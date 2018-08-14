@@ -1,7 +1,12 @@
+import 'dart:async';
+import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
+import 'package:geolocator/geolocator.dart';
 import 'camera.dart';
 import 'bookshelf.dart';
+
+Position position;
 
 void main() async {
   cameras = await availableCameras();
@@ -56,7 +61,37 @@ class _MyHomePageState extends State<MyHomePage> {
     "https://drive.google.com/uc?authuser=0&id=1GCMlgPofhMSYS-dkrXzeJHBWvF139UpR&export=download",
   ];
 
+  final Geolocator _geolocator = Geolocator();
+  Position _position;
+
   @override
+  void initState() {
+    super.initState();
+
+    _initLocationState();
+  }
+
+  // Platform messages are asynchronous, so we initialize in an async method.
+  void _initLocationState() async {
+    Position position;
+    // Platform messages may fail, so we use a try/catch PlatformException.
+    try {
+      position = await _geolocator.getLastKnownPosition(LocationAccuracy.high);
+    } on PlatformException {
+      position = null;
+    }
+
+    // If the widget was removed from the tree while the asynchronous platform
+    // message was in flight, we want to discard the reply rather than calling
+    // setState to update our non-existent appearance.
+    if (!mounted) return;
+
+    setState(() {
+      _position = position;
+    });
+  }
+
+@override
   Widget build(BuildContext context) {
     // This method is rerun every time setState is called, for instance as done
     // by the _incrementCounter method above.
@@ -64,6 +99,11 @@ class _MyHomePageState extends State<MyHomePage> {
     // The Flutter framework has been optimized to make rerunning build methods
     // fast, so that you can just rebuild anything that needs updating rather
     // than having to individually change instances of widgets.
+
+    final position = _position == null
+        ? 'Unknown'
+        : _position.latitude.toString() + ', ' + _position.longitude.toString();
+
     return new DefaultTabController(
         length: 3,
         child: Scaffold(
@@ -101,7 +141,8 @@ class _MyHomePageState extends State<MyHomePage> {
             // Tab with Donate
             new Column(
               children: <Widget>[
-                new Text("Here you will earn money by sharing your books. However to reach this stage we have to complete this app and do marketing to get high demand for book rental. Once people start renting books via Biblosphere it will be source of income for you. Please support us now to make this app source of your fun and income.",
+                new Text("Here you will earn money by sharing your books. However to reach this stage we have to complete this app and do marketing to get high demand for book rental. Once people start renting books via Biblosphere it will be source of income for you. Please support us now to make this app source of your fun and income."
+                          +"  \nPosition: $position",
                   textAlign: TextAlign.center,
                   style: new TextStyle(fontWeight: FontWeight.bold),),
                 new RaisedButton(onPressed: () {}, child: new Text ("Donate")),

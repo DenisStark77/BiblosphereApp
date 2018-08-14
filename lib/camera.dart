@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
+import 'package:flutter/services.dart';
 
 List<CameraDescription> cameras;
 
@@ -21,12 +22,22 @@ class _CameraAppState extends State<CameraHome> {
       }
       setState(() {});
     });
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+    ]);
   }
 
   @override
   void dispose() {
     controller?.dispose();
     super.dispose();
+
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.landscapeRight,
+      DeviceOrientation.landscapeLeft,
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+    ]);
   }
 
   @override
