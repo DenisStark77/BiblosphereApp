@@ -4,8 +4,14 @@ import 'package:flutter/services.dart';
 import 'dart:async';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:geolocator/geolocator.dart';
 
 List<CameraDescription> cameras;
+final FirebaseStorage storage = new FirebaseStorage();
+final Geolocator _geolocator = Geolocator();
 
 class CameraHome extends StatefulWidget {
   @override
@@ -85,6 +91,7 @@ class _CameraAppState extends State<CameraHome> {
 
   String timestamp() => new DateTime.now().millisecondsSinceEpoch.toString();
 
+  // Take picture and upload it to Firebase storage
   Future<String> takePicture() async {
     if (!controller.value.isInitialized) {
       print('Error: select a camera first.');
@@ -107,6 +114,33 @@ class _CameraAppState extends State<CameraHome> {
       return null;
     }
     print("Picture taken to $filePath");
-    return filePath;
+
+    //TODO: catch exteptions
+    final String storageUrl = await uploadPicture(filePath);
+
+    // TODO: catch exceptions
+    final position = await _geolocator.getLastKnownPosition(LocationAccuracy.high);
+
+    //TODO: Create record in Firestore database with location, URL, and user
+    DocumentReference doc = await Firestore.instance.collection('shelves').add({ 'user': 'denisstark', 'URL': storageUrl,
+      'position': new GeoPoint(position.latitude, position.longitude) });
+
+    return storageUrl;
+  }
+
+  Future<String> uploadPicture(String pictureFile) async {
+    final File file = new File(pictureFile);
+    final StorageReference ref = storage.ref().child('images').child('denisstark').child('${timestamp()}.jpg');
+    final StorageUploadTask uploadTask = ref.putFile(
+      file,
+      new StorageMetadata(
+        customMetadata: <String, String>{'activity': 'test'},
+      ),
+    );
+
+    final Uri downloadUrl = (await uploadTask.future).downloadUrl;
+        print("Picture uploaded to ${downloadUrl.toString()}");
+
+    return downloadUrl.toString();
   }
 }

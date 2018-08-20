@@ -4,13 +4,20 @@ import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+//import 'package:firebase_auth/firebase_auth.dart';
+
 import 'camera.dart';
 import 'bookshelf.dart';
+
+// TODO: Add Firebase authentication and change rules in Firebase Storge console
 
 Position position;
 
 void main() async {
   cameras = await availableCameras();
+
   runApp(new MyApp());
 }
 
@@ -55,12 +62,6 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  final List<String> bookshelves = <String>[
-    "https://drive.google.com/uc?authuser=0&id=1pO2PCgYZ_Vu4zObg4M71gLt8BzubD5PA&export=download",
-    "https://drive.google.com/uc?authuser=0&id=1ru5JLVVO23NLzzZ8-FZdgYLabAfPE3ce&export=download",
-    "https://drive.google.com/uc?authuser=0&id=1INLjS7x8RCz5nzrvFon415hkcg501QmL&export=download",
-    "https://drive.google.com/uc?authuser=0&id=1GCMlgPofhMSYS-dkrXzeJHBWvF139UpR&export=download",
-  ];
 
   final Geolocator _geolocator = Geolocator();
   Position _position;
@@ -70,7 +71,41 @@ class _MyHomePageState extends State<MyHomePage> {
     super.initState();
 
     _initLocationState();
+
+  //  initiateFacebookLogin();
   }
+
+  /* Facebook login */
+  /*
+  bool isLoggedIn = false;
+
+  void onLoginStatusChanged(bool isLoggedIn) {
+    setState(() {
+      this.isLoggedIn = isLoggedIn;
+    });
+  }
+
+
+  void initiateFacebookLogin() async {
+    var facebookLogin = FacebookLogin();
+    var facebookLoginResult =
+    await facebookLogin.logInWithReadPermissions(['email']);
+    switch (facebookLoginResult.status) {
+      case FacebookLoginStatus.error:
+        print("Error");
+        onLoginStatusChanged(false);
+        break;
+      case FacebookLoginStatus.cancelledByUser:
+        print("CancelledByUser");
+        onLoginStatusChanged(false);
+        break;
+      case FacebookLoginStatus.loggedIn:
+        print("LoggedIn");
+        onLoginStatusChanged(true);
+        break;
+    }
+  }
+*/
 
   // Platform messages are asynchronous, so we initialize in an async method.
   void _initLocationState() async {
@@ -129,15 +164,7 @@ class _MyHomePageState extends State<MyHomePage> {
             CameraHome(),
 
             // Main tab with bookshelves
-            new ListView.builder(
-              // Must have an item count equal to the number of items!
-              itemCount: bookshelves.length,
-              // A callback that will return a widget.
-              itemBuilder: (context, int) {
-              // In our case, a DogCard for each doggo.
-                return new BookshelfCard(bookshelves[int]);
-              },
-            ),
+            new BookshelfList(),
 
             // Tab with Donate
             new Column(
