@@ -7,7 +7,8 @@ import 'package:geolocator/geolocator.dart';
 //import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-//import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_facebook_login/flutter_facebook_login.dart';
 
 import 'camera.dart';
 import 'bookshelf.dart';
@@ -73,11 +74,10 @@ class _MyHomePageState extends State<MyHomePage> {
 
     _initLocationState();
 
-  //  initiateFacebookLogin();
+    initiateFacebookLogin();
   }
 
   /* Facebook login */
-  /*
   bool isLoggedIn = false;
 
   void onLoginStatusChanged(bool isLoggedIn) {
@@ -85,7 +85,6 @@ class _MyHomePageState extends State<MyHomePage> {
       this.isLoggedIn = isLoggedIn;
     });
   }
-
 
   void initiateFacebookLogin() async {
     var facebookLogin = FacebookLogin();
@@ -102,11 +101,11 @@ class _MyHomePageState extends State<MyHomePage> {
         break;
       case FacebookLoginStatus.loggedIn:
         print("LoggedIn");
+        FirebaseAuth.instance.signInWithFacebook(accessToken: facebookLoginResult.accessToken.token);
         onLoginStatusChanged(true);
         break;
     }
   }
-*/
 
   // Platform messages are asynchronous, so we initialize in an async method.
   void _initLocationState() async {

@@ -114,6 +114,13 @@
             </list>
           </value>
         </entry>
+        <entry key="flutter_facebook_login">
+          <value>
+            <list>
+              <option value="D:/Flutter/.pub-cache/hosted/pub.dartlang.org/flutter_facebook_login-1.1.1/lib" />
+            </list>
+          </value>
+        </entry>
         <entry key="flutter_test">
           <value>
             <list>
@@ -454,6 +461,7 @@
       <root url="file://D:/Flutter/.pub-cache/hosted/pub.dartlang.org/firebase_auth-0.5.18/lib" />
       <root url="file://D:/Flutter/.pub-cache/hosted/pub.dartlang.org/firebase_core-0.2.5/lib" />
       <root url="file://D:/Flutter/.pub-cache/hosted/pub.dartlang.org/firebase_storage-1.0.1/lib" />
+      <root url="file://D:/Flutter/.pub-cache/hosted/pub.dartlang.org/flutter_facebook_login-1.1.1/lib" />
       <root url="file://D:/Flutter/.pub-cache/hosted/pub.dartlang.org/front_end-0.1.0-alpha.12/lib" />
       <root url="file://D:/Flutter/.pub-cache/hosted/pub.dartlang.org/geolocator-1.4.0/lib" />
       <root url="file://D:/Flutter/.pub-cache/hosted/pub.dartlang.org/glob-1.1.5/lib" />
