@@ -37,5 +37,6 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+        <meta-data android:name="firebase_analytics_collection_deactivated" android:value="true" />
     </application>
 </manifest>
