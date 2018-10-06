@@ -3,11 +3,15 @@ import 'package:camera/camera.dart';
 import 'package:flutter/services.dart';
 import 'dart:async';
 import 'dart:io';
+import 'dart:convert';
 import 'package:path_provider/path_provider.dart';
 //import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:flutter_facebook_login/flutter_facebook_login.dart';
+import 'package:http/http.dart' as http;
 
 List<CameraDescription> cameras;
 final FirebaseStorage storage = new FirebaseStorage();
@@ -116,21 +120,32 @@ class _CameraAppState extends State<CameraHome> {
     print("Picture taken to $filePath");
 
     //TODO: catch exteptions
-    final String storageUrl = await uploadPicture(filePath);
+    final FirebaseUser user = await FirebaseAuth.instance.currentUser();
+
+    //TODO: catch exteptions
+    final String storageUrl = await uploadPicture(filePath, user);
 
     // TODO: catch exceptions
     final position = await _geolocator.getLastKnownPosition(LocationAccuracy.high);
 
+    // Get Facebook profile id
+    // TODO: Catch exceptions
+    final token = await FacebookLogin().currentAccessToken;
+    var graphResponse = await http.get(
+        'https://graph.facebook.com/v2.12/me?fields=name,first_name,last_name,email&access_token=${token.token}');
+    var profile = json.decode(graphResponse.body);
+
+
     //TODO: Create record in Firestore database with location, URL, and user
-    DocumentReference doc = await Firestore.instance.collection('shelves').add({ 'user': 'denisstark', 'URL': storageUrl,
+    DocumentReference doc = await Firestore.instance.collection('shelves').add({ 'user': profile["id"], 'URL': storageUrl,
       'position': new GeoPoint(position.latitude, position.longitude) });
 
     return storageUrl;
   }
 
-  Future<String> uploadPicture(String pictureFile) async {
+  Future<String> uploadPicture(String pictureFile, FirebaseUser user) async {
     final File file = new File(pictureFile);
-    final StorageReference ref = storage.ref().child('images').child('denisstark').child('${timestamp()}.jpg');
+    final StorageReference ref = storage.ref().child('images').child(user.uid).child('${timestamp()}.jpg');
     final StorageUploadTask uploadTask = ref.putFile(
       file,
       new StorageMetadata(
