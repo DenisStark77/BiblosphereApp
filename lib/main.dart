@@ -8,10 +8,14 @@ import 'package:geolocator/geolocator.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_facebook_login/flutter_facebook_login.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
-import 'camera.dart';
-import 'bookshelf.dart';
+import 'package:biblosphere/const.dart';
+import 'package:biblosphere/camera.dart';
+import 'package:biblosphere/bookshelf.dart';
+import 'package:biblosphere/chat.dart';
 
 // TODO: Add Firebase authentication and change rules in Firebase Storge console
 
@@ -67,6 +71,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   final Geolocator _geolocator = Geolocator();
   Position _position;
+  String currentUserId;
 
   @override
   void initState() {
@@ -101,8 +106,27 @@ class _MyHomePageState extends State<MyHomePage> {
         break;
       case FacebookLoginStatus.loggedIn:
         print("LoggedIn");
-        FirebaseAuth.instance.signInWithFacebook(accessToken: facebookLoginResult.accessToken.token);
+        FirebaseUser firebaseUser = await FirebaseAuth.instance.signInWithFacebook(accessToken: facebookLoginResult.accessToken.token);
         onLoginStatusChanged(true);
+        if (firebaseUser != null) {
+          // Check is already sign up
+          final QuerySnapshot result =
+          await Firestore.instance.collection('users').where(
+              'id', isEqualTo: firebaseUser.uid).getDocuments();
+          final List<DocumentSnapshot> documents = result.documents;
+          if (documents.length == 0) {
+            // Update data to server if new user
+            Firestore.instance.collection('users')
+                .document(firebaseUser.uid)
+                .setData(
+                {
+                  'name': firebaseUser.displayName,
+                  'photoUrl': firebaseUser.photoUrl,
+                  'id': firebaseUser.uid
+                });
+          }
+          currentUserId = firebaseUser.uid;
+        }
         break;
     }
   }
@@ -125,6 +149,78 @@ class _MyHomePageState extends State<MyHomePage> {
     setState(() {
       _position = position;
     });
+  }
+
+  Widget buildItem(BuildContext context, DocumentSnapshot document) {
+    if (document['id'] == currentUserId) {
+      return Container();
+    } else {
+      return Container(
+        child: FlatButton(
+          child: Row(
+            children: <Widget>[
+              Material(
+                child: CachedNetworkImage(
+                  placeholder: Container(
+                    child: CircularProgressIndicator(
+                      strokeWidth: 1.0,
+                      valueColor: AlwaysStoppedAnimation<Color>(themeColor),
+                    ),
+                    width: 50.0,
+                    height: 50.0,
+                    padding: EdgeInsets.all(15.0),
+                  ),
+                  imageUrl: document['photoUrl'],
+                  width: 50.0,
+                  height: 50.0,
+                  fit: BoxFit.cover,
+                ),
+                borderRadius: BorderRadius.all(Radius.circular(25.0)),
+              ),
+              new Flexible(
+                child: Container(
+                  child: new Column(
+                    children: <Widget>[
+                      new Container(
+                        child: Text(
+                          'Name: ${document['name']}',
+                          style: TextStyle(color: themeColor),
+                        ),
+                        alignment: Alignment.centerLeft,
+                        margin: new EdgeInsets.fromLTRB(10.0, 0.0, 0.0, 5.0),
+                      ),
+                      new Container(
+                        child: Text(
+                          '...',
+                          style: TextStyle(color: themeColor),
+                        ),
+                        alignment: Alignment.centerLeft,
+                        margin: new EdgeInsets.fromLTRB(10.0, 0.0, 0.0, 0.0),
+                      )
+                    ],
+                  ),
+                  margin: EdgeInsets.only(left: 20.0),
+                ),
+              ),
+            ],
+          ),
+          onPressed: () {
+            Navigator.push(
+                context,
+                new MaterialPageRoute(
+                    builder: (context) => new Chat(
+                      myId: currentUserId,
+                      peerId: document.documentID,
+                      peerAvatar: document['photoUrl'],
+                    )));
+          },
+          color: greyColor2,
+          padding: EdgeInsets.fromLTRB(25.0, 10.0, 25.0, 10.0),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
+        ),
+        margin: EdgeInsets.only(bottom: 10.0, left: 5.0, right: 5.0),
+      );
+    }
   }
 
 @override
@@ -150,6 +246,7 @@ class _MyHomePageState extends State<MyHomePage> {
             tabs: [
               Tab(icon: Icon(Icons.add_a_photo)),
               Tab(icon: Icon(Icons.local_library)),
+              Tab(icon: Icon(Icons.message)),
               Tab(icon: Icon(Icons.monetization_on)),
             ],
           ),
@@ -166,6 +263,27 @@ class _MyHomePageState extends State<MyHomePage> {
             // Main tab with bookshelves
             new BookshelfList(),
 
+            // Tab for chat
+            Container(
+              child: StreamBuilder(
+                stream: Firestore.instance.collection('users').snapshots(),
+                builder: (context, snapshot) {
+                  if (!snapshot.hasData) {
+                    return Center(
+                      child: CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.teal),
+                      ),
+                    );
+                  } else {
+                    return ListView.builder(
+                      padding: EdgeInsets.all(10.0),
+                      itemBuilder: (context, index) => buildItem(context, snapshot.data.documents[index]),
+                      itemCount: snapshot.data.documents.length,
+                    );
+                  }
+                },
+              ),
+            ),
             // Tab with Donate
             new Column(
               children: <Widget>[

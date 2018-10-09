@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class BookshelfCard extends StatelessWidget
 {
@@ -20,7 +21,7 @@ class BookshelfCard extends StatelessWidget
   Widget build(BuildContext context) {
     return new Stack (
       children: <Widget>[
-        new Image.network(_imageURL, fit: BoxFit.cover),
+        new Image(image: new CachedNetworkImageProvider(_imageURL), fit: BoxFit.cover),
         new Align(
           alignment: Alignment(1.0, 1.0),
           child: Row(
