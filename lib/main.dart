@@ -151,76 +151,82 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
-  Widget buildItem(BuildContext context, DocumentSnapshot document) {
-    if (document['id'] == currentUserId) {
-      return Container();
-    } else {
+  Future<DocumentSnapshot> _fetchUser(String peerId) async {
+    DocumentSnapshot userSnap = await Firestore.instance.collection('users').document(peerId).get();
+
+    return userSnap;
+  }
+
+  Widget buildItem(BuildContext context, DocumentSnapshot userSnap) {
+      print(userSnap.toString());
       return Container(
-        child: FlatButton(
-          child: Row(
-            children: <Widget>[
-              Material(
-                child: CachedNetworkImage(
-                  placeholder: Container(
-                    child: CircularProgressIndicator(
-                      strokeWidth: 1.0,
-                      valueColor: AlwaysStoppedAnimation<Color>(themeColor),
+          child: FlatButton(
+            child: Row(
+              children: <Widget>[
+                Material(
+                  child: CachedNetworkImage(
+                    placeholder: Container(
+                      child: CircularProgressIndicator(
+                        strokeWidth: 1.0,
+                        valueColor: AlwaysStoppedAnimation<Color>(themeColor),
+                      ),
+                      width: 50.0,
+                      height: 50.0,
+                      padding: EdgeInsets.all(15.0),
                     ),
+                    imageUrl: userSnap['photoUrl'],
                     width: 50.0,
                     height: 50.0,
-                    padding: EdgeInsets.all(15.0),
+                    fit: BoxFit.cover,
                   ),
-                  imageUrl: document['photoUrl'],
-                  width: 50.0,
-                  height: 50.0,
-                  fit: BoxFit.cover,
+                  borderRadius: BorderRadius.all(Radius.circular(25.0)),
                 ),
-                borderRadius: BorderRadius.all(Radius.circular(25.0)),
-              ),
-              new Flexible(
-                child: Container(
-                  child: new Column(
-                    children: <Widget>[
-                      new Container(
-                        child: Text(
-                          'Name: ${document['name']}',
-                          style: TextStyle(color: themeColor),
+                new Flexible(
+                  child: Container(
+                    child: new Column(
+                      children: <Widget>[
+                        new Container(
+                          child: Text(
+                            'Name: ${userSnap['name']}',
+                            style: TextStyle(color: themeColor),
+                          ),
+                          alignment: Alignment.centerLeft,
+                          margin: new EdgeInsets.fromLTRB(10.0, 0.0, 0.0, 5.0),
                         ),
-                        alignment: Alignment.centerLeft,
-                        margin: new EdgeInsets.fromLTRB(10.0, 0.0, 0.0, 5.0),
-                      ),
-                      new Container(
-                        child: Text(
-                          '...',
-                          style: TextStyle(color: themeColor),
-                        ),
-                        alignment: Alignment.centerLeft,
-                        margin: new EdgeInsets.fromLTRB(10.0, 0.0, 0.0, 0.0),
-                      )
-                    ],
+                        new Container(
+                          child: Text(
+                            '...',
+                            style: TextStyle(color: themeColor),
+                          ),
+                          alignment: Alignment.centerLeft,
+                          margin: new EdgeInsets.fromLTRB(10.0, 0.0, 0.0, 0.0),
+                        )
+                      ],
+                    ),
+                    margin: EdgeInsets.only(left: 20.0),
                   ),
-                  margin: EdgeInsets.only(left: 20.0),
                 ),
-              ),
-            ],
+              ],
+            ),
+            onPressed: () {
+              Navigator.push(
+                  context,
+                  new MaterialPageRoute(
+                      builder: (context) =>
+                      new Chat(
+                        myId: currentUserId,
+                        peerId: userSnap.documentID,
+                        peerAvatar: userSnap['photoUrl'],
+                        peerName: userSnap['name'],
+                      )));
+            },
+            color: greyColor2,
+            padding: EdgeInsets.fromLTRB(25.0, 10.0, 25.0, 10.0),
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10.0)),
           ),
-          onPressed: () {
-            Navigator.push(
-                context,
-                new MaterialPageRoute(
-                    builder: (context) => new Chat(
-                      myId: currentUserId,
-                      peerId: document.documentID,
-                      peerAvatar: document['photoUrl'],
-                    )));
-          },
-          color: greyColor2,
-          padding: EdgeInsets.fromLTRB(25.0, 10.0, 25.0, 10.0),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
-        ),
-        margin: EdgeInsets.only(bottom: 10.0, left: 5.0, right: 5.0),
-      );
-    }
+          margin: EdgeInsets.only(bottom: 10.0, left: 5.0, right: 5.0),
+        );
   }
 
 @override
@@ -237,7 +243,7 @@ class _MyHomePageState extends State<MyHomePage> {
         : _position.latitude.toString() + ', ' + _position.longitude.toString();
 
     return new DefaultTabController(
-        length: 3,
+        length: 4,
         child: Scaffold(
         appBar: new AppBar(
           // Here we take the value from the MyHomePage object that was created by
@@ -266,7 +272,10 @@ class _MyHomePageState extends State<MyHomePage> {
             // Tab for chat
             Container(
               child: StreamBuilder(
-                stream: Firestore.instance.collection('users').snapshots(),
+                stream: Firestore.instance.collection('messages')
+                    .where("ids", arrayContains : currentUserId)
+                    .orderBy("timestamp", descending: true)
+                    .snapshots(),
                 builder: (context, snapshot) {
                   if (!snapshot.hasData) {
                     return Center(
@@ -277,7 +286,31 @@ class _MyHomePageState extends State<MyHomePage> {
                   } else {
                     return ListView.builder(
                       padding: EdgeInsets.all(10.0),
-                      itemBuilder: (context, index) => buildItem(context, snapshot.data.documents[index]),
+                      itemBuilder: (context, index) {
+                        String peerId = snapshot.data.documents[index]['ids'].firstWhere((id) => id != currentUserId, orElse: () => null);
+                        print(peerId);
+
+                        return FutureBuilder(
+                        future: _fetchUser(peerId),
+                        builder: (context, snapshot) {
+                          switch (snapshot.connectionState) {
+                            case ConnectionState.none:
+                            case ConnectionState.waiting:
+                              return Align(
+                                  alignment: Alignment.center,
+                                  child: CircularProgressIndicator()
+                              );
+                            case ConnectionState.done:
+                              if (snapshot.hasError) {
+                                return Text('Error: ${snapshot.error}');
+                              } else {
+                                print("Futere snapshot: " + snapshot.data.toString());
+                                return buildItem(context, snapshot.data);
+                              }
+                          }
+                        },
+                      );
+                      },
                       itemCount: snapshot.data.documents.length,
                     );
                   }

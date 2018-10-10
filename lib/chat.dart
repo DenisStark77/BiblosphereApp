@@ -15,8 +15,9 @@ class Chat extends StatelessWidget {
   final String myId;
   final String peerId;
   final String peerAvatar;
+  final String peerName;
 
-  Chat({Key key, @required this.myId, @required this.peerId, @required this.peerAvatar}) : super(key: key);
+  Chat({Key key, @required this.myId, @required this.peerId, @required this.peerAvatar, @required this.peerName}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -32,6 +33,7 @@ class Chat extends StatelessWidget {
         myId: myId,
         peerId: peerId,
         peerAvatar: peerAvatar,
+        peerName: peerName,
       ),
     );
   }
@@ -41,18 +43,20 @@ class ChatScreen extends StatefulWidget {
   final String myId;
   final String peerId;
   final String peerAvatar;
+  final String peerName;
 
-  ChatScreen({Key key, @required this.myId, @required this.peerId, @required this.peerAvatar}) : super(key: key);
+  ChatScreen({Key key, @required this.myId, @required this.peerId, @required this.peerAvatar, @required this.peerName}) : super(key: key);
 
   @override
-  State createState() => new ChatScreenState(myId: myId, peerId: peerId, peerAvatar: peerAvatar);
+  State createState() => new ChatScreenState(myId: myId, peerId: peerId, peerAvatar: peerAvatar, peerName: peerName);
 }
 
 class ChatScreenState extends State<ChatScreen> {
-  ChatScreenState({Key key, @required this.myId, @required this.peerId, @required this.peerAvatar});
+  ChatScreenState({Key key, @required this.myId, @required this.peerId, @required this.peerAvatar, @required this.peerName});
 
   String peerId;
   String peerAvatar;
+  String peerName;
   String myId;
 
   var listMessage;
@@ -145,21 +149,38 @@ class ChatScreenState extends State<ChatScreen> {
     if (content.trim() != '') {
       textEditingController.clear();
 
-      var documentReference = Firestore.instance
+      String timestamp = DateTime.now().millisecondsSinceEpoch.toString();
+      
+      // Add message
+      var msgRef = Firestore.instance
           .collection('messages')
           .document(groupChatId)
           .collection(groupChatId)
-          .document(DateTime.now().millisecondsSinceEpoch.toString());
+          .document(timestamp);
 
       Firestore.instance.runTransaction((transaction) async {
         await transaction.set(
-          documentReference,
+          msgRef,
           {
             'idFrom': myId,
             'idTo': peerId,
-            'timestamp': DateTime.now().millisecondsSinceEpoch.toString(),
+            'timestamp': timestamp,
             'content': content,
             'type': type
+          },
+        );
+      });
+      // Update chat
+      var chatRef = Firestore.instance
+          .collection('messages')
+          .document(groupChatId);
+
+      Firestore.instance.runTransaction((transaction) async {
+        await transaction.set(
+          chatRef,
+          {
+            'ids': [peerId, myId],
+            'timestamp': timestamp
           },
         );
       });
