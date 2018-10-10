@@ -4,12 +4,16 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:biblosphere/chat.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class BookshelfCard extends StatelessWidget
 {
+  SharedPreferences prefs;
   String _imageURL;
   GeoPoint _position;
   String _user;
+  String currentUserId;
 
   BookshelfCard(String image, String user, GeoPoint position){
     _imageURL = image;
@@ -36,7 +40,7 @@ class BookshelfCard extends StatelessWidget
               ),
               new IconButton(
                 onPressed: () {
-                  openMsg(_user);
+                  openMsg(context, _user);
                 },
                 tooltip: 'Increment',
                 icon: new Icon(Icons.message),
@@ -57,15 +61,25 @@ class BookshelfCard extends StatelessWidget
     }
   }
 
-  void openMsg(String user) async {
-    final url = 'https://m.me/$user';
-    if (await canLaunch(url)) {
-      await launch(url);
-    } else {
-      throw 'Could not launch $url';
+  void openMsg(BuildContext context, String user) async {
+      prefs = await SharedPreferences.getInstance();
+      currentUserId = prefs.getString('id') ?? '';
+
+      //TODO: Handle exceptions
+      Firestore.instance.collection('users').document(user).get().then((DocumentSnapshot userSnap) {
+          Navigator.push(
+              context,
+              new MaterialPageRoute(
+                  builder: (context) =>
+                  new Chat(
+                    myId: currentUserId,
+                    peerId: user,
+                    peerAvatar: userSnap["photoUrl"],
+                    peerName: userSnap["name"],
+                  )));
+      });
     }
   }
-}
 
 class BookshelfList extends StatelessWidget {
   @override

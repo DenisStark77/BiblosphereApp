@@ -12,6 +12,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:flutter_facebook_login/flutter_facebook_login.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 List<CameraDescription> cameras;
 final FirebaseStorage storage = new FirebaseStorage();
@@ -25,6 +26,8 @@ class CameraHome extends StatefulWidget {
 class _CameraAppState extends State<CameraHome> {
   CameraController controller;
   String imagePath;
+  SharedPreferences prefs;
+  String currentUserId;
 
   @override
   void initState() {
@@ -128,16 +131,12 @@ class _CameraAppState extends State<CameraHome> {
     // TODO: catch exceptions
     final position = await _geolocator.getLastKnownPosition(LocationAccuracy.high);
 
-    // Get Facebook profile id
-    // TODO: Catch exceptions
-    final token = await FacebookLogin().currentAccessToken;
-    var graphResponse = await http.get(
-        'https://graph.facebook.com/v2.12/me?fields=name,first_name,last_name,email&access_token=${token.token}');
-    var profile = json.decode(graphResponse.body);
-
+    // Get current Firebase user from prefs (Not sure that async call is ok)
+    prefs = await SharedPreferences.getInstance();
+    currentUserId = prefs.getString('id') ?? '';
 
     //TODO: Create record in Firestore database with location, URL, and user
-    DocumentReference doc = await Firestore.instance.collection('shelves').add({ 'user': profile["id"], 'URL': storageUrl,
+    DocumentReference doc = await Firestore.instance.collection('shelves').add({ 'user': currentUserId, 'URL': storageUrl,
       'position': new GeoPoint(position.latitude, position.longitude) });
 
     return storageUrl;

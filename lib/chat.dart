@@ -96,6 +96,7 @@ class ChatScreenState extends State<ChatScreen> {
   }
 
   readLocal() async {
+
     if (myId.hashCode <= peerId.hashCode) {
       groupChatId = '$myId-$peerId';
     } else {

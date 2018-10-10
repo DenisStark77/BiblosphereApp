@@ -11,6 +11,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_facebook_login/flutter_facebook_login.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:biblosphere/const.dart';
 import 'package:biblosphere/camera.dart';
@@ -72,6 +73,7 @@ class _MyHomePageState extends State<MyHomePage> {
   final Geolocator _geolocator = Geolocator();
   Position _position;
   String currentUserId;
+  SharedPreferences prefs;
 
   @override
   void initState() {
@@ -126,6 +128,11 @@ class _MyHomePageState extends State<MyHomePage> {
                 });
           }
           currentUserId = firebaseUser.uid;
+          prefs = await SharedPreferences.getInstance();
+          await prefs.setString('id', firebaseUser.uid);
+//          await prefs.setString('name', firebaseUser.displayName);
+//          await prefs.setString('photoUrl', firebaseUser.photoUrl);
+
         }
         break;
     }
