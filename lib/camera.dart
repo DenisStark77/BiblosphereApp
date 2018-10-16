@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:camera/camera.dart';
 import 'package:flutter/services.dart';
 import 'dart:async';
 import 'dart:io';
 import 'dart:convert';
 import 'package:path_provider/path_provider.dart';
-//import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -13,148 +11,156 @@ import 'package:geolocator/geolocator.dart';
 import 'package:flutter_facebook_login/flutter_facebook_login.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
-List<CameraDescription> cameras;
+import 'package:biblosphere/const.dart';
+
 final FirebaseStorage storage = new FirebaseStorage();
 final Geolocator _geolocator = Geolocator();
 
-class CameraHome extends StatefulWidget {
-  @override
-  _CameraAppState createState() => new _CameraAppState();
-}
+class MyBookshelf extends StatelessWidget {
+  MyBookshelf({Key key, @required this.currentUserId, @required this.shelfId, @required this.imageURL, @required this.position, @required this.fileName});
 
-class _CameraAppState extends State<CameraHome> {
-  CameraController controller;
-  String imagePath;
-  SharedPreferences prefs;
+  String shelfId;
+  String imageURL;
+  GeoPoint position;
   String currentUserId;
+  String fileName;
 
-  @override
-  void initState() {
-    super.initState();
-    controller = new CameraController(cameras[0], ResolutionPreset.medium);
-    controller.initialize().then((_) {
-      if (!mounted) {
-        return;
-      }
-      setState(() {});
-    });
-    SystemChrome.setPreferredOrientations([
-      DeviceOrientation.portraitUp,
-    ]);
-  }
+  Future<void> deleteShelf () async {
+    //TODO: Delete bookshelf record in Firestore database
+    DocumentReference doc = Firestore.instance.collection('shelves').document("$shelfId");
+    await doc.delete();
+    print("Record deleted");
 
-  @override
-  void dispose() {
-    controller?.dispose();
-    super.dispose();
-
-    SystemChrome.setPreferredOrientations([
-      DeviceOrientation.landscapeRight,
-      DeviceOrientation.landscapeLeft,
-      DeviceOrientation.portraitUp,
-      DeviceOrientation.portraitDown,
-    ]);
+    //TODO: Delete image file from Firebase storage
+    print("TO be DELETED: currentUserId: $currentUserId, fileName: $fileName");
+    final StorageReference ref = storage.ref().child('images').child(currentUserId).child(fileName);
+    await ref.delete();
+    print("Image deleted");
   }
 
   @override
   Widget build(BuildContext context) {
-    if (!controller.value.isInitialized) {
-      return new Container();
-    }
-    return new AspectRatio(
-        aspectRatio:
-        controller.value.aspectRatio,
-        child: new Stack (
+    return new Container(
+        child: new Card(
+        child: new Column (
+        children: <Widget>[
+          new Container (
+        child: Image(image: new CachedNetworkImageProvider(imageURL), fit: BoxFit.cover),
+        margin: EdgeInsets.only(top: 7.0, left: 7.0, right: 7.0) ),
+          new Align(
+            alignment: Alignment(1.0, 1.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: <Widget>[
+                new IconButton(
+                  onPressed: deleteShelf,
+                  tooltip: 'Increment',
+                  icon: new Icon(Icons.delete),
+                ),
+                new IconButton(
+                  onPressed: () {},
+                  tooltip: 'Increment',
+                  icon: new Icon(Icons.share),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+          color: greyColor2,
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10.0)),
+
+        ),
+      margin: EdgeInsets.only(bottom: 10.0, left: 5.0, right: 5.0)
+    );
+  }
+}
+
+class MyBookshelfList extends StatelessWidget {
+  MyBookshelfList({Key key, @required this.currentUserId});
+
+  String currentUserId;
+
+  @override
+  Widget build(BuildContext context) {
+    return new StreamBuilder<QuerySnapshot>(
+      stream: Firestore.instance.collection('shelves').where("user", isEqualTo: currentUserId).snapshots(),
+      builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
+        if (!snapshot.hasData) return new Text('Loading...');
+        return new ListView(
+          children: snapshot.data.documents.map((DocumentSnapshot document) {
+            print("PATH-PATH-PATH: " + document.reference.path);
+            return new MyBookshelf(currentUserId: currentUserId, shelfId: document.documentID, imageURL: document['URL'], position: document['position'], fileName: document['file']);
+          }).toList(),
+        );
+      },
+    );
+  }
+}
+
+class Home extends StatelessWidget {
+  Home({Key key, @required this.currentUserId});
+
+  String imagePath;
+  String currentUserId;
+
+  String timestamp() => new DateTime.now().millisecondsSinceEpoch.toString();
+
+  Future getImage() async {
+    File image = await ImagePicker.pickImage(source: ImageSource.camera);
+    print("DEBUG: Picture taken to $image");
+
+    //TODO: catch exteptions
+    final FirebaseUser user = await FirebaseAuth.instance.currentUser();
+
+    String name = timestamp()+".jpg";
+
+    //TODO: catch exteptions
+    final String storageUrl = await uploadPicture(image, user, name);
+    print("DEBUG: Picture uploaded $storageUrl");
+
+    // TODO: catch exceptions
+    final position = await _geolocator.getLastKnownPosition();
+    print("DEBUG: Picture location ($position.latitude, $position.longitude)");
+
+    //TODO: Create record in Firestore database with location, URL, and user
+    DocumentReference doc = await Firestore.instance.collection('shelves').add({ "user": currentUserId, 'URL': storageUrl,
+      'position': new GeoPoint(position.latitude, position.longitude), 'file': name });
+    print("Record in Firestore created");
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return new Stack (
          children: <Widget> [
-            new CameraPreview(controller),
+            new MyBookshelfList(currentUserId: currentUserId),
             new Align (
               alignment: Alignment(0.0, 1.0),
               child: new FloatingActionButton(
-                onPressed: controller != null &&
-                    controller.value.isInitialized
-                    ? onTakePictureButtonPressed
-                    : null,
+                onPressed: getImage,
                 tooltip: 'Make a photo',
                 child: new Icon(Icons.photo_camera),
               ),
             ),
           ],
-        ),
-    );
+        );
   }
 
-  void onTakePictureButtonPressed() {
-    takePicture().then((String filePath) {
-      if (mounted) {
-        setState(() {
-          imagePath = filePath;
-        });
-//        if (filePath != null) showInSnackBar('Picture saved to $filePath');
-      }
-    });
-  }
-
-
-  String timestamp() => new DateTime.now().millisecondsSinceEpoch.toString();
-
-  // Take picture and upload it to Firebase storage
-  Future<String> takePicture() async {
-    if (!controller.value.isInitialized) {
-      print('Error: select a camera first.');
-      return null;
-    }
-    final Directory extDir = await getApplicationDocumentsDirectory();
-    final String dirPath = '${extDir.path}/Pictures/flutter_test';
-    await new Directory(dirPath).create(recursive: true);
-    final String filePath = '$dirPath/${timestamp()}.jpg';
-
-    if (controller.value.isTakingPicture) {
-      // A capture is already pending, do nothing.
-      return null;
-    }
-
-    try {
-      await controller.takePicture(filePath);
-    } on CameraException catch (e) {
-      print(e.toString());
-      return null;
-    }
-    print("Picture taken to $filePath");
-
-    //TODO: catch exteptions
-    final FirebaseUser user = await FirebaseAuth.instance.currentUser();
-
-    //TODO: catch exteptions
-    final String storageUrl = await uploadPicture(filePath, user);
-
-    // TODO: catch exceptions
-    final position = await _geolocator.getLastKnownPosition(LocationAccuracy.high);
-
-    // Get current Firebase user from prefs (Not sure that async call is ok)
-    prefs = await SharedPreferences.getInstance();
-    currentUserId = prefs.getString('id') ?? '';
-
-    //TODO: Create record in Firestore database with location, URL, and user
-    DocumentReference doc = await Firestore.instance.collection('shelves').add({ 'user': currentUserId, 'URL': storageUrl,
-      'position': new GeoPoint(position.latitude, position.longitude) });
-
-    return storageUrl;
-  }
-
-  Future<String> uploadPicture(String pictureFile, FirebaseUser user) async {
-    final File file = new File(pictureFile);
-    final StorageReference ref = storage.ref().child('images').child(user.uid).child('${timestamp()}.jpg');
+  Future<String> uploadPicture(File image, FirebaseUser user, String name) async {
+    final StorageReference ref = storage.ref().child('images').child(user.uid).child(name);
     final StorageUploadTask uploadTask = ref.putFile(
-      file,
+      image,
       new StorageMetadata(
         customMetadata: <String, String>{'activity': 'test'},
       ),
     );
+    StorageTaskSnapshot storageTaskSnapshot = await uploadTask.onComplete;
+    final String downloadUrl = await storageTaskSnapshot.ref.getDownloadURL();
 
-    final Uri downloadUrl = (await uploadTask.future).downloadUrl;
-        print("Picture uploaded to ${downloadUrl.toString()}");
-
-    return downloadUrl.toString();
+    return downloadUrl;
   }
 }

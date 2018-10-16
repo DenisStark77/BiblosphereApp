@@ -2,7 +2,6 @@ import 'dart:io';
 import 'dart:async';
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
-import 'package:camera/camera.dart';
 import 'package:geolocator/geolocator.dart';
 //import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -12,6 +11,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_facebook_login/flutter_facebook_login.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:image_picker/image_picker.dart';
+
 
 import 'package:biblosphere/const.dart';
 import 'package:biblosphere/camera.dart';
@@ -23,8 +24,6 @@ import 'package:biblosphere/chat.dart';
 Position position;
 
 void main() async {
-  cameras = await availableCameras();
-
   runApp(new MyApp());
 }
 
@@ -108,9 +107,17 @@ class _MyHomePageState extends State<MyHomePage> {
         break;
       case FacebookLoginStatus.loggedIn:
         print("LoggedIn");
+
         FirebaseUser firebaseUser = await FirebaseAuth.instance.signInWithFacebook(accessToken: facebookLoginResult.accessToken.token);
         onLoginStatusChanged(true);
+
         if (firebaseUser != null) {
+          currentUserId = firebaseUser.uid;
+          prefs = await SharedPreferences.getInstance();
+          await prefs.setString('id', firebaseUser.uid);
+//          await prefs.setString('name', firebaseUser.displayName);
+//          await prefs.setString('photoUrl', firebaseUser.photoUrl);
+
           // Check is already sign up
           final QuerySnapshot result =
           await Firestore.instance.collection('users').where(
@@ -127,12 +134,6 @@ class _MyHomePageState extends State<MyHomePage> {
                   'id': firebaseUser.uid
                 });
           }
-          currentUserId = firebaseUser.uid;
-          prefs = await SharedPreferences.getInstance();
-          await prefs.setString('id', firebaseUser.uid);
-//          await prefs.setString('name', firebaseUser.displayName);
-//          await prefs.setString('photoUrl', firebaseUser.photoUrl);
-
         }
         break;
     }
@@ -143,7 +144,7 @@ class _MyHomePageState extends State<MyHomePage> {
     Position position;
     // Platform messages may fail, so we use a try/catch PlatformException.
     try {
-      position = await _geolocator.getLastKnownPosition(LocationAccuracy.high);
+      position = await _geolocator.getLastKnownPosition();
     } on PlatformException {
       position = null;
     }
@@ -250,17 +251,16 @@ class _MyHomePageState extends State<MyHomePage> {
         : _position.latitude.toString() + ', ' + _position.longitude.toString();
 
     return new DefaultTabController(
-        length: 4,
+        length: 3,
         child: Scaffold(
         appBar: new AppBar(
           // Here we take the value from the MyHomePage object that was created by
           // the App.build method, and use it to set our appbar title.
           bottom: TabBar(
             tabs: [
-              Tab(icon: Icon(Icons.add_a_photo)),
+              Tab(icon: Icon(Icons.home)),
               Tab(icon: Icon(Icons.local_library)),
               Tab(icon: Icon(Icons.message)),
-              Tab(icon: Icon(Icons.monetization_on)),
             ],
           ),
           title: new Text(widget.title),
@@ -271,10 +271,10 @@ class _MyHomePageState extends State<MyHomePage> {
         body: TabBarView(
           children: <Widget> [
             // Camera tab
-            CameraHome(),
+            Home(currentUserId: currentUserId),
 
             // Main tab with bookshelves
-            new BookshelfList(),
+            new BookshelfList(currentUserId, new GeoPoint(_position.latitude, _position.longitude)),
 
             // Tab for chat
             Container(
@@ -301,6 +301,7 @@ class _MyHomePageState extends State<MyHomePage> {
                         future: _fetchUser(peerId),
                         builder: (context, snapshot) {
                           switch (snapshot.connectionState) {
+                            case ConnectionState.active:
                             case ConnectionState.none:
                             case ConnectionState.waiting:
                               return Align(
@@ -323,16 +324,6 @@ class _MyHomePageState extends State<MyHomePage> {
                   }
                 },
               ),
-            ),
-            // Tab with Donate
-            new Column(
-              children: <Widget>[
-                new Text("Here you will earn money by sharing your books. However to reach this stage we have to complete this app and do marketing to get high demand for book rental. Once people start renting books via Biblosphere it will be source of income for you. Please support us now to make this app source of your fun and income."
-                          +"  \nPosition: $position",
-                  textAlign: TextAlign.center,
-                  style: new TextStyle(fontWeight: FontWeight.bold),),
-                new RaisedButton(onPressed: () {}, child: new Text ("Donate")),
-              ],
             ),
           ],
         ),

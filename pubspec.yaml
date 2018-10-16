@@ -9,19 +9,19 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^0.1.2
 
-  camera: "^0.2.1"
+  geolocator: ^2.1.0
 
-  geolocator: ^1.4.0
+  firestore_helpers: ^2.0.7
 
   path_provider: ^0.4.1
 
-  cloud_firestore: ^0.8.0
+  cloud_firestore: ^0.8.1
 
-  firebase_storage: ^1.0.1
+  firebase_storage: ^1.0.3
 
-  google_sign_in: ^3.0.4
+  google_sign_in: ^3.2.1
 
-  firebase_auth: ^0.5.18
+  firebase_auth: ^0.5.20
 
   url_launcher: ^3.0.3
 
@@ -34,6 +34,8 @@ dependencies:
   fluttertoast: ^2.0.8
 
   intl: ^0.15.7
+
+  image_picker: ^0.4.10
 
 dev_dependencies:
   flutter_test:
