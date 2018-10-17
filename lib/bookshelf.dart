@@ -12,13 +12,16 @@ import 'package:biblosphere/const.dart';
 import 'dart:math' as math;
 
 class BookshelfCard extends StatelessWidget {
+  String firebaseId;
   String _imageURL;
   GeoPoint _position;
   String _user;
   String currentUserId;
   GeoPoint myPosition;
+  double distance;
 
-  BookshelfCard(String currentUser, String image, String user, GeoPoint position, GeoPoint currentPosition){
+  BookshelfCard(String id, String currentUser, String image, String user, GeoPoint position, GeoPoint currentPosition){
+    firebaseId = id;
     _imageURL = image;
     _user = user;
     _position = position;
@@ -118,8 +121,50 @@ class BookshelfList extends StatelessWidget {
     area = new Area(myPosition, 200.0);
   }
 
+  Stream<List<BookshelfCard>> getBookshelves(area) {
+    try {
+      return getDataInArea(
+          source: Firestore.instance.collection("shelves"),
+          area: area,
+          locationFieldNameInDB: 'position',
+          mapper: (document) {
+            var shelf = new BookshelfCard(document.documentID, currentUserId, document.data['URL'], document.data['user'], document.data['position'], myPosition);
+            // if you serializer does not pass types like GeoPoint through
+            // you have to add that fields manually. If using `jaguar_serializer`
+            // add @pass attribute to the GeoPoint field and you can omit this.
+//            shelf._position = document.data['position'] as GeoPoint;
+            return shelf;
+          },
+          locationAccessor: (shelf) => shelf._position,
+          distanceMapper: (shelf, distance) {
+            shelf.distance = distance;
+            return shelf;
+          },
+          distanceAccessor: (shelf) => shelf.distance,
+          sortDecending: true
+//          clientSitefilters: (BookshelfCard => shelf._user != currentUserId)  // filer only future events
+      );
+    } on Exception catch (ex) {
+      print(ex);
+    }
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
+    return new StreamBuilder<List<BookshelfCard>>(
+      stream: getBookshelves(area),
+      builder: (BuildContext context, AsyncSnapshot<List<BookshelfCard>> snapshot) {
+        if (!snapshot.hasData) return new Text('Loading...');
+        return new ListView(
+          children: snapshot.data.map((BookshelfCard shelf) {
+            if (shelf._user == currentUserId) return Container();
+            return shelf;
+          }).toList(),
+        );
+      },
+    );
+/*
     return new StreamBuilder<QuerySnapshot>(
       stream: Firestore.instance.collection('shelves').snapshots(),
       builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
@@ -132,5 +177,6 @@ class BookshelfList extends StatelessWidget {
         );
       },
     );
+*/
   }
 }
