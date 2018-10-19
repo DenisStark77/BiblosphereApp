@@ -2,24 +2,28 @@ import 'dart:io';
 import 'dart:async';
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
-import 'package:camera/camera.dart';
 import 'package:geolocator/geolocator.dart';
 //import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_facebook_login/flutter_facebook_login.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:image_picker/image_picker.dart';
 
-import 'camera.dart';
-import 'bookshelf.dart';
+
+import 'package:biblosphere/const.dart';
+import 'package:biblosphere/camera.dart';
+import 'package:biblosphere/bookshelf.dart';
+import 'package:biblosphere/chat.dart';
 
 // TODO: Add Firebase authentication and change rules in Firebase Storge console
 
 Position position;
 
 void main() async {
-  cameras = await availableCameras();
-
   runApp(new MyApp());
 }
 
@@ -67,6 +71,8 @@ class _MyHomePageState extends State<MyHomePage> {
 
   final Geolocator _geolocator = Geolocator();
   Position _position;
+  String currentUserId;
+  SharedPreferences prefs;
 
   @override
   void initState() {
@@ -101,8 +107,34 @@ class _MyHomePageState extends State<MyHomePage> {
         break;
       case FacebookLoginStatus.loggedIn:
         print("LoggedIn");
-        FirebaseAuth.instance.signInWithFacebook(accessToken: facebookLoginResult.accessToken.token);
+
+        FirebaseUser firebaseUser = await FirebaseAuth.instance.signInWithFacebook(accessToken: facebookLoginResult.accessToken.token);
         onLoginStatusChanged(true);
+
+        if (firebaseUser != null) {
+          currentUserId = firebaseUser.uid;
+          prefs = await SharedPreferences.getInstance();
+          await prefs.setString('id', firebaseUser.uid);
+//          await prefs.setString('name', firebaseUser.displayName);
+//          await prefs.setString('photoUrl', firebaseUser.photoUrl);
+
+          // Check is already sign up
+          final QuerySnapshot result =
+          await Firestore.instance.collection('users').where(
+              'id', isEqualTo: firebaseUser.uid).getDocuments();
+          final List<DocumentSnapshot> documents = result.documents;
+          if (documents.length == 0) {
+            // Update data to server if new user
+            Firestore.instance.collection('users')
+                .document(firebaseUser.uid)
+                .setData(
+                {
+                  'name': firebaseUser.displayName,
+                  'photoUrl': firebaseUser.photoUrl,
+                  'id': firebaseUser.uid
+                });
+          }
+        }
         break;
     }
   }
@@ -112,7 +144,7 @@ class _MyHomePageState extends State<MyHomePage> {
     Position position;
     // Platform messages may fail, so we use a try/catch PlatformException.
     try {
-      position = await _geolocator.getLastKnownPosition(LocationAccuracy.high);
+      position = await _geolocator.getLastKnownPosition();
     } on PlatformException {
       position = null;
     }
@@ -125,6 +157,84 @@ class _MyHomePageState extends State<MyHomePage> {
     setState(() {
       _position = position;
     });
+  }
+
+  Future<DocumentSnapshot> _fetchUser(String peerId) async {
+    DocumentSnapshot userSnap = await Firestore.instance.collection('users').document(peerId).get();
+
+    return userSnap;
+  }
+
+  Widget buildItem(BuildContext context, DocumentSnapshot userSnap) {
+      print(userSnap.toString());
+      return Container(
+          child: FlatButton(
+            child: Row(
+              children: <Widget>[
+                Material(
+                  child: CachedNetworkImage(
+                    placeholder: Container(
+                      child: CircularProgressIndicator(
+                        strokeWidth: 1.0,
+                        valueColor: AlwaysStoppedAnimation<Color>(themeColor),
+                      ),
+                      width: 50.0,
+                      height: 50.0,
+                      padding: EdgeInsets.all(15.0),
+                    ),
+                    imageUrl: userSnap['photoUrl'],
+                    width: 50.0,
+                    height: 50.0,
+                    fit: BoxFit.cover,
+                  ),
+                  borderRadius: BorderRadius.all(Radius.circular(25.0)),
+                ),
+                new Flexible(
+                  child: Container(
+                    child: new Column(
+                      children: <Widget>[
+                        new Container(
+                          child: Text(
+                            'Name: ${userSnap['name']}',
+                            style: TextStyle(color: themeColor),
+                          ),
+                          alignment: Alignment.centerLeft,
+                          margin: new EdgeInsets.fromLTRB(10.0, 0.0, 0.0, 5.0),
+                        ),
+                        new Container(
+                          child: Text(
+                            '...',
+                            style: TextStyle(color: themeColor),
+                          ),
+                          alignment: Alignment.centerLeft,
+                          margin: new EdgeInsets.fromLTRB(10.0, 0.0, 0.0, 0.0),
+                        )
+                      ],
+                    ),
+                    margin: EdgeInsets.only(left: 20.0),
+                  ),
+                ),
+              ],
+            ),
+            onPressed: () {
+              Navigator.push(
+                  context,
+                  new MaterialPageRoute(
+                      builder: (context) =>
+                      new Chat(
+                        myId: currentUserId,
+                        peerId: userSnap.documentID,
+                        peerAvatar: userSnap['photoUrl'],
+                        peerName: userSnap['name'],
+                      )));
+            },
+            color: greyColor2,
+            padding: EdgeInsets.fromLTRB(25.0, 10.0, 25.0, 10.0),
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10.0)),
+          ),
+          margin: EdgeInsets.only(bottom: 10.0, left: 5.0, right: 5.0),
+        );
   }
 
 @override
@@ -148,9 +258,9 @@ class _MyHomePageState extends State<MyHomePage> {
           // the App.build method, and use it to set our appbar title.
           bottom: TabBar(
             tabs: [
-              Tab(icon: Icon(Icons.add_a_photo)),
+              Tab(icon: Icon(Icons.home)),
               Tab(icon: Icon(Icons.local_library)),
-              Tab(icon: Icon(Icons.monetization_on)),
+              Tab(icon: Icon(Icons.message)),
             ],
           ),
           title: new Text(widget.title),
@@ -161,20 +271,59 @@ class _MyHomePageState extends State<MyHomePage> {
         body: TabBarView(
           children: <Widget> [
             // Camera tab
-            CameraHome(),
+            Home(currentUserId: currentUserId),
 
             // Main tab with bookshelves
-            new BookshelfList(),
+            new BookshelfList(currentUserId, new GeoPoint(_position.latitude, _position.longitude)),
 
-            // Tab with Donate
-            new Column(
-              children: <Widget>[
-                new Text("Here you will earn money by sharing your books. However to reach this stage we have to complete this app and do marketing to get high demand for book rental. Once people start renting books via Biblosphere it will be source of income for you. Please support us now to make this app source of your fun and income."
-                          +"  \nPosition: $position",
-                  textAlign: TextAlign.center,
-                  style: new TextStyle(fontWeight: FontWeight.bold),),
-                new RaisedButton(onPressed: () {}, child: new Text ("Donate")),
-              ],
+            // Tab for chat
+            Container(
+              child: StreamBuilder(
+                stream: Firestore.instance.collection('messages')
+                    .where("ids", arrayContains : currentUserId)
+                    .orderBy("timestamp", descending: true)
+                    .snapshots(),
+                builder: (context, snapshot) {
+                  if (!snapshot.hasData) {
+                    return Center(
+                      child: CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.teal),
+                      ),
+                    );
+                  } else {
+                    return ListView.builder(
+                      padding: EdgeInsets.all(10.0),
+                      itemBuilder: (context, index) {
+                        String peerId = snapshot.data.documents[index]['ids'].firstWhere((id) => id != currentUserId, orElse: () => null);
+                        print(peerId);
+
+                        return FutureBuilder(
+                        future: _fetchUser(peerId),
+                        builder: (context, snapshot) {
+                          switch (snapshot.connectionState) {
+                            case ConnectionState.active:
+                            case ConnectionState.none:
+                            case ConnectionState.waiting:
+                              return Align(
+                                  alignment: Alignment.center,
+                                  child: CircularProgressIndicator()
+                              );
+                            case ConnectionState.done:
+                              if (snapshot.hasError) {
+                                return Text('Error: ${snapshot.error}');
+                              } else {
+                                print("Futere snapshot: " + snapshot.data.toString());
+                                return buildItem(context, snapshot.data);
+                              }
+                          }
+                        },
+                      );
+                      },
+                      itemCount: snapshot.data.documents.length,
+                    );
+                  }
+                },
+              ),
             ),
           ],
         ),
