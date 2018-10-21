@@ -83,6 +83,9 @@ class MyBookshelfList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (currentUserId == null)
+      return Container();
+
     return new StreamBuilder<QuerySnapshot>(
       stream: Firestore.instance.collection('shelves').where("user", isEqualTo: currentUserId).snapshots(),
       builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
@@ -106,7 +109,7 @@ class Home extends StatelessWidget {
 
   Future getImage() async {
     try {
-      File image = await ImagePicker.pickImage(source: ImageSource.camera);
+      File image = await ImagePicker.pickImage(source: ImageSource.camera, maxWidth: 1024.0);
       String name = timestamp() + ".jpg";
 
       final String storageUrl = await uploadPicture(image, currentUserId, name);
@@ -148,12 +151,13 @@ class Home extends StatelessWidget {
     final StorageUploadTask uploadTask = ref.putFile(
       image,
       new StorageMetadata(
+        contentType: 'image/jpeg',
         customMetadata: <String, String>{'activity': 'test'},
       ),
     );
     StorageTaskSnapshot storageTaskSnapshot = await uploadTask.onComplete;
-    final String downloadUrl = await storageTaskSnapshot.ref.getDownloadURL();
+    final String imageUrl = await storageTaskSnapshot.ref.getDownloadURL();
 
-    return downloadUrl;
+    return imageUrl;
   }
 }

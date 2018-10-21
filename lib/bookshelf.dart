@@ -118,7 +118,8 @@ class BookshelfList extends StatelessWidget {
   Area area;
 
   BookshelfList (this.currentUserId, this.currentPosition) {
-    area = new Area(currentPosition, 200.0);
+    if (currentPosition != null)
+       area = new Area(currentPosition, 200.0);
   }
 
   Stream<List<BookshelfCard>> getBookshelves(area) {
@@ -152,6 +153,9 @@ class BookshelfList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (currentUserId == null || currentPosition == null)
+      return Container();
+
     return new StreamBuilder<List<BookshelfCard>>(
       stream: getBookshelves(area),
       builder: (BuildContext context, AsyncSnapshot<List<BookshelfCard>> snapshot) {
