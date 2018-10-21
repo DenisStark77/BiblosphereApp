@@ -1,17 +1,18 @@
-import 'dart:io';
+//import 'dart:io';
 import 'dart:async';
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 //import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_storage/firebase_storage.dart';
-import 'package:google_sign_in/google_sign_in.dart';
+//import 'package:firebase_storage/firebase_storage.dart';
+//import 'package:google_sign_in/google_sign_in.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_facebook_login/flutter_facebook_login.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:image_picker/image_picker.dart';
+//import 'package:image_picker/image_picker.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 
 import 'package:biblosphere/const.dart';
@@ -68,7 +69,7 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-
+  
   final Geolocator _geolocator = Geolocator();
   Position _position;
   String currentUserId;
@@ -145,6 +146,9 @@ class _MyHomePageState extends State<MyHomePage> {
     // Platform messages may fail, so we use a try/catch PlatformException.
     try {
       position = await _geolocator.getLastKnownPosition();
+      if (position == null) {
+        position = await _geolocator.getCurrentPosition();
+      }
     } on PlatformException {
       position = null;
     }
@@ -275,6 +279,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
             // Main tab with bookshelves
             new BookshelfList(currentUserId, new GeoPoint(_position.latitude, _position.longitude)),
+            //new BookshelfList(currentUserId, new GeoPoint(53.2, 50.15)),
 
             // Tab for chat
             Container(
