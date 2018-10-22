@@ -1,44 +1,37 @@
 import 'package:flutter/material.dart';
-//import 'package:flutter/services.dart';
 import 'dart:async';
 import 'dart:io';
-//import 'dart:convert';
-//import 'package:path_provider/path_provider.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:geolocator/geolocator.dart';
-//import 'package:flutter_facebook_login/flutter_facebook_login.dart';
-//import 'package:http/http.dart' as http;
-//import 'package:shared_preferences/shared_preferences.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-
+import 'package:share/share.dart';
 import 'package:biblosphere/const.dart';
-
-final FirebaseStorage storage = new FirebaseStorage();
-final Geolocator _geolocator = Geolocator();
 
 class MyBookshelf extends StatelessWidget {
   MyBookshelf({Key key, @required this.currentUserId, @required this.shelfId, @required this.imageURL, @required this.position, @required this.fileName});
 
-  String shelfId;
-  String imageURL;
-  GeoPoint position;
-  String currentUserId;
-  String fileName;
+  final String shelfId;
+  final String imageURL;
+  final GeoPoint position;
+  final String currentUserId;
+  final String fileName;
 
   Future<void> deleteShelf () async {
-    //TODO: Delete bookshelf record in Firestore database
-    DocumentReference doc = Firestore.instance.collection('shelves').document("$shelfId");
-    await doc.delete();
-    print("Record deleted");
+    try {
+      //Delete bookshelf record in Firestore database
+      DocumentReference doc = Firestore.instance.collection('shelves').document(
+          "$shelfId");
+      await doc.delete();
 
-    //TODO: Delete image file from Firebase storage
-    print("TO be DELETED: currentUserId: $currentUserId, fileName: $fileName");
-    final StorageReference ref = storage.ref().child('images').child(currentUserId).child(fileName);
-    await ref.delete();
-    print("Image deleted");
+      //Delete image file from Firebase storage
+      final StorageReference ref = FirebaseStorage.instance.ref().child(
+          'images').child(currentUserId).child(fileName);
+      await ref.delete();
+    } on Exception catch (ex) {
+      print('Shelf delete failed for [$shelfId, $currentUserId, $fileName]: ' + ex.toString());
+    }
   }
 
   @override
@@ -57,12 +50,15 @@ class MyBookshelf extends StatelessWidget {
               children: <Widget>[
                 new IconButton(
                   onPressed: deleteShelf,
-                  tooltip: 'Increment',
+                  tooltip: 'Delete your bookshelf',
                   icon: new Icon(Icons.delete),
                 ),
                 new IconButton(
-                  onPressed: () {},
-                  tooltip: 'Increment',
+                  onPressed: () {
+                    //TODO: Add sharing image only text sharing at the moment
+                    Share.share('I\'ve published my bookshelf on Biblosphere \n $imageURL');
+                  },
+                  tooltip: 'Share your bookshelf',
                   icon: new Icon(Icons.share),
                 ),
               ],
@@ -83,17 +79,19 @@ class MyBookshelf extends StatelessWidget {
 class MyBookshelfList extends StatelessWidget {
   MyBookshelfList({Key key, @required this.currentUserId});
 
-  String currentUserId;
+  final String currentUserId;
 
   @override
   Widget build(BuildContext context) {
+    if (currentUserId == null)
+      return Container();
+
     return new StreamBuilder<QuerySnapshot>(
       stream: Firestore.instance.collection('shelves').where("user", isEqualTo: currentUserId).snapshots(),
       builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
         if (!snapshot.hasData) return new Text('Loading...');
         return new ListView(
           children: snapshot.data.documents.map((DocumentSnapshot document) {
-            print("PATH-PATH-PATH: " + document.reference.path);
             return new MyBookshelf(currentUserId: currentUserId, shelfId: document.documentID, imageURL: document['URL'], position: document['position'], fileName: document['file']);
           }).toList(),
         );
@@ -105,32 +103,30 @@ class MyBookshelfList extends StatelessWidget {
 class Home extends StatelessWidget {
   Home({Key key, @required this.currentUserId});
 
-  String imagePath;
-  String currentUserId;
+  final String currentUserId;
 
   String timestamp() => new DateTime.now().millisecondsSinceEpoch.toString();
 
   Future getImage() async {
-    File image = await ImagePicker.pickImage(source: ImageSource.camera);
-    print("DEBUG: Picture taken to $image");
+    try {
+      File image = await ImagePicker.pickImage(source: ImageSource.camera, maxWidth: 1024.0);
+      String name = timestamp() + ".jpg";
 
-    //TODO: catch exteptions
-    final FirebaseUser user = await FirebaseAuth.instance.currentUser();
+      final String storageUrl = await uploadPicture(image, currentUserId, name);
 
-    String name = timestamp()+".jpg";
+      final position = await Geolocator().getLastKnownPosition();
 
-    //TODO: catch exteptions
-    final String storageUrl = await uploadPicture(image, user, name);
-    print("DEBUG: Picture uploaded $storageUrl");
-
-    // TODO: catch exceptions
-    final position = await _geolocator.getLastKnownPosition();
-    print("DEBUG: Picture location ($position.latitude, $position.longitude)");
-
-    //TODO: Create record in Firestore database with location, URL, and user
-    DocumentReference doc = await Firestore.instance.collection('shelves').add({ "user": currentUserId, 'URL': storageUrl,
-      'position': new GeoPoint(position.latitude, position.longitude), 'file': name });
-    print("Record in Firestore created");
+      //Create record in Firestore database with location, URL, and user
+      DocumentReference doc = await Firestore.instance.collection('shelves')
+          .add({
+        "user": currentUserId,
+        'URL': storageUrl,
+        'position': new GeoPoint(position.latitude, position.longitude),
+        'file': name
+      });
+    } on Exception catch (ex) {
+      print("Failed to take image: " + ex.toString());
+    }
   }
 
   @override
@@ -142,7 +138,7 @@ class Home extends StatelessWidget {
               alignment: Alignment(0.0, 1.0),
               child: new FloatingActionButton(
                 onPressed: getImage,
-                tooltip: 'Make a photo',
+                tooltip: 'Add your bookshelf',
                 child: new Icon(Icons.photo_camera),
               ),
             ),
@@ -150,17 +146,18 @@ class Home extends StatelessWidget {
         );
   }
 
-  Future<String> uploadPicture(File image, FirebaseUser user, String name) async {
-    final StorageReference ref = storage.ref().child('images').child(user.uid).child(name);
+  Future<String> uploadPicture(File image, String user, String name) async {
+    final StorageReference ref = FirebaseStorage.instance.ref().child('images').child(user).child(name);
     final StorageUploadTask uploadTask = ref.putFile(
       image,
       new StorageMetadata(
+        contentType: 'image/jpeg',
         customMetadata: <String, String>{'activity': 'test'},
       ),
     );
     StorageTaskSnapshot storageTaskSnapshot = await uploadTask.onComplete;
-    final String downloadUrl = await storageTaskSnapshot.ref.getDownloadURL();
+    final String imageUrl = await storageTaskSnapshot.ref.getDownloadURL();
 
-    return downloadUrl;
+    return imageUrl;
   }
 }

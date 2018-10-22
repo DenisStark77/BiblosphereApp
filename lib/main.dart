@@ -1,28 +1,17 @@
-//import 'dart:io';
 import 'dart:async';
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
-//import 'package:firebase_core/firebase_core.dart';
-//import 'package:firebase_storage/firebase_storage.dart';
-//import 'package:google_sign_in/google_sign_in.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_facebook_login/flutter_facebook_login.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-//import 'package:image_picker/image_picker.dart';
-import 'package:permission_handler/permission_handler.dart';
-
-
 import 'package:biblosphere/const.dart';
 import 'package:biblosphere/camera.dart';
 import 'package:biblosphere/bookshelf.dart';
 import 'package:biblosphere/chat.dart';
 
 // TODO: Add Firebase authentication and change rules in Firebase Storge console
-
-Position position;
 
 void main() async {
   runApp(new MyApp());
@@ -69,11 +58,8 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  
-  final Geolocator _geolocator = Geolocator();
-  Position _position;
+  GeoPoint _position;
   String currentUserId;
-  SharedPreferences prefs;
 
   @override
   void initState() {
@@ -87,9 +73,10 @@ class _MyHomePageState extends State<MyHomePage> {
   /* Facebook login */
   bool isLoggedIn = false;
 
-  void onLoginStatusChanged(bool isLoggedIn) {
+  void onLoginStatusChanged(bool isLoggedIn, String user) {
     setState(() {
       this.isLoggedIn = isLoggedIn;
+      this.currentUserId = user;
     });
   }
 
@@ -99,25 +86,15 @@ class _MyHomePageState extends State<MyHomePage> {
     await facebookLogin.logInWithReadPermissions(['email']);
     switch (facebookLoginResult.status) {
       case FacebookLoginStatus.error:
-        print("Error");
-        onLoginStatusChanged(false);
+        onLoginStatusChanged(false, null);
         break;
       case FacebookLoginStatus.cancelledByUser:
-        print("CancelledByUser");
-        onLoginStatusChanged(false);
+        onLoginStatusChanged(false, null);
         break;
       case FacebookLoginStatus.loggedIn:
-        print("LoggedIn");
-
-        FirebaseUser firebaseUser = await FirebaseAuth.instance.signInWithFacebook(accessToken: facebookLoginResult.accessToken.token);
-        onLoginStatusChanged(true);
-
-        if (firebaseUser != null) {
-          currentUserId = firebaseUser.uid;
-          prefs = await SharedPreferences.getInstance();
-          await prefs.setString('id', firebaseUser.uid);
-//          await prefs.setString('name', firebaseUser.displayName);
-//          await prefs.setString('photoUrl', firebaseUser.photoUrl);
+        try {
+          FirebaseUser firebaseUser = await FirebaseAuth.instance.signInWithFacebook(accessToken: facebookLoginResult.accessToken.token);
+          onLoginStatusChanged(true, firebaseUser.uid);
 
           // Check is already sign up
           final QuerySnapshot result =
@@ -135,6 +112,9 @@ class _MyHomePageState extends State<MyHomePage> {
                   'id': firebaseUser.uid
                 });
           }
+        } on Exception catch (ex) {
+          onLoginStatusChanged(false, null);
+          print(ex);
         }
         break;
     }
@@ -145,10 +125,7 @@ class _MyHomePageState extends State<MyHomePage> {
     Position position;
     // Platform messages may fail, so we use a try/catch PlatformException.
     try {
-      position = await _geolocator.getLastKnownPosition();
-      if (position == null) {
-        position = await _geolocator.getCurrentPosition();
-      }
+      position = await Geolocator().getLastKnownPosition();
     } on PlatformException {
       position = null;
     }
@@ -159,7 +136,7 @@ class _MyHomePageState extends State<MyHomePage> {
     if (!mounted) return;
 
     setState(() {
-      _position = position;
+      _position = new GeoPoint(position.latitude, position.longitude);
     });
   }
 
@@ -170,7 +147,6 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Widget buildItem(BuildContext context, DocumentSnapshot userSnap) {
-      print(userSnap.toString());
       return Container(
           child: FlatButton(
             child: Row(
@@ -250,10 +226,6 @@ class _MyHomePageState extends State<MyHomePage> {
     // fast, so that you can just rebuild anything that needs updating rather
     // than having to individually change instances of widgets.
 
-    final position = _position == null
-        ? 'Unknown'
-        : _position.latitude.toString() + ', ' + _position.longitude.toString();
-
     return new DefaultTabController(
         length: 3,
         child: Scaffold(
@@ -268,9 +240,6 @@ class _MyHomePageState extends State<MyHomePage> {
             ],
           ),
           title: new Text(widget.title),
-          actions: <Widget>[
-            new FlatButton(onPressed: () {}, child: Text("1 km")),
-          ],
         ),
         body: TabBarView(
           children: <Widget> [
@@ -278,8 +247,7 @@ class _MyHomePageState extends State<MyHomePage> {
             Home(currentUserId: currentUserId),
 
             // Main tab with bookshelves
-            new BookshelfList(currentUserId, new GeoPoint(_position.latitude, _position.longitude)),
-            //new BookshelfList(currentUserId, new GeoPoint(53.2, 50.15)),
+            new BookshelfList(currentUserId, _position),
 
             // Tab for chat
             Container(
@@ -300,7 +268,6 @@ class _MyHomePageState extends State<MyHomePage> {
                       padding: EdgeInsets.all(10.0),
                       itemBuilder: (context, index) {
                         String peerId = snapshot.data.documents[index]['ids'].firstWhere((id) => id != currentUserId, orElse: () => null);
-                        print(peerId);
 
                         return FutureBuilder(
                         future: _fetchUser(peerId),
@@ -317,7 +284,6 @@ class _MyHomePageState extends State<MyHomePage> {
                               if (snapshot.hasError) {
                                 return Text('Error: ${snapshot.error}');
                               } else {
-                                print("Futere snapshot: " + snapshot.data.toString());
                                 return buildItem(context, snapshot.data);
                               }
                           }

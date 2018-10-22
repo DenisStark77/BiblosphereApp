@@ -1,15 +1,11 @@
 import 'dart:async';
 import 'dart:io';
-
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-//import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:biblosphere/const.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-// import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
-// import 'package:shared_preferences/shared_preferences.dart';
 
 class Chat extends StatelessWidget {
   final String myId;
@@ -65,7 +61,6 @@ class ChatScreenState extends State<ChatScreen> {
 
   File imageFile;
   bool isLoading;
-  bool isShowSticker;
   String imageUrl;
 
   final TextEditingController textEditingController = new TextEditingController();
@@ -75,24 +70,13 @@ class ChatScreenState extends State<ChatScreen> {
   @override
   void initState() {
     super.initState();
-    focusNode.addListener(onFocusChange);
 
     groupChatId = '';
 
     isLoading = false;
-    isShowSticker = false;
     imageUrl = '';
 
     readLocal();
-  }
-
-  void onFocusChange() {
-    if (focusNode.hasFocus) {
-      // Hide sticker when keyboard appear
-      setState(() {
-        isShowSticker = false;
-      });
-    }
   }
 
   readLocal() async {
@@ -105,45 +89,6 @@ class ChatScreenState extends State<ChatScreen> {
 
     setState(() {});
   }
-
-/*
-  Future getImage() async {
-    File image = await ImagePicker.pickImage(source: ImageSource.gallery);
-
-    if (image != null) {
-      setState(() {
-        imageFile = image;
-        isLoading = true;
-      });
-    }
-    uploadFile();
-  }
-*/
-
-  void getSticker() {
-    // Hide keyboard when sticker appear
-    focusNode.unfocus();
-    setState(() {
-      isShowSticker = !isShowSticker;
-    });
-  }
-
-  /*
-  Future uploadFile() async {
-    String fileName = DateTime.now().millisecondsSinceEpoch.toString();
-    StorageReference reference = FirebaseStorage.instance.ref().child(fileName);
-    StorageUploadTask uploadTask = reference.putFile(imageFile);
-
-    Uri downloadUrl = (await uploadTask.future).downloadUrl;
-    imageUrl = downloadUrl.toString();
-
-    setState(() {
-      isLoading = false;
-    });
-
-    onSendMessage(imageUrl, 1);
-  }
-*/
 
   void onSendMessage(String content, int type) {
     // type: 0 = text, 1 = image, 2 = sticker
@@ -386,13 +331,7 @@ class ChatScreenState extends State<ChatScreen> {
   }
 
   Future<bool> onBackPress() {
-    if (isShowSticker) {
-      setState(() {
-        isShowSticker = false;
-      });
-    } else {
-      Navigator.pop(context);
-    }
+    Navigator.pop(context);
 
     return Future.value(false);
   }
@@ -407,9 +346,6 @@ class ChatScreenState extends State<ChatScreen> {
               // List of messages
               buildListMessage(),
 
-              // Sticker
-              (isShowSticker ? buildSticker() : Container()),
-
               // Input content
               buildInput(),
             ],
@@ -420,116 +356,6 @@ class ChatScreenState extends State<ChatScreen> {
         ],
       ),
       onWillPop: onBackPress,
-    );
-  }
-
-  Widget buildSticker() {
-    return Container(
-      child: Column(
-        children: <Widget>[
-          Row(
-            children: <Widget>[
-              FlatButton(
-                onPressed: () => onSendMessage('mimi1', 2),
-                child: new Image.asset(
-                  'images/mimi1.gif',
-                  width: 50.0,
-                  height: 50.0,
-                  fit: BoxFit.cover,
-                ),
-              ),
-              FlatButton(
-                onPressed: () => onSendMessage('mimi2', 2),
-                child: new Image.asset(
-                  'images/mimi2.gif',
-                  width: 50.0,
-                  height: 50.0,
-                  fit: BoxFit.cover,
-                ),
-              ),
-              FlatButton(
-                onPressed: () => onSendMessage('mimi3', 2),
-                child: new Image.asset(
-                  'images/mimi3.gif',
-                  width: 50.0,
-                  height: 50.0,
-                  fit: BoxFit.cover,
-                ),
-              )
-            ],
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          ),
-          Row(
-            children: <Widget>[
-              FlatButton(
-                onPressed: () => onSendMessage('mimi4', 2),
-                child: new Image.asset(
-                  'images/mimi4.gif',
-                  width: 50.0,
-                  height: 50.0,
-                  fit: BoxFit.cover,
-                ),
-              ),
-              FlatButton(
-                onPressed: () => onSendMessage('mimi5', 2),
-                child: new Image.asset(
-                  'images/mimi5.gif',
-                  width: 50.0,
-                  height: 50.0,
-                  fit: BoxFit.cover,
-                ),
-              ),
-              FlatButton(
-                onPressed: () => onSendMessage('mimi6', 2),
-                child: new Image.asset(
-                  'images/mimi6.gif',
-                  width: 50.0,
-                  height: 50.0,
-                  fit: BoxFit.cover,
-                ),
-              )
-            ],
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          ),
-          Row(
-            children: <Widget>[
-              FlatButton(
-                onPressed: () => onSendMessage('mimi7', 2),
-                child: new Image.asset(
-                  'images/mimi7.gif',
-                  width: 50.0,
-                  height: 50.0,
-                  fit: BoxFit.cover,
-                ),
-              ),
-              FlatButton(
-                onPressed: () => onSendMessage('mimi8', 2),
-                child: new Image.asset(
-                  'images/mimi8.gif',
-                  width: 50.0,
-                  height: 50.0,
-                  fit: BoxFit.cover,
-                ),
-              ),
-              FlatButton(
-                onPressed: () => onSendMessage('mimi9', 2),
-                child: new Image.asset(
-                  'images/mimi9.gif',
-                  width: 50.0,
-                  height: 50.0,
-                  fit: BoxFit.cover,
-                ),
-              )
-            ],
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          )
-        ],
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      ),
-      decoration: new BoxDecoration(
-          border: new Border(top: new BorderSide(color: greyColor2, width: 0.5)), color: Colors.white),
-      padding: EdgeInsets.all(5.0),
-      height: 180.0,
     );
   }
 
@@ -550,34 +376,10 @@ class ChatScreenState extends State<ChatScreen> {
     return Container(
       child: Row(
         children: <Widget>[
-/*
-          // Button send image
-          Material(
-            child: new Container(
-              margin: new EdgeInsets.symmetric(horizontal: 1.0),
-              child: new IconButton(
-                icon: new Icon(Icons.image),
-                onPressed: getImage,
-                color: primaryColor,
-              ),
-            ),
-            color: Colors.white,
-          ),
-  */
-          Material(
-            child: new Container(
-              margin: new EdgeInsets.symmetric(horizontal: 1.0),
-              child: new IconButton(
-                icon: new Icon(Icons.face),
-                onPressed: getSticker,
-                color: primaryColor,
-              ),
-            ),
-            color: Colors.white,
-          ),
           // Edit text
           Flexible(
             child: Container(
+              margin: new EdgeInsets.only(left: 10.0, right: 1.0),
               child: TextField(
                 style: TextStyle(color: primaryColor, fontSize: 15.0),
                 controller: textEditingController,
