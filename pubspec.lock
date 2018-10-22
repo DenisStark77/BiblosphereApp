@@ -313,7 +313,7 @@ packages:
     source: hosted
     version: "0.4.1"
   permission_handler:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: permission_handler
       url: "https://pub.dartlang.org"

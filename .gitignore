@@ -7,3 +7,7 @@
 build/
 
 .flutter-plugins
+
+pubspec.lock
+
+*.log
