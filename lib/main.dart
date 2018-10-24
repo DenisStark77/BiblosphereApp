@@ -69,6 +69,14 @@ class _MyHomePageState extends State<MyHomePage> {
     _initLocationState();
 
     initiateFacebookLogin();
+
+    // To get new position after app became active after background
+    SystemChannels.lifecycle.setMessageHandler((msg){
+       if (msg == 'AppLifecycleState.resumed') {
+         print('DEBUG: reinitiate position');
+         _initLocationState();
+       }
+    });
   }
 
   /* Facebook login */
