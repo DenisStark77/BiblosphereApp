@@ -7,6 +7,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:share/share.dart';
+import 'package:firebase_ml_vision/firebase_ml_vision.dart';
 import 'package:biblosphere/const.dart';
 
 class MyBookshelf extends StatelessWidget {
@@ -107,9 +108,58 @@ class Home extends StatelessWidget {
 
   String timestamp() => new DateTime.now().millisecondsSinceEpoch.toString();
 
-  Future getImage() async {
+  Future getImage(BuildContext context) async {
     try {
       File image = await ImagePicker.pickImage(source: ImageSource.camera, maxWidth: 1024.0);
+
+      bool imageAccepted = await isBookcase(image);
+
+      print("IMAGE FILTER: $imageAccepted");
+
+      if (! imageAccepted) {
+        showDialog<Null>(
+          context: context,
+          barrierDismissible: true,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              content: Container(
+                child: Row(
+                  children: <Widget>[
+                    Material(
+                      child: Image.asset('images/Librarian50x50.jpg', width: 50.0,),
+                      borderRadius: BorderRadius.all(Radius.circular(5.0)),
+                    ),
+                    new Flexible(
+                      child: Container(
+                        child: new Container(
+                              child: Text(
+                                'Hey, this does not look like a bookshelf to me.',
+                                style: TextStyle(color: themeColor),
+                              ),
+                              alignment: Alignment.centerLeft,
+                              margin: new EdgeInsets.fromLTRB(5.0, 0.0, 0.0, 5.0),
+                            ),
+                        margin: EdgeInsets.only(left: 5.0),
+                      ),
+                    ),
+          ]),
+                height: 50.0,
+              ),
+              actions: <Widget>[
+                FlatButton(
+                  child: Text('Ok'),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                ),
+              ],
+            );
+          },
+        );
+
+        return;
+      }
+
       String name = timestamp() + ".jpg";
 
       final String storageUrl = await uploadPicture(image, currentUserId, name);
@@ -137,13 +187,32 @@ class Home extends StatelessWidget {
             new Align (
               alignment: Alignment(0.0, 1.0),
               child: new FloatingActionButton(
-                onPressed: getImage,
+                onPressed: () => getImage(context),
                 tooltip: 'Add your bookshelf',
                 child: new Icon(Icons.photo_camera),
               ),
             ),
           ],
         );
+  }
+
+  Future<bool> isBookcase(File imageFile) async {
+
+    final FirebaseVisionImage visionImage = FirebaseVisionImage.fromFile(imageFile);
+
+    FirebaseVisionDetector detector = FirebaseVision.instance.cloudLabelDetector();
+//  Use FirebaseVision.instance.labelDetector() for on-device detection
+
+    final List<Label> results = await detector.detectInImage(visionImage);
+
+    if (results != null) {
+      results.forEach((label) => print ("IMAGE LABEL: " + label.label));
+
+      var bookcase = results.where((label) => label.label == 'bookcase');
+      return bookcase.length > 0;
+    }
+
+    return false;
   }
 
   Future<String> uploadPicture(File image, String user, String name) async {

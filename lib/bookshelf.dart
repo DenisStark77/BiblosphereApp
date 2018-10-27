@@ -4,8 +4,9 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:biblosphere/chat.dart';
 import 'package:firestore_helpers/firestore_helpers.dart';
-import 'package:biblosphere/const.dart';
+import 'package:photo_view/photo_view.dart';
 import 'dart:math' as math;
+import 'package:biblosphere/const.dart';
 
 class BookshelfCard extends StatelessWidget {
   final String id;
@@ -39,8 +40,22 @@ class BookshelfCard extends StatelessWidget {
           child: new Column (
             children: <Widget>[
               new Container(
-                  child: Image(image: new CachedNetworkImageProvider(image),
-                      fit: BoxFit.cover),
+                  child: GestureDetector(
+                    onTap: () {
+                      print("onTap called.");
+                      Navigator.push(
+                          context,
+                          new MaterialPageRoute(
+                              builder: (context) =>
+                              new PhotoView(
+                                  imageProvider: CachedNetworkImageProvider(image)
+                              )));
+
+
+                    },
+                    child: Image(image: new CachedNetworkImageProvider(image),
+                        fit: BoxFit.cover),
+                  ),
                   margin: EdgeInsets.only(top: 7.0, left: 7.0, right: 7.0)
               ),
               new Align(

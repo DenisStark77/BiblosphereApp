@@ -6,12 +6,11 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_facebook_login/flutter_facebook_login.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:biblosphere/const.dart';
 import 'package:biblosphere/camera.dart';
 import 'package:biblosphere/bookshelf.dart';
 import 'package:biblosphere/chat.dart';
-
-// TODO: Add Firebase authentication and change rules in Firebase Storge console
 
 void main() async {
   runApp(new MyApp());
@@ -58,8 +57,10 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+
   GeoPoint _position;
   String currentUserId;
+  final FirebaseMessaging _firebaseMessaging = FirebaseMessaging();
 
   @override
   void initState() {
@@ -68,6 +69,35 @@ class _MyHomePageState extends State<MyHomePage> {
     _initLocationState();
 
     initiateFacebookLogin();
+
+    _firebaseMessaging.configure(
+      onMessage: (Map<String, dynamic> message) {
+        print('on message $message');
+      },
+      onResume: (Map<String, dynamic> message) {
+        print('on resume $message');
+        print('User: $currentUserId, Peer: ${message['sender']}');
+        new Future.delayed(Duration.zero,() {
+          Chat.runChat(context, currentUserId, message['sender']);
+        });
+      },
+      onLaunch: (Map<String, dynamic> message) {
+        print('on launch $message');
+        new Future.delayed(Duration.zero,() {
+          Chat.runChat(context, currentUserId, message['sender']);
+        });
+      },
+    );
+    _firebaseMessaging.requestNotificationPermissions(
+        const IosNotificationSettings(sound: true, badge: true, alert: true));
+
+    // To get new position after app became active after background
+    SystemChannels.lifecycle.setMessageHandler((msg){
+       if (msg == 'AppLifecycleState.resumed') {
+         print('DEBUG: reinitiate position');
+         _initLocationState();
+       }
+    });
   }
 
   /* Facebook login */
@@ -112,6 +142,18 @@ class _MyHomePageState extends State<MyHomePage> {
                   'id': firebaseUser.uid
                 });
           }
+
+          _firebaseMessaging.getToken().then((token){
+            print(token);
+            // Update FCM token for notifications
+            Firestore.instance.collection('users')
+                .document(firebaseUser.uid)
+                .updateData(
+                {
+                  'token': token,
+                });
+          });
+
         } on Exception catch (ex) {
           onLoginStatusChanged(false, null);
           print(ex);
@@ -171,31 +213,15 @@ class _MyHomePageState extends State<MyHomePage> {
                 ),
                 new Flexible(
                   child: Container(
-                    child: new Column(
-                      children: <Widget>[
-                        new Container(
                           child: Text(
-                            'Name: ${userSnap['name']}',
+                            userSnap['name'],
                             style: TextStyle(color: themeColor),
                           ),
                           alignment: Alignment.centerLeft,
-                          margin: new EdgeInsets.fromLTRB(10.0, 0.0, 0.0, 5.0),
-                        ),
-                        new Container(
-                          child: Text(
-                            '...',
-                            style: TextStyle(color: themeColor),
-                          ),
-                          alignment: Alignment.centerLeft,
-                          margin: new EdgeInsets.fromLTRB(10.0, 0.0, 0.0, 0.0),
-                        )
-                      ],
-                    ),
-                    margin: EdgeInsets.only(left: 20.0),
+                          margin: new EdgeInsets.fromLTRB(20.0, 0.0, 0.0, 20.0),
+                    )
                   ),
-                ),
-              ],
-            ),
+                ]),
             onPressed: () {
               Navigator.push(
                   context,

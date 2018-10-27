@@ -8,6 +8,23 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl/intl.dart';
 
 class Chat extends StatelessWidget {
+  static runChat(BuildContext context, String myId, String userId) async {
+    DocumentSnapshot userSnap = await Firestore.instance.collection('users')
+        .document(userId)
+        .get();
+
+    Navigator.push(
+        context,
+        new MaterialPageRoute(
+            builder: (context) =>
+            new Chat(
+              myId: myId,
+              peerId: userSnap.documentID,
+              peerAvatar: userSnap['photoUrl'],
+              peerName: userSnap['name'],
+            )));
+  }
+
   final String myId;
   final String peerId;
   final String peerAvatar;
