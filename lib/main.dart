@@ -7,13 +7,40 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_facebook_login/flutter_facebook_login.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter_crashlytics/flutter_crashlytics.dart';
 import 'package:biblosphere/const.dart';
 import 'package:biblosphere/camera.dart';
 import 'package:biblosphere/bookshelf.dart';
 import 'package:biblosphere/chat.dart';
 
 void main() async {
-  runApp(new MyApp());
+  bool isInDebugMode = false;
+  profile((){
+    isInDebugMode=true;
+  });
+
+  FlutterError.onError = (FlutterErrorDetails details) {
+    if (isInDebugMode) {
+      // In development mode simply print to console.
+      FlutterError.dumpErrorToConsole(details);
+    } else {
+      // In production mode report to the application zone to report to
+      // Crashlytics.
+      Zone.current.handleUncaughtError(details.exception, details.stack);
+    }
+  };
+
+  await FlutterCrashlytics().initialize();
+
+  runZoned<Future<Null>>(() async {
+    runApp(new MyApp());
+  }, onError: (error, stackTrace) async {
+    // Whenever an error occurs, call the `reportCrash` function. This will send
+    // Dart errors to our dev console or Crashlytics depending on the environment.
+    debugPrint(error.toString());
+    await FlutterCrashlytics().reportCrash(error, stackTrace, forceCrash: false);
+  });
 }
 
 class MyApp extends StatelessWidget {
@@ -177,9 +204,11 @@ class _MyHomePageState extends State<MyHomePage> {
     // setState to update our non-existent appearance.
     if (!mounted) return;
 
-    setState(() {
-      _position = new GeoPoint(position.latitude, position.longitude);
-    });
+    if (_position != null) {
+      setState(() {
+        _position = new GeoPoint(position.latitude, position.longitude);
+      });
+    }
   }
 
   Future<DocumentSnapshot> _fetchUser(String peerId) async {
