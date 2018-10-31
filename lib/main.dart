@@ -99,17 +99,14 @@ class _MyHomePageState extends State<MyHomePage> {
 
     _firebaseMessaging.configure(
       onMessage: (Map<String, dynamic> message) {
-        print('on message $message');
+//        print('on message $message');
       },
       onResume: (Map<String, dynamic> message) {
-        print('on resume $message');
-        print('User: $currentUserId, Peer: ${message['sender']}');
         new Future.delayed(Duration.zero,() {
           Chat.runChat(context, currentUserId, message['sender']);
         });
       },
       onLaunch: (Map<String, dynamic> message) {
-        print('on launch $message');
         new Future.delayed(Duration.zero,() {
           Chat.runChat(context, currentUserId, message['sender']);
         });
@@ -121,8 +118,10 @@ class _MyHomePageState extends State<MyHomePage> {
     // To get new position after app became active after background
     SystemChannels.lifecycle.setMessageHandler((msg){
        if (msg == 'AppLifecycleState.resumed') {
-         print('DEBUG: reinitiate position');
-         _initLocationState();
+         new Future.delayed(Duration.zero,()
+         {
+           _initLocationState();
+         });
        }
     });
   }
@@ -171,7 +170,6 @@ class _MyHomePageState extends State<MyHomePage> {
           }
 
           _firebaseMessaging.getToken().then((token){
-            print(token);
             // Update FCM token for notifications
             Firestore.instance.collection('users')
                 .document(firebaseUser.uid)
@@ -204,7 +202,7 @@ class _MyHomePageState extends State<MyHomePage> {
     // setState to update our non-existent appearance.
     if (!mounted) return;
 
-    if (_position != null) {
+    if (position != null) {
       setState(() {
         _position = new GeoPoint(position.latitude, position.longitude);
       });

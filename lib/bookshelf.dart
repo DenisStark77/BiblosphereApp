@@ -42,7 +42,6 @@ class BookshelfCard extends StatelessWidget {
               new Container(
                   child: GestureDetector(
                     onTap: () {
-                      print("onTap called.");
                       Navigator.push(
                           context,
                           new MaterialPageRoute(
