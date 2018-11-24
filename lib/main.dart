@@ -8,7 +8,7 @@ import 'package:flutter_facebook_login/flutter_facebook_login.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter_crashlytics/flutter_crashlytics.dart';
+//import 'package:flutter_crashlytics/flutter_crashlytics.dart';
 import 'package:biblosphere/const.dart';
 import 'package:biblosphere/camera.dart';
 import 'package:biblosphere/bookshelf.dart';
@@ -31,7 +31,7 @@ void main() async {
     }
   };
 
-  await FlutterCrashlytics().initialize();
+  //await FlutterCrashlytics().initialize();
 
   runZoned<Future<Null>>(() async {
     runApp(new MyApp());
@@ -39,7 +39,7 @@ void main() async {
     // Whenever an error occurs, call the `reportCrash` function. This will send
     // Dart errors to our dev console or Crashlytics depending on the environment.
     debugPrint(error.toString());
-    await FlutterCrashlytics().reportCrash(error, stackTrace, forceCrash: false);
+    //await FlutterCrashlytics().reportCrash(error, stackTrace, forceCrash: false);
   });
 }
 

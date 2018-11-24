@@ -39,7 +39,7 @@ dependencies:
 
   photo_view: ^0.0.11
 
-  flutter_crashlytics: ^0.1.1
+  #flutter_crashlytics: ^0.1.1
 
 dev_dependencies:
   flutter_test:
