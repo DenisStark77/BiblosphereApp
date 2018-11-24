@@ -114,8 +114,6 @@ class Home extends StatelessWidget {
 
       bool imageAccepted = await isBookcase(image);
 
-      print("IMAGE FILTER: $imageAccepted");
-
       if (! imageAccepted) {
         showDialog<Null>(
           context: context,
@@ -206,8 +204,6 @@ class Home extends StatelessWidget {
     final List<Label> results = await detector.detectInImage(visionImage);
 
     if (results != null) {
-      results.forEach((label) => print ("IMAGE LABEL: " + label.label));
-
       var bookcase = results.where((label) => label.label == 'bookcase');
       return bookcase.length > 0;
     }

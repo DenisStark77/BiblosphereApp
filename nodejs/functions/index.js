@@ -17,7 +17,7 @@ exports.sendNotification = functions.firestore
          var message = {
                token: doc.data().token,
                notification: {
-                  title: '',
+                  title: 'Message notification',
                   body: doc.data().name + ' sent you a message'
                },
                data : {
