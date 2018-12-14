@@ -30,7 +30,7 @@ android {
         applicationId "com.biblosphere.biblosphere"
         minSdkVersion 21
         targetSdkVersion 27
-        versionCode 1
+        versionCode 10464
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         multiDexEnabled true
@@ -46,6 +46,13 @@ signingConfigs {
 }
 buildTypes {
     release {
+        ndk {
+//          Use with flutter build apk --target-platform=android-arm
+//            abiFilters "armeabi-v7a"
+//          Use with flutter build apk --target-platform=android-arm64
+            abiFilters "arm64-v8a"
+        }
+
         signingConfig signingConfigs.release
 
 //        minifyEnabled true
@@ -61,13 +68,13 @@ flutter {
 
 dependencies {
     testImplementation 'junit:junit:4.12'
-    androidTestImplementation 'com.android.support.test:runner:1.0.1'
-    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.1'
+    androidTestImplementation 'com.android.support.test:runner:1.0.2'
+    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
     implementation 'com.android.support:multidex:1.0.3'
     implementation 'com.google.firebase:firebase-core:16.0.4'
-    implementation 'com.google.firebase:firebase-auth:16.0.4'
-    implementation 'com.google.firebase:firebase-firestore:17.1.1'
-    implementation 'com.google.firebase:firebase-storage:16.0.3'
+    implementation 'com.google.firebase:firebase-auth:16.0.5'
+    implementation 'com.google.firebase:firebase-firestore:17.1.2'
+    implementation 'com.google.firebase:firebase-storage:16.0.4'
 //    implementation 'com.crashlytics.sdk.android:crashlytics:2.9.5'
 
 //    implementation 'com.google.firebase:firebase-firestore:17.1.0'

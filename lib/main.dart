@@ -5,14 +5,79 @@ import 'package:geolocator/geolocator.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_facebook_login/flutter_facebook_login.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_crashlytics/flutter_crashlytics.dart';
+import 'package:intro_views_flutter/Models/page_view_model.dart';
+import 'package:intro_views_flutter/intro_views_flutter.dart';
+import 'package:flutter_auth_buttons/flutter_auth_buttons.dart';
+
 import 'package:biblosphere/const.dart';
 import 'package:biblosphere/camera.dart';
 import 'package:biblosphere/bookshelf.dart';
 import 'package:biblosphere/chat.dart';
+
+final FirebaseAuth _auth = FirebaseAuth.instance;
+final FacebookLogin _facebookLogin = FacebookLogin();
+final GoogleSignIn _googleSignIn = new GoogleSignIn();
+
+void signInWithFacebook() async {
+  var facebookLoginResult =
+  await _facebookLogin.logInWithReadPermissions(['email']);
+  switch (facebookLoginResult.status) {
+    case FacebookLoginStatus.error:
+      print('Facebook login failed');
+      break;
+    case FacebookLoginStatus.cancelledByUser:
+      print('Facebook login canceled');
+      break;
+    case FacebookLoginStatus.loggedIn:
+      try {
+        FirebaseUser firebaseUser = await _auth.signInWithFacebook(accessToken: facebookLoginResult.accessToken.token);
+      } catch (ex, stack) {
+        print(ex);
+        FlutterCrashlytics().logException(ex, stack);
+      }
+      break;
+  }
+}
+
+Future<FirebaseUser> signInWithGoogle() async {
+  // Attempt to get the currently authenticated user
+  GoogleSignInAccount currentUser = _googleSignIn.currentUser;
+  if (currentUser == null) {
+    // Attempt to sign in without user interaction
+    currentUser = await _googleSignIn.signInSilently();
+  }
+  if (currentUser == null) {
+    // Force the user to interactively sign in
+    currentUser = await _googleSignIn.signIn();
+  }
+
+  final GoogleSignInAuthentication auth = await currentUser.authentication;
+
+  // Authenticate with firebase
+  final FirebaseUser user = await _auth.signInWithGoogle(
+    idToken: auth.idToken,
+    accessToken: auth.accessToken,
+  );
+
+  assert(user != null);
+  assert(!user.isAnonymous);
+
+  return user;
+}
+
+
+Future<Null> signOut() async {
+  // Sign out with firebase and Facebook
+  await _auth.signOut();
+  // Sign out with google
+  await _facebookLogin.logOut();
+  await _googleSignIn.signOut();
+}
 
 void main() async {
   bool isInDebugMode = false;
@@ -60,7 +125,194 @@ class MyApp extends StatelessWidget {
         // counter didn't reset back to zero; the application is not restarted.
         primarySwatch: Colors.teal,
       ),
-      home: new MyHomePage(title: 'Biblosphere'),
+      home: IntroPage(),
+      routes: <String, WidgetBuilder>{
+        '/main': (BuildContext context) => new MyHomePage(title: 'Biblosphere'),
+      },
+    );
+  }
+}
+
+// Widget with into page
+class IntroPage extends StatefulWidget {
+  IntroPage({Key key}) : super(key: key);
+
+  @override
+  _IntroPageState createState() => new _IntroPageState();
+}
+
+class _IntroPageState extends State<IntroPage> {
+  final pages = [
+    new PageViewModel(
+        pageColor: const Color(0xFF03A9F4),
+        iconImageAssetPath: 'images/home.png',
+        iconColor: null,
+        bubbleBackgroundColor: null,
+        body: Text(
+          'Shoot your bookcase and share to neighbours and tourists. Your books attract likeminded people.',
+        ),
+        title: Text(
+          'Shoot',
+        ),
+        textStyle: TextStyle(fontFamily: 'MyFont', color: Colors.white),
+        mainImage: Image.asset(
+          'images/shoot.png',
+//          height: 285.0,
+//          width: 285.0,
+          alignment: Alignment.center,
+        )),
+    new PageViewModel(
+      pageColor: const Color(0xFF8BC34A),
+      iconImageAssetPath: 'images/local_library.png',
+      iconColor: null,
+      bubbleBackgroundColor: null,
+      body: Text(
+        'App shows bookcases in 200 km around you sorted by distance. Get access to wide variaty of books.',
+      ),
+      title: Text('Surf'),
+      mainImage: Image.asset(
+        'images/surf.png',
+//        height: 285.0,
+//        width: 285.0,
+        alignment: Alignment.center,
+      ),
+      textStyle: TextStyle(fontFamily: 'MyFont', color: Colors.white),
+    ),
+    new PageViewModel(
+      pageColor: const Color(0xFF607D8B),
+      iconImageAssetPath: 'images/message.png',
+      iconColor: null,
+      bubbleBackgroundColor: null,
+      body: Text(
+        'Contact owner of the books you like and arrange appointment to get new books to read.',
+      ),
+      title: Text('Meet'),
+      mainImage: Image.asset(
+        'images/meet.png',
+//        height: 285.0,
+//        width: 285.0,
+        alignment: Alignment.center,
+      ),
+      textStyle: TextStyle(fontFamily: 'MyFont', color: Colors.white),
+    ),
+  ];
+
+  StreamSubscription authStateChange;
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Listen for our auth event (on reload or start)
+    // Go to our /todos page once logged in
+    authStateChange = _auth.onAuthStateChanged
+        .listen((user) {
+      print("IntroPage onAuthStateChanged User: " + user.toString());
+      if (user != null) {
+        Navigator.of(context).pushReplacementNamed('/main');
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    authStateChange.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // This method is rerun every time setState is called, for instance as done
+    // by the _incrementCounter method above.
+    //
+    // The Flutter framework has been optimized to make rerunning build methods
+    // fast, so that you can just rebuild anything that needs updating rather
+    // than having to individually change instances of widgets.
+
+    return new Builder(
+      builder: (context) => new IntroViewsFlutter(
+        pages,
+        onTapDoneButton: () {
+          Navigator.pushReplacement(
+            context,
+            new MaterialPageRoute(
+              builder: (context) => new LoginPage(),
+            ), //MaterialPageRoute
+          );
+        },
+        onTapSkipButton:  () {
+          Navigator.pushReplacement(
+            context,
+            new MaterialPageRoute(
+              builder: (context) => new LoginPage(),
+            ), //MaterialPageRoute
+          );
+        },
+        showSkipButton:
+        true, //Whether you want to show the skip button or not.
+        pageButtonTextStyles: TextStyle(
+          color: Colors.white,
+          fontSize: 18.0,
+        ),
+      ), //IntroViewsFlutter
+    );
+  }
+}
+
+// Widget with login buttons to manage Facebook, Google and SMS logins
+class LoginPage extends StatefulWidget {
+  LoginPage({Key key}) : super(key: key);
+
+  @override
+  _LoginPageState createState() => new _LoginPageState();
+}
+
+class _LoginPageState extends State<LoginPage> {
+  StreamSubscription authStateChange;
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Listen for our auth event (on reload or start)
+    // Go to our /todos page once logged in
+    authStateChange = _auth.onAuthStateChanged
+        .listen((user) {
+      print("LoginPage onAuthStateChanged User: " + user.toString());
+      if (user != null) {
+        Navigator.of(context).pushReplacementNamed('/main');
+      }
+    });
+
+  }
+
+  @override
+  void dispose() {
+    authStateChange.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // This method is rerun every time setState is called, for instance as done
+    // by the _incrementCounter method above.
+    //
+    // The Flutter framework has been optimized to make rerunning build methods
+    // fast, so that you can just rebuild anything that needs updating rather
+    // than having to individually change instances of widgets.
+
+    return new Container (
+      color: Colors.amber.shade400,
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            GoogleSignInButton(onPressed: () { signInWithGoogle();}),
+            FacebookSignInButton(onPressed: () { signInWithFacebook(); }),
+          ],
+        ),
+      ),
+
     );
   }
 }
@@ -88,6 +340,9 @@ class _MyHomePageState extends State<MyHomePage> {
   GeoPoint _position;
   String currentUserId;
   final FirebaseMessaging _firebaseMessaging = FirebaseMessaging();
+  FirebaseUser firebaseUser;
+
+  StreamSubscription authStateChange;
 
   @override
   void initState() {
@@ -95,7 +350,11 @@ class _MyHomePageState extends State<MyHomePage> {
 
     _initLocationState();
 
-    initiateFacebookLogin();
+    authStateChange = _auth.onAuthStateChanged.listen((user) async {
+      print('Home onAuthStateChanged: USER: ' + user.toString());
+      firebaseUser = await _auth.currentUser();
+      currentUserId = (firebaseUser != null) ? firebaseUser.uid : null;
+    });
 
     _firebaseMessaging.configure(
       onMessage: (Map<String, dynamic> message) {
@@ -124,35 +383,17 @@ class _MyHomePageState extends State<MyHomePage> {
          });
        }
     });
+
+    _initUserRecord();
   }
 
-  /* Facebook login */
-  bool isLoggedIn = false;
-
-  void onLoginStatusChanged(bool isLoggedIn, String user) {
-    setState(() {
-      this.isLoggedIn = isLoggedIn;
-      this.currentUserId = user;
-    });
-  }
-
-  void initiateFacebookLogin() async {
-    var facebookLogin = FacebookLogin();
-    var facebookLoginResult =
-    await facebookLogin.logInWithReadPermissions(['email']);
-    switch (facebookLoginResult.status) {
-      case FacebookLoginStatus.error:
-        onLoginStatusChanged(false, null);
-        break;
-      case FacebookLoginStatus.cancelledByUser:
-        onLoginStatusChanged(false, null);
-        break;
-      case FacebookLoginStatus.loggedIn:
+  void _initUserRecord() async {
         try {
-          FirebaseUser firebaseUser = await FirebaseAuth.instance.signInWithFacebook(accessToken: facebookLoginResult.accessToken.token);
-          onLoginStatusChanged(true, firebaseUser.uid);
+          //TODO: Do we need to reinitiate it each re-login. Where?
+          firebaseUser = await _auth.currentUser();
+          currentUserId = firebaseUser.uid;
 
-          // Check is already sign up
+          // Check if user record exist
           final QuerySnapshot result =
           await Firestore.instance.collection('users').where(
               'id', isEqualTo: firebaseUser.uid).getDocuments();
@@ -179,12 +420,10 @@ class _MyHomePageState extends State<MyHomePage> {
                 });
           });
 
-        } on Exception catch (ex) {
-          onLoginStatusChanged(false, null);
+        } catch (ex, stack) {
           print(ex);
+          FlutterCrashlytics().logException(ex, stack);
         }
-        break;
-    }
   }
 
   // Platform messages are asynchronous, so we initialize in an async method.
@@ -213,6 +452,12 @@ class _MyHomePageState extends State<MyHomePage> {
     DocumentSnapshot userSnap = await Firestore.instance.collection('users').document(peerId).get();
 
     return userSnap;
+  }
+
+  @override
+  void dispose() {
+    authStateChange.cancel();
+    super.dispose();
   }
 
   Widget buildItem(BuildContext context, DocumentSnapshot userSnap) {
@@ -285,6 +530,16 @@ class _MyHomePageState extends State<MyHomePage> {
         appBar: new AppBar(
           // Here we take the value from the MyHomePage object that was created by
           // the App.build method, and use it to set our appbar title.
+          actions: <Widget>[
+        new IconButton(
+        onPressed: () async {
+        await signOut();
+        Navigator.of(context).pushReplacementNamed('/');
+        },
+          tooltip: 'Logout',
+          icon: new Icon(Icons.exit_to_app),
+        ),
+          ],
           bottom: TabBar(
             tabs: [
               Tab(icon: Icon(Icons.home)),

@@ -112,8 +112,13 @@ class ChatScreenState extends State<ChatScreen> {
     if (content.trim() != '') {
       textEditingController.clear();
 
-      String timestamp = DateTime.now().millisecondsSinceEpoch.toString();
-      
+      //TODO: strange but now() at the same moment return different values in different timezones.
+      //      to compensate it timeZoneOffset is added to have proper sequence of messages in the
+      //      chat. However it does not look quite right for me.
+      DateTime time = DateTime.now();
+      time = time.add(time.timeZoneOffset);
+      String timestamp = time.millisecondsSinceEpoch.toString();
+
       // Add message
       var msgRef = Firestore.instance
           .collection('messages')
@@ -317,7 +322,9 @@ class ChatScreenState extends State<ChatScreen> {
                 ? Container(
               child: Text(
                 DateFormat('dd MMM kk:mm')
-                    .format(DateTime.fromMillisecondsSinceEpoch(int.parse(document['timestamp']))),
+                    .format(DateTime.fromMillisecondsSinceEpoch(int.parse(document['timestamp']))
+                    .subtract(DateTime.now().timeZoneOffset)
+                ),
                 style: TextStyle(color: greyColor, fontSize: 12.0, fontStyle: FontStyle.italic),
               ),
               margin: EdgeInsets.only(left: 50.0, top: 5.0, bottom: 5.0),
