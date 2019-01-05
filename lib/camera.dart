@@ -8,6 +8,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:share/share.dart';
 import 'package:firebase_ml_vision/firebase_ml_vision.dart';
+import 'package:flutter_crashlytics/flutter_crashlytics.dart';
 import 'package:biblosphere/const.dart';
 
 class MyBookshelf extends StatelessWidget {
@@ -30,8 +31,9 @@ class MyBookshelf extends StatelessWidget {
       final StorageReference ref = FirebaseStorage.instance.ref().child(
           'images').child(currentUserId).child(fileName);
       await ref.delete();
-    } on Exception catch (ex) {
+    } catch (ex, stack) {
       print('Shelf delete failed for [$shelfId, $currentUserId, $fileName]: ' + ex.toString());
+      FlutterCrashlytics().logException(ex, stack);
     }
   }
 
@@ -112,6 +114,8 @@ class Home extends StatelessWidget {
     try {
       File image = await ImagePicker.pickImage(source: ImageSource.camera, maxWidth: 1024.0);
 
+      if (image == null) return;
+
       bool imageAccepted = await isBookcase(image);
 
       if (! imageAccepted) {
@@ -165,15 +169,16 @@ class Home extends StatelessWidget {
       final position = await Geolocator().getLastKnownPosition();
 
       //Create record in Firestore database with location, URL, and user
-      DocumentReference doc = await Firestore.instance.collection('shelves')
+      await Firestore.instance.collection('shelves')
           .add({
         "user": currentUserId,
         'URL': storageUrl,
         'position': new GeoPoint(position.latitude, position.longitude),
         'file': name
       });
-    } on Exception catch (ex) {
+    } catch (ex, stack) {
       print("Failed to take image: " + ex.toString());
+      FlutterCrashlytics().logException(ex, stack);
     }
   }
 
@@ -182,14 +187,15 @@ class Home extends StatelessWidget {
     return new Stack (
          children: <Widget> [
             new MyBookshelfList(currentUserId: currentUserId),
-            new Align (
-              alignment: Alignment(0.0, 1.0),
-              child: new FloatingActionButton(
-                onPressed: () => getImage(context),
-                tooltip: 'Add your bookshelf',
-                child: new Icon(Icons.photo_camera),
-              ),
-            ),
+            Container(
+    child: new FloatingActionButton(
+      onPressed: () => getImage(context),
+      tooltip: 'Add your bookshelf',
+      child: new Icon(Icons.photo_camera),
+    ),
+    alignment: Alignment.bottomCenter,
+    margin: new EdgeInsets.fromLTRB(0.0, 0.0, 0.0, 10.0),
+    ),
           ],
         );
   }
@@ -204,8 +210,8 @@ class Home extends StatelessWidget {
     final List<Label> results = await detector.detectInImage(visionImage);
 
     if (results != null) {
-      var bookcase = results.where((label) => label.label == 'bookcase');
-      return bookcase.length > 0;
+      var books = results.where((label) => label.label == 'bookcase' || label.label == 'book');
+      return books.length > 0;
     }
 
     return false;
