@@ -9,7 +9,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter_crashlytics/flutter_crashlytics.dart';
+//import 'package:flutter_crashlytics/flutter_crashlytics.dart';
 import 'package:intro_views_flutter/Models/page_view_model.dart';
 import 'package:intro_views_flutter/intro_views_flutter.dart';
 import 'package:flutter_auth_buttons/flutter_auth_buttons.dart';
@@ -38,7 +38,8 @@ void signInWithFacebook() async {
         FirebaseUser firebaseUser = await _auth.signInWithFacebook(accessToken: facebookLoginResult.accessToken.token);
       } catch (ex, stack) {
         print(ex);
-        FlutterCrashlytics().logException(ex, stack);
+        //TODO: uncomment
+        //FlutterCrashlytics().logException(ex, stack);
       }
       break;
   }
@@ -422,7 +423,8 @@ class _MyHomePageState extends State<MyHomePage> {
 
         } catch (ex, stack) {
           print(ex);
-          FlutterCrashlytics().logException(ex, stack);
+          //TODO: uncomment
+          //FlutterCrashlytics().logException(ex, stack);
         }
   }
 

@@ -8,7 +8,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:share/share.dart';
 import 'package:firebase_ml_vision/firebase_ml_vision.dart';
-import 'package:flutter_crashlytics/flutter_crashlytics.dart';
+//import 'package:flutter_crashlytics/flutter_crashlytics.dart';
 import 'package:biblosphere/const.dart';
 
 class MyBookshelf extends StatelessWidget {
@@ -33,7 +33,8 @@ class MyBookshelf extends StatelessWidget {
       await ref.delete();
     } catch (ex, stack) {
       print('Shelf delete failed for [$shelfId, $currentUserId, $fileName]: ' + ex.toString());
-      FlutterCrashlytics().logException(ex, stack);
+      //TODO: uncomment
+      //FlutterCrashlytics().logException(ex, stack);
     }
   }
 
@@ -178,7 +179,8 @@ class Home extends StatelessWidget {
       });
     } catch (ex, stack) {
       print("Failed to take image: " + ex.toString());
-      FlutterCrashlytics().logException(ex, stack);
+      //TODO: uncomment
+      //FlutterCrashlytics().logException(ex, stack);
     }
   }
 

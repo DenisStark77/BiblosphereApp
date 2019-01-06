@@ -6,7 +6,7 @@ import 'package:biblosphere/chat.dart';
 import 'package:firestore_helpers/firestore_helpers.dart';
 import 'package:photo_view/photo_view.dart';
 import 'dart:math' as math;
-import 'package:flutter_crashlytics/flutter_crashlytics.dart';
+//import 'package:flutter_crashlytics/flutter_crashlytics.dart';
 import 'package:biblosphere/const.dart';
 
 class BookshelfCard extends StatelessWidget {
@@ -122,7 +122,8 @@ class BookshelfCard extends StatelessWidget {
               )));
     } catch (ex, stack) {
       print("Chat screen failed: " + ex.toString());
-      FlutterCrashlytics().logException(ex, stack);
+      //TODO: uncomment
+      //FlutterCrashlytics().logException(ex, stack);
     }
   }
 }
@@ -163,7 +164,8 @@ class BookshelfList extends StatelessWidget {
       );
     } catch (ex, stack) {
       print("Sort and filter by distance failed: " + ex.toString());
-      FlutterCrashlytics().logException(ex, stack);
+      //TODO: uncomment
+      //FlutterCrashlytics().logException(ex, stack);
     }
     return null;
   }
