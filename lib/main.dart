@@ -25,7 +25,7 @@ final GoogleSignIn _googleSignIn = new GoogleSignIn();
 
 void signInWithFacebook() async {
   var facebookLoginResult =
-  await _facebookLogin.logInWithReadPermissions(['email']);
+      await _facebookLogin.logInWithReadPermissions(['email']);
   switch (facebookLoginResult.status) {
     case FacebookLoginStatus.error:
       print('Facebook login failed');
@@ -35,7 +35,8 @@ void signInWithFacebook() async {
       break;
     case FacebookLoginStatus.loggedIn:
       try {
-        FirebaseUser firebaseUser = await _auth.signInWithFacebook(accessToken: facebookLoginResult.accessToken.token);
+        FirebaseUser firebaseUser = await _auth.signInWithFacebook(
+            accessToken: facebookLoginResult.accessToken.token);
       } catch (ex, stack) {
         print(ex);
         //TODO: uncomment
@@ -71,7 +72,6 @@ Future<FirebaseUser> signInWithGoogle() async {
   return user;
 }
 
-
 Future<Null> signOut() async {
   // Sign out with firebase and Facebook
   await _auth.signOut();
@@ -82,8 +82,8 @@ Future<Null> signOut() async {
 
 void main() async {
   bool isInDebugMode = false;
-  profile((){
-    isInDebugMode=true;
+  profile(() {
+    isInDebugMode = true;
   });
 
   FlutterError.onError = (FlutterErrorDetails details) {
@@ -105,7 +105,9 @@ void main() async {
     // Whenever an error occurs, call the `reportCrash` function. This will send
     // Dart errors to our dev console or Crashlytics depending on the environment.
     debugPrint(error.toString());
-    //await FlutterCrashlytics().reportCrash(error, stackTrace, forceCrash: false);
+    //TODO: uncomment
+    //await FlutterCrashlytics()
+    //    .reportCrash(error, stackTrace, forceCrash: false);
   });
 }
 
@@ -206,8 +208,7 @@ class _IntroPageState extends State<IntroPage> {
 
     // Listen for our auth event (on reload or start)
     // Go to our /todos page once logged in
-    authStateChange = _auth.onAuthStateChanged
-        .listen((user) {
+    authStateChange = _auth.onAuthStateChanged.listen((user) {
       print("IntroPage onAuthStateChanged User: " + user.toString());
       if (user != null) {
         Navigator.of(context).pushReplacementNamed('/main');
@@ -232,30 +233,30 @@ class _IntroPageState extends State<IntroPage> {
 
     return new Builder(
       builder: (context) => new IntroViewsFlutter(
-        pages,
-        onTapDoneButton: () {
-          Navigator.pushReplacement(
-            context,
-            new MaterialPageRoute(
-              builder: (context) => new LoginPage(),
-            ), //MaterialPageRoute
-          );
-        },
-        onTapSkipButton:  () {
-          Navigator.pushReplacement(
-            context,
-            new MaterialPageRoute(
-              builder: (context) => new LoginPage(),
-            ), //MaterialPageRoute
-          );
-        },
-        showSkipButton:
-        true, //Whether you want to show the skip button or not.
-        pageButtonTextStyles: TextStyle(
-          color: Colors.white,
-          fontSize: 18.0,
-        ),
-      ), //IntroViewsFlutter
+            pages,
+            onTapDoneButton: () {
+              Navigator.pushReplacement(
+                context,
+                new MaterialPageRoute(
+                  builder: (context) => new LoginPage(),
+                ), //MaterialPageRoute
+              );
+            },
+            onTapSkipButton: () {
+              Navigator.pushReplacement(
+                context,
+                new MaterialPageRoute(
+                  builder: (context) => new LoginPage(),
+                ), //MaterialPageRoute
+              );
+            },
+            showSkipButton:
+                true, //Whether you want to show the skip button or not.
+            pageButtonTextStyles: TextStyle(
+              color: Colors.white,
+              fontSize: 18.0,
+            ),
+          ), //IntroViewsFlutter
     );
   }
 }
@@ -277,14 +278,12 @@ class _LoginPageState extends State<LoginPage> {
 
     // Listen for our auth event (on reload or start)
     // Go to our /todos page once logged in
-    authStateChange = _auth.onAuthStateChanged
-        .listen((user) {
+    authStateChange = _auth.onAuthStateChanged.listen((user) {
       print("LoginPage onAuthStateChanged User: " + user.toString());
       if (user != null) {
         Navigator.of(context).pushReplacementNamed('/main');
       }
     });
-
   }
 
   @override
@@ -302,18 +301,21 @@ class _LoginPageState extends State<LoginPage> {
     // fast, so that you can just rebuild anything that needs updating rather
     // than having to individually change instances of widgets.
 
-    return new Container (
+    return new Container(
       color: Colors.amber.shade400,
       child: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            GoogleSignInButton(onPressed: () { signInWithGoogle();}),
-            FacebookSignInButton(onPressed: () { signInWithFacebook(); }),
+            GoogleSignInButton(onPressed: () {
+              signInWithGoogle();
+            }),
+            FacebookSignInButton(onPressed: () {
+              signInWithFacebook();
+            }),
           ],
         ),
       ),
-
     );
   }
 }
@@ -337,11 +339,11 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-
   GeoPoint _position;
   String currentUserId;
   final FirebaseMessaging _firebaseMessaging = FirebaseMessaging();
   FirebaseUser firebaseUser;
+  bool unreadMessage = false;
 
   StreamSubscription authStateChange;
 
@@ -359,15 +361,18 @@ class _MyHomePageState extends State<MyHomePage> {
 
     _firebaseMessaging.configure(
       onMessage: (Map<String, dynamic> message) {
-//        print('on message $message');
+        print("DEBUG: message received: " + message.toString());
+        setState(() {
+          unreadMessage = true;
+        });
       },
       onResume: (Map<String, dynamic> message) {
-        new Future.delayed(Duration.zero,() {
+        new Future.delayed(Duration.zero, () {
           Chat.runChat(context, currentUserId, message['sender']);
         });
       },
       onLaunch: (Map<String, dynamic> message) {
-        new Future.delayed(Duration.zero,() {
+        new Future.delayed(Duration.zero, () {
           Chat.runChat(context, currentUserId, message['sender']);
         });
       },
@@ -376,56 +381,55 @@ class _MyHomePageState extends State<MyHomePage> {
         const IosNotificationSettings(sound: true, badge: true, alert: true));
 
     // To get new position after app became active after background
-    SystemChannels.lifecycle.setMessageHandler((msg){
-       if (msg == 'AppLifecycleState.resumed') {
-         new Future.delayed(Duration.zero,()
-         {
-           _initLocationState();
-         });
-       }
+    SystemChannels.lifecycle.setMessageHandler((msg) {
+      if (msg == 'AppLifecycleState.resumed') {
+        new Future.delayed(Duration.zero, () {
+          _initLocationState();
+        });
+      }
     });
 
     _initUserRecord();
   }
 
   void _initUserRecord() async {
-        try {
-          //TODO: Do we need to reinitiate it each re-login. Where?
-          firebaseUser = await _auth.currentUser();
-          currentUserId = firebaseUser.uid;
+    try {
+      //TODO: Do we need to reinitiate it each re-login. Where?
+      firebaseUser = await _auth.currentUser();
+      currentUserId = firebaseUser.uid;
 
-          // Check if user record exist
-          final QuerySnapshot result =
-          await Firestore.instance.collection('users').where(
-              'id', isEqualTo: firebaseUser.uid).getDocuments();
-          final List<DocumentSnapshot> documents = result.documents;
-          if (documents.length == 0) {
-            // Update data to server if new user
-            Firestore.instance.collection('users')
-                .document(firebaseUser.uid)
-                .setData(
-                {
-                  'name': firebaseUser.displayName,
-                  'photoUrl': firebaseUser.photoUrl,
-                  'id': firebaseUser.uid
-                });
-          }
+      // Check if user record exist
+      final QuerySnapshot result = await Firestore.instance
+          .collection('users')
+          .where('id', isEqualTo: firebaseUser.uid)
+          .getDocuments();
+      final List<DocumentSnapshot> documents = result.documents;
+      if (documents.length == 0) {
+        // Update data to server if new user
+        Firestore.instance
+            .collection('users')
+            .document(firebaseUser.uid)
+            .setData({
+          'name': firebaseUser.displayName,
+          'photoUrl': firebaseUser.photoUrl,
+          'id': firebaseUser.uid
+        });
+      }
 
-          _firebaseMessaging.getToken().then((token){
-            // Update FCM token for notifications
-            Firestore.instance.collection('users')
-                .document(firebaseUser.uid)
-                .updateData(
-                {
-                  'token': token,
-                });
-          });
-
-        } catch (ex, stack) {
-          print(ex);
-          //TODO: uncomment
-          //FlutterCrashlytics().logException(ex, stack);
-        }
+      _firebaseMessaging.getToken().then((token) {
+        // Update FCM token for notifications
+        Firestore.instance
+            .collection('users')
+            .document(firebaseUser.uid)
+            .updateData({
+          'token': token,
+        });
+      });
+    } catch (ex, stack) {
+      print(ex);
+      //TODO: uncomment
+      //FlutterCrashlytics().logException(ex, stack);
+    }
   }
 
   // Platform messages are asynchronous, so we initialize in an async method.
@@ -451,7 +455,8 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<DocumentSnapshot> _fetchUser(String peerId) async {
-    DocumentSnapshot userSnap = await Firestore.instance.collection('users').document(peerId).get();
+    DocumentSnapshot userSnap =
+        await Firestore.instance.collection('users').document(peerId).get();
 
     return userSnap;
   }
@@ -463,61 +468,61 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Widget buildItem(BuildContext context, DocumentSnapshot userSnap) {
-      return Container(
-          child: FlatButton(
-            child: Row(
-              children: <Widget>[
-                Material(
-                  child: CachedNetworkImage(
-                    placeholder: Container(
-                      child: CircularProgressIndicator(
-                        strokeWidth: 1.0,
-                        valueColor: AlwaysStoppedAnimation<Color>(themeColor),
-                      ),
-                      width: 50.0,
-                      height: 50.0,
-                      padding: EdgeInsets.all(15.0),
-                    ),
-                    imageUrl: userSnap['photoUrl'],
-                    width: 50.0,
-                    height: 50.0,
-                    fit: BoxFit.cover,
-                  ),
-                  borderRadius: BorderRadius.all(Radius.circular(25.0)),
+    return Container(
+      child: FlatButton(
+        child: Row(children: <Widget>[
+          Material(
+            child: CachedNetworkImage(
+              placeholder: Container(
+                child: CircularProgressIndicator(
+                  strokeWidth: 1.0,
+                  valueColor: AlwaysStoppedAnimation<Color>(themeColor),
                 ),
-                new Flexible(
-                  child: Container(
-                          child: Text(
-                            userSnap['name'],
-                            style: TextStyle(color: themeColor),
-                          ),
-                          alignment: Alignment.centerLeft,
-                          margin: new EdgeInsets.fromLTRB(20.0, 0.0, 0.0, 20.0),
-                    )
-                  ),
-                ]),
-            onPressed: () {
-              Navigator.push(
-                  context,
-                  new MaterialPageRoute(
-                      builder: (context) =>
-                      new Chat(
+                width: 50.0,
+                height: 50.0,
+                padding: EdgeInsets.all(15.0),
+              ),
+              imageUrl: userSnap['photoUrl'],
+              width: 50.0,
+              height: 50.0,
+              fit: BoxFit.cover,
+            ),
+            borderRadius: BorderRadius.all(Radius.circular(25.0)),
+          ),
+          new Flexible(
+              child: Container(
+            child: Text(
+              userSnap['name'],
+              style: TextStyle(color: themeColor),
+            ),
+            alignment: Alignment.centerLeft,
+            margin: new EdgeInsets.fromLTRB(20.0, 0.0, 0.0, 20.0),
+          )),
+        ]),
+        onPressed: () {
+          setState(() {
+            unreadMessage = false;
+          });
+          Navigator.push(
+              context,
+              new MaterialPageRoute(
+                  builder: (context) => new Chat(
                         myId: currentUserId,
                         peerId: userSnap.documentID,
                         peerAvatar: userSnap['photoUrl'],
                         peerName: userSnap['name'],
                       )));
-            },
-            color: greyColor2,
-            padding: EdgeInsets.fromLTRB(25.0, 10.0, 25.0, 10.0),
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10.0)),
-          ),
-          margin: EdgeInsets.only(bottom: 10.0, left: 5.0, right: 5.0),
-        );
+        },
+        color: greyColor2,
+        padding: EdgeInsets.fromLTRB(25.0, 10.0, 25.0, 10.0),
+        shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
+      ),
+      margin: EdgeInsets.only(bottom: 10.0, left: 5.0, right: 5.0),
+    );
   }
 
-@override
+  @override
   Widget build(BuildContext context) {
     // This method is rerun every time setState is called, for instance as done
     // by the _incrementCounter method above.
@@ -527,32 +532,35 @@ class _MyHomePageState extends State<MyHomePage> {
     // than having to individually change instances of widgets.
 
     return new DefaultTabController(
-        length: 3,
-        child: Scaffold(
+      length: 3,
+      child: Scaffold(
         appBar: new AppBar(
           // Here we take the value from the MyHomePage object that was created by
           // the App.build method, and use it to set our appbar title.
           actions: <Widget>[
-        new IconButton(
-        onPressed: () async {
-        await signOut();
-        Navigator.of(context).pushReplacementNamed('/');
-        },
-          tooltip: 'Logout',
-          icon: new Icon(Icons.exit_to_app),
-        ),
+            new IconButton(
+              onPressed: () async {
+                await signOut();
+                Navigator.of(context).pushReplacementNamed('/');
+              },
+              tooltip: 'Logout',
+              icon: new Icon(Icons.exit_to_app),
+            ),
           ],
           bottom: TabBar(
             tabs: [
               Tab(icon: Icon(Icons.home)),
               Tab(icon: Icon(Icons.local_library)),
-              Tab(icon: Icon(Icons.message)),
+              Tab(
+                  icon: unreadMessage
+                      ? Icon(Icons.outlined_flag)
+                      : Icon(Icons.message)),
             ],
           ),
           title: new Text(widget.title),
         ),
         body: TabBarView(
-          children: <Widget> [
+          children: <Widget>[
             // Camera tab
             Home(currentUserId: currentUserId),
 
@@ -562,8 +570,9 @@ class _MyHomePageState extends State<MyHomePage> {
             // Tab for chat
             Container(
               child: StreamBuilder(
-                stream: Firestore.instance.collection('messages')
-                    .where("ids", arrayContains : currentUserId)
+                stream: Firestore.instance
+                    .collection('messages')
+                    .where("ids", arrayContains: currentUserId)
                     .orderBy("timestamp", descending: true)
                     .snapshots(),
                 builder: (context, snapshot) {
@@ -577,28 +586,29 @@ class _MyHomePageState extends State<MyHomePage> {
                     return ListView.builder(
                       padding: EdgeInsets.all(10.0),
                       itemBuilder: (context, index) {
-                        String peerId = snapshot.data.documents[index]['ids'].firstWhere((id) => id != currentUserId, orElse: () => null);
+                        String peerId = snapshot.data.documents[index]['ids']
+                            .firstWhere((id) => id != currentUserId,
+                                orElse: () => null);
 
                         return FutureBuilder(
-                        future: _fetchUser(peerId),
-                        builder: (context, snapshot) {
-                          switch (snapshot.connectionState) {
-                            case ConnectionState.active:
-                            case ConnectionState.none:
-                            case ConnectionState.waiting:
-                              return Align(
-                                  alignment: Alignment.center,
-                                  child: CircularProgressIndicator()
-                              );
-                            case ConnectionState.done:
-                              if (snapshot.hasError) {
-                                return Text('Error: ${snapshot.error}');
-                              } else {
-                                return buildItem(context, snapshot.data);
-                              }
-                          }
-                        },
-                      );
+                          future: _fetchUser(peerId),
+                          builder: (context, snapshot) {
+                            switch (snapshot.connectionState) {
+                              case ConnectionState.active:
+                              case ConnectionState.none:
+                              case ConnectionState.waiting:
+                                return Align(
+                                    alignment: Alignment.center,
+                                    child: CircularProgressIndicator());
+                              case ConnectionState.done:
+                                if (snapshot.hasError) {
+                                  return Text('Error: ${snapshot.error}');
+                                } else {
+                                  return buildItem(context, snapshot.data);
+                                }
+                            }
+                          },
+                        );
                       },
                       itemCount: snapshot.data.documents.length,
                     );

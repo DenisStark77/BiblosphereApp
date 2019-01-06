@@ -19,16 +19,18 @@ class BookshelfCard extends StatelessWidget {
   //TODO: non final field in the StatelessWidget. Should be refactored.
   double distance;
 
-  BookshelfCard(this.id, this.currentUser, this.image, this.user,
-      this.position, this.currentPosition);
+  BookshelfCard(this.id, this.currentUser, this.image, this.user, this.position,
+      this.currentPosition);
 
   double distanceBetween(double lat1, double lon1, double lat2, double lon2) {
     double R = 6378.137; // Radius of earth in KM
     double dLat = lat2 * math.pi / 180 - lat1 * math.pi / 180;
     double dLon = lon2 * math.pi / 180 - lon1 * math.pi / 180;
     double a = math.sin(dLat / 2) * math.sin(dLat / 2) +
-        math.cos(lat1 * math.pi / 180) * math.cos(lat2 * math.pi / 180) *
-            math.sin(dLon / 2) * math.sin(dLon / 2);
+        math.cos(lat1 * math.pi / 180) *
+            math.cos(lat2 * math.pi / 180) *
+            math.sin(dLon / 2) *
+            math.sin(dLon / 2);
     double c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a));
     double d = R * c;
     return d; // meters
@@ -38,7 +40,7 @@ class BookshelfCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return new Container(
         child: new Card(
-          child: new Column (
+          child: new Column(
             children: <Widget>[
               new Container(
                   child: GestureDetector(
@@ -46,28 +48,39 @@ class BookshelfCard extends StatelessWidget {
                       Navigator.push(
                           context,
                           new MaterialPageRoute(
-                              builder: (context) =>
-                              new PhotoView(
-                                  imageProvider: CachedNetworkImageProvider(image)
-                              )));
-
-
+                              builder: (context) => new Scaffold(
+                                    appBar: new AppBar(
+                                      title: new Text(
+                                        'ZOOM',
+                                        style: TextStyle(
+                                            color: primaryColor,
+                                            fontWeight: FontWeight.bold),
+                                      ),
+                                      centerTitle: true,
+                                    ),
+                                    body: new PhotoView(
+                                        imageProvider:
+                                            CachedNetworkImageProvider(image)),
+                                  )));
                     },
-                    child: Image(image: new CachedNetworkImageProvider(image),
+                    child: Image(
+                        image: new CachedNetworkImageProvider(image),
                         fit: BoxFit.cover),
                   ),
-                  margin: EdgeInsets.only(top: 7.0, left: 7.0, right: 7.0)
-              ),
+                  margin: EdgeInsets.only(top: 7.0, left: 7.0, right: 7.0)),
               new Align(
                 alignment: Alignment(1.0, 1.0),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: <Widget>[
                     new Text(distanceBetween(
-                        position.latitude, position.longitude,
-                        currentPosition.latitude, currentPosition.longitude)
-                        .round()
-                        .toString() + " km"),
+                                position.latitude,
+                                position.longitude,
+                                currentPosition.latitude,
+                                currentPosition.longitude)
+                            .round()
+                            .toString() +
+                        " km"),
                     new IconButton(
                       onPressed: () {
                         openMap(position);
@@ -88,16 +101,15 @@ class BookshelfCard extends StatelessWidget {
             ],
           ),
           color: greyColor2,
-          shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10.0)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
         ),
-        margin: EdgeInsets.only(bottom: 10.0, left: 5.0, right: 5.0)
-    );
+        margin: EdgeInsets.only(bottom: 10.0, left: 5.0, right: 5.0));
   }
 
   void openMap(GeoPoint pos) async {
-    final url = 'https://www.google.com/maps/search/?api=1&query=${pos
-        .latitude},${pos.longitude}';
+    final url =
+        'https://www.google.com/maps/search/?api=1&query=${pos.latitude},${pos.longitude}';
     if (await canLaunch(url)) {
       await launch(url);
     } else {
@@ -107,19 +119,17 @@ class BookshelfCard extends StatelessWidget {
 
   void openMsg(BuildContext context, String user) async {
     try {
-      DocumentSnapshot userSnap = await Firestore.instance.collection('users')
-          .document(user)
-          .get();
+      DocumentSnapshot userSnap =
+          await Firestore.instance.collection('users').document(user).get();
       Navigator.push(
           context,
           new MaterialPageRoute(
-              builder: (context) =>
-              new Chat(
-                myId: currentUser,
-                peerId: user,
-                peerAvatar: userSnap["photoUrl"],
-                peerName: userSnap["name"],
-              )));
+              builder: (context) => new Chat(
+                    myId: currentUser,
+                    peerId: user,
+                    peerAvatar: userSnap["photoUrl"],
+                    peerName: userSnap["name"],
+                  )));
     } catch (ex, stack) {
       print("Chat screen failed: " + ex.toString());
       //TODO: uncomment
@@ -130,13 +140,12 @@ class BookshelfCard extends StatelessWidget {
 
 class BookshelfList extends StatelessWidget {
   final String currentUserId;
-  final GeoPoint  currentPosition;
+  final GeoPoint currentPosition;
   //TODO: Area is not final field in StatelessWidget. Should be refactored.
   Area area;
 
-  BookshelfList (this.currentUserId, this.currentPosition) {
-    if (currentPosition != null)
-       area = new Area(currentPosition, 200.0);
+  BookshelfList(this.currentUserId, this.currentPosition) {
+    if (currentPosition != null) area = new Area(currentPosition, 200.0);
   }
 
   Stream<List<BookshelfCard>> getBookshelves(area) {
@@ -146,7 +155,13 @@ class BookshelfList extends StatelessWidget {
           area: area,
           locationFieldNameInDB: 'position',
           mapper: (document) {
-            var shelf = new BookshelfCard(document.documentID, currentUserId, document.data['URL'], document.data['user'], document.data['position'], currentPosition);
+            var shelf = new BookshelfCard(
+                document.documentID,
+                currentUserId,
+                document.data['URL'],
+                document.data['user'],
+                document.data['position'],
+                currentPosition);
             // if you serializer does not pass types like GeoPoint through
             // you have to add that fields manually. If using `jaguar_serializer`
             // add @pass attribute to the GeoPoint field and you can omit this.
@@ -161,7 +176,7 @@ class BookshelfList extends StatelessWidget {
           distanceAccessor: (shelf) => shelf.distance,
           sortDecending: true
 //          clientSitefilters: (BookshelfCard => shelf._user != currentUserId)  // filer only future events
-      );
+          );
     } catch (ex, stack) {
       print("Sort and filter by distance failed: " + ex.toString());
       //TODO: uncomment
@@ -172,12 +187,12 @@ class BookshelfList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (currentUserId == null || currentPosition == null)
-      return Container();
+    if (currentUserId == null || currentPosition == null) return Container();
 
     return new StreamBuilder<List<BookshelfCard>>(
       stream: getBookshelves(area),
-      builder: (BuildContext context, AsyncSnapshot<List<BookshelfCard>> snapshot) {
+      builder:
+          (BuildContext context, AsyncSnapshot<List<BookshelfCard>> snapshot) {
         if (!snapshot.hasData) return new Text('Loading...');
         return new ListView(
           children: snapshot.data.map((BookshelfCard shelf) {
