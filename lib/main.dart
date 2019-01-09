@@ -39,7 +39,7 @@ void signInWithFacebook() async {
             accessToken: facebookLoginResult.accessToken.token);
       } catch (ex, stack) {
         print(ex);
-        //TODO: uncomment
+        //TODO: fix FlutterCrashlytics build issue, uncomment
         //FlutterCrashlytics().logException(ex, stack);
       }
       break;
@@ -105,7 +105,7 @@ void main() async {
     // Whenever an error occurs, call the `reportCrash` function. This will send
     // Dart errors to our dev console or Crashlytics depending on the environment.
     debugPrint(error.toString());
-    //TODO: uncomment
+    //TODO: fix FlutterCrashlytics build issue, uncomment
     //await FlutterCrashlytics()
     //    .reportCrash(error, stackTrace, forceCrash: false);
   });
@@ -427,7 +427,7 @@ class _MyHomePageState extends State<MyHomePage> {
       });
     } catch (ex, stack) {
       print(ex);
-      //TODO: uncomment
+      //TODO: fix FlutterCrashlytics build issue, uncomment
       //FlutterCrashlytics().logException(ex, stack);
     }
   }

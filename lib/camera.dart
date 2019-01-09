@@ -33,7 +33,7 @@ class MyBookshelf extends StatelessWidget {
       await ref.delete();
     } catch (ex, stack) {
       print('Shelf delete failed for [$shelfId, $currentUserId, $fileName]: ' + ex.toString());
-      //TODO: uncomment
+      //TODO: fix FlutterCrashlytics build issue, uncomment
       //FlutterCrashlytics().logException(ex, stack);
     }
   }
@@ -179,7 +179,7 @@ class Home extends StatelessWidget {
       });
     } catch (ex, stack) {
       print("Failed to take image: " + ex.toString());
-      //TODO: uncomment
+      //TODO: fix FlutterCrashlytics build issue, uncomment
       //FlutterCrashlytics().logException(ex, stack);
     }
   }

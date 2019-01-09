@@ -132,7 +132,7 @@ class BookshelfCard extends StatelessWidget {
                   )));
     } catch (ex, stack) {
       print("Chat screen failed: " + ex.toString());
-      //TODO: uncomment
+      //TODO: fix FlutterCrashlytics build issue, uncomment
       //FlutterCrashlytics().logException(ex, stack);
     }
   }
@@ -179,7 +179,7 @@ class BookshelfList extends StatelessWidget {
           );
     } catch (ex, stack) {
       print("Sort and filter by distance failed: " + ex.toString());
-      //TODO: uncomment
+      //TODO: fix FlutterCrashlytics build issue, uncomment
       //FlutterCrashlytics().logException(ex, stack);
     }
     return null;
