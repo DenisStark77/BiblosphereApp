@@ -58,9 +58,10 @@ class MyBookshelf extends StatelessWidget {
                   icon: new Icon(Icons.delete),
                 ),
                 new IconButton(
-                  onPressed: () {
+                  onPressed: () async {
+                    //TODO: Depend on implementation of CachedImage use CacheManager directly
                     //TODO: Add sharing image only text sharing at the moment
-                    Share.share('I\'ve published my bookshelf on Biblosphere \n $imageURL');
+                    Share.share('https://biblosphere.org/shelf?id=$shelfId#download');
                   },
                   tooltip: 'Share your bookshelf',
                   icon: new Icon(Icons.share),
@@ -225,6 +226,8 @@ class Home extends StatelessWidget {
       image,
       new StorageMetadata(
         contentType: 'image/jpeg',
+        // To enable Client-side caching you can set the Cache-Control headers here. Uncomment below.
+        cacheControl: 'public,max-age=3600',
         customMetadata: <String, String>{'activity': 'test'},
       ),
     );

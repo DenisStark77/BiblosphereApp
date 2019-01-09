@@ -28,7 +28,7 @@ void signInWithFacebook() async {
       await _facebookLogin.logInWithReadPermissions(['email']);
   switch (facebookLoginResult.status) {
     case FacebookLoginStatus.error:
-      print('Facebook login failed');
+      print('Facebook login failed ' + facebookLoginResult.errorMessage);
       break;
     case FacebookLoginStatus.cancelledByUser:
       print('Facebook login canceled');
@@ -76,8 +76,10 @@ Future<Null> signOut() async {
   // Sign out with firebase and Facebook
   await _auth.signOut();
   // Sign out with google
-  await _facebookLogin.logOut();
-  await _googleSignIn.signOut();
+  if (await _facebookLogin.isLoggedIn)
+    await _facebookLogin.logOut();
+  if (_googleSignIn.currentUser != null)
+    await _googleSignIn.signOut();
 }
 
 void main() async {

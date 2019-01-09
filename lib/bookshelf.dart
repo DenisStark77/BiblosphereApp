@@ -59,8 +59,15 @@ class BookshelfCard extends StatelessWidget {
                                       centerTitle: true,
                                     ),
                                     body: new PhotoView(
-                                        imageProvider:
-                                            CachedNetworkImageProvider(image)),
+                                      imageProvider:
+                                          CachedNetworkImageProvider(image),
+                                      minScale:
+                                          PhotoViewComputedScale.contained * 1.0,
+                                      maxScale:
+                                          PhotoViewComputedScale.covered * 2.0,
+//                                      initialScale:
+//                                          PhotoViewComputedScale.contained * 1.1,
+                                    ),
                                   )));
                     },
                     child: Image(
