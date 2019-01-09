@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+    <title>Biblosphere usage</title>
+    <style>
+      /* Always set the map height explicitly to define the size of the div
+       * element that contains the map. */
+      #map {
+        height: 100%;
+      }
+      /* Optional: Makes the sample page fill the window. */
+      html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+    </style>
+  </head>
+  <body> <iframe src="https://www.youtube.com/embed/_gq_T4nWsKM" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+
+      allowfullscreen="" height="315" frameborder="0" width="560"></iframe>
+    <p>There are <b id="counter"></b> bookshelves published.</p>
+    <b id="counter">
+      <div id="map"></div>
+      <script src="https://www.gstatic.com/firebasejs/5.5.9/firebase.js"></script>
+      <script>
+    // Initialize Firebase
+    var config = {
+      apiKey: "AIzaSyALK5T0HqUsw-KAQMV9NjaPt-4oyWvpw70",
+      authDomain: "biblosphere-210106.firebaseapp.com",
+      databaseURL: "https://biblosphere-210106.firebaseio.com",
+      projectId: "biblosphere-210106",
+      storageBucket: "biblosphere-210106.appspot.com",
+      messagingSenderId: "779249096383"
+    };
+    firebase.initializeApp(config);
+    /**
+     * The JavaScript code that creates the firebase map goes between the empty script tags below.
+     */
+    // Initialize Cloud Firestore through Firebase
+    var db = firebase.firestore();
+
+    // Disable deprecated features
+    db.settings({
+       timestampsInSnapshots: true
+    });
+
+      function initMap() {
+
+        var map = new google.maps.Map(document.getElementById('map'), {
+          zoom: 3,
+          center: {lat: 42, lng: 0}
+        });
+
+        var markers = [];
+
+        db.collection("shelves").get().then((querySnapshot) => {
+          querySnapshot.forEach((doc) => {
+            var latLng = new google.maps.LatLng(doc.data().position.latitude,
+            doc.data().position.longitude);
+            var marker = new google.maps.Marker({'position': latLng});
+            markers.push(marker);
+          });
+
+          // Add a marker clusterer to manage the markers.
+          var markerCluster = new MarkerClusterer(map, markers,
+              {imagePath: 'https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/m'});
+          
+          document.getElementById('counter').innerHTML = markers.length;
+
+        }).catch(function(error) {
+            console.error("Error reading document: ", error);
+        });
+      }
+    </script>
+      <script src="https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/markerclusterer.js">
+    </script>
+      <script async="" defer="defer" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDJR_BnU_JVJyGTfaWcj086UuQxXP3LoTU&callback=initMap">
+    </script>
+  </body>
+</html>

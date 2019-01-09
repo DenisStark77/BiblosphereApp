@@ -14,8 +14,13 @@
     ],
     "rewrites": [
       {
-        "source": "**",
-        "destination": "/index.html"
+        "source": "/shelf", "function": "shelf"
+      },
+      {
+        "source": "/thumbnail", "function": "thumbnail"
+      },
+      {
+        "source": "**", "destination": "/index.html"
       }
     ]
   }

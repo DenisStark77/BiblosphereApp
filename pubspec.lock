@@ -7,7 +7,7 @@ packages:
       name: after_layout
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "1.0.4"
+    version: "1.0.7"
   analyzer:
     dependency: transitive
     description:
@@ -49,7 +49,7 @@ packages:
       name: cached_network_image
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "0.4.2"
+    version: "0.5.1"
   charcode:
     dependency: transitive
     description:
@@ -168,7 +168,7 @@ packages:
       name: flutter_cache_manager
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "0.1.2"
+    version: "0.2.0+1"
   flutter_crashlytics:
     dependency: "direct main"
     description:

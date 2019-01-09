@@ -11,7 +11,6 @@
       <root url="file://D:/Flutter/.pub-cache/hosted/pub.dartlang.org/permission_handler-2.1.0" />
       <root url="file://D:/Flutter/.pub-cache/hosted/pub.dartlang.org/geolocator-2.1.0" />
       <root url="file://D:/Flutter/.pub-cache/hosted/pub.dartlang.org/google_api_availability-1.0.4" />
-      <root url="file://D:/Flutter/.pub-cache/hosted/pub.dartlang.org/share-0.5.3" />
       <root url="file://D:/Flutter/.pub-cache/hosted/pub.dartlang.org/firebase_ml_vision-0.2.0+1" />
       <root url="file://D:/Flutter/.pub-cache/hosted/pub.dartlang.org/flutter_crashlytics-0.1.1" />
       <root url="file://D:/Flutter/.pub-cache/hosted/pub.dartlang.org/firebase_auth-0.6.2+1" />
@@ -19,6 +18,7 @@
       <root url="file://D:/Flutter/.pub-cache/hosted/pub.dartlang.org/firebase_messaging-2.0.3" />
       <root url="file://D:/Flutter/.pub-cache/hosted/pub.dartlang.org/cloud_firestore-0.8.2+1" />
       <root url="file://D:/Flutter/.pub-cache/hosted/pub.dartlang.org/google_sign_in-3.2.4" />
+      <root url="file://D:/Flutter/.pub-cache/hosted/pub.dartlang.org/share-0.5.3" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />
