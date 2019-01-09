@@ -7,6 +7,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:share/share.dart';
+import 'package:firebase_dynamic_links/firebase_dynamic_links.dart';
 import 'package:firebase_ml_vision/firebase_ml_vision.dart';
 import 'package:flutter_crashlytics/flutter_crashlytics.dart';
 import 'package:biblosphere/const.dart';
@@ -58,9 +59,27 @@ class MyBookshelf extends StatelessWidget {
                 ),
                 new IconButton(
                   onPressed: () async {
-                    //TODO: Depend on implementation of CachedImage use CacheManager directly
-                    //TODO: Add sharing image only text sharing at the moment
-                    Share.share('https://biblosphere.org/shelf?id=$shelfId#download');
+
+                    final DynamicLinkParameters parameters = DynamicLinkParameters(
+                      domain: 'biblosphere.page.link',
+                      link: Uri.parse('https://biblosphere.org/shelf?id=$shelfId#download'),
+                      androidParameters: AndroidParameters(
+                        packageName: 'com.biblosphere.biblosphere',
+                        minimumVersion: 0,
+                      ),
+                      dynamicLinkParametersOptions: DynamicLinkParametersOptions(
+                        shortDynamicLinkPathLength: ShortDynamicLinkPathLength.short,
+                      ),
+                      iosParameters: IosParameters(
+                        bundleId: 'com.biblosphere.biblosphere',
+                        minimumVersion: '0',
+                      ),
+                    );
+
+
+                    final ShortDynamicLink shortLink = await parameters.buildShortLink();
+
+                    Share.share(shortLink.shortUrl.toString());
                   },
                   tooltip: 'Share your bookshelf',
                   icon: new Icon(Icons.share),

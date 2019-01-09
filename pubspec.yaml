@@ -35,6 +35,8 @@ dependencies:
 
   share: ^0.5.3
 
+  firebase_dynamic_links: ^0.1.0+1
+
   firebase_ml_vision: ^0.2.0+1
 
   firebase_messaging: ^2.0.3
