@@ -355,12 +355,9 @@ class _MyHomePageState extends State<MyHomePage> {
 
     authStateChange = _auth.onAuthStateChanged.listen((user) async {
       print('Home onAuthStateChanged: USER: ' + user.toString());
-      firebaseUser = await _auth.currentUser();
       setState(() {
-        currentUserId = (firebaseUser != null) ? firebaseUser.uid : null;
+        _initUserRecord();
       });
-
-      if(firebaseUser != null) _initUserRecord(firebaseUser);
     });
 
     _firebaseMessaging.configure(
@@ -392,25 +389,32 @@ class _MyHomePageState extends State<MyHomePage> {
         });
       }
     });
+
+    _initUserRecord();
   }
 
-  void _initUserRecord(FirebaseUser user) async {
+  void _initUserRecord() async {
     try {
+      firebaseUser = await _auth.currentUser();
+      currentUserId = (firebaseUser != null) ? firebaseUser.uid : null;
+
+      if (currentUserId == null) return;
+
       // Check if user record exist
       final QuerySnapshot result = await Firestore.instance
           .collection('users')
-          .where('id', isEqualTo: user.uid)
+          .where('id', isEqualTo: firebaseUser.uid)
           .getDocuments();
       final List<DocumentSnapshot> documents = result.documents;
       if (documents.length == 0) {
         // Update data to server if new user
         Firestore.instance
             .collection('users')
-            .document(user.uid)
+            .document(firebaseUser.uid)
             .setData({
-          'name': user.displayName,
-          'photoUrl': user.photoUrl,
-          'id': user.uid
+          'name': firebaseUser.displayName,
+          'photoUrl': firebaseUser.photoUrl,
+          'id': firebaseUser.uid
         });
       }
 
@@ -418,7 +422,7 @@ class _MyHomePageState extends State<MyHomePage> {
         // Update FCM token for notifications
         Firestore.instance
             .collection('users')
-            .document(user.uid)
+            .document(firebaseUser.uid)
             .updateData({
           'token': token,
         });
