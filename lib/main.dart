@@ -356,7 +356,11 @@ class _MyHomePageState extends State<MyHomePage> {
     authStateChange = _auth.onAuthStateChanged.listen((user) async {
       print('Home onAuthStateChanged: USER: ' + user.toString());
       firebaseUser = await _auth.currentUser();
-      currentUserId = (firebaseUser != null) ? firebaseUser.uid : null;
+      setState(() {
+        currentUserId = (firebaseUser != null) ? firebaseUser.uid : null;
+      });
+
+      if(firebaseUser != null) _initUserRecord(firebaseUser);
     });
 
     _firebaseMessaging.configure(
@@ -388,31 +392,25 @@ class _MyHomePageState extends State<MyHomePage> {
         });
       }
     });
-
-    _initUserRecord();
   }
 
-  void _initUserRecord() async {
+  void _initUserRecord(FirebaseUser user) async {
     try {
-      //TODO: Do we need to reinitiate it each re-login. Where?
-      firebaseUser = await _auth.currentUser();
-      currentUserId = firebaseUser.uid;
-
       // Check if user record exist
       final QuerySnapshot result = await Firestore.instance
           .collection('users')
-          .where('id', isEqualTo: firebaseUser.uid)
+          .where('id', isEqualTo: user.uid)
           .getDocuments();
       final List<DocumentSnapshot> documents = result.documents;
       if (documents.length == 0) {
         // Update data to server if new user
         Firestore.instance
             .collection('users')
-            .document(firebaseUser.uid)
+            .document(user.uid)
             .setData({
-          'name': firebaseUser.displayName,
-          'photoUrl': firebaseUser.photoUrl,
-          'id': firebaseUser.uid
+          'name': user.displayName,
+          'photoUrl': user.photoUrl,
+          'id': user.uid
         });
       }
 
@@ -420,7 +418,7 @@ class _MyHomePageState extends State<MyHomePage> {
         // Update FCM token for notifications
         Firestore.instance
             .collection('users')
-            .document(firebaseUser.uid)
+            .document(user.uid)
             .updateData({
           'token': token,
         });
