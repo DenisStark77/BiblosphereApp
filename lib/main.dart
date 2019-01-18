@@ -357,8 +357,9 @@ class _MyHomePageState extends State<MyHomePage> {
 
     authStateChange = _auth.onAuthStateChanged.listen((user) async {
       print('Home onAuthStateChanged: USER: ' + user.toString());
-      firebaseUser = await _auth.currentUser();
-      currentUserId = (firebaseUser != null) ? firebaseUser.uid : null;
+      setState(() {
+        _initUserRecord();
+      });
     });
 
     _firebaseMessaging.configure(
@@ -396,9 +397,10 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void _initUserRecord() async {
     try {
-      //TODO: Do we need to reinitiate it each re-login. Where?
       firebaseUser = await _auth.currentUser();
-      currentUserId = firebaseUser.uid;
+      currentUserId = (firebaseUser != null) ? firebaseUser.uid : null;
+
+      if (currentUserId == null) return;
 
       // Check if user record exist
       final QuerySnapshot result = await Firestore.instance
