@@ -90,6 +90,13 @@ class BookshelfCard extends StatelessWidget {
                         " km"),
                     new IconButton(
                       onPressed: () {
+                        reportContent();
+                      },
+                      tooltip: 'Report objectionable content',
+                      icon: new Icon(Icons.flag),
+                    ),
+                    new IconButton(
+                      onPressed: () {
                         openMap(position);
                       },
                       tooltip: 'See location',
@@ -141,6 +148,23 @@ class BookshelfCard extends StatelessWidget {
       print("Chat screen failed: " + ex.toString());
       //TODO: fix FlutterCrashlytics build issue, uncomment
       //FlutterCrashlytics().logException(ex, stack);
+    }
+  }
+  void reportContent() async {
+    try {
+      Firestore.instance
+          .collection('reports')
+          .document(id)
+          .setData({
+        'shelf': id,
+        'reportedBy': currentUser,
+        'image': image,
+        'user': user
+      });
+
+    } catch (ex, stack) {
+      print("Content report failed: " + ex.toString());
+      FlutterCrashlytics().logException(ex, stack);
     }
   }
 }
