@@ -13,6 +13,8 @@ import 'package:flutter_crashlytics/flutter_crashlytics.dart';
 import 'package:intro_views_flutter/Models/page_view_model.dart';
 import 'package:intro_views_flutter/intro_views_flutter.dart';
 import 'package:flutter_auth_buttons/flutter_auth_buttons.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter/gestures.dart';
 
 import 'package:biblosphere/const.dart';
 import 'package:biblosphere/camera.dart';
@@ -23,62 +25,77 @@ final FirebaseAuth _auth = FirebaseAuth.instance;
 final FacebookLogin _facebookLogin = FacebookLogin();
 final GoogleSignIn _googleSignIn = new GoogleSignIn();
 
-void signInWithFacebook() async {
-  var facebookLoginResult =
-      await _facebookLogin.logInWithReadPermissions(['email']);
-  switch (facebookLoginResult.status) {
-    case FacebookLoginStatus.error:
-      print('Facebook login failed ' + facebookLoginResult.errorMessage);
-      break;
-    case FacebookLoginStatus.cancelledByUser:
-      print('Facebook login canceled');
-      break;
-    case FacebookLoginStatus.loggedIn:
-      try {
-        FirebaseUser firebaseUser = await _auth.signInWithFacebook(
+Future<FirebaseUser> signInWithFacebook() async {
+  try {
+    //Sign out from Firebase to ensure that onAuthStateChanged is called on login
+    await _auth.signOut();
+
+    var facebookLoginResult =
+        await _facebookLogin.logInWithReadPermissions(['email']);
+    switch (facebookLoginResult.status) {
+      case FacebookLoginStatus.error:
+        print('Facebook login failed ' + facebookLoginResult.errorMessage);
+        return null;
+        break;
+      case FacebookLoginStatus.cancelledByUser:
+        print('Facebook login canceled');
+        return null;
+        break;
+      case FacebookLoginStatus.loggedIn:
+        FirebaseUser user = await _auth.signInWithFacebook(
             accessToken: facebookLoginResult.accessToken.token);
-      } catch (ex, stack) {
-        print(ex);
-        FlutterCrashlytics().logException(ex, stack);
-      }
-      break;
+
+        return user;
+        break;
+    }
+  } catch (ex, stack) {
+    print(ex);
+    FlutterCrashlytics().logException(ex, stack);
+    return null;
   }
 }
 
 Future<FirebaseUser> signInWithGoogle() async {
-  // Attempt to get the currently authenticated user
-  GoogleSignInAccount currentUser = _googleSignIn.currentUser;
-  if (currentUser == null) {
-    // Attempt to sign in without user interaction
-    currentUser = await _googleSignIn.signInSilently();
+  try {
+    //Sign out from Firebase to ensure that onAuthStateChanged is called on login
+    await _auth.signOut();
+
+    // Attempt to get the currently authenticated user
+    GoogleSignInAccount currentUser = _googleSignIn.currentUser;
+    if (currentUser == null) {
+      // Attempt to sign in without user interaction
+      currentUser = await _googleSignIn.signInSilently();
+    }
+    if (currentUser == null) {
+      // Force the user to interactively sign in
+      currentUser = await _googleSignIn.signIn();
+    }
+
+    final GoogleSignInAuthentication auth = await currentUser.authentication;
+
+    // Authenticate with firebase
+    final FirebaseUser user = await _auth.signInWithGoogle(
+      idToken: auth.idToken,
+      accessToken: auth.accessToken,
+    );
+
+    assert(user != null);
+    assert(!user.isAnonymous);
+
+    return user;
+  } catch (ex, stack) {
+    print(ex);
+    FlutterCrashlytics().logException(ex, stack);
+    return null;
   }
-  if (currentUser == null) {
-    // Force the user to interactively sign in
-    currentUser = await _googleSignIn.signIn();
-  }
-
-  final GoogleSignInAuthentication auth = await currentUser.authentication;
-
-  // Authenticate with firebase
-  final FirebaseUser user = await _auth.signInWithGoogle(
-    idToken: auth.idToken,
-    accessToken: auth.accessToken,
-  );
-
-  assert(user != null);
-  assert(!user.isAnonymous);
-
-  return user;
 }
 
 Future<Null> signOut() async {
   // Sign out with firebase and Facebook
   await _auth.signOut();
   // Sign out with google
-  if (await _facebookLogin.isLoggedIn)
-    await _facebookLogin.logOut();
-  if (_googleSignIn.currentUser != null)
-    await _googleSignIn.signOut();
+  if (await _facebookLogin.isLoggedIn) await _facebookLogin.logOut();
+  if (_googleSignIn.currentUser != null) await _googleSignIn.signOut();
 }
 
 void main() async {
@@ -270,26 +287,9 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  StreamSubscription authStateChange;
-
   @override
   void initState() {
     super.initState();
-
-    // Listen for our auth event (on reload or start)
-    // Go to our /todos page once logged in
-    authStateChange = _auth.onAuthStateChanged.listen((user) {
-      print("LoginPage onAuthStateChanged User: " + user.toString());
-      if (user != null) {
-        Navigator.of(context).pushReplacementNamed('/main');
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    authStateChange.cancel();
-    super.dispose();
   }
 
   @override
@@ -307,11 +307,79 @@ class _LoginPageState extends State<LoginPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            GoogleSignInButton(onPressed: () {
-              signInWithGoogle();
+            Container(
+              padding: EdgeInsets.all(5.0),
+              child: RichText(
+                textAlign: TextAlign.center,
+                text: new TextSpan(
+//                  style: DefaultTextStyle.of(context)
+//                      .style
+//                      .apply(fontSizeFactor: 0.3),
+                  children: [
+                    new TextSpan(
+                      text:
+                          'By clicking sign in button below, you agree \n to our ',
+                      style: new TextStyle(color: Colors.black),
+                    ),
+                    new TextSpan(
+                      text: 'end user licence agreement',
+                      style: new TextStyle(
+                          color: Colors.blue,
+                          decoration: TextDecoration.underline),
+                      recognizer: new TapGestureRecognizer()
+                        ..onTap = () async {
+                          const url = 'https://biblosphere.org/eula.html';
+                          if (await canLaunch(url)) {
+                            await launch(url);
+                          } else {
+                            throw 'Could not launch url $url';
+                          }
+                        },
+                    ),
+                    new TextSpan(
+                      text: '\nand that you read our ',
+                      style: new TextStyle(color: Colors.black),
+                    ),
+                    new TextSpan(
+                      text: 'privacy policy',
+                      style: new TextStyle(
+                          color: Colors.blue,
+                          decoration: TextDecoration.underline),
+                      recognizer: new TapGestureRecognizer()
+                        ..onTap = () async {
+                          const url = 'https://biblosphere.org/pp.html';
+                          if (await canLaunch(url)) {
+                            await launch(url);
+                          } else {
+                            throw 'Could not launch url $url';
+                          }
+                        },
+                    ),
+                    new TextSpan(
+                      text: '.',
+                      style: new TextStyle(color: Colors.black),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            GoogleSignInButton(onPressed: () async {
+              FirebaseUser user = await signInWithGoogle();
+              if (user != null) {
+                Navigator.of(context).pushReplacementNamed('/main');
+              } else {
+                await signOut();
+                Navigator.of(context).pushReplacementNamed('/');
+              }
             }),
-            FacebookSignInButton(onPressed: () {
-              signInWithFacebook();
+            FacebookSignInButton(onPressed: () async {
+              FirebaseUser user = await signInWithFacebook();
+              if (user != null) {
+                Navigator.of(context).pushReplacementNamed('/main');
+              } else {
+                await signOut();
+                Navigator.of(context).pushReplacementNamed('/');
+              }
             }),
           ],
         ),
@@ -345,20 +413,11 @@ class _MyHomePageState extends State<MyHomePage> {
   FirebaseUser firebaseUser;
   bool unreadMessage = false;
 
-  StreamSubscription authStateChange;
-
   @override
   void initState() {
     super.initState();
 
     _initLocationState();
-
-    authStateChange = _auth.onAuthStateChanged.listen((user) async {
-      print('Home onAuthStateChanged: USER: ' + user.toString());
-      setState(() {
-        _initUserRecord();
-      });
-    });
 
     _firebaseMessaging.configure(
       onMessage: (Map<String, dynamic> message) {
@@ -378,6 +437,7 @@ class _MyHomePageState extends State<MyHomePage> {
         });
       },
     );
+
     _firebaseMessaging.requestNotificationPermissions(
         const IosNotificationSettings(sound: true, badge: true, alert: true));
 
@@ -460,12 +520,6 @@ class _MyHomePageState extends State<MyHomePage> {
         await Firestore.instance.collection('users').document(peerId).get();
 
     return userSnap;
-  }
-
-  @override
-  void dispose() {
-    authStateChange.cancel();
-    super.dispose();
   }
 
   Widget buildItem(BuildContext context, DocumentSnapshot userSnap) {
