@@ -119,6 +119,8 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return new MaterialApp(
       title: 'Biblosphere',
+      // Uncomment to make screenshots in simulator without debug banner
+      // debugShowCheckedModeBanner: false,
       theme: new ThemeData(
         // This is the theme of your application.
         //
