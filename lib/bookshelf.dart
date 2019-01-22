@@ -91,9 +91,10 @@ class BookshelfCard extends StatelessWidget {
                     new IconButton(
                       onPressed: () {
                         reportContent();
+                        showBbsDialog(context, 'This photo reported as objectionable content.');
                       },
                       tooltip: 'Report objectionable content',
-                      icon: new Icon(Icons.flag),
+                      icon: new Icon(Icons.report),
                     ),
                     new IconButton(
                       onPressed: () {

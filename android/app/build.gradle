@@ -30,7 +30,7 @@ android {
         applicationId "com.biblosphere.biblosphere"
         minSdkVersion 21
         targetSdkVersion 27
-        versionCode 10764
+        versionCode 10864
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         multiDexEnabled true
