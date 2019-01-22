@@ -164,7 +164,8 @@ class BookshelfCard extends StatelessWidget {
 
     } catch (ex, stack) {
       print("Content report failed: " + ex.toString());
-      FlutterCrashlytics().logException(ex, stack);
+      //TODO: fix FlutterCrashlytics build issue, uncomment
+      //FlutterCrashlytics().logException(ex, stack);
     }
   }
 }

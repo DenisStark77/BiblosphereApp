@@ -86,7 +86,8 @@ Future<FirebaseUser> signInWithGoogle() async {
     return user;
   } catch (ex, stack) {
     print(ex);
-    FlutterCrashlytics().logException(ex, stack);
+    //TODO: fix FlutterCrashlytics build issue, uncomment
+    //FlutterCrashlytics().logException(ex, stack);
     return null;
   }
 }
