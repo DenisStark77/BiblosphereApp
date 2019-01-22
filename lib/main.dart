@@ -252,6 +252,7 @@ class _IntroPageState extends State<IntroPage> {
       builder: (context) => new IntroViewsFlutter(
             pages,
             onTapDoneButton: () {
+              authStateChange.cancel();
               Navigator.pushReplacement(
                 context,
                 new MaterialPageRoute(
@@ -260,6 +261,7 @@ class _IntroPageState extends State<IntroPage> {
               );
             },
             onTapSkipButton: () {
+              authStateChange.cancel();
               Navigator.pushReplacement(
                 context,
                 new MaterialPageRoute(
@@ -522,6 +524,14 @@ class _MyHomePageState extends State<MyHomePage> {
     return userSnap;
   }
 
+  void blockUser(String blockingUser, String blockedUser)  {
+     Firestore.instance
+         .collection('messages')
+         .document(chatId(blockingUser, blockedUser))
+         .updateData({'blocked': 'yes'});
+  }
+
+
   Widget buildItem(BuildContext context, DocumentSnapshot userSnap) {
     return Container(
       child: FlatButton(
@@ -553,6 +563,13 @@ class _MyHomePageState extends State<MyHomePage> {
             alignment: Alignment.centerLeft,
             margin: new EdgeInsets.fromLTRB(20.0, 0.0, 0.0, 20.0),
           )),
+          new IconButton(
+            onPressed: () {
+              blockUser(currentUserId, userSnap['id']);
+            },
+            tooltip: 'Block abusive user',
+            icon: new Icon(Icons.report),
+          ),
         ]),
         onPressed: () {
           setState(() {
@@ -628,6 +645,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 stream: Firestore.instance
                     .collection('messages')
                     .where("ids", arrayContains: currentUserId)
+                    .where("blocked", isEqualTo: "no")
                     .orderBy("timestamp", descending: true)
                     .snapshots(),
                 builder: (context, snapshot) {

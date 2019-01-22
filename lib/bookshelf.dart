@@ -93,7 +93,7 @@ class BookshelfCard extends StatelessWidget {
                         reportContent();
                       },
                       tooltip: 'Report objectionable content',
-                      icon: new Icon(Icons.flag),
+                      icon: new Icon(Icons.report),
                     ),
                     new IconButton(
                       onPressed: () {

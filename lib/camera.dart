@@ -139,46 +139,7 @@ class Home extends StatelessWidget {
       bool imageAccepted = await isBookcase(image);
 
       if (! imageAccepted) {
-        showDialog<Null>(
-          context: context,
-          barrierDismissible: true,
-          builder: (BuildContext context) {
-            return AlertDialog(
-              content: Container(
-                child: Row(
-                  children: <Widget>[
-                    Material(
-                      child: Image.asset('images/Librarian50x50.jpg', width: 50.0,),
-                      borderRadius: BorderRadius.all(Radius.circular(5.0)),
-                    ),
-                    new Flexible(
-                      child: Container(
-                        child: new Container(
-                              child: Text(
-                                'Hey, this does not look like a bookshelf to me.',
-                                style: TextStyle(color: themeColor),
-                              ),
-                              alignment: Alignment.centerLeft,
-                              margin: new EdgeInsets.fromLTRB(5.0, 0.0, 0.0, 5.0),
-                            ),
-                        margin: EdgeInsets.only(left: 5.0),
-                      ),
-                    ),
-          ]),
-                height: 50.0,
-              ),
-              actions: <Widget>[
-                FlatButton(
-                  child: Text('Ok'),
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                  },
-                ),
-              ],
-            );
-          },
-        );
-
+        showBbsDialog(context, 'Hey, this does not look like a bookshelf to me.');
         return;
       }
 
