@@ -457,15 +457,25 @@ class _MyHomePageState extends State<MyHomePage> {
       }
     });
 
-    _initUserRecord();
+    // This is async call so if user initialization takes too long then
+    // build function is called prior to it (empty currentUserId)
+    _initUserRecord().then((_) {
+      setState(() {});
+    });
+
+    // TODO: build function executed 3 times: after initState, after setState in
+    //       _initUserRecord and after setState in _initLocationState.
+    //       Better to minimize rebuilding. For example by providing currentUser
+    //       as parameter on widget push (is it possible?).
   }
 
-  void _initUserRecord() async {
+  Future<void> _initUserRecord() async {
     try {
       firebaseUser = await _auth.currentUser();
       currentUserId = (firebaseUser != null) ? firebaseUser.uid : null;
 
-      if (currentUserId == null) return;
+      if (currentUserId == null)
+         throw "CurrentUserId is null, login failed or not completed";
 
       // Check if user record exist
       final QuerySnapshot result = await Firestore.instance
@@ -536,7 +546,6 @@ class _MyHomePageState extends State<MyHomePage> {
          .document(chatId(blockingUser, blockedUser))
          .updateData({'blocked': 'yes'});
   }
-
 
   Widget buildItem(BuildContext context, DocumentSnapshot userSnap) {
     return Container(
