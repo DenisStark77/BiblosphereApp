@@ -172,7 +172,7 @@ class _IntroPageState extends State<IntroPage> {
         pageColor: const Color(0xFF03A9F4),
         iconImageAssetPath: 'images/home.png',
         iconColor: null,
-        bubbleBackgroundColor: null,
+        bubbleBackgroundColor: Colors.white,
         body: Text(
           'Shoot your bookcase and share to neighbours and tourists. Your books attract likeminded people.',
         ),
@@ -190,7 +190,7 @@ class _IntroPageState extends State<IntroPage> {
       pageColor: const Color(0xFF8BC34A),
       iconImageAssetPath: 'images/local_library.png',
       iconColor: null,
-      bubbleBackgroundColor: null,
+      bubbleBackgroundColor: Colors.white,
       body: Text(
         'App shows bookcases in 200 km around you sorted by distance. Get access to wide variaty of books.',
       ),
@@ -207,7 +207,7 @@ class _IntroPageState extends State<IntroPage> {
       pageColor: const Color(0xFF607D8B),
       iconImageAssetPath: 'images/message.png',
       iconColor: null,
-      bubbleBackgroundColor: null,
+      bubbleBackgroundColor: Colors.white,
       body: Text(
         'Contact owner of the books you like and arrange appointment to get new books to read.',
       ),
