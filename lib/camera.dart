@@ -187,13 +187,15 @@ class Home extends StatelessWidget {
 
     final FirebaseVisionImage visionImage = FirebaseVisionImage.fromFile(imageFile);
 
+    // Cloud detection
     FirebaseVisionDetector detector = FirebaseVision.instance.cloudLabelDetector();
-//  Use FirebaseVision.instance.labelDetector() for on-device detection
+    //On-device detection
+    //FirebaseVisionDetector detector = FirebaseVision.instance.labelDetector();
 
     final List<Label> results = await detector.detectInImage(visionImage);
 
     if (results != null) {
-      var books = results.where((label) => label.label == 'bookcase' || label.label == 'book');
+      var books = results.where((label) => label.label.toLowerCase() == 'bookcase' || label.label.toLowerCase() == 'book');
       return books.length > 0;
     }
 
