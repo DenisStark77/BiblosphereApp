@@ -576,7 +576,7 @@ exports.shelf = functions.https.onRequest(async (req, res) => {
           <h1 class="display-2"> Download The App to access this bookshelf! </h1>
           <p> Via app you can contact books' owners and get new books to read. </p>
           <ul class="download-content__badges">
-            <li><a href="#0" title="" class="badge-appstore">App Store</a></li>
+            <li><a href="https://itunes.apple.com/ae/app/biblosphere/id1445570468?mt=8" title="" class="badge-appstore">App Store</a></li>
             <li><a href="https://play.google.com/store/apps/details?id=com.biblosphere.biblosphere"
 
                 title="" class="badge-googleplay">Play Store</a></li>
