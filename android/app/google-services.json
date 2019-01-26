@@ -1,0 +1,42 @@
+{
+  "project_info": {
+    "project_number": "779249096383",
+    "firebase_url": "https://biblosphere-210106.firebaseio.com",
+    "project_id": "biblosphere-210106",
+    "storage_bucket": "biblosphere-210106.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:779249096383:android:7f71d49fd0686307",
+        "android_client_info": {
+          "package_name": "com.biblosphere.biblosphere"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "779249096383-7ddo7gvc3emlmm58qglcdj9ep8j0jqvu.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCjAOu7UGz3I6C73dAJjtHy5BYU-I6qeLg"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
