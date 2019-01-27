@@ -49,7 +49,7 @@ android {
         //Use with flutter build apk --target-platform=android-arm --flavor=arm7
         arm7 {
             dimension 'cpuArch'
-            versionCode 11032
+            versionCode 11132
             ndk {
                 abiFilter 'armeabi-v7a'
             }
@@ -58,7 +58,7 @@ android {
         //Use with flutter build apk --target-platform=android-arm64 --flavor=arm8
         arm8 {
             dimension 'cpuArch'
-            versionCode 11064
+            versionCode 11164
             ndk {
                 abiFilters 'arm64-v8a'
             }
