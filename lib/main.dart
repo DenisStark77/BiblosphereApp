@@ -9,7 +9,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
-//import 'package:flutter_crashlytics/flutter_crashlytics.dart';
+import 'package:flutter_crashlytics/flutter_crashlytics.dart';
 import 'package:intro_views_flutter/Models/page_view_model.dart';
 import 'package:intro_views_flutter/intro_views_flutter.dart';
 import 'package:flutter_auth_buttons/flutter_auth_buttons.dart';
@@ -50,8 +50,7 @@ Future<FirebaseUser> signInWithFacebook() async {
     return null;
   } catch (ex, stack) {
     print(ex);
-    //TODO: fix FlutterCrashlytics build issue, uncomment
-    //FlutterCrashlytics().logException(ex, stack);
+    FlutterCrashlytics().logException(ex, stack);
     return null;
   }
 }
@@ -86,8 +85,7 @@ Future<FirebaseUser> signInWithGoogle() async {
     return user;
   } catch (ex, stack) {
     print(ex);
-    //TODO: fix FlutterCrashlytics build issue, uncomment
-    //FlutterCrashlytics().logException(ex, stack);
+    FlutterCrashlytics().logException(ex, stack);
     return null;
   }
 }
@@ -117,7 +115,7 @@ void main() async {
     }
   };
 
-  //await FlutterCrashlytics().initialize();
+  await FlutterCrashlytics().initialize();
 
   runZoned<Future<Null>>(() async {
     runApp(new MyApp());
@@ -125,9 +123,8 @@ void main() async {
     // Whenever an error occurs, call the `reportCrash` function. This will send
     // Dart errors to our dev console or Crashlytics depending on the environment.
     debugPrint(error.toString());
-    //TODO: fix FlutterCrashlytics build issue, uncomment
-    //await FlutterCrashlytics()
-    //    .reportCrash(error, stackTrace, forceCrash: false);
+    await FlutterCrashlytics()
+        .reportCrash(error, stackTrace, forceCrash: false);
   });
 }
 
@@ -506,8 +503,7 @@ class _MyHomePageState extends State<MyHomePage> {
       });
     } catch (ex, stack) {
       print(ex);
-      //TODO: fix FlutterCrashlytics build issue, uncomment
-      //FlutterCrashlytics().logException(ex, stack);
+      FlutterCrashlytics().logException(ex, stack);
     }
   }
 

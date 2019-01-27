@@ -6,7 +6,7 @@ import 'package:biblosphere/chat.dart';
 import 'package:firestore_helpers/firestore_helpers.dart';
 import 'package:photo_view/photo_view.dart';
 import 'dart:math' as math;
-//import 'package:flutter_crashlytics/flutter_crashlytics.dart';
+import 'package:flutter_crashlytics/flutter_crashlytics.dart';
 import 'package:biblosphere/const.dart';
 
 class ShelfData {
@@ -152,8 +152,7 @@ class BookshelfCard extends StatelessWidget {
                   )));
     } catch (ex, stack) {
       print("Chat screen failed: " + ex.toString());
-      //TODO: fix FlutterCrashlytics build issue, uncomment
-      //FlutterCrashlytics().logException(ex, stack);
+      FlutterCrashlytics().logException(ex, stack);
     }
   }
   void reportContent() async {
@@ -170,8 +169,7 @@ class BookshelfCard extends StatelessWidget {
 
     } catch (ex, stack) {
       print("Content report failed: " + ex.toString());
-      //TODO: fix FlutterCrashlytics build issue, uncomment
-      //FlutterCrashlytics().logException(ex, stack);
+      FlutterCrashlytics().logException(ex, stack);
     }
   }
 }
@@ -213,8 +211,7 @@ class BookshelfList extends StatelessWidget {
           ).map((list) => new List<BookshelfCard>.generate(list.length, (int index) => new BookshelfCard(list[index], currentUserId, currentPosition)));
     } catch (ex, stack) {
       print("Sort and filter by distance failed: " + ex.toString());
-      //TODO: fix FlutterCrashlytics build issue, uncomment
-      //FlutterCrashlytics().logException(ex, stack);
+      FlutterCrashlytics().logException(ex, stack);
     }
     return null;
   }
