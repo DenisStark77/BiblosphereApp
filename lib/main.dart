@@ -14,6 +14,7 @@ import 'package:intro_views_flutter/Models/page_view_model.dart';
 import 'package:intro_views_flutter/intro_views_flutter.dart';
 import 'package:flutter_auth_buttons/flutter_auth_buttons.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:firestore_helpers/firestore_helpers.dart';
 import 'package:flutter/gestures.dart';
 
 import 'package:biblosphere/const.dart';
@@ -35,11 +36,9 @@ Future<FirebaseUser> signInWithFacebook() async {
     switch (facebookLoginResult.status) {
       case FacebookLoginStatus.error:
         print('Facebook login failed ' + facebookLoginResult.errorMessage);
-        return null;
         break;
       case FacebookLoginStatus.cancelledByUser:
         print('Facebook login canceled');
-        return null;
         break;
       case FacebookLoginStatus.loggedIn:
         FirebaseUser user = await _auth.signInWithFacebook(
@@ -48,6 +47,7 @@ Future<FirebaseUser> signInWithFacebook() async {
         return user;
         break;
     }
+    return null;
   } catch (ex, stack) {
     print(ex);
     //TODO: fix FlutterCrashlytics build issue, uncomment
@@ -172,7 +172,7 @@ class _IntroPageState extends State<IntroPage> {
         pageColor: const Color(0xFF03A9F4),
         iconImageAssetPath: 'images/home.png',
         iconColor: null,
-        bubbleBackgroundColor: Colors.white,
+        bubbleBackgroundColor: const Color(0x88FFFFFF),
         body: Text(
           'Shoot your bookcase and share to neighbours and tourists. Your books attract likeminded people.',
         ),
@@ -190,7 +190,7 @@ class _IntroPageState extends State<IntroPage> {
       pageColor: const Color(0xFF8BC34A),
       iconImageAssetPath: 'images/local_library.png',
       iconColor: null,
-      bubbleBackgroundColor: Colors.white,
+      bubbleBackgroundColor: Color(0x88FFFFFF),
       body: Text(
         'App shows bookcases in 200 km around you sorted by distance. Get access to wide variaty of books.',
       ),
@@ -207,7 +207,7 @@ class _IntroPageState extends State<IntroPage> {
       pageColor: const Color(0xFF607D8B),
       iconImageAssetPath: 'images/message.png',
       iconColor: null,
-      bubbleBackgroundColor: Colors.white,
+      bubbleBackgroundColor: Color(0x88FFFFFF),
       body: Text(
         'Contact owner of the books you like and arrange appointment to get new books to read.',
       ),
@@ -652,7 +652,7 @@ class _MyHomePageState extends State<MyHomePage> {
             Home(currentUserId: currentUserId),
 
             // Main tab with bookshelves
-            new BookshelfList(currentUserId, _position),
+            new BookshelfList(currentUserId, _position, _position!=null ? new Area(_position, 200.0) : null),
 
             // Tab for chat
             Container(
