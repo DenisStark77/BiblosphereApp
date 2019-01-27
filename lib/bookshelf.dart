@@ -9,18 +9,23 @@ import 'dart:math' as math;
 import 'package:flutter_crashlytics/flutter_crashlytics.dart';
 import 'package:biblosphere/const.dart';
 
-class BookshelfCard extends StatelessWidget {
-  final String id;
-  final String image;
-  final GeoPoint position;
-  final String user;
-  final String currentUser;
-  final GeoPoint currentPosition;
-  //TODO: non final field in the StatelessWidget. Should be refactored.
+class ShelfData {
+  String id;
+  String image;
+  GeoPoint position;
+  String user;
+
   double distance;
 
-  BookshelfCard(this.id, this.currentUser, this.image, this.user, this.position,
-      this.currentPosition);
+  ShelfData(this.id, this.image, this.position, this.user);
+}
+
+class BookshelfCard extends StatelessWidget {
+  final ShelfData shelf;
+  final String currentUser;
+  final GeoPoint currentPosition;
+
+  BookshelfCard(this.shelf, this.currentUser, this.currentPosition);
 
   double distanceBetween(double lat1, double lon1, double lat2, double lon2) {
     double R = 6378.137; // Radius of earth in KM
@@ -60,7 +65,7 @@ class BookshelfCard extends StatelessWidget {
                                     ),
                                     body: new PhotoView(
                                       imageProvider:
-                                          CachedNetworkImageProvider(image),
+                                          CachedNetworkImageProvider(shelf.image),
                                       minScale:
                                           PhotoViewComputedScale.contained * 1.0,
                                       maxScale:
@@ -71,7 +76,7 @@ class BookshelfCard extends StatelessWidget {
                                   )));
                     },
                     child: Image(
-                        image: new CachedNetworkImageProvider(image),
+                        image: new CachedNetworkImageProvider(shelf.image),
                         fit: BoxFit.cover),
                   ),
                   margin: EdgeInsets.only(top: 7.0, left: 7.0, right: 7.0)),
@@ -81,8 +86,8 @@ class BookshelfCard extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: <Widget>[
                     new Text(distanceBetween(
-                                position.latitude,
-                                position.longitude,
+                                shelf.position.latitude,
+                                shelf.position.longitude,
                                 currentPosition.latitude,
                                 currentPosition.longitude)
                             .round()
@@ -98,14 +103,14 @@ class BookshelfCard extends StatelessWidget {
                     ),
                     new IconButton(
                       onPressed: () {
-                        openMap(position);
+                        openMap(shelf.position);
                       },
                       tooltip: 'See location',
                       icon: new Icon(Icons.location_on),
                     ),
                     new IconButton(
                       onPressed: () {
-                        openMsg(context, user);
+                        openMsg(context, shelf.user);
                       },
                       tooltip: 'Message owner',
                       icon: new Icon(Icons.message),
@@ -154,12 +159,12 @@ class BookshelfCard extends StatelessWidget {
     try {
       Firestore.instance
           .collection('reports')
-          .document(id)
+          .document(shelf.id)
           .setData({
-        'shelf': id,
+        'shelf': shelf.id,
         'reportedBy': currentUser,
-        'image': image,
-        'user': user
+        'image': shelf.image,
+        'user': shelf.user
       });
 
     } catch (ex, stack) {
@@ -173,11 +178,9 @@ class BookshelfList extends StatelessWidget {
   final String currentUserId;
   final GeoPoint currentPosition;
   //TODO: Area is not final field in StatelessWidget. Should be refactored.
-  Area area;
+  final Area area;
 
-  BookshelfList(this.currentUserId, this.currentPosition) {
-    if (currentPosition != null) area = new Area(currentPosition, 200.0);
-  }
+  BookshelfList(this.currentUserId, this.currentPosition, this.area);
 
   Stream<List<BookshelfCard>> getBookshelves(area) {
     try {
@@ -186,13 +189,11 @@ class BookshelfList extends StatelessWidget {
           area: area,
           locationFieldNameInDB: 'position',
           mapper: (document) {
-            var shelf = new BookshelfCard(
+            var shelf = new ShelfData(
                 document.documentID,
-                currentUserId,
                 document.data['URL'],
-                document.data['user'],
                 document.data['position'],
-                currentPosition);
+                document.data['user']);
             // if you serializer does not pass types like GeoPoint through
             // you have to add that fields manually. If using `jaguar_serializer`
             // add @pass attribute to the GeoPoint field and you can omit this.
@@ -207,7 +208,7 @@ class BookshelfList extends StatelessWidget {
           distanceAccessor: (shelf) => shelf.distance,
           sortDecending: true
 //          clientSitefilters: (BookshelfCard => shelf._user != currentUserId)  // filer only future events
-          );
+          ).map((list) => new List<BookshelfCard>.generate(list.length, (int index) => new BookshelfCard(list[index], currentUserId, currentPosition)));
     } catch (ex, stack) {
       print("Sort and filter by distance failed: " + ex.toString());
       FlutterCrashlytics().logException(ex, stack);
@@ -219,14 +220,14 @@ class BookshelfList extends StatelessWidget {
   Widget build(BuildContext context) {
     if (currentUserId == null || currentPosition == null) return Container();
 
-    return new StreamBuilder<List<BookshelfCard>>(
+    return StreamBuilder<List<BookshelfCard>>(
       stream: getBookshelves(area),
       builder:
           (BuildContext context, AsyncSnapshot<List<BookshelfCard>> snapshot) {
         if (!snapshot.hasData) return new Text('Loading...');
         return new ListView(
-          children: snapshot.data.map((BookshelfCard shelf) {
-            if (shelf.user == currentUserId) return Container();
+          children: snapshot.data.map((BookshelfCard shelf)  {
+            if (shelf.shelf.user == currentUserId) return Container();
             return shelf;
           }).toList(),
         );
