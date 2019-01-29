@@ -8,6 +8,7 @@ import 'package:photo_view/photo_view.dart';
 import 'dart:math' as math;
 import 'package:flutter_crashlytics/flutter_crashlytics.dart';
 import 'package:biblosphere/const.dart';
+import 'package:biblosphere/l10n.dart';
 
 class ShelfData {
   String id;
@@ -55,11 +56,11 @@ class BookshelfCard extends StatelessWidget {
                           new MaterialPageRoute(
                               builder: (context) => new Scaffold(
                                     appBar: new AppBar(
-                                      title: new Text(
-                                        'ZOOM',
+                                      title: new Text(S.of(context).zoom,
                                         style: TextStyle(
                                             color: primaryColor,
-                                            fontWeight: FontWeight.bold),
+                                            fontWeight: FontWeight.bold
+                                        ),
                                       ),
                                       centerTitle: true,
                                     ),
@@ -92,27 +93,27 @@ class BookshelfCard extends StatelessWidget {
                                 currentPosition.longitude)
                             .round()
                             .toString() +
-                        " km"),
+                        S.of(context).km),
                     new IconButton(
                       onPressed: () {
                         reportContent();
-                        showBbsDialog(context, 'This photo reported as objectionable content.');
+                        showBbsDialog(context, S.of(context).reportedPhoto);
                       },
-                      tooltip: 'Report objectionable content',
+                      tooltip: S.of(context).reportShelf,
                       icon: new Icon(Icons.report),
                     ),
                     new IconButton(
                       onPressed: () {
                         openMap(shelf.position);
                       },
-                      tooltip: 'See location',
+                      tooltip: S.of(context).seeLocation,
                       icon: new Icon(Icons.location_on),
                     ),
                     new IconButton(
                       onPressed: () {
                         openMsg(context, shelf.user);
                       },
-                      tooltip: 'Message owner',
+                      tooltip: S.of(context).messageOwner,
                       icon: new Icon(Icons.message),
                     ),
                   ],
@@ -224,7 +225,7 @@ class BookshelfList extends StatelessWidget {
       stream: getBookshelves(area),
       builder:
           (BuildContext context, AsyncSnapshot<List<BookshelfCard>> snapshot) {
-        if (!snapshot.hasData) return new Text('Loading...');
+        if (!snapshot.hasData) return new Text(S.of(context).loading);
         return new ListView(
           children: snapshot.data.map((BookshelfCard shelf)  {
             if (shelf.shelf.user == currentUserId) return Container();

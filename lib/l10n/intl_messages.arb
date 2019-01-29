@@ -1,0 +1,139 @@
+{
+  "@@last_modified": "2019-01-29T22:39:30.555558",
+  "title": "Biblosphere",
+  "@title": {
+    "description": "The application title",
+    "type": "text",
+    "placeholders": {}
+  },
+  "introShootHint": "Shoot your bookcase and share to neighbours and tourists. Your books attract likeminded people.",
+  "@introShootHint": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "introShoot": "Shoot",
+  "@introShoot": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "introSurfHint": "App shows bookcases in 200 km around you sorted by distance. Get access to wide variaty of books.",
+  "@introSurfHint": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "introSurf": "Surf",
+  "@introSurf": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "introMeetHint": "Contact owner of the books you like and arrange appointment to get new books to read.",
+  "@introMeetHint": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "introMeet": "Meet",
+  "@introMeet": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "loginAgree1": "By clicking sign in button below, you agree \n to our",
+  "@loginAgree1": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "loginAgree2": "end user licence agreement",
+  "@loginAgree2": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "loginAgree3": "\nand that you read our ",
+  "@loginAgree3": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "loginAgree4": "privacy policy",
+  "@loginAgree4": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "blockUser": "Block abusive user",
+  "@blockUser": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "logout": "Logout",
+  "@logout": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "deleteShelf": "Delete your bookshelf",
+  "@deleteShelf": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "shareShelf": "Share your bookshelf",
+  "@shareShelf": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "loading": "Loading...",
+  "@loading": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "notBooks": "Hey, this does not look like a bookshelf to me.",
+  "@notBooks": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "addShelf": "Add your bookshelf",
+  "@addShelf": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "zoom": "ZOOM",
+  "@zoom": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "km": " km",
+  "@km": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "reportedPhoto": "This photo reported as objectionable content.",
+  "@reportedPhoto": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "reportShelf": "Report objectionable content",
+  "@reportShelf": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "seeLocation": "See location",
+  "@seeLocation": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "messageOwner": "Message owner",
+  "@messageOwner": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "chat": "CHAT",
+  "@chat": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "nothingToSend": "Nothing to send",
+  "@nothingToSend": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "typeMsg": "Type your message...",
+  "@typeMsg": {
+    "type": "text",
+    "placeholders": {}
+  }
+}

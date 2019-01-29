@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:biblosphere/const.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl/intl.dart';
+import 'package:biblosphere/l10n.dart';
 
 class Chat extends StatelessWidget {
   static runChat(BuildContext context, String myId, String userId) async {
@@ -37,7 +38,7 @@ class Chat extends StatelessWidget {
     return new Scaffold(
       appBar: new AppBar(
         title: new Text(
-          'CHAT',
+          S.of(context).chat,
           style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
@@ -148,7 +149,7 @@ class ChatScreenState extends State<ChatScreen> {
       });
       listScrollController.animateTo(0.0, duration: Duration(milliseconds: 300), curve: Curves.easeOut);
     } else {
-      Fluttertoast.showToast(msg: 'Nothing to send');
+      Fluttertoast.showToast(msg: S.of(context).nothingToSend);
     }
   }
 
@@ -402,7 +403,7 @@ class ChatScreenState extends State<ChatScreen> {
                 style: TextStyle(color: primaryColor, fontSize: 15.0),
                 controller: textEditingController,
                 decoration: InputDecoration.collapsed(
-                  hintText: 'Type your message...',
+                  hintText: S.of(context).typeMsg,
                   hintStyle: TextStyle(color: greyColor),
                 ),
                 focusNode: focusNode,

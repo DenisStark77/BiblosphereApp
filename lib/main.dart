@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -21,6 +22,7 @@ import 'package:biblosphere/const.dart';
 import 'package:biblosphere/camera.dart';
 import 'package:biblosphere/bookshelf.dart';
 import 'package:biblosphere/chat.dart';
+import 'package:biblosphere/l10n.dart';
 
 final FirebaseAuth _auth = FirebaseAuth.instance;
 final FacebookLogin _facebookLogin = FacebookLogin();
@@ -133,7 +135,13 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return new MaterialApp(
-      title: 'Biblosphere',
+      localizationsDelegates: [
+        AppLocalizationsDelegate(),
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate
+      ],
+      supportedLocales: [Locale("en"), Locale("ru")],
+      onGenerateTitle: (BuildContext context) => S.of(context).title,
       theme: new ThemeData(
         // This is the theme of your application.
         //
@@ -147,7 +155,7 @@ class MyApp extends StatelessWidget {
       ),
       home: IntroPage(),
       routes: <String, WidgetBuilder>{
-        '/main': (BuildContext context) => new MyHomePage(title: 'Biblosphere'),
+        '/main': (BuildContext context) => new MyHomePage(),
       },
     );
   }
@@ -162,60 +170,6 @@ class IntroPage extends StatefulWidget {
 }
 
 class _IntroPageState extends State<IntroPage> {
-  final pages = [
-    new PageViewModel(
-        pageColor: const Color(0xFF03A9F4),
-        iconImageAssetPath: 'images/home.png',
-        iconColor: null,
-        bubbleBackgroundColor: const Color(0x88FFFFFF),
-        body: Text(
-          'Shoot your bookcase and share to neighbours and tourists. Your books attract likeminded people.',
-        ),
-        title: Text(
-          'Shoot',
-        ),
-        textStyle: TextStyle(fontFamily: 'MyFont', color: Colors.white),
-        mainImage: Image.asset(
-          'images/shoot.png',
-//          height: 285.0,
-//          width: 285.0,
-          alignment: Alignment.center,
-        )),
-    new PageViewModel(
-      pageColor: const Color(0xFF8BC34A),
-      iconImageAssetPath: 'images/local_library.png',
-      iconColor: null,
-      bubbleBackgroundColor: Color(0x88FFFFFF),
-      body: Text(
-        'App shows bookcases in 200 km around you sorted by distance. Get access to wide variaty of books.',
-      ),
-      title: Text('Surf'),
-      mainImage: Image.asset(
-        'images/surf.png',
-//        height: 285.0,
-//        width: 285.0,
-        alignment: Alignment.center,
-      ),
-      textStyle: TextStyle(fontFamily: 'MyFont', color: Colors.white),
-    ),
-    new PageViewModel(
-      pageColor: const Color(0xFF607D8B),
-      iconImageAssetPath: 'images/message.png',
-      iconColor: null,
-      bubbleBackgroundColor: Color(0x88FFFFFF),
-      body: Text(
-        'Contact owner of the books you like and arrange appointment to get new books to read.',
-      ),
-      title: Text('Meet'),
-      mainImage: Image.asset(
-        'images/meet.png',
-//        height: 285.0,
-//        width: 285.0,
-        alignment: Alignment.center,
-      ),
-      textStyle: TextStyle(fontFamily: 'MyFont', color: Colors.white),
-    ),
-  ];
 
   StreamSubscription authStateChange;
 
@@ -226,7 +180,6 @@ class _IntroPageState extends State<IntroPage> {
     // Listen for our auth event (on reload or start)
     // Go to our /todos page once logged in
     authStateChange = _auth.onAuthStateChanged.listen((user) {
-      print("IntroPage onAuthStateChanged User: " + user.toString());
       if (user != null) {
         Navigator.of(context).pushReplacementNamed('/main');
       }
@@ -247,6 +200,52 @@ class _IntroPageState extends State<IntroPage> {
     // The Flutter framework has been optimized to make rerunning build methods
     // fast, so that you can just rebuild anything that needs updating rather
     // than having to individually change instances of widgets.
+    final pages = [
+      new PageViewModel(
+          pageColor: const Color(0xFF03A9F4),
+          iconImageAssetPath: 'images/home.png',
+          iconColor: null,
+          bubbleBackgroundColor: const Color(0x88FFFFFF),
+          body: Text(S.of(context).introShootHint),
+          title: Text(S.of(context).introShoot),
+          textStyle: TextStyle(fontFamily: 'MyFont', color: Colors.white),
+          mainImage: Image.asset(
+            'images/shoot.png',
+//          height: 285.0,
+//          width: 285.0,
+            alignment: Alignment.center,
+          )),
+      new PageViewModel(
+        pageColor: const Color(0xFF8BC34A),
+        iconImageAssetPath: 'images/local_library.png',
+        iconColor: null,
+        bubbleBackgroundColor: Color(0x88FFFFFF),
+        body: Text(S.of(context).introSurfHint),
+        title: Text(S.of(context).introSurf),
+        mainImage: Image.asset(
+          'images/surf.png',
+//        height: 285.0,
+//        width: 285.0,
+          alignment: Alignment.center,
+        ),
+        textStyle: TextStyle(fontFamily: 'MyFont', color: Colors.white),
+      ),
+      new PageViewModel(
+        pageColor: const Color(0xFF607D8B),
+        iconImageAssetPath: 'images/message.png',
+        iconColor: null,
+        bubbleBackgroundColor: Color(0x88FFFFFF),
+        body: Text(S.of(context).introMeetHint),
+        title: Text(S.of(context).introMeet),
+        mainImage: Image.asset(
+          'images/meet.png',
+//        height: 285.0,
+//        width: 285.0,
+          alignment: Alignment.center,
+        ),
+        textStyle: TextStyle(fontFamily: 'MyFont', color: Colors.white),
+      ),
+    ];
 
     return new Builder(
       builder: (context) => new IntroViewsFlutter(
@@ -319,12 +318,11 @@ class _LoginPageState extends State<LoginPage> {
 //                      .apply(fontSizeFactor: 0.3),
                   children: [
                     new TextSpan(
-                      text:
-                          'By clicking sign in button below, you agree \n to our ',
+                      text: S.of(context).loginAgree1,
                       style: new TextStyle(color: Colors.black),
                     ),
                     new TextSpan(
-                      text: 'end user licence agreement',
+                      text: S.of(context).loginAgree2,
                       style: new TextStyle(
                           color: Colors.blue,
                           decoration: TextDecoration.underline),
@@ -339,11 +337,11 @@ class _LoginPageState extends State<LoginPage> {
                         },
                     ),
                     new TextSpan(
-                      text: '\nand that you read our ',
+                      text: S.of(context).loginAgree3,
                       style: new TextStyle(color: Colors.black),
                     ),
                     new TextSpan(
-                      text: 'privacy policy',
+                      text: S.of(context).loginAgree4,
                       style: new TextStyle(
                           color: Colors.blue,
                           decoration: TextDecoration.underline),
@@ -391,7 +389,7 @@ class _LoginPageState extends State<LoginPage> {
 }
 
 class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key, this.title}) : super(key: key);
+  MyHomePage({Key key}) : super(key: key);
 
   // This widget is the home page of your application. It is stateful, meaning
   // that it has a State object (defined below) that contains fields that affect
@@ -401,8 +399,6 @@ class MyHomePage extends StatefulWidget {
   // case the title) provided by the parent (in this case the App widget) and
   // used by the build method of the State. Fields in a Widget subclass are
   // always marked "final".
-
-  final String title;
 
   @override
   _MyHomePageState createState() => new _MyHomePageState();
@@ -423,7 +419,6 @@ class _MyHomePageState extends State<MyHomePage> {
 
     _firebaseMessaging.configure(
       onMessage: (Map<String, dynamic> message) {
-        print("DEBUG: message received: " + message.toString());
         setState(() {
           unreadMessage = true;
         });
@@ -576,7 +571,7 @@ class _MyHomePageState extends State<MyHomePage> {
             onPressed: () {
               blockUser(currentUserId, userSnap['id']);
             },
-            tooltip: 'Block abusive user',
+            tooltip: S.of(context).blockUser,
             icon: new Icon(Icons.report),
           ),
         ]),
@@ -624,7 +619,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 await signOut();
                 Navigator.of(context).pushReplacementNamed('/');
               },
-              tooltip: 'Logout',
+              tooltip: S.of(context).logout,
               icon: new Icon(Icons.exit_to_app),
             ),
           ],
@@ -638,7 +633,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       : Icon(Icons.message)),
             ],
           ),
-          title: new Text(widget.title),
+          title: new Text(S.of(context).title),
         ),
         body: TabBarView(
           children: <Widget>[
