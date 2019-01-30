@@ -1,5 +1,5 @@
 {
-  "@@last_modified": "2019-01-29T22:39:30.555558",
+  "@@last_modified": "2019-01-30T07:57:27.670704",
   "title": "Biblosphere",
   "@title": {
     "description": "The application title",
@@ -28,6 +28,16 @@
   },
   "introMeetHint": "Contact owner of the books you like and arrange appointment to get new books to read.",
   "@introMeetHint": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "introDone": "DONE",
+  "@introDone": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "introSkip": "SKIP",
+  "@introSkip": {
     "type": "text",
     "placeholders": {}
   },

@@ -15,10 +15,11 @@ class ShelfData {
   String image;
   GeoPoint position;
   String user;
+  String userName;
 
   double distance;
 
-  ShelfData(this.id, this.image, this.position, this.user);
+  ShelfData(this.id, this.image, this.position, this.user, this.userName);
 }
 
 class BookshelfCard extends StatelessWidget {
@@ -86,14 +87,6 @@ class BookshelfCard extends StatelessWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: <Widget>[
-                    new Text(distanceBetween(
-                                shelf.position.latitude,
-                                shelf.position.longitude,
-                                currentPosition.latitude,
-                                currentPosition.longitude)
-                            .round()
-                            .toString() +
-                        S.of(context).km),
                     new IconButton(
                       onPressed: () {
                         reportContent();
@@ -102,6 +95,15 @@ class BookshelfCard extends StatelessWidget {
                       tooltip: S.of(context).reportShelf,
                       icon: new Icon(Icons.report),
                     ),
+                    new Expanded(child: Text(shelf.userName)),
+                    new Text(distanceBetween(
+                        shelf.position.latitude,
+                        shelf.position.longitude,
+                        currentPosition.latitude,
+                        currentPosition.longitude)
+                        .round()
+                        .toString() +
+                        S.of(context).km),
                     new IconButton(
                       onPressed: () {
                         openMap(shelf.position);
@@ -165,7 +167,8 @@ class BookshelfCard extends StatelessWidget {
         'shelf': shelf.id,
         'reportedBy': currentUser,
         'image': shelf.image,
-        'user': shelf.user
+        'user': shelf.user,
+        'userName': shelf.userName
       });
 
     } catch (ex, stack) {
@@ -194,7 +197,8 @@ class BookshelfList extends StatelessWidget {
                 document.documentID,
                 document.data['URL'],
                 document.data['position'],
-                document.data['user']);
+                document.data['user'],
+                document.data['userName']);
             // if you serializer does not pass types like GeoPoint through
             // you have to add that fields manually. If using `jaguar_serializer`
             // add @pass attribute to the GeoPoint field and you can omit this.

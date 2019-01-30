@@ -250,6 +250,8 @@ class _IntroPageState extends State<IntroPage> {
     return new Builder(
       builder: (context) => new IntroViewsFlutter(
             pages,
+            doneText: Text(S.of(context).introDone),
+            skipText: Text(S.of(context).introSkip),
             onTapDoneButton: () {
               authStateChange.cancel();
               Navigator.pushReplacement(

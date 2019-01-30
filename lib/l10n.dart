@@ -56,6 +56,14 @@ class S {
         name: 'introMeetHint');
   }
 
+  String get introDone {
+    return Intl.message('DONE', name: 'introDone');
+  }
+
+  String get introSkip {
+    return Intl.message('SKIP', name: 'introSkip');
+  }
+
   String get introMeet {
     return Intl.message('Meet', name: 'introMeet');
   }

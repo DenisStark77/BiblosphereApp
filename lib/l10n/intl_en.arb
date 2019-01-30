@@ -31,6 +31,16 @@
     "type": "text",
     "placeholders": {}
   },
+    "introDone": "DONE",
+    "@introDone": {
+      "type": "text",
+      "placeholders": {}
+    },
+    "introSkip": "SKIP",
+    "@introSkip": {
+      "type": "text",
+      "placeholders": {}
+    },
   "introMeet": "Meet",
   "@introMeet": {
     "type": "text",

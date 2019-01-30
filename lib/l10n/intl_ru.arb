@@ -31,6 +31,16 @@
     "type": "text",
     "placeholders": {}
   },
+  "introDone": "НАЧАТЬ",
+  "@introDone": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "introSkip": "ДАЛЬШЕ",
+  "@introSkip": {
+    "type": "text",
+    "placeholders": {}
+  },
   "introMeet": "Встречайся",
   "@introMeet": {
     "type": "text",
