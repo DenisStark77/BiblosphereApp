@@ -52,6 +52,28 @@ exports.sendNotification = functions.firestore
       return null;
   });
 
+exports.userNames = functions.https.onRequest(async (req, res) => {
+  try {
+    var querySnapshot = await admin.firestore().collection('shelves').get();
+    querySnapshot.forEach(async (shelf) => {
+            const userDoc = await admin.firestore().collection('users').doc(shelf.data().user).get();
+            const userName = userDoc.data().name;
+            console.log(`Name found for shelf: ${shelf.id}, ${userName}`);
+            admin.firestore().collection('shelves').doc(shelf.id).update({'userName': userName}).then((result) => {
+                  console.log(`Shelf updated ${shelf.id}`); 
+                  return result;
+            }).catch((err) => {
+                  console.log(`Shelf update failed ${shelf.id}: ${err}`); 
+            });
+            return shelf;
+    });
+    return res.status(200).send("Running");
+  } catch(err) {
+    console.log('Shelf update failed: ', err);
+    return res.status(404).send("Shelf update generation failed");
+  }
+});  
+
 const THUMB_MAX_HEIGHT = 600;
 const THUMB_MAX_WIDTH = 600;
 const THUMB_PREFIX = 'thumb_';

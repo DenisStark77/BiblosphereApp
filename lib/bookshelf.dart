@@ -8,16 +8,18 @@ import 'package:photo_view/photo_view.dart';
 import 'dart:math' as math;
 import 'package:flutter_crashlytics/flutter_crashlytics.dart';
 import 'package:biblosphere/const.dart';
+import 'package:biblosphere/l10n.dart';
 
 class ShelfData {
   String id;
   String image;
   GeoPoint position;
   String user;
+  String userName;
 
   double distance;
 
-  ShelfData(this.id, this.image, this.position, this.user);
+  ShelfData(this.id, this.image, this.position, this.user, this.userName);
 }
 
 class BookshelfCard extends StatelessWidget {
@@ -55,11 +57,11 @@ class BookshelfCard extends StatelessWidget {
                           new MaterialPageRoute(
                               builder: (context) => new Scaffold(
                                     appBar: new AppBar(
-                                      title: new Text(
-                                        'ZOOM',
+                                      title: new Text(S.of(context).zoom,
                                         style: TextStyle(
                                             color: primaryColor,
-                                            fontWeight: FontWeight.bold),
+                                            fontWeight: FontWeight.bold
+                                        ),
                                       ),
                                       centerTitle: true,
                                     ),
@@ -85,34 +87,35 @@ class BookshelfCard extends StatelessWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: <Widget>[
-                    new Text(distanceBetween(
-                                shelf.position.latitude,
-                                shelf.position.longitude,
-                                currentPosition.latitude,
-                                currentPosition.longitude)
-                            .round()
-                            .toString() +
-                        " km"),
                     new IconButton(
                       onPressed: () {
                         reportContent();
-                        showBbsDialog(context, 'This photo reported as objectionable content.');
+                        showBbsDialog(context, S.of(context).reportedPhoto);
                       },
-                      tooltip: 'Report objectionable content',
+                      tooltip: S.of(context).reportShelf,
                       icon: new Icon(Icons.report),
                     ),
+                    new Expanded(child: Text(shelf.userName)),
+                    new Text(distanceBetween(
+                        shelf.position.latitude,
+                        shelf.position.longitude,
+                        currentPosition.latitude,
+                        currentPosition.longitude)
+                        .round()
+                        .toString() +
+                        S.of(context).km),
                     new IconButton(
                       onPressed: () {
                         openMap(shelf.position);
                       },
-                      tooltip: 'See location',
+                      tooltip: S.of(context).seeLocation,
                       icon: new Icon(Icons.location_on),
                     ),
                     new IconButton(
                       onPressed: () {
                         openMsg(context, shelf.user);
                       },
-                      tooltip: 'Message owner',
+                      tooltip: S.of(context).messageOwner,
                       icon: new Icon(Icons.message),
                     ),
                   ],
@@ -164,7 +167,8 @@ class BookshelfCard extends StatelessWidget {
         'shelf': shelf.id,
         'reportedBy': currentUser,
         'image': shelf.image,
-        'user': shelf.user
+        'user': shelf.user,
+        'userName': shelf.userName
       });
 
     } catch (ex, stack) {
@@ -193,7 +197,8 @@ class BookshelfList extends StatelessWidget {
                 document.documentID,
                 document.data['URL'],
                 document.data['position'],
-                document.data['user']);
+                document.data['user'],
+                document.data['userName']);
             // if you serializer does not pass types like GeoPoint through
             // you have to add that fields manually. If using `jaguar_serializer`
             // add @pass attribute to the GeoPoint field and you can omit this.
@@ -224,7 +229,7 @@ class BookshelfList extends StatelessWidget {
       stream: getBookshelves(area),
       builder:
           (BuildContext context, AsyncSnapshot<List<BookshelfCard>> snapshot) {
-        if (!snapshot.hasData) return new Text('Loading...');
+        if (!snapshot.hasData) return new Text(S.of(context).loading);
         return new ListView(
           children: snapshot.data.map((BookshelfCard shelf)  {
             if (shelf.shelf.user == currentUserId) return Container();

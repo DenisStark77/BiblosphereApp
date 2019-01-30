@@ -11,6 +11,7 @@ import 'package:firebase_dynamic_links/firebase_dynamic_links.dart';
 import 'package:firebase_ml_vision/firebase_ml_vision.dart';
 import 'package:flutter_crashlytics/flutter_crashlytics.dart';
 import 'package:biblosphere/const.dart';
+import 'package:biblosphere/l10n.dart';
 
 class MyBookshelf extends StatelessWidget {
   MyBookshelf({Key key, @required this.currentUserId, @required this.shelfId, @required this.imageURL, @required this.position, @required this.fileName});
@@ -54,7 +55,7 @@ class MyBookshelf extends StatelessWidget {
               children: <Widget>[
                 new IconButton(
                   onPressed: deleteShelf,
-                  tooltip: 'Delete your bookshelf',
+                  tooltip: S.of(context).deleteShelf,
                   icon: new Icon(Icons.delete),
                 ),
                 new IconButton(
@@ -81,7 +82,7 @@ class MyBookshelf extends StatelessWidget {
 
                     Share.share(shortLink.shortUrl.toString());
                   },
-                  tooltip: 'Share your bookshelf',
+                  tooltip: S.of(context).shareShelf,
                   icon: new Icon(Icons.share),
                 ),
               ],
@@ -112,7 +113,7 @@ class MyBookshelfList extends StatelessWidget {
     return new StreamBuilder<QuerySnapshot>(
       stream: Firestore.instance.collection('shelves').where("user", isEqualTo: currentUserId).snapshots(),
       builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
-        if (!snapshot.hasData) return new Text('Loading...');
+        if (!snapshot.hasData) return new Text(S.of(context).loading);
         return new ListView(
           children: snapshot.data.documents.map((DocumentSnapshot document) {
             return new MyBookshelf(currentUserId: currentUserId, shelfId: document.documentID, imageURL: document['URL'], position: document['position'], fileName: document['file']);
@@ -139,7 +140,7 @@ class Home extends StatelessWidget {
       bool imageAccepted = await isBookcase(image);
 
       if (! imageAccepted) {
-        showBbsDialog(context, 'Hey, this does not look like a bookshelf to me.');
+        showBbsDialog(context, S.of(context).notBooks);
         return;
       }
 
@@ -171,7 +172,7 @@ class Home extends StatelessWidget {
             Container(
     child: new FloatingActionButton(
       onPressed: () => getImage(context),
-      tooltip: 'Add your bookshelf',
+      tooltip: S.of(context).addShelf,
       child: new Icon(Icons.photo_camera),
     ),
     alignment: Alignment.bottomCenter,

@@ -1,0 +1,149 @@
+﻿{
+  "@@last_modified": "2019-01-29T21:04:04.079240",
+  "title": "Библосфера",
+  "@title": {
+    "description": "The application title",
+    "type": "text",
+    "placeholders": {}
+  },
+  "introShootHint": "Сфотографируй и покажи свои книжные полки. Твои книги привлекут единомышленников.",
+  "@introShootHint": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "introShoot": "Снимай",
+  "@introShoot": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "introSurfHint": "Приложение показвыает книжные полки в радиусе 200 км. Получи доступ к книгам соседей.",
+  "@introSurfHint": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "introSurf": "Исследуй",
+  "@introSurf": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "introMeetHint": "Свяжись с владельцем понравившейся книги и договорись о встрече, чтобы взять книгу почитать.",
+  "@introMeetHint": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "introDone": "НАЧАТЬ",
+  "@introDone": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "introSkip": "ДАЛЬШЕ",
+  "@introSkip": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "introMeet": "Встречайся",
+  "@introMeet": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "loginAgree1": "Заходя в приложение вы соглашаетесь\n с нашим ",
+  "@loginAgree1": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "loginAgree2": "пользовательским соглашением",
+  "@loginAgree2": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "loginAgree3": "\nи подтверждаете согласие с ",
+  "@loginAgree3": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "loginAgree4": "политикой конфиденциальности",
+  "@loginAgree4": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "blockUser": "Заблокировать пользователя",
+  "@blockUser": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "logout": "Выйти",
+  "@logout": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "deleteShelf": "Удалить полку",
+  "@deleteShelf": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "shareShelf": "Поделиться фотографией полки",
+  "@shareShelf": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "loading": "Загружается...",
+  "@loading": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "notBooks": "Опа, это не похоже на книги.",
+  "@notBooks": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "addShelf": "Добавить книжную полку",
+  "@addShelf": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "zoom": "УВЕЛИЧИТЬ",
+  "@zoom": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "km": " км",
+  "@km": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "reportedPhoto": "Это фото отмечено как запрещённое.",
+  "@reportedPhoto": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "reportShelf": "Сообщить о незаконном содержимом",
+  "@reportShelf": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "seeLocation": "Перейти в карты",
+  "@seeLocation": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "messageOwner": "Написать владельцу",
+  "@messageOwner": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "chat": "ЧАТ",
+  "@chat": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "nothingToSend": "Нечего отправить",
+  "@nothingToSend": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "typeMsg": "Наберите сообщение...",
+  "@typeMsg": {
+    "type": "text",
+    "placeholders": {}
+  }
+}
