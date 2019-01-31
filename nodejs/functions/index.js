@@ -9,6 +9,12 @@ const path = require('path');
 const os = require('os');
 const fs = require('fs');
 
+// Imports the Google Cloud client library
+const vision = require('@google-cloud/vision');
+// Creates a client
+const client = new vision.ImageAnnotatorClient();
+
+
 exports.sendNotification = functions.firestore
   .document("messages/{chatId}/{chatCollectionId}/{msgId}")
   .onCreate((snap, context) => {
@@ -52,6 +58,9 @@ exports.sendNotification = functions.firestore
       return null;
   });
 
+// ADMIN functions
+// Function userNames: 
+// Filling shelf records with user name
 exports.userNames = functions.https.onRequest(async (req, res) => {
   try {
     var querySnapshot = await admin.firestore().collection('shelves').get();
@@ -71,6 +80,112 @@ exports.userNames = functions.https.onRequest(async (req, res) => {
   } catch(err) {
     console.log('Shelf update failed: ', err);
     return res.status(404).send("Shelf update generation failed");
+  }
+});  
+
+//Function: detectLanguage
+// Detect languages of the books and store it in detectedLanguages field
+exports.detectLanguage = functions.https.onRequest(async (req, res) => {
+  try {
+    console.log('Function detectLanguage version 0.0.19');
+//    var querySnapshot = await admin.firestore().collection('shelves').where('user', '==', 'oyYUDByQGVdgP13T1nyArhyFkct1').get();
+    var querySnapshot = await admin.firestore().collection('shelves').get();
+    querySnapshot.forEach(async (shelf) => {
+        const imgUri = `gs://biblosphere-210106.appspot.com/images/${shelf.data().user}/${shelf.data().file}`;
+        const request = {
+            image: {
+               source: {imageUri: imgUri}
+            },
+        };
+
+        client.textDetection(request)
+          .then(results => {
+              var langList = new Set();
+              if (results[0] && results[0].fullTextAnnotation && results[0].fullTextAnnotation.pages[0]) {
+                 const blocks = results[0].fullTextAnnotation.pages[0].blocks;
+                    
+                 blocks.forEach(blk => {
+                      if(blk.property) {
+                           blk.property.detectedLanguages.forEach(lang => {
+                              langList.add(lang.languageCode);
+                           });
+                      }
+                 });
+       
+                 console.log('List of detected languages: ', langList);
+                 return admin.firestore().collection('shelves').doc(shelf.id).update({'detectedLanguages': Array.from(langList)});
+              } else {
+                throw new Error("OCR request failed");
+              }
+          })
+          .then(result => {
+              console.log(`Shelf ${shelf.id} with languages ${langList}`); 
+              return null;
+          })
+          .catch(err => {
+              console.error(err);
+          });
+    });
+    return res.status(200).send("Language detection running...");
+  } catch(err) {
+    console.log('Language detection failed: ', err);
+    return res.status(404).send("Language detection failed");
+  }
+});  
+
+//Function: detectBooks
+// Detect languages of the books and store it in detectedLanguages field
+exports.detectBooks = functions.https.onRequest(async (req, res) => {
+  try {
+    console.log('Function detectBooks version 0.0.5');
+    const shelfId = req.query.id;
+    console.log('Book recognition requested for shelf ', shelfId);
+  
+    const shelf = await admin.firestore().collection('shelves').doc(shelfId).get();
+    console.log('Shelf found ', shelfId);
+
+    const imgUri = `gs://biblosphere-210106.appspot.com/images/${shelf.data().user}/${shelf.data().file}`;
+    const request = {
+        image: {
+           source: {imageUri: imgUri}
+        },
+    };
+
+    var results = await client.textDetection(request);
+
+    if (results[0] && results[0].fullTextAnnotation && results[0].fullTextAnnotation.text) {
+       results[0].fullTextAnnotation.text
+       var bookList = results[0].fullTextAnnotation.text.split("\n");
+/*
+       // JSON output       
+       const response = {
+          books: bookList
+       };
+*/
+       //HTML output
+       const response = `
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<HTML>
+   <HEAD>
+      <TITLE>Books</TITLE>
+   </HEAD>
+   <BODY>
+      <ul>
+        ${bookList.map(book => `<li>${book}</li>`)}
+      </ul>
+      <img src="${shelf.data().URL}"/>
+   </BODY>
+</HTML>
+`;
+
+       return res.status(200).send(response)
+    } else {
+       console.log('Empty annotation', results);
+       return res.status(404).send("Empty annotation response");
+    }
+  } catch(err) {
+    console.log('Book detection failed: ', err);
+    return res.status(404).send("Book detection failed");
   }
 });  
 

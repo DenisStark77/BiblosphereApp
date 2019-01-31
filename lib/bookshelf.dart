@@ -198,7 +198,7 @@ class BookshelfList extends StatelessWidget {
                 document.data['URL'],
                 document.data['position'],
                 document.data['user'],
-                document.data['userName']);
+                document.data['userName']!=null?document.data['userName']:"");
             // if you serializer does not pass types like GeoPoint through
             // you have to add that fields manually. If using `jaguar_serializer`
             // add @pass attribute to the GeoPoint field and you can omit this.
