@@ -1,72 +1,72 @@
 {
   "@@last_modified": "2019-01-29T21:04:04.079240",
-  "title": "Biblosphere",
+  "title": "Biblosfere",
   "@title": {
     "description": "The application title",
     "type": "text",
     "placeholders": {}
   },
-  "introShootHint": "Shoot your bookcase and share with neighbours and tourists. Your books attract likeminded people.",
+  "introShootHint": "Scatta una foto dei tuoi scaffali e condividili ai vicini e ai turisti. I tuoi libri attraggono il aderenti",
   "@introShootHint": {
     "type": "text",
     "placeholders": {}
   },
-  "introShoot": "Shoot",
+  "introShoot": "Fai foto",
   "@introShoot": {
     "type": "text",
     "placeholders": {}
   },
-  "introSurfHint": "App shows bookcases in 200 km around you sorted by distance. Get an access to a wide variety of books.",
+  "introSurfHint": "App mostra librerie in 200 km intorno a te in ordine di distanza. Ottieni l'accesso a un'ampia varietà di libri.",
   "@introSurfHint": {
     "type": "text",
     "placeholders": {}
   },
-  "introSurf": "Surf",
+  "introSurf": "Esplora",
   "@introSurf": {
     "type": "text",
     "placeholders": {}
   },
-  "introMeetHint": "Contact the owner of the books you like and arrange an appointment to get some new books to read.",
+  "introMeetHint": "Contatta il proprietario dei libri che ti piacciono e fissa un appuntamento per averli.",
   "@introMeetHint": {
     "type": "text",
     "placeholders": {}
   },
-    "introDone": "DONE",
+    "introDone": "FATTO",
     "@introDone": {
       "type": "text",
       "placeholders": {}
     },
-    "introSkip": "SKIP",
+    "introSkip": "SALTARE",
     "@introSkip": {
       "type": "text",
       "placeholders": {}
     },
-  "introMeet": "Meet",
+  "introMeet": "Incontrarsi",
   "@introMeet": {
     "type": "text",
     "placeholders": {}
   },
-  "loginAgree1": "By clicking sign in button below, you agree \n to our",
+  "loginAgree1": "Cliccando su Registrami confermi di accettare  \n le ",
   "@loginAgree1": {
     "type": "text",
     "placeholders": {}
   },
-  "loginAgree2": "end user license agreement",
+  "loginAgree2": "condizioni di utilizzo e l'informativa ",
   "@loginAgree2": {
     "type": "text",
     "placeholders": {}
   },
-  "loginAgree3": "\nand that you read our ",
+  "loginAgree3": "\nsul trattamento dei ",
   "@loginAgree3": {
     "type": "text",
     "placeholders": {}
   },
-  "loginAgree4": "privacy policy",
+  "loginAgree4": "dati personali ",
   "@loginAgree4": {
     "type": "text",
     "placeholders": {}
   },
-  "blockUser": "Block abusive user",
+  "blockUser": "Bloccare l’Utente abusivo",
   "@blockUser": {
     "type": "text",
     "placeholders": {}
@@ -76,12 +76,12 @@
     "type": "text",
     "placeholders": {}
   },
-  "deleteShelf": "Delete your bookshelf",
+  "deleteShelf": "Cancella questo scaffale",
   "@deleteShelf": {
     "type": "text",
     "placeholders": {}
   },
-  "shareShelf": "Share your bookshelf",
+  "shareShelf": "Condividi il scaffale",
   "@shareShelf": {
     "type": "text",
     "placeholders": {}
@@ -91,12 +91,12 @@
     "type": "text",
     "placeholders": {}
   },
-  "notBooks": "Hey, this does not look like a bookshelf to me.",
+  "notBooks": "Ehi, questa non sembra un scaffale per me",
   "@notBooks": {
     "type": "text",
     "placeholders": {}
   },
-  "addShelf": "Add your bookshelf",
+  "addShelf": "Aggiungi il tuo scaffale",
   "@addShelf": {
     "type": "text",
     "placeholders": {}
@@ -111,22 +111,22 @@
     "type": "text",
     "placeholders": {}
   },
-  "reportedPhoto": "This photo is reported as an objectionable content.",
+  "reportedPhoto": "Questa foto è segnalata come i contenuti discutibili.",
   "@reportedPhoto": {
     "type": "text",
     "placeholders": {}
   },
-  "reportShelf": "Report an objectionable content",
+  "reportShelf": "Segnala un contenuto discutibile",
   "@reportShelf": {
     "type": "text",
     "placeholders": {}
   },
-  "seeLocation": "See location",
+  "seeLocation": "Vedere la posizione",
   "@seeLocation": {
     "type": "text",
     "placeholders": {}
   },
-  "messageOwner": "Message owner",
+  "messageOwner": "Messaggio al proprietario",
   "@messageOwner": {
     "type": "text",
     "placeholders": {}
@@ -136,12 +136,12 @@
     "type": "text",
     "placeholders": {}
   },
-  "nothingToSend": "Nothing to send",
+  "nothingToSend": "Niente da inviare",
   "@nothingToSend": {
     "type": "text",
     "placeholders": {}
   },
-  "typeMsg": "Type your message...",
+  "typeMsg": "Scrivi il tuo messaggio...",
   "@typeMsg": {
     "type": "text",
     "placeholders": {}

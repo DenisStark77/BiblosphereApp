@@ -5,7 +5,7 @@ import 'package:intl/intl.dart';
 
 // Command line to generate dart code for localization
 //flutter packages pub run intl_translation:extract_to_arb --output-dir=lib/l10n lib/l10n.dart
-//flutter packages pub run intl_translation:generate_from_arb --output-dir=lib/l10n --no-use-deferred-loading lib/l10n.dart lib/l10n/intl_ru.arb lib/l10n/intl_en.arb lib/l10n/intl_messages.arb
+//flutter packages pub run intl_translation:generate_from_arb --output-dir=lib/l10n --no-use-deferred-loading lib/l10n.dart lib/l10n/intl_ru.arb lib/l10n/intl_en.arb lib/l10n/intl_it.arb lib/l10n/intl_messages.arb
 import 'l10n/messages_all.dart';
 
 class S {
@@ -158,7 +158,7 @@ class AppLocalizationsDelegate extends LocalizationsDelegate<S> {
 
   @override
   bool isSupported(Locale locale) {
-    return ['en', 'ru'].contains(locale.languageCode);
+    return ['en', 'ru', 'it'].contains(locale.languageCode);
   }
 
   @override
