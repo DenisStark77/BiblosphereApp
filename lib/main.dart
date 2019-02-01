@@ -411,6 +411,7 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   GeoPoint _position;
   String currentUserId;
+  String currentUserName;
   final FirebaseMessaging _firebaseMessaging = FirebaseMessaging();
   FirebaseUser firebaseUser;
   bool unreadMessage = false;
@@ -470,6 +471,8 @@ class _MyHomePageState extends State<MyHomePage> {
 
       if (currentUserId == null)
          throw "CurrentUserId is null, login failed or not completed";
+
+      currentUserName = firebaseUser.displayName;
 
       // Check if user record exist
       final QuerySnapshot result = await Firestore.instance
@@ -642,7 +645,7 @@ class _MyHomePageState extends State<MyHomePage> {
         body: TabBarView(
           children: <Widget>[
             // Camera tab
-            Home(currentUserId: currentUserId),
+            Home(currentUserId: currentUserId, currentUserName: currentUserName, ),
 
             // Main tab with bookshelves
             new BookshelfList(currentUserId, _position, _position!=null ? new Area(_position, 200.0) : null),

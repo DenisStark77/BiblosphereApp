@@ -125,9 +125,10 @@ class MyBookshelfList extends StatelessWidget {
 }
 
 class Home extends StatelessWidget {
-  Home({Key key, @required this.currentUserId});
+  Home({Key key, @required this.currentUserId, @required this.currentUserName});
 
   final String currentUserId;
+  final String currentUserName;
 
   String timestamp() => new DateTime.now().millisecondsSinceEpoch.toString();
 
@@ -154,6 +155,7 @@ class Home extends StatelessWidget {
       await Firestore.instance.collection('shelves')
           .add({
         "user": currentUserId,
+        "userName": currentUserName,
         'URL': storageUrl,
         'position': new GeoPoint(position.latitude, position.longitude),
         'file': name

@@ -59,6 +59,27 @@ exports.sendNotification = functions.firestore
   });
 
 // ADMIN functions
+// Function blockedMessages: 
+// Filling blocked field in messages
+exports.blockedMessages = functions.https.onRequest(async (req, res) => {
+  try {
+    var querySnapshot = await admin.firestore().collection('messages').get();
+    querySnapshot.forEach(async (chat) => {
+            admin.firestore().collection('messages').doc(chat.id).update({'blocked': "no"}).then((result) => {
+                  console.log(`Chat updated ${chat.id}`); 
+                  return result;
+            }).catch((err) => {
+                  console.log(`Chat update failed ${chat.id}: ${err}`); 
+            });
+            return shelf;
+    });
+    return res.status(200).send("Running");
+  } catch(err) {
+    console.log('Chat update failed: ', err);
+    return res.status(404).send("Chat update generation failed");
+  }
+});  
+
 // Function userNames: 
 // Filling shelf records with user name
 exports.userNames = functions.https.onRequest(async (req, res) => {
