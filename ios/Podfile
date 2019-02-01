@@ -13,10 +13,13 @@ pod 'Firebase/Database'
 pod 'Firebase/Storage'
 pod 'Firebase/Firestore'
 pod 'Firebase/MLVision'
-pod 'Firebase/MLVisionBarcodeModel'
-pod 'Firebase/MLVisionFaceModel'
-pod 'Firebase/MLVisionLabelModel'
-pod 'Firebase/MLVisionTextModel'
+# recently updated version 5.16.0 cannot be compiled
+# version 5.15.0 conflicts with other MLVision pods
+# but we don't need them
+pod 'Firebase/MLVisionLabelModel', '5.15.0'
+#pod 'Firebase/MLVisionBarcodeModel'
+#pod 'Firebase/MLVisionFaceModel'
+#pod 'Firebase/MLVisionTextModel'
 pod 'Firebase/DynamicLinks'
 pod 'Fabric'
 pod 'Crashlytics'

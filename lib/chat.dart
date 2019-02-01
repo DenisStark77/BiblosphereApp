@@ -143,7 +143,8 @@ class ChatScreenState extends State<ChatScreen> {
           chatRef,
           {
             'ids': [peerId, myId],
-            'timestamp': timestamp
+            'timestamp': timestamp,
+            'blocked': 'no'
           },
         );
       });
