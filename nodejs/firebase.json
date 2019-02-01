@@ -23,6 +23,9 @@
         "source": "/userNames", "function": "userNames"
       },
       {
+        "source": "/blockedMessages", "function": "blockedMessages"
+      },
+      {
         "source": "/shelf", "function": "shelf"
       },
       {
