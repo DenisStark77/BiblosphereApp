@@ -145,5 +145,30 @@
   "@typeMsg": {
     "type": "text",
     "placeholders": {}
+  },
+  "blockedChat": "Пользователь заблокирован",
+  "@blockedChat": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "confirmReportPhoto": "Пожаловаться на фото?",
+  "@confirmReportPhoto": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "Yes": "Да",
+  "@Yes": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "no": "Нет",
+  "@no": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "confirmBlockUser": "Заблокировать пользователя?",
+  "@confirmBlockUser": {
+    "type": "text",
+    "placeholders": {}
   }
 }

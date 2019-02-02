@@ -145,5 +145,30 @@
   "@typeMsg": {
     "type": "text",
     "placeholders": {}
+  },
+  "blockedChat": "User blocked",
+  "@blockedChat": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "confirmReportPhoto": "Do you want to report this photo as abusive?",
+  "@confirmReportPhoto": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "Yes": "Yes",
+  "@Yes": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "no": "No",
+  "@no": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "confirmBlockUser": "Do you want to block this user?",
+  "@confirmBlockUser": {
+    "type": "text",
+    "placeholders": {}
   }
 }

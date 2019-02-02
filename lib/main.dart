@@ -576,7 +576,11 @@ class _MyHomePageState extends State<MyHomePage> {
           )),
           new IconButton(
             onPressed: () {
-              blockUser(currentUserId, userSnap['id']);
+              showBbsConfirmation(context, S.of(context).confirmBlockUser).then((confirmed) {
+                if (confirmed) {
+                  blockUser(currentUserId, userSnap['id']);
+                }
+              });
             },
             tooltip: S.of(context).blockUser,
             icon: new Icon(Icons.report),

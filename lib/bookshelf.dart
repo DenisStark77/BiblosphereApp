@@ -89,8 +89,12 @@ class BookshelfCard extends StatelessWidget {
                   children: <Widget>[
                     new IconButton(
                       onPressed: () {
-                        reportContent();
-                        showBbsDialog(context, S.of(context).reportedPhoto);
+                        showBbsConfirmation(context, S.of(context).confirmReportPhoto).then((confirmed) {
+                          if (confirmed) {
+                            reportContent();
+                          }
+                        });
+                        //showBbsDialog(context, S.of(context).reportedPhoto);
                       },
                       tooltip: S.of(context).reportShelf,
                       icon: new Icon(Icons.report),
@@ -142,6 +146,22 @@ class BookshelfCard extends StatelessWidget {
 
   void openMsg(BuildContext context, String user) async {
     try {
+      bool isBlocked = false;
+      DocumentSnapshot chatSnap =
+          await Firestore.instance
+          .collection('messages')
+          .document(chatId(currentUser, user)).get();
+      if (chatSnap != null) {
+        if (chatSnap['blocked'] == 'yes') {
+          isBlocked = true;
+        }
+      }
+
+      if (isBlocked) {
+        showBbsDialog(context, S.of(context).blockedChat);
+        return;
+      }
+      
       DocumentSnapshot userSnap =
           await Firestore.instance.collection('users').document(user).get();
       Navigator.push(

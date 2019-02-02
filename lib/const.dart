@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:biblosphere/l10n.dart';
 
 final themeColor = new Color(0xfff5a623);
 final primaryColor = new Color(0xff203152);
@@ -54,4 +55,54 @@ String chatId(String user1, String user2) {
   } else {
     return '$user2-$user1';
   }
+}
+
+Future<bool> showBbsConfirmation(BuildContext context, String text) async {
+  return(
+    await showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          content: Container(
+            child: Row(
+                children: <Widget>[
+                  Material(
+                    child: Image.asset('images/Librarian50x50.jpg', width: 50.0,),
+                    borderRadius: BorderRadius.all(Radius.circular(5.0)),
+                  ),
+                  new Flexible(
+                    child: Container(
+                      child: new Container(
+                        child: Text(
+                          text,
+                          style: TextStyle(color: themeColor),
+                        ),
+                        alignment: Alignment.centerLeft,
+                        margin: new EdgeInsets.fromLTRB(5.0, 0.0, 0.0, 5.0),
+                      ),
+                      margin: EdgeInsets.only(left: 5.0),
+                    ),
+                  ),
+                ]),
+            height: 50.0,
+          ),
+          actions: <Widget>[
+            FlatButton(
+              child: Text(S.of(context).yes),
+              onPressed: () {
+                Navigator.of(context).pop(true);
+              },
+            ),
+            FlatButton(
+              child: Text(S.of(context).no),
+              onPressed: () {
+                Navigator.of(context).pop(false);
+              },
+            ),
+          ],
+        );
+      },
+    )
+  );
 }
