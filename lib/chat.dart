@@ -23,6 +23,7 @@ class Chat extends StatelessWidget {
               peerId: userSnap.documentID,
               peerAvatar: userSnap['photoUrl'],
               peerName: userSnap['name'],
+              isNewChat: false,
             )));
   }
 
@@ -30,8 +31,9 @@ class Chat extends StatelessWidget {
   final String peerId;
   final String peerAvatar;
   final String peerName;
+  final bool isNewChat;
 
-  Chat({Key key, @required this.myId, @required this.peerId, @required this.peerAvatar, @required this.peerName}) : super(key: key);
+  Chat({Key key, @required this.myId, @required this.peerId, @required this.peerAvatar, @required this.peerName, @required this.isNewChat}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -48,6 +50,7 @@ class Chat extends StatelessWidget {
         peerId: peerId,
         peerAvatar: peerAvatar,
         peerName: peerName,
+        isNewChat: isNewChat,
       ),
     );
   }
@@ -58,20 +61,22 @@ class ChatScreen extends StatefulWidget {
   final String peerId;
   final String peerAvatar;
   final String peerName;
+  final bool isNewChat;
 
-  ChatScreen({Key key, @required this.myId, @required this.peerId, @required this.peerAvatar, @required this.peerName}) : super(key: key);
+  ChatScreen({Key key, @required this.myId, @required this.peerId, @required this.peerAvatar, @required this.peerName, @required this.isNewChat}) : super(key: key);
 
   @override
-  State createState() => new ChatScreenState(myId: myId, peerId: peerId, peerAvatar: peerAvatar, peerName: peerName);
+  State createState() => new ChatScreenState(myId: myId, peerId: peerId, peerAvatar: peerAvatar, peerName: peerName, isNewChat: isNewChat);
 }
 
 class ChatScreenState extends State<ChatScreen> {
-  ChatScreenState({Key key, @required this.myId, @required this.peerId, @required this.peerAvatar, @required this.peerName});
+  ChatScreenState({Key key, @required this.myId, @required this.peerId, @required this.peerAvatar, @required this.peerName, @required this.isNewChat});
 
   String peerId;
   String peerAvatar;
   String peerName;
   String myId;
+  bool isNewChat;
 
   var listMessage;
   String groupChatId;
@@ -138,16 +143,31 @@ class ChatScreenState extends State<ChatScreen> {
           .collection('messages')
           .document(groupChatId);
 
-      Firestore.instance.runTransaction((transaction) async {
-        await transaction.set(
-          chatRef,
-          {
-            'ids': [peerId, myId],
-            'timestamp': timestamp,
-            'blocked': 'no'
-          },
-        );
-      });
+      Map chatMap;
+      if (isNewChat) {
+        Firestore.instance.runTransaction((transaction) async {
+          await transaction.set(
+            chatRef,
+            {
+              'ids': [peerId, myId],
+              'timestamp': timestamp,
+              'blocked': 'no'
+            },
+          );
+        });
+        isNewChat = false;
+      } else {
+        Firestore.instance.runTransaction((transaction) async {
+          await transaction.set(
+            chatRef,
+            {
+              'ids': [peerId, myId],
+              'timestamp': timestamp
+            },
+          );
+        });
+      }
+
       listScrollController.animateTo(0.0, duration: Duration(milliseconds: 300), curve: Curves.easeOut);
     } else {
       Fluttertoast.showToast(msg: S.of(context).nothingToSend);

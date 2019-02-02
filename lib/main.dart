@@ -598,6 +598,7 @@ class _MyHomePageState extends State<MyHomePage> {
                         peerId: userSnap.documentID,
                         peerAvatar: userSnap['photoUrl'],
                         peerName: userSnap['name'],
+                        isNewChat: false,
                       )));
         },
         color: greyColor2,
