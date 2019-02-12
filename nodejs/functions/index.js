@@ -58,6 +58,14 @@ exports.sendNotification = functions.firestore
       return null;
   });
 
+exports.updateBlocked = functions.firestore
+  .document("messages/{chatId}")
+  .onCreate((chat, context) => {
+       
+       return admin.firestore().collection('messages').doc(chat.id).update({'blocked': "no"});
+
+  });
+
 // ADMIN functions
 // Function blockedMessages: 
 // Filling blocked field in messages
@@ -71,7 +79,7 @@ exports.blockedMessages = functions.https.onRequest(async (req, res) => {
             }).catch((err) => {
                   console.log(`Chat update failed ${chat.id}: ${err}`); 
             });
-            return shelf;
+            return chat;
     });
     return res.status(200).send("Running");
   } catch(err) {
