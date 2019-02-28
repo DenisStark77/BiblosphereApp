@@ -21,11 +21,11 @@ dependencies:
 
   firebase_auth: ^0.6.2+1
 
-  url_launcher: ^3.0.3
+  url_launcher: ^5.0.1
 
-  flutter_facebook_login: ^1.1.1
+  #flutter_facebook_login: ^1.1.1
 
-  google_sign_in: ^3.2.4
+  #google_sign_in: ^4.0.1+1
 
   cached_network_image: "^0.5.1"
 
@@ -37,7 +37,7 @@ dependencies:
 
   share: ^0.5.3
 
-  firebase_dynamic_links: ^0.1.0+1
+  firebase_dynamic_links: ^0.2.0+2
 
   firebase_ml_vision: ^0.2.0+1
 
@@ -49,13 +49,26 @@ dependencies:
 
   intro_views_flutter: ^2.3.0
 
-  flutter_auth_buttons: ^0.3.1
+  #flutter_auth_buttons: ^0.3.1
 
-  #intro_views_flutter:
-  #  git: git://github.com/aagarwal1012/IntroViews-Flutter
+  #card_settings: ^1.2.5
+
+  barcode_scan: ^0.0.8
+
+  googleapis: ^0.53.0
+
+  googleapis_auth: ^0.2.6
+
+  flutter_firebase_ui: ^0.0.13
 
   flutter_launcher_icons: "^0.6.1"
 
+  shared_preferences: ^0.4.0
+
+  xml: ^3.3.1
+
+  #Registration with Goodreads
+  oauth1: ^1.0.3
 # Run flutter pub pub run flutter_launcher_icons:main
 flutter_icons:
   image_path: "images/biblosphere.png"
@@ -66,7 +79,7 @@ dev_dependencies:
   intl_translation: ^0.17.1
   flutter_test:
     sdk: flutter
-
+  mockito: ^3.0.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://www.dartlang.org/tools/pub/pubspec
@@ -88,6 +101,10 @@ flutter:
     - images/home.png
     - images/local_library.png
     - images/message.png
+    - images/bookmooch.jpg
+    - images/bookcrossing.jpg
+    - images/goodreads.png
+    - images/librarything.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.io/assets-and-images/#resolution-aware.
@@ -100,7 +117,20 @@ flutter:
   # "family" key with the font family name, and a "fonts" key with a
   # list giving the asset and other descriptors for the font. For
   # example:
-  # fonts:
+  fonts:
+    - family: AmaticSc
+      fonts:
+        - asset: fonts/AmaticSC-Regular.ttf
+        - asset: fonts/AmaticSC-Bold.ttf
+          weight: 700
+    - family: Oswald
+      fonts:
+        - asset: fonts/Oswald-Regular.ttf
+        - asset: fonts/Oswald-Bold.ttf
+          weight: 700
+    - family: MyIcons
+      fonts:
+        - asset: fonts/Flaticon.ttf
   #   - family: Schyler
   #     fonts:
   #       - asset: fonts/Schyler-Regular.ttf

@@ -46,7 +46,7 @@
     "type": "text",
     "placeholders": {}
   },
-  "loginAgree1": "By clicking sign in button below, you agree \n to our",
+  "loginAgree1": "By clicking sign in button below, you agree \n to our ",
   "@loginAgree1": {
     "type": "text",
     "placeholders": {}
@@ -72,6 +72,16 @@
     "placeholders": {}
   },
   "logout": "Logout",
+  "@logout": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "settings": "Settings",
+  "@logout": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "shelfSettings": "Bookshelf settings",
   "@logout": {
     "type": "text",
     "placeholders": {}

@@ -69,7 +69,7 @@ class S {
   }
 
   String get loginAgree1 {
-    return Intl.message('By clicking sign in button below, you agree \n to our',
+    return Intl.message('By clicking sign in button below, you agree \n to our ',
         name: 'loginAgree1');
   }
 
@@ -92,6 +92,16 @@ class S {
   String get logout {
     return Intl.message('Logout', name: 'logout');
   }
+
+  String get settings {
+    return Intl.message('Settings', name: 'settings');
+  }
+
+  String get shelfSettings {
+    return Intl.message('Bookshelf settings', name: 'shelfSettings');
+  }
+
+  // end of main.dart
 
   // camera.dart
   String get deleteShelf {
@@ -151,6 +161,47 @@ class S {
   String get typeMsg {
     return Intl.message('Type your message...', name: 'typeMsg');
   }
+
+  String get favorite {
+    return Intl.message('Add shelf to favorite', name: 'favorite');
+  }
+
+  String get drawerHeader {
+    return Intl.message('Choose mode', name: 'drawerHeader');
+  }
+
+  String get bookshelves {
+    return Intl.message('Bookshelves', name: 'bookshelves');
+  }
+
+  String get books {
+    return Intl.message('Books', name: 'favorite');
+  }
+
+  String get read {
+    return Intl.message('Read', name: 'read');
+  }
+
+  String get meet {
+    return Intl.message('Meet', name: 'meet');
+  }
+
+  String get explore {
+    return Intl.message('Explore', name: 'explore');
+  }
+
+  String get share {
+    return Intl.message('Share', name: 'share');
+  }
+
+  String get borrow {
+    return Intl.message('Borrow', name: 'borrow');
+  }
+
+  String get earn {
+    return Intl.message('Earn', name: 'earn');
+  }
+
 }
 
 class AppLocalizationsDelegate extends LocalizationsDelegate<S> {
