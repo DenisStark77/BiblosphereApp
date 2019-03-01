@@ -66,6 +66,230 @@ exports.updateBlocked = functions.firestore
 
   });
 
+exports.bookId = functions.firestore
+  .document("books/{bookId}")
+  .onCreate((book, context) => {
+
+       console.log('Updating:', book.id);
+       return admin.firestore().collection('books').doc(book.id).update({'book.id': book.id});
+
+  });
+
+function distanceBetween(lat1, lon1, lat2, lon2, unit) {
+	if ((lat1 === lat2) && (lon1 === lon2)) {
+		return 0;
+	}
+	else {
+		var radlat1 = Math.PI * lat1/180;
+		var radlat2 = Math.PI * lat2/180;
+		var theta = lon1-lon2;
+		var radtheta = Math.PI * theta/180;
+		var dist = Math.sin(radlat1) * Math.sin(radlat2) + Math.cos(radlat1) * Math.cos(radlat2) * Math.cos(radtheta);
+		if (dist > 1) {
+			dist = 1;
+		}
+		dist = Math.acos(dist);
+		dist = dist * 180/Math.PI;
+		dist = dist * 60 * 1.1515;
+		if (unit==="K") { dist = dist * 1.609344 }
+		if (unit==="N") { dist = dist * 0.8684 }
+		return dist;
+	}
+}
+
+exports.linkShelves = functions.firestore
+  .document("shelves/{shelfId}")
+  .onCreate(async (shelf, context) => {
+
+       var userRef = admin.firestore().collection('users').doc(shelf.data().user);
+
+       var transaction = admin.firestore().runTransaction(t => {
+           return t.get(userRef)
+             .then(doc => {
+                var shelfCount = doc.data().shelfCount;
+                if( !shelfCount ) shelfCount = 0;
+                return t.update(userRef, {shelfCount: shelfCount + 1});
+             });
+       }).then(result => {
+           console.log('Transaction success!');
+           return true;
+       }).catch(err => {
+           console.log('Transaction failure:', err);
+       });
+       return;
+  });
+
+exports.deleteShelf = functions.firestore
+  .document("shelves/{shelfId}")
+  .onDelete(async (shelf, context) => {
+
+       var userRef = admin.firestore().collection('users').doc(shelf.data().user);
+
+       var transaction = admin.firestore().runTransaction(t => {
+           return t.get(userRef)
+             .then(doc => {
+                var shelfCount = doc.data().shelfCount;
+                if( !shelfCount ) shelfCount = 1;
+                return t.update(userRef, {shelfCount: shelfCount - 1});
+             });
+       }).then(result => {
+           console.log('Transaction success!');
+           return true;
+       }).catch(err => {
+           console.log('Transaction failure:', err);
+       });
+       return;
+  });
+
+exports.deleteBookcopy = functions.firestore
+  .document("bookcopies/{bookId}")
+  .onDelete(async (bookcopy, context) => {
+
+       var userRef = admin.firestore().collection('users').doc(bookcopy.data().owner.id);
+
+       var transaction = admin.firestore().runTransaction(t => {
+           return t.get(userRef)
+             .then(doc => {
+                var bookCount = doc.data().bookCount;
+                if( !bookCount ) bookCount = 1;
+                return t.update(userRef, {bookCount: bookCount - 1});
+             });
+       }).then(result => {
+           console.log('Transaction success!');
+           return true;
+       }).catch(err => {
+           console.log('Transaction failure:', err);
+       });
+  });
+
+exports.deleteWish = functions.firestore
+  .document("wishes/{wishId}")
+  .onDelete(async (wish, context) => {
+
+       var userRef = admin.firestore().collection('users').doc(wish.data().wisher.id);
+
+       var transaction = admin.firestore().runTransaction(t => {
+           return t.get(userRef)
+             .then(doc => {
+                var wishCount = doc.data().wishCount;
+                if( !wishCount ) wishCount = 1;
+                return t.update(userRef, {wishCount: wishCount - 1});
+             });
+       }).then(result => {
+           console.log('Transaction success!');
+           return true;
+       }).catch(err => {
+           console.log('Transaction failure:', err);
+       });
+  });
+
+exports.linkWishes = functions.firestore
+  .document("bookcopies/{bookcopyId}")
+  .onCreate(async (bookcopy, context) => {
+
+       admin.firestore().collection('bookcopies').doc(bookcopy.id).update({id: bookcopy.id});
+
+       var minDistance = 40000.0;
+       var nearestWisher;
+       var nearestWishId;
+
+       var userRef = admin.firestore().collection('users').doc(bookcopy.data().owner.id);
+
+       var transaction = admin.firestore().runTransaction(t => {
+           return t.get(userRef)
+             .then(doc => {
+                var bookCount = doc.data().bookCount;
+                if( !bookCount ) bookCount = 0;
+                console.log(`Book count ${wishCount}`);
+                return t.update(userRef, {bookCount: bookCount + 1});
+             });
+       }).then(result => {
+           console.log('Transaction success!');
+           return true;
+       }).catch(err => {
+           console.log('Transaction failure:', err);
+       });
+
+       var q = await admin.firestore().collection('wishes').where('book.id', '==', bookcopy.data().book.id).get();
+       q.forEach(async (wish) => {
+           var d = distanceBetween(wish.data().wisher.position.latitude, wish.data().wisher.position.longitude,
+                            bookcopy.data().position.latitude, bookcopy.data().position.longitude, 'K');
+
+           if ( d < minDistance ) {
+              minDistance = d;
+              nearestWisher = wish.data().wisher;
+              nearestWishId = wish.id;
+           }
+
+           if (! wish.data().matched || wish.data().distance > d) {
+               admin.firestore().collection('wishes').doc(wish.id).update({matched: true, owner: bookcopy.data().owner, bookcopyId: bookcopy.id, bookcopyPosition: bookcopy.data().position, distance: d});
+           }
+       });
+
+       //Wish found
+       if (minDistance < 40000.0) {
+         return admin.firestore().collection('bookcopies').doc(bookcopy.id).update({matched: true, wisher: nearestWisher, wishId: nearestWishId, distance: minDistance});
+       }
+
+       return false;
+  });
+
+exports.linkBookcopies = functions.firestore
+  .document("wishes/{wishId}")
+  .onCreate(async (wish, context) => {
+
+       admin.firestore().collection('wishes').doc(wish.id).update({id: wish.id});
+
+       var minDistance = 40000.0;
+       var nearestBookcopyId;
+       var nearestBookcopyPosition;
+       var nearestOwner;
+
+       // Initialize document
+       var userRef = admin.firestore().collection('users').doc(wish.data().wisher.id);
+
+       var transaction = admin.firestore().runTransaction(t => {
+           return t.get(userRef)
+             .then(doc => {
+                var wishCount = doc.data().wishCount;
+                if( !wishCount ) wishCount = 0;
+                console.log(`Wish count ${wishCount}`);
+                return t.update(userRef, {wishCount: wishCount + 1, positioned: true, position: wish.data().position});
+             });
+       }).then(result => {
+           console.log('Transaction success!');
+           return true;
+       }).catch(err => {
+           console.log('Transaction failure:', err);
+       });
+
+//       admin.firestore().collection('users').doc(wish.data().wisher.id).update({positioned: true, position: wish.data().position});
+
+       var q = await admin.firestore().collection('bookcopies').where('book.id', '==', wish.data().book.id).get();
+       q.forEach(async (bookcopy) => {
+           var d = distanceBetween(wish.data().wisher.position.latitude, wish.data().wisher.position.longitude,
+                            bookcopy.data().position.latitude, bookcopy.data().position.longitude, 'K');
+
+           if ( d < minDistance ) {
+              minDistance = d;
+              nearestOwner = bookcopy.data().owner;
+              nearestBookcopyId = bookcopy.id;
+              nearestBookcopyPosition = bookcopy.data().position;
+           }
+
+           if (! bookcopy.data().matched || bookcopy.data().distance > d) {
+               admin.firestore().collection('bookcopies').doc(bookcopy.id).update({matched: true, wisher: wish.data().wisher, wishId: wish.id, distance: d});
+           }
+       });
+
+       //Wish found
+       if (minDistance < 40000.0) {
+         return admin.firestore().collection('wishes').doc(wish.id).update({matched: true, owner: nearestOwner, bookcopyId: nearestBookcopyId, bookcopyPosition: nearestBookcopyPosition, distance: minDistance});
+       }
+
+       return false;
+  });
+
 // ADMIN functions
 // Function blockedMessages: 
 // Filling blocked field in messages
@@ -801,7 +1025,7 @@ exports.shelf = functions.https.onRequest(async (req, res) => {
             <a href="mailto:#0" class="footer__mail-link">support@biblosphere.org</a>
           </p>
           <div class="cl-copyright"> <span><!-- Link back to Colorlib can't be removed. Template is licensed under CC BY 3.0. -->
-              Copyright ©
+              Copyright ï¿½
               <script>document.write(new Date().getFullYear());</script> All
               rights reserved | This template is made with by <a href="https://colorlib.com"
 

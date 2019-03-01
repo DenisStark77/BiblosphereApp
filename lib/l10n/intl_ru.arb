@@ -76,6 +76,16 @@
     "type": "text",
     "placeholders": {}
   },
+  "settings": "Настройки",
+  "@logout": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "shelfSettings": "Настройки книжной полки",
+    "@logout": {
+      "type": "text",
+      "placeholders": {}
+    },
   "deleteShelf": "Удалить полку",
   "@deleteShelf": {
     "type": "text",

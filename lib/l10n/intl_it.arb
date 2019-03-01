@@ -76,6 +76,16 @@
     "type": "text",
     "placeholders": {}
   },
+  "settings": "Impostazioni",
+  "@logout": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "shelfSettings": "Impostazioni scaffale",
+  "@logout": {
+    "type": "text",
+    "placeholders": {}
+  },
   "deleteShelf": "Cancella questo scaffale",
   "@deleteShelf": {
     "type": "text",
