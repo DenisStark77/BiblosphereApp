@@ -49,6 +49,24 @@ void openMap(GeoPoint pos) async {
 
 void openMsg(BuildContext context, String user, String currentUser) async {
   try {
+    bool isBlocked = false;
+    bool isNewChat = true;
+    DocumentSnapshot chatSnap =
+        await Firestore.instance
+        .collection('messages')
+        .document(chatId(currentUser, user)).get();
+    if (chatSnap.exists) {
+      isNewChat = false;
+      if (chatSnap['blocked'] == 'yes') {
+        isBlocked = true;
+      }
+    }
+
+    if (isBlocked) {
+      showBbsDialog(context, S.of(context).blockedChat);
+      return;
+    }
+
     DocumentSnapshot userSnap =
         await Firestore.instance.collection('users').document(user).get();
     Navigator.push(
@@ -59,6 +77,7 @@ void openMsg(BuildContext context, String user, String currentUser) async {
                   peerId: user,
                   peerAvatar: userSnap["photoUrl"],
                   peerName: userSnap["name"],
+                  isNewChat: isNewChat,
                 )));
   } catch (ex, stack) {
     print("Chat screen failed: " + ex.toString());
@@ -341,8 +360,12 @@ class BookshelfCard extends StatelessWidget {
                   children: <Widget>[
                     new IconButton(
                       onPressed: () {
-                        reportContent();
-                        showBbsDialog(context, S.of(context).reportedPhoto);
+                        showBbsConfirmation(context, S.of(context).confirmReportPhoto).then((confirmed) {
+                          if (confirmed) {
+                            reportContent();
+                          }
+                        });
+                        //showBbsDialog(context, S.of(context).reportedPhoto);
                       },
                       tooltip: S.of(context).reportShelf,
                       icon: new Icon(MyIcons.thumbdown),

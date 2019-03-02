@@ -7,3 +7,9 @@
 build/
 
 .flutter-plugins
+
+*.log
+
+.vscode
+
+pubspec.lock

@@ -162,6 +162,26 @@ class S {
     return Intl.message('Type your message...', name: 'typeMsg');
   }
 
+  String get blockedChat {
+    return Intl.message('Blocked', name: 'blockedChat');
+  }
+
+  String get confirmReportPhoto {
+    return Intl.message('Do you want to report this photo as abusive?', name: 'confirmReportPhoto');
+  }
+
+  String get yes {
+    return Intl.message('Yes', name: 'yes');
+  }
+
+  String get no {
+    return Intl.message('No', name: 'no');
+  }
+
+  String get confirmBlockUser {
+    return Intl.message('Do you want to block this user?', name: 'confirmBlockUser');
+  }
+  
   String get favorite {
     return Intl.message('Add shelf to favorite', name: 'favorite');
   }

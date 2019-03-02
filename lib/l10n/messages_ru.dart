@@ -21,8 +21,11 @@ class MessageLookup extends MessageLookupByLibrary {
   final messages = _notInlinedMessages(_notInlinedMessages);
   static _notInlinedMessages(_) => <String, Function> {
     "addShelf" : MessageLookupByLibrary.simpleMessage("Добавить книжную полку"),
+    "blockedChat" : MessageLookupByLibrary.simpleMessage("Пользователь заблокирован"),
     "blockUser" : MessageLookupByLibrary.simpleMessage("Заблокировать пользователя"),
     "chat" : MessageLookupByLibrary.simpleMessage("ЧАТ"),
+    "confirmBlockUser" : MessageLookupByLibrary.simpleMessage("Заблокировать пользователя?"),
+    "confirmReportPhoto" : MessageLookupByLibrary.simpleMessage("Пожаловаться на фото?"),
     "deleteShelf" : MessageLookupByLibrary.simpleMessage("Удалить полку"),
     "introDone" : MessageLookupByLibrary.simpleMessage("НАЧАТЬ"),
     "introMeet" : MessageLookupByLibrary.simpleMessage("Встречайся"),
@@ -40,6 +43,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "loginAgree4" : MessageLookupByLibrary.simpleMessage("политикой конфиденциальности"),
     "logout" : MessageLookupByLibrary.simpleMessage("Выйти"),
     "messageOwner" : MessageLookupByLibrary.simpleMessage("Написать владельцу"),
+    "no" : MessageLookupByLibrary.simpleMessage("Нет"),
     "notBooks" : MessageLookupByLibrary.simpleMessage("Опа, это не похоже на книги."),
     "nothingToSend" : MessageLookupByLibrary.simpleMessage("Нечего отправить"),
     "reportShelf" : MessageLookupByLibrary.simpleMessage("Сообщить о незаконном содержимом"),
@@ -48,6 +52,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "shareShelf" : MessageLookupByLibrary.simpleMessage("Поделиться фотографией полки"),
     "title" : MessageLookupByLibrary.simpleMessage("Библосфера"),
     "typeMsg" : MessageLookupByLibrary.simpleMessage("Наберите сообщение..."),
+    "yes" : MessageLookupByLibrary.simpleMessage("Да"),
     "zoom" : MessageLookupByLibrary.simpleMessage("УВЕЛИЧИТЬ")
   };
 }

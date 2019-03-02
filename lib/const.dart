@@ -10,6 +10,8 @@ import 'package:http/http.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:geolocator/geolocator.dart';
 
+import 'package:biblosphere/l10n.dart';
+
 String getTimestamp() => new DateTime.now().millisecondsSinceEpoch.toString();
 
 class MyIcons {
@@ -710,6 +712,56 @@ String chatId(String user1, String user2) {
   } else {
     return '$user2-$user1';
   }
+}
+
+Future<bool> showBbsConfirmation(BuildContext context, String text) async {
+  return(
+    await showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          content: Container(
+            child: Row(
+                children: <Widget>[
+                  Material(
+                    child: Image.asset('images/Librarian50x50.jpg', width: 50.0,),
+                    borderRadius: BorderRadius.all(Radius.circular(5.0)),
+                  ),
+                  new Flexible(
+                    child: Container(
+                      child: new Container(
+                        child: Text(
+                          text,
+                          style: TextStyle(color: themeColor),
+                        ),
+                        alignment: Alignment.centerLeft,
+                        margin: new EdgeInsets.fromLTRB(5.0, 0.0, 0.0, 5.0),
+                      ),
+                      margin: EdgeInsets.only(left: 5.0),
+                    ),
+                  ),
+                ]),
+            height: 50.0,
+          ),
+          actions: <Widget>[
+            FlatButton(
+              child: Text(S.of(context).yes),
+              onPressed: () {
+                Navigator.of(context).pop(true);
+              },
+            ),
+            FlatButton(
+              child: Text(S.of(context).no),
+              onPressed: () {
+                Navigator.of(context).pop(false);
+              },
+            ),
+          ],
+        );
+      },
+    )
+  );
 }
 
 Future<GeoPoint> currentPosition() async {
