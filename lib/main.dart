@@ -65,6 +65,8 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return new MaterialApp(
+      // Uncomment to make screenshots in simulator without debug banner
+      // debugShowCheckedModeBanner: false,
       localizationsDelegates: [
         AppLocalizationsDelegate(),
         GlobalMaterialLocalizations.delegate,
@@ -400,7 +402,11 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
           )),
           new IconButton(
             onPressed: () {
-              blockUser(currentUser?.id, userSnap['id']);
+              showBbsConfirmation(context, S.of(context).confirmBlockUser).then((confirmed) {
+                if (confirmed) {
+                  blockUser(currentUser?.id, userSnap['id']);
+                }
+              });
             },
             tooltip: S.of(context).blockUser,
             icon: new Icon(MyIcons.stop),
@@ -418,6 +424,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                         peerId: userSnap.documentID,
                         peerAvatar: userSnap['photoUrl'],
                         peerName: userSnap['name'],
+                        isNewChat: false,
                       )));
         },
         color: greyColor2,

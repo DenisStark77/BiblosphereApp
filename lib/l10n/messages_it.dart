@@ -21,8 +21,11 @@ class MessageLookup extends MessageLookupByLibrary {
   final messages = _notInlinedMessages(_notInlinedMessages);
   static _notInlinedMessages(_) => <String, Function> {
     "addShelf" : MessageLookupByLibrary.simpleMessage("Aggiungi il tuo scaffale"),
+    "blockedChat" : MessageLookupByLibrary.simpleMessage("User blocked"),
     "blockUser" : MessageLookupByLibrary.simpleMessage("Bloccare l’Utente abusivo"),
     "chat" : MessageLookupByLibrary.simpleMessage("CHAT"),
+    "confirmBlockUser" : MessageLookupByLibrary.simpleMessage("Do you want to block this user?"),
+    "confirmReportPhoto" : MessageLookupByLibrary.simpleMessage("Do you want to report this photo as abusive?"),
     "deleteShelf" : MessageLookupByLibrary.simpleMessage("Cancella questo scaffale"),
     "introDone" : MessageLookupByLibrary.simpleMessage("FATTO"),
     "introMeet" : MessageLookupByLibrary.simpleMessage("Incontrarsi"),
@@ -40,6 +43,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "loginAgree4" : MessageLookupByLibrary.simpleMessage("dati personali "),
     "logout" : MessageLookupByLibrary.simpleMessage("Logout"),
     "messageOwner" : MessageLookupByLibrary.simpleMessage("Messaggio al proprietario"),
+    "no" : MessageLookupByLibrary.simpleMessage("No"),
     "notBooks" : MessageLookupByLibrary.simpleMessage("Ehi, questa non sembra un scaffale per me"),
     "nothingToSend" : MessageLookupByLibrary.simpleMessage("Niente da inviare"),
     "reportShelf" : MessageLookupByLibrary.simpleMessage("Segnala un contenuto discutibile"),
@@ -48,6 +52,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "shareShelf" : MessageLookupByLibrary.simpleMessage("Condividi il scaffale"),
     "title" : MessageLookupByLibrary.simpleMessage("Biblosfere"),
     "typeMsg" : MessageLookupByLibrary.simpleMessage("Scrivi il tuo messaggio..."),
+    "yes" : MessageLookupByLibrary.simpleMessage("Yes"),
     "zoom" : MessageLookupByLibrary.simpleMessage("ZOOM")
   };
 }
