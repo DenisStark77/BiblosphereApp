@@ -9,6 +9,7 @@ import 'package:googleapis_auth/auth_io.dart';
 import 'package:http/http.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:xml/xml.dart' as xml;
 
 String getTimestamp() => new DateTime.now().millisecondsSinceEpoch.toString();
 
@@ -109,6 +110,17 @@ class Book {
     }
   }
 
+  Book.goodreads(xml.XmlElement xml) {
+//      isbn = xml.findElements("isbn13")?.first?.text?.toString();
+      title = xml.findElements("title")?.first?.text?.toString();
+      if (title.contains(':')) title = title.substring(0, title.indexOf(':'));
+      image = xml.findElements("image_url")?.first?.text?.toString();
+      if (image.contains('nophoto')) image = '';
+      authors = [];
+      xml.findAllElements("author").forEach((a) =>
+          authors.add(a.findElements("name")?.first?.text?.toString()));
+  }
+
   Book.fromJson(Map json)
       : id = json['id'],
         title = json['title'],
@@ -132,9 +144,9 @@ class User {
   String name;
   String photo;
   GeoPoint position;
-  int wishCount=0;
-  int bookCount=0;
-  int shelfCount=0;
+  int wishCount = 0;
+  int bookCount = 0;
+  int shelfCount = 0;
   double d;
 
   User(
@@ -148,9 +160,9 @@ class User {
         name = json['name'],
         photo = json['photo'],
         position = json['position'] as GeoPoint,
-        wishCount = json['wishCount']??0,
-        bookCount = json['bookCount']??0,
-        shelfCount = json['shelfCount']??0;
+        wishCount = json['wishCount'] ?? 0,
+        bookCount = json['bookCount'] ?? 0,
+        shelfCount = json['shelfCount'] ?? 0;
 
   Map<String, dynamic> toJson() {
     return {'id': id, 'name': name, 'photo': photo, 'position': position};
@@ -185,7 +197,9 @@ class Bookcopy {
         matched = json['matched'],
         wishId = json['wishId'],
         wisher = json['wisher'] != null ? User.fromJson(json['wisher']) : null,
-        distance = json['distance'] != null ? (json['distance'] as num).toDouble() : double.infinity;
+        distance = json['distance'] != null
+            ? (json['distance'] as num).toDouble()
+            : double.infinity;
 
   Map<String, dynamic> toJson() {
     return {
@@ -235,7 +249,9 @@ class Wish {
         bookcopyId = json['bookcopyId'],
         bookcopyPosition = json['bookcopyPosition'] as GeoPoint,
         owner = json['owner'] != null ? User.fromJson(json['owner']) : null,
-        distance = json['distance'] != null ? (json['distance'] as num).toDouble() : double.infinity;
+        distance = json['distance'] != null
+            ? (json['distance'] as num).toDouble()
+            : double.infinity;
 
   Map<String, dynamic> toJson() {
     return {
@@ -256,7 +272,8 @@ class Wish {
 //Callback function type definition
 typedef BookCallback(Book book);
 
-Future addBook(Book b, User u, GeoPoint position, {String source='goodreads'}) async {
+Future addBook(Book b, User u, GeoPoint position,
+    {String source = 'goodreads'}) async {
   bool existingBook = false;
   String bookId;
   QuerySnapshot q = await Firestore.instance
@@ -287,17 +304,13 @@ Future addBook(Book b, User u, GeoPoint position, {String source='goodreads'}) a
     if (q.documents.isNotEmpty) return;
   }
 
-  Bookcopy bookcopy = new Bookcopy(
-      owner: u,
-      book: b,
-      position: position);
+  Bookcopy bookcopy = new Bookcopy(owner: u, book: b, position: position);
 
-  await Firestore.instance
-      .collection('bookcopies')
-      .add(bookcopy.toJson());
+  await Firestore.instance.collection('bookcopies').add(bookcopy.toJson());
 }
 
-Future addWish(Book b, User u, GeoPoint position, {String source='goodreads'}) async {
+Future addWish(Book b, User u, GeoPoint position,
+    {String source = 'goodreads'}) async {
   bool existingBook = false;
   String bookId;
   QuerySnapshot q = await Firestore.instance
@@ -329,14 +342,9 @@ Future addWish(Book b, User u, GeoPoint position, {String source='goodreads'}) a
   }
 
   Wish wish = new Wish(
-      wisher: u,
-      position: u.position,
-      book: b,
-      created: getTimestamp());
+      wisher: u, position: u.position, book: b, created: getTimestamp());
 
-  await Firestore.instance
-      .collection('wishes')
-      .add(wish.toJson());
+  await Firestore.instance.collection('wishes').add(wish.toJson());
 }
 
 final themeColor = new Color(0xfff5a623);
@@ -344,97 +352,14 @@ final primaryColor = new Color(0xff203152);
 final greyColor = new Color(0xffaeaeae);
 final greyColor2 = new Color(0xffE8E8E8);
 
-Future scanIsbn(BuildContext context) async {
-  try {
-    String barcode = await BarcodeScanner.scan();
-    print("Isbn: $barcode");
-
-    /*
-      //Account credentials are in JSON key file
-      final accountCredentials = new ServiceAccountCredentials.fromJson({
-        "private_key_id": "ADD HERE",
-        "private_key": "ADD HERE",
-        "client_email": "biblosphere-210106@appspot.gserviceaccount.com",
-        "client_id": "106972658678192953965",
-        "type": "service_account"
-      });
-
-      var scopes = ['https://www.googleapis.com/auth/books'];
-
-      clientViaServiceAccount(accountCredentials, scopes).then((AuthClient client) async {
-        BooksApi booksApi = new BooksApi(client);
-
-        print("Books Api initialized: $booksApi");
-
-        Volumes books = await booksApi.volumes.list('+isbn:$barcode');
-
-        print("Volumes: ${books.toJson()}");
-
-        books.items.forEach((book) => print("Book title: ${book.volumeInfo.title}"));
-
-        client.close();
-      });
-
-      //TODO: avoid calls using ApiKey as it is not protected from others calling
-      //      our service and use quota. See option above.
-      Map<String, String> headers = await googleSignIn.currentUser.authHeaders;
-      print("HEADERS: ${headers.toString()}");
-      print("SCOPES: ${googleSignIn.scopes.toString()}");
-
-      GoogleSignInAuthentication auth = await googleSignIn.currentUser.authentication;
-      print("ACCESS TOKEN: ${auth.accessToken}");
-      print("ID TOKEN: ${auth.idToken}");
-
-      Client baseClient = new Client();
-      AccessCredentials credentials = new AccessCredentials(new AccessToken("Bearer", auth.accessToken, DateTime.now().toUtc().add(new Duration(days: 1))), null, googleSignIn.scopes);
-      AuthClient client = authenticatedClient(baseClient, credentials);
-*/
-
-    var client = clientViaApiKey('AIzaSyDJR_BnU_JVJyGTfaWcj086UuQxXP3LoTU');
-
-    BooksApi booksApi = new BooksApi(client);
-
-    Volumes books = await booksApi.volumes.list('isbn:$barcode');
-
-    if (books.items != null) {
-      final String title = books.items[0].volumeInfo.title;
-      final String author = books.items[0].volumeInfo.authors.join(", ");
-      final String image = books.items[0].volumeInfo.imageLinks.thumbnail;
-
-/*
-      final position = await Geolocator().getLastKnownPosition();
-
-      //Create record in Firestore database with location, URL, and book details
-      await Firestore.instance.collection('books').add({
-        "user": currentUserId,
-        "userName": currentUserName,
-        'URL': image,
-        'isbn': barcode,
-        'title': title,
-        'author': author,
-        'position': new GeoPoint(position.latitude, position.longitude)
-      });
-*/
-    } else {
-      print("No record found for isbn: $barcode");
-    }
-    client.close();
-  } on PlatformException catch (e) {
-    if (e.code == BarcodeScanner.CameraAccessDenied) {
-      print('The user did not grant the camera permission!');
-    } else {
-      print('Unknown error: $e');
-    }
-  } on FormatException {
-    print(
-        'null (User returned using the "back"-button before scanning anything. Result)');
-  } catch (e) {
-    print('Unknown error: $e');
-  }
-}
-
 class EnterBook extends StatefulWidget {
-  EnterBook({Key key, @required this.title, @required this.onConfirm, this.scan = true, this.search = true}) : super(key: key);
+  EnterBook(
+      {Key key,
+      @required this.title,
+      @required this.onConfirm,
+      this.scan = true,
+      this.search = true})
+      : super(key: key);
 
   final BookCallback onConfirm;
   final String title;
@@ -450,6 +375,7 @@ class _EnterBookState extends State<EnterBook> {
   Book bookToAdd;
   Client client;
   BooksApi booksApi;
+
   TextEditingController textController;
 
   @override
@@ -459,6 +385,7 @@ class _EnterBookState extends State<EnterBook> {
     textController = new TextEditingController();
     textController.addListener(searchAutocomplete);
 
+    //TODO: avoid calls using ApiKey as it is not protected from others calling
     client = clientViaApiKey('AIzaSyDJR_BnU_JVJyGTfaWcj086UuQxXP3LoTU');
     booksApi = new BooksApi(client);
   }
@@ -472,16 +399,14 @@ class _EnterBookState extends State<EnterBook> {
 
   _EnterBookState();
 
-  searchAutocomplete() async {
-    String text = textController.text;
-    if (text.length > 5) {
-      List<Book> newSuggestions = [];
-      Volumes books =
-          await booksApi.volumes.list(text, printType: 'books', maxResults: 10);
+  Future<List<Book>> searchByTitleAuthorGoogle(String text) async {
+    Volumes books =
+        await booksApi.volumes.list(text, printType: 'books', maxResults: 10);
 
-      if (books.items.isNotEmpty) {
-        books.items.forEach((Volume v) {
-          if (v.volumeInfo.title != null &&
+    if (books.items != null && books.items.isNotEmpty) {
+      return books.items
+          .where((v) =>
+              v.volumeInfo.title != null &&
               v.volumeInfo.authors != null &&
               v.volumeInfo.authors.isNotEmpty &&
               v.volumeInfo.imageLinks != null &&
@@ -491,13 +416,61 @@ class _EnterBookState extends State<EnterBook> {
                       .firstWhere((test) => test.type == 'ISBN_13') !=
                   null &&
               v.saleInfo != null &&
-              !v.saleInfo.isEbook) {
-            print('BOOK WITH FULL DATA: ${v.volumeInfo.title}');
-            newSuggestions.add(new Book.volume(v));
-          }
-        });
-      }
+              !v.saleInfo.isEbook)
+          .map((v) {
+        return new Book.volume(v);
+      }).toList();
+    } else {
+      return null;
+    }
+  }
 
+  Future<Book> searchByIsbnGoogle(String isbn) async {
+    Volumes books = await booksApi.volumes.list('isbn:$isbn');
+    if (books.items != null && books.items.isNotEmpty) {
+      var v = books.items[0];
+      if (v.volumeInfo.title != null &&
+          v.volumeInfo.authors != null &&
+          v.volumeInfo.authors.isNotEmpty &&
+          v.volumeInfo.imageLinks != null &&
+          v.volumeInfo.imageLinks.thumbnail != null &&
+          v.volumeInfo.industryIdentifiers != null &&
+          v.volumeInfo.industryIdentifiers
+              .firstWhere((test) => test.type == 'ISBN_13') !=
+              null &&
+          v.saleInfo != null &&
+          !v.saleInfo.isEbook) {
+        return new Book.volume(v);
+      }
+    }
+    print("No record found for isbn: $isbn");
+    return null;
+  }
+
+  Future<Book> searchByIsbnGoodreads(String isbn) async {
+    //TODO: avoid calls using ApiKey as it is not protected from others calling
+    final String apiKey = 'SXMWtbHvcnbTgRTLT7isA';
+    Client client = new Client();
+
+    var res = await client.get('https://www.goodreads.com/search/index.xml?key=$apiKey&q=$isbn');
+
+    print('[DEBUG] ${res.body.toString()}');
+
+    var document = xml.parse(res.body);
+
+    var bookXml = document?.findAllElements('best_book')?.first;
+    if (bookXml != null) {
+      return new Book.goodreads(bookXml)..isbn=isbn;
+    }
+
+    print("No record found for isbn: $isbn");
+    return null;
+  }
+
+  searchAutocomplete() async {
+    String text = textController.text;
+    if (text.length > 5) {
+      List<Book> newSuggestions = await searchByTitleAuthorGoogle(text);
       setState(() {
         suggestions = newSuggestions;
         bookToAdd = null;
@@ -530,8 +503,7 @@ class _EnterBookState extends State<EnterBook> {
                 widget.scan
                     ? Row(children: <Widget>[
                         Expanded(
-                            child: Text(
-                                'Scan ISBN from the back of the book',
+                            child: Text('Scan ISBN from the back of the book',
                                 style: Theme.of(context).textTheme.body1)),
                         RaisedButton(
                           textColor: Colors.white,
@@ -605,6 +577,35 @@ class _EnterBookState extends State<EnterBook> {
         ));
   }
 
+  Future scanIsbn(BuildContext context) async {
+    try {
+      String barcode = await BarcodeScanner.scan();
+      print("Isbn: $barcode");
+
+//      Book book = await searchByIsbnGoogle(barcode);
+      Book book = await searchByIsbnGoodreads(barcode);
+
+      if (book != null ) {
+        setState(() {
+          bookToAdd = book;
+        });
+      } else {
+        print("No record found for isbn: $barcode");
+      }
+    } on PlatformException catch (e) {
+      if (e.code == BarcodeScanner.CameraAccessDenied) {
+        print('The user did not grant the camera permission!');
+      } else {
+        print('Unknown error: $e');
+      }
+    } on FormatException {
+      print(
+          'null (User returned using the "back"-button before scanning anything. Result)');
+    } catch (e) {
+      print('Unknown error: $e');
+    }
+  }
+
   Widget confirmBook(BuildContext context, Book book) {
     return new Container(
         child: new Column(
@@ -645,9 +646,11 @@ class _EnterBookState extends State<EnterBook> {
                     new Text('Add', style: Theme.of(context).textTheme.title),
                 onPressed: () {
                   print('Book \'${book.title}\' to be added.');
-                  bookToAdd = null;
-                  textController.clear();
                   widget.onConfirm(book);
+                  setState(() {
+                    bookToAdd = null;
+                    textController.clear();
+                  });
                 },
                 shape: new RoundedRectangleBorder(
                     borderRadius: new BorderRadius.circular(20.0)),
