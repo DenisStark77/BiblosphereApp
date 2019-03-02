@@ -158,7 +158,7 @@ class ChatScreenState extends State<ChatScreen> {
         isNewChat = false;
       } else {
         Firestore.instance.runTransaction((transaction) async {
-          await transaction.set(
+          await transaction.update(
             chatRef,
             {
               'ids': [peerId, myId],
