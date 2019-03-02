@@ -15,11 +15,15 @@ dependencies:
 
   firestore_helpers: ^3.0.0
 
-  cloud_firestore: ^0.8.2+3
+  #Last version prior to AndroidX
+  cloud_firestore: 0.8.2+3
 
   firebase_storage: ^1.0.4
 
   firebase_auth: ^0.6.6
+
+  #Last version prior to AndroidX
+  permission_handler: 2.1.2
 
   url_launcher: ^5.0.1
 
@@ -37,11 +41,13 @@ dependencies:
 
   share: ^0.5.3
 
-  firebase_dynamic_links: ^0.2.0+2
+  #Last version prior to AndroidX
+  firebase_dynamic_links: 0.1.0+1
 
   firebase_ml_vision: ^0.2.1
 
-  firebase_messaging: '2.1.0'
+  #Last version prior to AndroidX
+  firebase_messaging: '2.2.0+1'
 
   photo_view: ^0.0.11
 
