@@ -371,6 +371,8 @@ class _GoodreadsState extends State<Goodreads> with WidgetsBindingObserver {
         String id = e.findElements("id")?.first?.text?.toString();
         String isbn = e.findElements("isbn13")?.first?.text?.toString();
         String title = e.findElements("title")?.first?.text?.toString();
+        if (title.contains(':')) title = title.substring(0, title.indexOf(':'));
+
         String image = e.findElements("image_url")?.first?.text?.toString();
         if (image.contains('nophoto')) image = '';
         List<String> authors = [];

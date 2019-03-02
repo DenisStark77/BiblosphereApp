@@ -10,19 +10,19 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 import 'package:biblosphere/camera.dart';
 import 'package:biblosphere/l10n.dart';
+import 'package:biblosphere/const.dart';
 
 class FirebaseAuthMock extends Mock implements FirebaseAuth {}
 
 final FirebaseAuth _auth = new FirebaseAuthMock();
 
 void main() async {
+  FirebaseUser user = await _auth.signInWithEmailAndPassword(
+      email: 'tester2@biblosphere.org', password: '123456');
 
-  FirebaseUser user = await _auth.signInWithEmailAndPassword(email: 'tester2@biblosphere.org', password: '123456');
-  
   testWidgets('IntroPage smoke test', (WidgetTester tester) async {
     // Build our app and trigger a frame.
-    await tester.pumpWidget(
-        Builder(builder: (BuildContext context) {
+    await tester.pumpWidget(Builder(builder: (BuildContext context) {
       return MaterialApp(
         localizationsDelegates: [
           AppLocalizationsDelegate(),
@@ -31,7 +31,9 @@ void main() async {
         ],
         supportedLocales: [Locale("en"), Locale("ru")],
         locale: Locale('en'),
-        home: Home(currentUserId: user.uid, currentUserName: user.displayName),
+        home: Home(
+            currentUser: new User(
+                id: user.uid, name: user.displayName, photo: user.photoUrl)),
       );
     }));
 
@@ -39,6 +41,5 @@ void main() async {
 
     // Verify that take photo button is there
     expect(find.byIcon(Icons.photo_camera), findsOneWidget);
-
   });
 }

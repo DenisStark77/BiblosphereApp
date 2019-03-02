@@ -505,7 +505,7 @@ class Home extends StatelessWidget {
                       style: Theme.of(context).textTheme.subtitle),
                   Row(children: <Widget>[
                     Expanded(
-                        child: Text('${currentUser.bookCount} books',
+                        child: Text('My books',
                             style: Theme.of(context).textTheme.body1)),
                     RaisedButton(
                       textColor: Colors.white,
@@ -519,9 +519,8 @@ class Home extends StatelessWidget {
                                     appBar: new AppBar(
                                       title: new Text(
                                         'MY BOOKS',
-                                        style: TextStyle(
-                                            color: primaryColor,
-                                            fontWeight: FontWeight.bold),
+                                        style: Theme.of(context).textTheme.title.apply(
+                                            color: Colors.white),
                                       ),
                                       centerTitle: true,
                                     ),
@@ -575,7 +574,7 @@ class Home extends StatelessWidget {
                   ]),
                   Row(children: <Widget>[
                     Expanded(
-                        child: Text('${currentUser.shelfCount} bookshelves',
+                        child: Text('My bookshelves',
                             style: Theme.of(context).textTheme.body1)),
                     RaisedButton(
                       textColor: Colors.white,
@@ -589,9 +588,8 @@ class Home extends StatelessWidget {
                                     appBar: new AppBar(
                                       title: new Text(
                                         'MY BOOKSHELVES',
-                                        style: TextStyle(
-                                            color: primaryColor,
-                                            fontWeight: FontWeight.bold),
+                                        style: Theme.of(context).textTheme.title.apply(
+                                            color: Colors.white),
                                       ),
                                       centerTitle: true,
                                     ),
@@ -628,7 +626,7 @@ class Home extends StatelessWidget {
                   Row(children: <Widget>[
                     Expanded(
                         child: Text(
-                            '${currentUser.wishCount} books in wishlist',
+                            'My wishlist',
                             style: Theme.of(context).textTheme.body1)),
                     RaisedButton(
                       textColor: Colors.white,
@@ -642,9 +640,8 @@ class Home extends StatelessWidget {
                                     appBar: new AppBar(
                                       title: new Text(
                                         'MY WISHES',
-                                        style: TextStyle(
-                                            color: primaryColor,
-                                            fontWeight: FontWeight.bold),
+                                        style: Theme.of(context).textTheme.title.apply(
+                                            color: Colors.white),
                                       ),
                                       centerTitle: true,
                                     ),
