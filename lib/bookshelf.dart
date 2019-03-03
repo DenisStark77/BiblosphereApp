@@ -142,7 +142,7 @@ class _PersonCardState extends State<PersonCard> {
               ),
               wishlist == null || wishlist.isEmpty
                   ? Container()
-                  : Container(margin: EdgeInsets.only(left: 5.0), alignment: Alignment.centerLeft, child: Text('Recent wishes:',
+                  : Container(margin: EdgeInsets.only(left: 5.0), alignment: Alignment.centerLeft, child: Text(S.of(context).recentWishes,
                   style: Theme.of(context).textTheme.body1)),
               wishlist == null || wishlist.isEmpty
                   ? Container()
@@ -239,6 +239,7 @@ class BookCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
                       Image(
+                          width: 120,
                           image:
                               new CachedNetworkImageProvider(book.book.image),
                           fit: BoxFit.cover),
@@ -561,7 +562,7 @@ class _BookshelfListState extends State<BookshelfList> {
                 return Text(S.of(context).loading);
               default:
                 if (!snapshot.hasData || snapshot.data.documents.isEmpty) {
-                  return Container(padding: EdgeInsets.all(10), child: Text('Hey, right now nodody around you has the books from your wishlist. They will be shown here once someone registers them.\nSpread the word about Biblosphere to make it happen sooner. And add more books to your wishlist.', style: Theme.of(context).textTheme.body1,));
+                  return Container(padding: EdgeInsets.all(10), child: Text(S.of(context).noMatchForWishlist, style: Theme.of(context).textTheme.body1,));
                 }
                 return new ListView(
                   children:
@@ -627,19 +628,19 @@ class _BookshelfListState extends State<BookshelfList> {
           spacing: 1.0, // gap between adjacent chips
           runSpacing: 0.0, // gap between lines
           children: <Widget>[
-            activityChip(context, AppActivity.books, 'Books',
+            activityChip(context, AppActivity.books, S.of(context).books,
                 activity == AppActivity.books, onSelected: (bool selected) {
               setState(() {
                 activity = AppActivity.books;
               });
             }, icon: new Icon(MyIcons.book)),
-            activityChip(context, AppActivity.shelves, 'Shelves',
+            activityChip(context, AppActivity.shelves, S.of(context).shelves,
                 activity == AppActivity.shelves, onSelected: (bool selected) {
               setState(() {
                 activity = AppActivity.shelves;
               });
             }, icon: new Icon(MyIcons.open)),
-            activityChip(context, AppActivity.wished, 'Wished',
+            activityChip(context, AppActivity.wished, S.of(context).wished,
                 activity == AppActivity.wished, onSelected: (bool selected) {
               setState(() {
                 activity = AppActivity.wished;
@@ -665,7 +666,7 @@ class _BookshelfListState extends State<BookshelfList> {
                       Image(
                           image:
                               new CachedNetworkImageProvider(wish.book.image),
-                          width: 50,
+                          width: 120,
                           fit: BoxFit.cover),
                       Expanded(
                         child: Container(
@@ -815,7 +816,7 @@ class _PeopleState extends State<PeopleList> {
                 return Text(S.of(context).loading);
               default:
                 if (!snapshot.hasData || snapshot.data.documents.isEmpty) {
-                  return Container(padding: EdgeInsets.all(10), child: Text('Here you\'ll see people who wish your books once they are registered. To make it happen add more books and spread the word about Biblosphere.', style: Theme.of(context).textTheme.body1,));
+                  return Container(padding: EdgeInsets.all(10), child: Text(S.of(context).noMatchForBooks, style: Theme.of(context).textTheme.body1,));
                 }
                 return new ListView(
                   children:
@@ -862,14 +863,14 @@ class _PeopleState extends State<PeopleList> {
           spacing: 1.0, // gap between adjacent chips
           runSpacing: 0.0, // gap between lines
           children: <Widget>[
-            activityChip(context, AppActivity.people, 'People',
+            activityChip(context, AppActivity.people, S.of(context).people,
                 activity == AppActivity.people, onSelected: (bool selected) {
               setState(() {
                 activity = AppActivity.people;
               });
             }, icon: new Icon(MyIcons.people)),
             activityChip(
-                context, AppActivity.give, 'Share', activity == AppActivity.give,
+                context, AppActivity.give, S.of(context).share, activity == AppActivity.give,
                 onSelected: (bool selected) {
               setState(() {
                 activity = AppActivity.give;
@@ -909,8 +910,7 @@ class _PeopleState extends State<PeopleList> {
                       Expanded(
                         child: Container(
                           margin: EdgeInsets.all(5.0),
-                          child: Text(
-                              '${bookcopy.wisher.name} wish to read your book \'${bookcopy.book.title}\'',
+                          child: Text(S.of(context).wishToRead(bookcopy.wisher.name, bookcopy.book.title),
                               style: Theme.of(context).textTheme.body1),
                         ),
                       ),

@@ -13,6 +13,8 @@ import 'package:xml/xml.dart' as xml;
 
 import 'package:biblosphere/l10n.dart';
 
+const String sharingUrl = 'https://biblosphere.org/images/phone-app-screens-2000.png';
+
 String getTimestamp() => new DateTime.now().millisecondsSinceEpoch.toString();
 
 class MyIcons {
@@ -81,12 +83,16 @@ class UserActionRecord {
   UserAction action;
 }
 
+enum BookSource { none, google, goodreads }
+
 class Book {
   String id;
   String title;
   List<String> authors;
-  String isbn;
+  String isbn = 'NA';
   String image;
+  String sourceId;
+  BookSource source = BookSource.none;
 
   Book(
       {this.id,
@@ -104,9 +110,11 @@ class Book {
       //TODO: what if ISBN_13 missing?
       var industryIds = v.volumeInfo.industryIdentifiers;
       if (industryIds != null) {
-        var isbnId = industryIds.firstWhere((test) => test.type == 'ISBN_13');
+        var isbnId = industryIds.firstWhere((test) => test.type == 'ISBN_13',
+            orElse: () => null);
         if (isbnId != null) isbn = isbnId.identifier;
       }
+      source = BookSource.google;
     } catch (e) {
       print('Unknown error: $e');
     }
@@ -114,13 +122,19 @@ class Book {
 
   Book.goodreads(xml.XmlElement xml) {
 //      isbn = xml.findElements("isbn13")?.first?.text?.toString();
-      title = xml.findElements("title")?.first?.text?.toString();
-      if (title.contains(':')) title = title.substring(0, title.indexOf(':'));
-      image = xml.findElements("image_url")?.first?.text?.toString();
-      if (image.contains('nophoto')) image = '';
-      authors = [];
-      xml.findAllElements("author").forEach((a) =>
-          authors.add(a.findElements("name")?.first?.text?.toString()));
+    sourceId = xml.findElements("id")?.first?.text?.toString();
+    var isbnXml = xml.findElements("isbn13");
+    if (isbnXml != null && isbnXml.isNotEmpty)
+        isbn = isbnXml.first?.text?.toString();
+    if (isbn == null) isbn = 'NA';
+    title = xml.findElements("title")?.first?.text?.toString();
+    if (title.contains(':')) title = title.substring(0, title.indexOf(':'));
+    image = xml.findElements("image_url")?.first?.text?.toString();
+    if (image.contains('nophoto')) image = '';
+    authors = [];
+    xml.findAllElements("author").forEach(
+        (a) => authors.add(a.findElements("name")?.first?.text?.toString()));
+    source = BookSource.goodreads;
   }
 
   Book.fromJson(Map json)
@@ -278,6 +292,15 @@ Future addBook(Book b, User u, GeoPoint position,
     {String source = 'goodreads'}) async {
   bool existingBook = false;
   String bookId;
+
+  if (b.isbn == null || b.isbn == 'NA')
+    throw 'Book ${b?.title}, ${b?.authors?.join()} has no ISBN';
+
+  //Try to get image if missing
+  if (b.image == null || b.image.isEmpty) {
+    b = await enrichBookRecord(b);
+  }
+
   QuerySnapshot q = await Firestore.instance
       .collection('books')
       .where('book.isbn', isEqualTo: b.isbn)
@@ -289,10 +312,12 @@ Future addBook(Book b, User u, GeoPoint position,
         .add({'book': b.toJson(), 'source': source});
 
     b.id = d.documentID;
-    existingBook = true;
   } else {
+    existingBook = true;
     b.id = q.documents.first.documentID;
   }
+
+  Bookcopy bookcopy = new Bookcopy(owner: u, book: b, position: position);
 
   //Check if bookcopy already exist. Make sense only if isb is registered
   if (existingBook) {
@@ -302,11 +327,13 @@ Future addBook(Book b, User u, GeoPoint position,
         .where('owner.id', isEqualTo: u.id)
         .getDocuments();
 
-    //Bookcopy already exist
-    if (q.documents.isNotEmpty) return;
+    //If bookcopy already exist refresh it
+    if (q.documents.isNotEmpty) {
+      bookcopy.id = q.documents.first.documentID;
+      await Firestore.instance.collection('bookcopies').document(bookcopy.id).updateData(bookcopy.toJson());
+      return;
+    }
   }
-
-  Bookcopy bookcopy = new Bookcopy(owner: u, book: b, position: position);
 
   await Firestore.instance.collection('bookcopies').add(bookcopy.toJson());
 }
@@ -315,6 +342,15 @@ Future addWish(Book b, User u, GeoPoint position,
     {String source = 'goodreads'}) async {
   bool existingBook = false;
   String bookId;
+
+  if (b.isbn == null || b.isbn == 'NA')
+    throw 'Book ${b?.title}, ${b?.authors?.join()} has no ISBN';
+
+  //Try to get image if missing
+  if (b.image == null || b.image.isEmpty) {
+    b = await enrichBookRecord(b);
+  }
+
   QuerySnapshot q = await Firestore.instance
       .collection('books')
       .where('book.isbn', isEqualTo: b.isbn)
@@ -326,12 +362,15 @@ Future addWish(Book b, User u, GeoPoint position,
         .add({'book': b.toJson(), 'source': source});
 
     b.id = d.documentID;
-    existingBook = true;
   } else {
+    existingBook = true;
     b.id = q.documents.first.documentID;
   }
 
-  //Check if bookcopy already exist. Make sense only if isb is registered
+  Wish wish = new Wish(
+      wisher: u, position: u.position, book: b, created: getTimestamp());
+
+  //Check if wish already exist. Make sense only if isb is registered
   if (existingBook) {
     QuerySnapshot q = await Firestore.instance
         .collection('wishes')
@@ -339,14 +378,143 @@ Future addWish(Book b, User u, GeoPoint position,
         .where('wisher.id', isEqualTo: u.id)
         .getDocuments();
 
-    //Bookcopy already exist
-    if (q.documents.isNotEmpty) return;
+    if (q.documents.isNotEmpty) {
+      wish.id = q.documents.first.documentID;
+      await Firestore.instance.collection('wishes').document(wish.id).updateData(wish.toJson());
+      return;
+    }
   }
 
-  Wish wish = new Wish(
-      wisher: u, position: u.position, book: b, created: getTimestamp());
-
   await Firestore.instance.collection('wishes').add(wish.toJson());
+}
+
+//TODO: Not sure it's good idea to have it as global valiables. Need to find
+// better way. Hwever to have it in widget is not good idea either as it used
+// from Goodreads import as well.
+//TODO: Where to close such clients
+class LibConnect {
+  static Client _googleClient;
+  static BooksApi _booksApi;
+  static String goodreadsApiKey = 'SXMWtbHvcnbTgRTLT7isA';
+  static Client _goodreadsClient;
+
+  static Client getGoodreadClient() {
+    if (_goodreadsClient == null) _goodreadsClient = new Client();
+    return _goodreadsClient;
+  }
+
+  static BooksApi getGoogleBookApi() {
+    if (_googleClient == null)
+      _googleClient =
+          clientViaApiKey('AIzaSyDJR_BnU_JVJyGTfaWcj086UuQxXP3LoTU');
+
+    if (_booksApi == null) _booksApi = new BooksApi(_googleClient);
+
+    return _booksApi;
+  }
+}
+
+Future<List<Book>> searchByTitleAuthorGoogle(String text) async {
+  Volumes books = await LibConnect.getGoogleBookApi()
+      .volumes
+      .list(text, printType: 'books', maxResults: 10);
+
+  if (books.items != null && books.items.isNotEmpty) {
+    return books.items
+        .where((v) =>
+            v.volumeInfo.title != null &&
+            v.volumeInfo.authors != null &&
+            v.volumeInfo.authors.isNotEmpty &&
+            v.volumeInfo.imageLinks != null &&
+            v.volumeInfo.imageLinks.thumbnail != null &&
+            v.volumeInfo.industryIdentifiers != null &&
+            v.saleInfo != null &&
+            !v.saleInfo.isEbook)
+        .map((v) {
+      return new Book.volume(v);
+    }).toList();
+  } else {
+    return null;
+  }
+}
+
+Future<List<Book>> searchByTitleAuthorGoodreads(String text) async {
+  //TODO: avoid calls using ApiKey as it is not protected from others calling
+  var res = await LibConnect.getGoodreadClient().get(
+      'https://www.goodreads.com/search/index.xml?key=${LibConnect.goodreadsApiKey}&q=$text');
+
+  var document = xml.parse(res.body);
+
+  List<Book> books =
+      document.findAllElements('best_book')?.take(5).map((xml.XmlElement e) {
+    return new Book.goodreads(e);
+    //As Goodreads doesn't have ISBN in search responce keep Goodreads ID instead.
+    // It'll be replaced by ISBN by enrichBookRecord function on confirm stage.
+  })?.toList();
+
+  return books;
+}
+
+Future<Book> enrichBookRecord(Book book) async {
+  //As Goodreads search by title/author does not return ISBN it's empty for
+  // these records
+  if (book.isbn == null || book.isbn.isEmpty || book.isbn == 'NA') {
+    if (book.sourceId != null && book.sourceId.isNotEmpty) {
+      var res = await LibConnect.getGoodreadClient().get(
+          'https://www.goodreads.com/book/show/${book.sourceId}.xml?key=${LibConnect.goodreadsApiKey}');
+
+      var document = xml.parse(res.body);
+      String isbn = document.findAllElements('isbn13')?.first?.text?.toString();
+
+      if (isbn != null) book.isbn = isbn;
+    }
+    if (book.isbn == null || book.isbn.isEmpty) book.isbn = 'NA';
+  }
+
+  //As many Goodreads books doesn't have images enrich it from Google
+  if (book.image == null || book.image.isEmpty) {
+    if (book.isbn != 'NA' && book.source != BookSource.google) {
+      Book b = await searchByIsbnGoogle(book.isbn);
+      if (b?.image != null) book.image = b.image;
+    }
+  }
+
+  return book;
+}
+
+Future<Book> searchByIsbnGoogle(String isbn) async {
+  Volumes books =
+      await LibConnect.getGoogleBookApi().volumes.list('isbn:$isbn');
+  if (books?.items != null && books?.items?.isNotEmpty) {
+    var v = books?.items[0];
+    if (v?.volumeInfo?.title != null &&
+        v?.volumeInfo?.authors != null &&
+        v.volumeInfo.authors.isNotEmpty &&
+        v?.volumeInfo?.imageLinks != null &&
+        v?.volumeInfo?.imageLinks?.thumbnail != null &&
+        v?.volumeInfo?.industryIdentifiers != null &&
+        v?.saleInfo != null &&
+        !v?.saleInfo?.isEbook) {
+      return new Book.volume(v)..isbn = isbn;
+    }
+  }
+  print("No record found for isbn: $isbn");
+  return null;
+}
+
+Future<Book> searchByIsbnGoodreads(String isbn) async {
+  var res = await LibConnect.getGoodreadClient().get(
+      'https://www.goodreads.com/search/index.xml?key=${LibConnect.goodreadsApiKey}&q=$isbn');
+
+  var document = xml.parse(res.body);
+
+  var bookXml = document?.findAllElements('best_book')?.first;
+  if (bookXml != null) {
+    return new Book.goodreads(bookXml)..isbn = isbn;
+  }
+
+  print("No record found for isbn: $isbn");
+  return null;
 }
 
 final themeColor = new Color(0xfff5a623);
@@ -375,8 +543,6 @@ class EnterBook extends StatefulWidget {
 class _EnterBookState extends State<EnterBook> {
   List<Book> suggestions = [];
   Book bookToAdd;
-  Client client;
-  BooksApi booksApi;
 
   TextEditingController textController;
 
@@ -386,92 +552,22 @@ class _EnterBookState extends State<EnterBook> {
 
     textController = new TextEditingController();
     textController.addListener(searchAutocomplete);
-
-    //TODO: avoid calls using ApiKey as it is not protected from others calling
-    client = clientViaApiKey('AIzaSyDJR_BnU_JVJyGTfaWcj086UuQxXP3LoTU');
-    booksApi = new BooksApi(client);
   }
 
   @override
   void dispose() {
-    client.close();
     textController.dispose();
     super.dispose();
   }
 
   _EnterBookState();
 
-  Future<List<Book>> searchByTitleAuthorGoogle(String text) async {
-    Volumes books =
-        await booksApi.volumes.list(text, printType: 'books', maxResults: 10);
-
-    if (books.items != null && books.items.isNotEmpty) {
-      return books.items
-          .where((v) =>
-              v.volumeInfo.title != null &&
-              v.volumeInfo.authors != null &&
-              v.volumeInfo.authors.isNotEmpty &&
-              v.volumeInfo.imageLinks != null &&
-              v.volumeInfo.imageLinks.thumbnail != null &&
-              v.volumeInfo.industryIdentifiers != null &&
-              v.volumeInfo.industryIdentifiers
-                      .firstWhere((test) => test.type == 'ISBN_13') !=
-                  null &&
-              v.saleInfo != null &&
-              !v.saleInfo.isEbook)
-          .map((v) {
-        return new Book.volume(v);
-      }).toList();
-    } else {
-      return null;
-    }
-  }
-
-  Future<Book> searchByIsbnGoogle(String isbn) async {
-    Volumes books = await booksApi.volumes.list('isbn:$isbn');
-    if (books.items != null && books.items.isNotEmpty) {
-      var v = books.items[0];
-      if (v.volumeInfo.title != null &&
-          v.volumeInfo.authors != null &&
-          v.volumeInfo.authors.isNotEmpty &&
-          v.volumeInfo.imageLinks != null &&
-          v.volumeInfo.imageLinks.thumbnail != null &&
-          v.volumeInfo.industryIdentifiers != null &&
-          v.volumeInfo.industryIdentifiers
-              .firstWhere((test) => test.type == 'ISBN_13') !=
-              null &&
-          v.saleInfo != null &&
-          !v.saleInfo.isEbook) {
-        return new Book.volume(v);
-      }
-    }
-    print("No record found for isbn: $isbn");
-    return null;
-  }
-
-  Future<Book> searchByIsbnGoodreads(String isbn) async {
-    //TODO: avoid calls using ApiKey as it is not protected from others calling
-    final String apiKey = 'SXMWtbHvcnbTgRTLT7isA';
-    Client client = new Client();
-
-    var res = await client.get('https://www.goodreads.com/search/index.xml?key=$apiKey&q=$isbn');
-
-    print('[DEBUG] ${res.body.toString()}');
-
-    var document = xml.parse(res.body);
-
-    var bookXml = document?.findAllElements('best_book')?.first;
-    if (bookXml != null) {
-      return new Book.goodreads(bookXml)..isbn=isbn;
-    }
-
-    print("No record found for isbn: $isbn");
-    return null;
-  }
-
   searchAutocomplete() async {
     String text = textController.text;
     if (text.length > 5) {
+      //Goodreads search does not have ISBN in response, so using Google
+      //List<Book> newSuggestions = await searchByTitleAuthorGoodreads(text);
+
       List<Book> newSuggestions = await searchByTitleAuthorGoogle(text);
       setState(() {
         suggestions = newSuggestions;
@@ -505,7 +601,7 @@ class _EnterBookState extends State<EnterBook> {
                 widget.scan
                     ? Row(children: <Widget>[
                         Expanded(
-                            child: Text('Scan ISBN from the back of the book',
+                            child: Text(S.of(context).scanISBN,
                                 style: Theme.of(context).textTheme.body1)),
                         RaisedButton(
                           textColor: Colors.white,
@@ -527,7 +623,7 @@ class _EnterBookState extends State<EnterBook> {
                           controller: textController,
                           style: Theme.of(context).textTheme.body1,
                           decoration:
-                              InputDecoration(hintText: 'Enter title/author'),
+                              InputDecoration(hintText: S.of(context).enterTitle),
                         )),
                         RaisedButton(
                           textColor: Colors.white,
@@ -548,7 +644,8 @@ class _EnterBookState extends State<EnterBook> {
                         return Container(
                             margin: EdgeInsets.all(3.0),
                             child: GestureDetector(
-                                onTap: () {
+                                onTap: () async {
+                                  b = await enrichBookRecord(b);
                                   setState(() {
                                     bookToAdd = b;
                                     suggestions.clear();
@@ -567,7 +664,7 @@ class _EnterBookState extends State<EnterBook> {
                                       child: Container(
                                           margin: EdgeInsets.only(left: 3.0),
                                           child: Text(
-                                              '\'${b.title}\' by ${b.authors[0]}')))
+                                              '\'${b.title}\' ${b.authors[0]}')))
                                 ])));
                       }).toList()
                     : [Container()])
@@ -587,7 +684,9 @@ class _EnterBookState extends State<EnterBook> {
 //      Book book = await searchByIsbnGoogle(barcode);
       Book book = await searchByIsbnGoodreads(barcode);
 
-      if (book != null ) {
+      if (book != null) {
+        //Many books on goodreads does not have images. Enreach it from Google
+        book = await enrichBookRecord(book);
         setState(() {
           bookToAdd = book;
         });
@@ -645,7 +744,7 @@ class _EnterBookState extends State<EnterBook> {
                 textColor: Colors.white,
                 color: Theme.of(context).colorScheme.secondary,
                 child:
-                    new Text('Add', style: Theme.of(context).textTheme.title),
+                    new Text(S.of(context).add, style: Theme.of(context).textTheme.title),
                 onPressed: () {
                   print('Book \'${book.title}\' to be added.');
                   widget.onConfirm(book);
@@ -698,7 +797,7 @@ void showBbsDialog(BuildContext context, String text) {
         ),
         actions: <Widget>[
           FlatButton(
-            child: Text('Ok'),
+            child: Text(S.of(context).ok),
             onPressed: () {
               Navigator.of(context).pop();
             },
@@ -718,53 +817,53 @@ String chatId(String user1, String user2) {
 }
 
 Future<bool> showBbsConfirmation(BuildContext context, String text) async {
-  return(
-    await showDialog(
-      context: context,
-      barrierDismissible: true,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          content: Container(
-            child: Row(
-                children: <Widget>[
-                  Material(
-                    child: Image.asset('images/Librarian50x50.jpg', width: 50.0,),
-                    borderRadius: BorderRadius.all(Radius.circular(5.0)),
+  return (await showDialog(
+    context: context,
+    barrierDismissible: true,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        content: Container(
+          child: Row(children: <Widget>[
+            Material(
+              child: Image.asset(
+                'images/Librarian50x50.jpg',
+                width: 50.0,
+              ),
+              borderRadius: BorderRadius.all(Radius.circular(5.0)),
+            ),
+            new Flexible(
+              child: Container(
+                child: new Container(
+                  child: Text(
+                    text,
+                    style: TextStyle(color: themeColor),
                   ),
-                  new Flexible(
-                    child: Container(
-                      child: new Container(
-                        child: Text(
-                          text,
-                          style: TextStyle(color: themeColor),
-                        ),
-                        alignment: Alignment.centerLeft,
-                        margin: new EdgeInsets.fromLTRB(5.0, 0.0, 0.0, 5.0),
-                      ),
-                      margin: EdgeInsets.only(left: 5.0),
-                    ),
-                  ),
-                ]),
-            height: 50.0,
+                  alignment: Alignment.centerLeft,
+                  margin: new EdgeInsets.fromLTRB(5.0, 0.0, 0.0, 5.0),
+                ),
+                margin: EdgeInsets.only(left: 5.0),
+              ),
+            ),
+          ]),
+          height: 50.0,
+        ),
+        actions: <Widget>[
+          FlatButton(
+            child: Text(S.of(context).yes),
+            onPressed: () {
+              Navigator.of(context).pop(true);
+            },
           ),
-          actions: <Widget>[
-            FlatButton(
-              child: Text(S.of(context).yes),
-              onPressed: () {
-                Navigator.of(context).pop(true);
-              },
-            ),
-            FlatButton(
-              child: Text(S.of(context).no),
-              onPressed: () {
-                Navigator.of(context).pop(false);
-              },
-            ),
-          ],
-        );
-      },
-    )
-  );
+          FlatButton(
+            child: Text(S.of(context).no),
+            onPressed: () {
+              Navigator.of(context).pop(false);
+            },
+          ),
+        ],
+      );
+    },
+  ));
 }
 
 Future<GeoPoint> currentPosition() async {

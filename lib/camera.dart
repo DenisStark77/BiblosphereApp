@@ -48,6 +48,7 @@ class MyBook extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
                       Image(
+                          width: 120,
                           image: new CachedNetworkImageProvider(
                               bookcopy.book.image),
                           fit: BoxFit.cover),
@@ -80,18 +81,19 @@ class MyBook extends StatelessWidget {
                       tooltip: S.of(context).deleteShelf,
                       icon: new Icon(MyIcons.trash),
                     ),
+/*  Nothing to do in settings right now
                     new IconButton(
                       onPressed: () {},
                       tooltip: S.of(context).shelfSettings,
                       icon: new Icon(MyIcons.settings),
                     ),
+*/
                     new IconButton(
                       onPressed: () async {
                         final DynamicLinkParameters parameters =
                             DynamicLinkParameters(
                           domain: 'biblosphere.page.link',
-                          link: Uri.parse(
-                              'https://biblosphere.org/book?id=${bookcopy.book.id}#download'),
+                          link: Uri.parse('https://biblosphere.org'),
                           androidParameters: AndroidParameters(
                             packageName: 'com.biblosphere.biblosphere',
                             minimumVersion: 0,
@@ -105,6 +107,10 @@ class MyBook extends StatelessWidget {
                             bundleId: 'com.biblosphere.biblosphere',
                             minimumVersion: '0',
                           ),
+                          socialMetaTagParameters: SocialMetaTagParameters(
+                              title: S.of(context).title,
+                              description: S.of(context).shareBooks,
+                              imageUrl: Uri.parse(sharingUrl)),
                         );
 
                         final ShortDynamicLink shortLink =
@@ -159,6 +165,7 @@ class MyWish extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
                       Image(
+                          width: 120,
                           image:
                               new CachedNetworkImageProvider(wish.book.image),
                           fit: BoxFit.cover),
@@ -191,18 +198,19 @@ class MyWish extends StatelessWidget {
                       tooltip: S.of(context).deleteShelf,
                       icon: new Icon(MyIcons.trash),
                     ),
+/*  Nothing to do in settings right now
                     new IconButton(
                       onPressed: () {},
                       tooltip: S.of(context).shelfSettings,
                       icon: new Icon(MyIcons.settings),
                     ),
+*/
                     new IconButton(
                       onPressed: () async {
                         final DynamicLinkParameters parameters =
                             DynamicLinkParameters(
                           domain: 'biblosphere.page.link',
-                          link: Uri.parse(
-                              'https://biblosphere.org/book?id=${wish.book.id}#download'),
+                          link: Uri.parse('https://biblosphere.org'),
                           androidParameters: AndroidParameters(
                             packageName: 'com.biblosphere.biblosphere',
                             minimumVersion: 0,
@@ -216,6 +224,10 @@ class MyWish extends StatelessWidget {
                             bundleId: 'com.biblosphere.biblosphere',
                             minimumVersion: '0',
                           ),
+                          socialMetaTagParameters: SocialMetaTagParameters(
+                              title: S.of(context).title,
+                              description: S.of(context).shareWishlist,
+                              imageUrl: Uri.parse(sharingUrl)),
                         );
 
                         final ShortDynamicLink shortLink =
@@ -296,18 +308,19 @@ class MyBookshelf extends StatelessWidget {
                       tooltip: S.of(context).deleteShelf,
                       icon: new Icon(MyIcons.trash),
                     ),
+/*  Nothing to do in settings right now
                     new IconButton(
                       onPressed: () {},
                       tooltip: S.of(context).shelfSettings,
                       icon: new Icon(MyIcons.settings),
                     ),
+*/
                     new IconButton(
                       onPressed: () async {
                         final DynamicLinkParameters parameters =
                             DynamicLinkParameters(
                           domain: 'biblosphere.page.link',
-                          link: Uri.parse(
-                              'https://biblosphere.org/shelf?id=$shelfId#download'),
+                          link: Uri.parse('https://biblosphere.org'),
                           androidParameters: AndroidParameters(
                             packageName: 'com.biblosphere.biblosphere',
                             minimumVersion: 0,
@@ -321,12 +334,18 @@ class MyBookshelf extends StatelessWidget {
                             bundleId: 'com.biblosphere.biblosphere',
                             minimumVersion: '0',
                           ),
+                          socialMetaTagParameters: SocialMetaTagParameters(
+                              title: S.of(context).title,
+                              description: S.of(context).shareBookshelf,
+                              imageUrl: Uri.parse(imageURL)),
                         );
 
                         final ShortDynamicLink shortLink =
                             await parameters.buildShortLink();
-
                         Share.share(shortLink.shortUrl.toString());
+
+//                        final Uri link = await parameters.buildUrl();
+//                        Share.share(link.toString());
                       },
                       tooltip: S.of(context).shareShelf,
                       icon: new Icon(MyIcons.share1),
@@ -397,7 +416,7 @@ class Home extends StatelessWidget {
       FlutterCrashlytics().logException(ex, stack);
     }
   }
-
+  /*
   //Demo record for User Actions:
   //TODO: remove it and replace with actual code
   List<UserActionRecord> actions = [
@@ -456,6 +475,7 @@ class Home extends StatelessWidget {
           ),
         ]));
   }
+  */
 
   @override
   Widget build(BuildContext context) {
@@ -464,7 +484,7 @@ class Home extends StatelessWidget {
       padding: const EdgeInsets.all(5.0),
       children: <Widget>[
         EnterBook(
-            title: 'Add your book',
+            title: S.of(context).addYourBook,
             onConfirm: (Book book) async {
               addBook(book, currentUser, await currentPosition(),
                   source: 'googlebooks');
@@ -473,7 +493,7 @@ class Home extends StatelessWidget {
             search: true),
         //Add wishlist section
         EnterBook(
-            title: 'Add to Wishlist',
+            title: S.of(context).addToWishlist,
             onConfirm: (Book book) async {
               addWish(book, currentUser, await currentPosition(),
                   source: 'googlebooks');
@@ -501,11 +521,11 @@ class Home extends StatelessWidget {
             child: Container(
                 margin: EdgeInsets.all(10.0),
                 child: new Column(children: <Widget>[
-                  Text('Your Biblosphere',
+                  Text(S.of(context).yourBiblosphere,
                       style: Theme.of(context).textTheme.subtitle),
                   Row(children: <Widget>[
                     Expanded(
-                        child: Text('My books',
+                        child: Text(S.of(context).myBooksItem,
                             style: Theme.of(context).textTheme.body1)),
                     RaisedButton(
                       textColor: Colors.white,
@@ -518,9 +538,11 @@ class Home extends StatelessWidget {
                                 builder: (context) => new Scaffold(
                                     appBar: new AppBar(
                                       title: new Text(
-                                        'MY BOOKS',
-                                        style: Theme.of(context).textTheme.title.apply(
-                                            color: Colors.white),
+                                        S.of(context).myBooksTitle,
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .title
+                                            .apply(color: Colors.white),
                                       ),
                                       centerTitle: true,
                                     ),
@@ -548,7 +570,7 @@ class Home extends StatelessWidget {
                                                 return Container(
                                                     padding: EdgeInsets.all(10),
                                                     child: Text(
-                                                      'You don\'t have any books in Biblosphere. Add it manually or import from Goodreads.',
+                                                      S.of(context).noBooks,
                                                       style: Theme.of(context)
                                                           .textTheme
                                                           .body1,
@@ -574,7 +596,7 @@ class Home extends StatelessWidget {
                   ]),
                   Row(children: <Widget>[
                     Expanded(
-                        child: Text('My bookshelves',
+                        child: Text(S.of(context).myBookshelvesItem,
                             style: Theme.of(context).textTheme.body1)),
                     RaisedButton(
                       textColor: Colors.white,
@@ -587,37 +609,65 @@ class Home extends StatelessWidget {
                                 builder: (context) => new Scaffold(
                                     appBar: new AppBar(
                                       title: new Text(
-                                        'MY BOOKSHELVES',
-                                        style: Theme.of(context).textTheme.title.apply(
-                                            color: Colors.white),
+                                        S.of(context).myBookshelvesTitle,
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .title
+                                            .apply(color: Colors.white),
                                       ),
                                       centerTitle: true,
                                     ),
                                     body: StreamBuilder<QuerySnapshot>(
-                                      stream: Firestore.instance
-                                          .collection('shelves')
-                                          .where("user",
-                                              isEqualTo: currentUser.id)
-                                          .snapshots(),
-                                      builder: (BuildContext context,
-                                          AsyncSnapshot<QuerySnapshot>
-                                              snapshot) {
-                                        if (!snapshot.hasData)
-                                          return new Text(
-                                              S.of(context).loading);
-                                        return new ListView(
-                                          children: snapshot.data.documents
-                                              .map((DocumentSnapshot document) {
-                                            return new MyBookshelf(
-                                                currentUserId: currentUser.id,
-                                                shelfId: document.documentID,
-                                                imageURL: document['URL'],
-                                                position: document['position'],
-                                                fileName: document['file']);
-                                          }).toList(),
-                                        );
-                                      },
-                                    ))));
+                                        stream: Firestore.instance
+                                            .collection('shelves')
+                                            .where("user",
+                                                isEqualTo: currentUser.id)
+                                            .snapshots(),
+                                        builder: (BuildContext context,
+                                            AsyncSnapshot<QuerySnapshot>
+                                                snapshot) {
+                                          if (snapshot.hasError) {
+                                            return Text(
+                                                'Error: ${snapshot.error}');
+                                          }
+                                          switch (snapshot.connectionState) {
+                                            case ConnectionState.waiting:
+                                              return Text(
+                                                  S.of(context).loading);
+                                            default:
+                                              if (!snapshot.hasData ||
+                                                  snapshot
+                                                      .data.documents.isEmpty) {
+                                                return Container(
+                                                    padding: EdgeInsets.all(10),
+                                                    child: Text(
+                                                      S
+                                                          .of(context)
+                                                          .noBookshelves,
+                                                      style: Theme.of(context)
+                                                          .textTheme
+                                                          .body1,
+                                                    ));
+                                              }
+                                              return new ListView(
+                                                children: snapshot
+                                                    .data.documents
+                                                    .map((DocumentSnapshot
+                                                        document) {
+                                                  return new MyBookshelf(
+                                                      currentUserId:
+                                                          currentUser.id,
+                                                      shelfId:
+                                                          document.documentID,
+                                                      imageURL: document['URL'],
+                                                      position:
+                                                          document['position'],
+                                                      fileName:
+                                                          document['file']);
+                                                }).toList(),
+                                              );
+                                          }
+                                        }))));
                       },
                       shape: new RoundedRectangleBorder(
                           borderRadius: new BorderRadius.circular(20.0)),
@@ -625,8 +675,7 @@ class Home extends StatelessWidget {
                   ]),
                   Row(children: <Widget>[
                     Expanded(
-                        child: Text(
-                            'My wishlist',
+                        child: Text(S.of(context).myWishlistItem,
                             style: Theme.of(context).textTheme.body1)),
                     RaisedButton(
                       textColor: Colors.white,
@@ -639,9 +688,11 @@ class Home extends StatelessWidget {
                                 builder: (context) => new Scaffold(
                                     appBar: new AppBar(
                                       title: new Text(
-                                        'MY WISHES',
-                                        style: Theme.of(context).textTheme.title.apply(
-                                            color: Colors.white),
+                                        S.of(context).myWishlistTitle,
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .title
+                                            .apply(color: Colors.white),
                                       ),
                                       centerTitle: true,
                                     ),
@@ -669,7 +720,7 @@ class Home extends StatelessWidget {
                                                 return Container(
                                                     padding: EdgeInsets.all(10),
                                                     child: Text(
-                                                      'You don\'t have any books in your wishlist. Add it manually or import from Goodreads.',
+                                                      S.of(context).noWishes,
                                                       style: Theme.of(context)
                                                           .textTheme
                                                           .body1,
@@ -704,11 +755,11 @@ class Home extends StatelessWidget {
                 margin: EdgeInsets.all(10.0),
                 child:
                     Column(mainAxisSize: MainAxisSize.min, children: <Widget>[
-                  Text('Add your bookshelf',
+                  Text(S.of(context).addYourBookshelf,
                       style: Theme.of(context).textTheme.subtitle),
                   Row(children: <Widget>[
                     Expanded(
-                        child: Text('Make a photo of your bookshelf',
+                        child: Text(S.of(context).makePhotoOfShelf,
                             style: Theme.of(context).textTheme.body1)),
                     RaisedButton(
                       textColor: Colors.white,
@@ -724,33 +775,6 @@ class Home extends StatelessWidget {
                 ]))),
       ],
     );
-    /*
-    return new Stack(
-      children: <Widget>[
-        new MyBookshelfList(currentUserId: currentUserId, mode: mode),
-        Container(
-          child: new FloatingActionButton(
-            onPressed: () {
-              switch (mode) {
-                case AppMode.book:
-                  scanIsbn(context);
-                  break;
-                case AppMode.bookshelf:
-                  getImage(context);
-                  break;
-              }
-            },
-            tooltip: S.of(context).addShelf,
-            child: mode == AppMode.bookshelf
-                ? new Icon(MyIcons.camera)
-                : new Icon(MyIcons.barcode),
-          ),
-          alignment: Alignment.bottomCenter,
-          margin: new EdgeInsets.fromLTRB(0.0, 0.0, 0.0, 10.0),
-        ),
-      ],
-    );
- */
   }
 
   Future<bool> isBookcase(File imageFile) async {

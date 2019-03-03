@@ -31,7 +31,7 @@
     "type": "text",
     "placeholders": {}
   },
-  "introDone": "НАЧАТЬ",
+  "introDone": "ПРОПУСТИТЬ",
   "@introDone": {
     "type": "text",
     "placeholders": {}
@@ -180,5 +180,239 @@
   "@confirmBlockUser": {
     "type": "text",
     "placeholders": {}
-  }
+  },
+  "favorite": "Добавить полку в избранное",
+  "@favorite": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "drawerHeader": "Выбери режим",
+  "@drawerHeader": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "bookshelves": "Полки",
+  "@bookshelves": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "books": "Книги",
+  "@books": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "read": "Читать",
+  "@read": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "meet": "Люди",
+  "@meet": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "explore": "Исследовать",
+  "@explore": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "share": "Поделись",
+  "@share": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "borrow": "Возьми",
+  "@borrow": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "earn": "Заработай",
+  "@earn": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "welcome": "Добро пожаловать",
+  "@welcome": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "shareBooks": "Я делюсь книгами через Библосферу. Присоединяйся!",
+  "@shareBooks": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "shareWishlist": "Я публикую в Библосфере список книг, которые хочу почитать. А ты?",
+  "@shareWishlist": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "shareBookshelf": "Эта моя книжная полка. Заходи в Библосферу, чтобы делиться книгами и знакомиться с читающими людьми.",
+  "@shareBookshelf": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "addYourBook": "Добавить свою книгу",
+  "@addYourBook": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "addToWishlist": "Добавить желаемую книгу",
+  "@addToWishlist": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "yourBiblosphere": "Моя Библосфера",
+  "@yourBiblosphere": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "myBooksItem": "Мои кнги",
+  "@myBooksItem": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "myBooksTitle": "МОИ КНИГИ",
+  "@myBooksTitle": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "noBooks": "У Вас ни одной книги в Библосфере. Добавьте их вручную или загрузите из Goodreads.",
+  "@noBooks": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "myBookshelvesItem": "Мои полки",
+  "@myBookshelvesItem": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "myBookshelvesTitle": "МОИ ПОЛКИ",
+  "@myBookshelvesTitle": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "noBookshelves": "У Вас ни одной книжной полки в Библосфере. Сделайте фото вашей полки, чтобы на ваши книги могли посмотреть.",
+  "@noBookshelves": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "myWishlistItem": "Хочу почитать",
+  "@myWishlistItem": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "myWishlistTitle": "ХОЧУ ПОЧИТАТЬ",
+  "@myWishlistTitle": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "noWishes": "У Вас ни одной книги в списке для прочтения. Добавьте их вручную или загрузите из Goodreads.",
+  "@noWishes": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "addYourBookshelf": "Добавьте вашу полку",
+  "@addYourBookshelf": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "makePhotoOfShelf": "Сделайте фотографию вашей книжной полки",
+  "@makePhotoOfShelf": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "recentWishes": "Хочет почитать:",
+  "@recentWishes": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "noMatchForWishlist": "К сожалению, пока никто не добавил книг, которые Вы хотите прочитать. Вы их увидите здесь, как только их добавят.\nРасскажите о Библосфере, чтобы это произошло быстрее. И добавьте больше книг в ваш список для прочтения.",
+  "@noMatchForWishlist": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "shelves": "Полки",
+  "@shelves": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "wished": "Избранное",
+  "@wished": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "noMatchForBooks": "Здесь Вы увидите людей, кто хочет почитать Ваши книги, как только они появятся. Чтобы это произошло, добавьте больше книг и расскажите о Библосфере друзьям.",
+  "@noMatchForBooks": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "people": "Люди",
+  "@people": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "wishToRead": "{name} хочет почитать Вашу книгу '{title}'",
+  "@wishToRead": {
+    "type": "text",
+    "placeholders": {
+      "name": {},
+      "title": {}
+    }
+  },
+  "yourGoodreads": "Ваш Goodreads",
+  "@yourGoodreads": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "linkToGoodreads": "Подключи свой Goodreads",
+  "@linkToGoodreads": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "importYouBooks": "Загрузи книги в Библосферу",
+  "@importYouBooks": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "linkYourAccount": "Подключи учётную запись Goodreads",
+  "@linkYourAccount": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "useCurrentLocation": "Использовать текущее местоположение для загрузки",
+  "@useCurrentLocation": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "importToWishlist": "Загрузить в список желаемых книг:",
+  "@importToWishlist": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "importToBooks": "Загрузить в список моих книг:",
+  "@importToBooks": {
+    "type": "text",
+    "placeholders": {}
+  },
+     "scanISBN": "Сканировать ISBN с обложки книги",
+     "@scanISBN": {
+       "type": "text",
+       "placeholders": {}
+     },
+     "enterTitle": "Начните вводить автора и/или название",
+     "@enterTitle": {
+       "type": "text",
+       "placeholders": {}
+     },
+     "add": "Добавить",
+     "@add": {
+       "type": "text",
+       "placeholders": {}
+     },
+     "ok": "Ок",
+     "@ok": {
+       "type": "text",
+       "placeholders": {}
+     }
+
 }

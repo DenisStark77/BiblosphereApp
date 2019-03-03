@@ -180,5 +180,239 @@
   "@confirmBlockUser": {
     "type": "text",
     "placeholders": {}
-  }
+  },
+  "favorite": "Add shelf to favorite",
+  "@favorite": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "drawerHeader": "Choose mode",
+  "@drawerHeader": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "bookshelves": "Bookshelves",
+  "@bookshelves": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "books": "Books",
+  "@books": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "read": "Read",
+  "@read": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "meet": "Meet",
+  "@meet": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "explore": "Explore",
+  "@explore": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "share": "Share",
+  "@share": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "borrow": "Borrow",
+  "@borrow": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "earn": "Earn",
+  "@earn": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "welcome": "Welcome",
+  "@welcome": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "shareBooks": "I'm sharing my books on Biblosphere. Join me to read it.",
+  "@shareBooks": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "shareWishlist": "I'm sharing my book wishlist on Biblosphere. Join me.",
+  "@shareWishlist": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "shareBookshelf": "That's my bookshelf. Join Biblosphere to share books and find like-minded people.",
+  "@shareBookshelf": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "addYourBook": "Add your book",
+  "@addYourBook": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "addToWishlist": "Add to Wishlist",
+  "@addToWishlist": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "yourBiblosphere": "Your Biblosphere",
+  "@yourBiblosphere": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "myBooksItem": "My books",
+  "@myBooksItem": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "myBooksTitle": "MY BOOKS",
+  "@myBooksTitle": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "noBooks": "You don't have any books in Biblosphere. Add it manually or import from Goodreads.",
+  "@noBooks": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "myBookshelvesItem": "My bookshelves",
+  "@myBookshelvesItem": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "myBookshelvesTitle": "MY BOOKSHELVES",
+  "@myBookshelvesTitle": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "noBookshelves": "You don't have any bookshelves in Biblosphere. Make a photo of your bookshelf to share with neighbours.",
+  "@noBookshelves": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "myWishlistItem": "My wishlist",
+  "@myWishlistItem": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "myWishlistTitle": "MY WISHLIST",
+  "@myWishlistTitle": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "noWishes": "You don't have any books in your wishlist. Add it manually or import from Goodreads.",
+  "@noWishes": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "addYourBookshelf": "Add your bookshelf",
+  "@addYourBookshelf": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "makePhotoOfShelf": "Make a photo of your bookshelf",
+  "@makePhotoOfShelf": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "recentWishes": "Recent wishes:",
+  "@recentWishes": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "noMatchForWishlist": "Hey, right now nodody around you has the books from your wishlist. They will be shown here once someone registers them.\nSpread the word about Biblosphere to make it happen sooner. And add more books to your wishlist.",
+  "@noMatchForWishlist": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "shelves": "Shelves",
+  "@shelves": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "wished": "Wished",
+  "@wished": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "noMatchForBooks": "Here you'll see people who wish your books once they are registered. To make it happen add more books and spread the word about Biblosphere.",
+  "@noMatchForBooks": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "people": "People",
+  "@people": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "wishToRead": "{name} wish to read your book '{title}'",
+  "@wishToRead": {
+    "type": "text",
+    "placeholders": {
+      "name": {},
+      "title": {}
+    }
+  },
+  "yourGoodreads": "Your Goodreads",
+  "@yourGoodreads": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "linkToGoodreads": "Link your Goodreads",
+  "@linkToGoodreads": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "importYouBooks": "Import your books to Biblosphere",
+  "@importYouBooks": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "linkYourAccount": "Link your Goodreads account",
+  "@linkYourAccount": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "useCurrentLocation": "Use current location for import",
+  "@useCurrentLocation": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "importToWishlist": "Import to Wishlist:",
+  "@importToWishlist": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "importToBooks": "Import to available books:",
+  "@importToBooks": {
+    "type": "text",
+    "placeholders": {}
+  },
+     "scanISBN": "Scan ISBN from the back of the book",
+     "@scanISBN": {
+       "type": "text",
+       "placeholders": {}
+     },
+     "enterTitle": "Enter title/author",
+     "@enterTitle": {
+       "type": "text",
+       "placeholders": {}
+     },
+     "add": "Add",
+     "@add": {
+       "type": "text",
+       "placeholders": {}
+     },
+     "ok": "Ok",
+     "@ok": {
+       "type": "text",
+       "placeholders": {}
+     }
+
 }

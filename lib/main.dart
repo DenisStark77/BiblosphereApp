@@ -2,7 +2,6 @@ import 'dart:async';
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_firebase_ui/flutter_firebase_ui.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -15,6 +14,7 @@ import 'package:intro_views_flutter/intro_views_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:firestore_helpers/firestore_helpers.dart';
 import 'package:flutter/gestures.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 //Temporary for visual debugging
 //import 'package:flutter/rendering.dart';
 
@@ -131,7 +131,11 @@ class MyApp extends StatelessWidget {
 
 // Widget with into page
 class IntroPage extends StatelessWidget {
-  IntroPage({Key key}) : super(key: key);
+  VoidCallback onTapDoneButton;
+  VoidCallback onTapSkipButton;
+
+  IntroPage({Key key, this.onTapDoneButton, this.onTapSkipButton})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -193,12 +197,8 @@ class IntroPage extends StatelessWidget {
             pages,
             doneText: Text(S.of(context).introDone),
             skipText: Text(S.of(context).introSkip),
-            onTapDoneButton: () {
-              Navigator.pop(context);
-            },
-            onTapSkipButton: () {
-              Navigator.pop(context);
-            },
+            onTapDoneButton: onTapDoneButton,
+            onTapSkipButton: onTapSkipButton,
             showSkipButton:
                 true, //Whether you want to show the skip button or not.
             pageButtonTextStyles: TextStyle(
@@ -234,6 +234,8 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   StreamSubscription<FirebaseUser> _listener;
   FirebaseUser firebaseUser;
   bool unreadMessage = false;
+  bool firstRun = true;
+  bool skipIntro = false;
 
   @override
   void initState() {
@@ -290,6 +292,20 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   }
 
   void _checkCurrentUser() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    firstRun = prefs.getBool('firstRun') ?? true;
+
+    setState(() {
+      skipIntro = prefs.getBool('skipIntro') ?? false;
+    });
+
+    if (firstRun) {
+      signOutProviders();
+      await prefs.setBool('firstRun', false);
+      firstRun = false;
+    }
+
     firebaseUser = await _auth.currentUser();
     firebaseUser?.getIdToken(refresh: true);
 
@@ -335,9 +351,9 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
           'id': firebaseUser.uid
         });
       } else {
-        currentUser.wishCount = documents[0].data['wishCount']??0;
-        currentUser.wishCount = documents[0].data['bookCount']??0;
-        currentUser.wishCount = documents[0].data['shelfCount']??0;
+        currentUser.wishCount = documents[0].data['wishCount'] ?? 0;
+        currentUser.wishCount = documents[0].data['bookCount'] ?? 0;
+        currentUser.wishCount = documents[0].data['shelfCount'] ?? 0;
       }
 
       _firebaseMessaging.getToken().then((token) {
@@ -373,24 +389,15 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
     return Container(
       child: FlatButton(
         child: Row(children: <Widget>[
-          Material(
-            child: CachedNetworkImage(
-              placeholder: Container(
-                child: CircularProgressIndicator(
-                  strokeWidth: 1.0,
-                  valueColor: AlwaysStoppedAnimation<Color>(themeColor),
-                ),
-                width: 50.0,
-                height: 50.0,
-                padding: EdgeInsets.all(15.0),
-              ),
-              imageUrl: userSnap['photoUrl'],
+          Container(
               width: 50.0,
               height: 50.0,
-              fit: BoxFit.cover,
-            ),
-            borderRadius: BorderRadius.all(Radius.circular(25.0)),
-          ),
+              decoration: new BoxDecoration(
+                  shape: BoxShape.circle,
+                  image: new DecorationImage(
+                      fit: BoxFit.fill,
+                      image: new CachedNetworkImageProvider(
+                          userSnap['photoUrl'])))),
           new Flexible(
               child: Container(
             child: Text(
@@ -402,7 +409,8 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
           )),
           new IconButton(
             onPressed: () {
-              showBbsConfirmation(context, S.of(context).confirmBlockUser).then((confirmed) {
+              showBbsConfirmation(context, S.of(context).confirmBlockUser)
+                  .then((confirmed) {
                 if (confirmed) {
                   blockUser(currentUser?.id, userSnap['id']);
                 }
@@ -445,9 +453,21 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
     // fast, so that you can just rebuild anything that needs updating rather
     // than having to individually change instances of widgets.
 
-    if (firebaseUser == null) {
+    if (!skipIntro && firebaseUser == null) {
+      return new IntroPage(onTapDoneButton: () {
+        setState(() {
+          skipIntro = true;
+        });
+      }, onTapSkipButton: () async {
+        setState(() {
+          skipIntro = true;
+        });
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        prefs.setBool('skipIntro', true);
+      });
+    } else if (firebaseUser == null) {
       return new SignInScreen(
-        title: "Welcome",
+        title: S.of(context).welcome,
         header: new Padding(
           padding: const EdgeInsets.symmetric(vertical: 16.0),
           child: new Padding(
@@ -548,7 +568,10 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
               ],
             ),
             title: new Text(S.of(context).title,
-                style: Theme.of(context).textTheme.title.apply(color: Colors.white)),
+                style: Theme.of(context)
+                    .textTheme
+                    .title
+                    .apply(color: Colors.white)),
           ),
           body: TabBarView(
             children: <Widget>[
@@ -603,9 +626,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                                 case ConnectionState.active:
                                 case ConnectionState.none:
                                 case ConnectionState.waiting:
-                                  return Align(
-                                      alignment: Alignment.center,
-                                      child: CircularProgressIndicator());
+                                  return Container();
                                 case ConnectionState.done:
                                   if (snapshot.hasError) {
                                     return Text('Error: ${snapshot.error}');
@@ -624,56 +645,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
               ),
             ],
           ),
-  /*
-          drawer: Drawer(
-            child: ListView(
-              // Important: Remove any padding from the ListView.
-              padding: EdgeInsets.zero,
-              children: <Widget>[
-                Container(
-                  height: 100.0,
-                  child: DrawerHeader(
-                    child: Text(S.of(context).drawerHeader,
-                        style: Theme.of(context).textTheme.subtitle),
-                    decoration: BoxDecoration(
-                      color: Colors.black38,
-                    ),
-                  ),
-                ),
-                ListTile(
-                  title: Text(S.of(context).bookshelves,
-                      style: Theme.of(context).textTheme.subtitle),
-                  onTap: () {
-                    setState(() {
-                      mode = AppMode.bookshelf;
-                    });
-                    Navigator.pop(context);
-                  },
-                ),
-                ListTile(
-                  title: Text(S.of(context).books,
-                      style: Theme.of(context).textTheme.subtitle),
-                  onTap: () {
-                    setState(() {
-                      mode = AppMode.book;
-                    });
-                    Navigator.pop(context);
-                  },
-                ),
-              ],
-            ),
-          ),
-*/
-/*
-          bottomNavigationBar: BottomAppBar(
-              color: Theme.of(context).colorScheme.primary,
-              child: Container(height: 50, child: Row(children: <Widget>[
-            Expanded(child: Container(margin: EdgeInsets.only(left: 5.0), child: Text('Look at books or shelves around you', style: TextStyle(color: Colors.white),), alignment: Alignment.centerLeft,)),
-            Padding(padding: EdgeInsets.all(1.0), child: ChoiceChip(label: Text('Books'), selected: true, onSelected: (b) {print('X');},)),
-            Padding(padding: EdgeInsets.all(1.0), child: ChoiceChip(label: Text('Shelves'), selected: false, onSelected: (b) {print('X');})),
-          ]))),
-*/
-        ),
+       ),
       );
     }
   }

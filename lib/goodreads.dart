@@ -94,7 +94,7 @@ class _GoodreadsState extends State<Goodreads> with WidgetsBindingObserver {
                           'images/goodreads.png',
                           width: 25.0,
                         )),
-                    Text(linked ? 'Your Goodreads' : 'Link your Goodreads',
+                    Text(linked ? S.of(context).yourGoodreads : S.of(context).linkToGoodreads,
                         style: Theme.of(context).textTheme.subtitle),
                   ]),
               Row(children: <Widget>[
@@ -103,13 +103,15 @@ class _GoodreadsState extends State<Goodreads> with WidgetsBindingObserver {
                   margin: EdgeInsets.all(5.0),
                   child: Text(
                       linked
-                          ? 'Import your books to Biblosphere'
-                          : 'Link your Goodreads account',
+                          ? S.of(context).importYouBooks
+                          : S.of(context).linkYourAccount,
                       style: Theme.of(context).textTheme.body1),
                 )),
                 RaisedButton(
-                  textColor: Colors.white,
                   color: Theme.of(context).colorScheme.secondary,
+                  textColor: Colors.white,
+                  disabledColor: Theme.of(context).colorScheme.secondaryVariant,
+                  disabledTextColor: Colors.white70,
                   child: new Icon(linked ? MyIcons.synch : MyIcons.chain),
                   onPressed: !linked || linked && locationConfirmed
                       ? () {
@@ -141,7 +143,7 @@ class _GoodreadsState extends State<Goodreads> with WidgetsBindingObserver {
                             Expanded(
                                 child: Container(
                               margin: EdgeInsets.only(left: 5.0),
-                              child: Text('Use current location for import',
+                              child: Text(S.of(context).useCurrentLocation,
                                   style: Theme.of(context).textTheme.body1),
                             ))
                           ]),
@@ -151,7 +153,7 @@ class _GoodreadsState extends State<Goodreads> with WidgetsBindingObserver {
                   ? Container(
                       alignment: Alignment.centerLeft,
                       margin: EdgeInsets.all(5.0),
-                      child: Text('Import to Wishlist:',
+                      child: Text(S.of(context).importToWishlist,
                           style: Theme.of(context).textTheme.body1),
                     )
                   : Container(),
@@ -179,7 +181,7 @@ class _GoodreadsState extends State<Goodreads> with WidgetsBindingObserver {
                   ? Container(
                       margin: EdgeInsets.all(5.0),
                       alignment: Alignment.centerLeft,
-                      child: Text('Import to available books:',
+                      child: Text(S.of(context).importToBooks,
                           style: Theme.of(context).textTheme.body1),
                     )
                   : Container(),
@@ -367,20 +369,7 @@ class _GoodreadsState extends State<Goodreads> with WidgetsBindingObserver {
       var document = xml.parse(res.body);
 
       List<Book> books =
-          document.findAllElements('book')?.map((xml.XmlElement e) {
-        String id = e.findElements("id")?.first?.text?.toString();
-        String isbn = e.findElements("isbn13")?.first?.text?.toString();
-        String title = e.findElements("title")?.first?.text?.toString();
-        if (title.contains(':')) title = title.substring(0, title.indexOf(':'));
-
-        String image = e.findElements("image_url")?.first?.text?.toString();
-        if (image.contains('nophoto')) image = '';
-        List<String> authors = [];
-        e.findAllElements("author").forEach((a) =>
-            authors.add(a.findElements("name")?.first?.text?.toString()));
-        return new Book(
-            title: title, authors: authors, isbn: isbn, image: image);
-      })?.toList();
+          document.findAllElements('book')?.map((xml.XmlElement e) { return new Book.goodreads(e); })?.toList();
 
       books.forEach((b) => addBook(b, user, position));
     }
@@ -392,17 +381,7 @@ class _GoodreadsState extends State<Goodreads> with WidgetsBindingObserver {
       var document = xml.parse(res.body);
 
       List<Book> books =
-      document.findAllElements('book')?.map((xml.XmlElement e) {
-        String id = e.findElements("id")?.first?.text?.toString();
-        String isbn = e.findElements("isbn13")?.first?.text?.toString();
-        String title = e.findElements("title")?.first?.text?.toString();
-        String image = e.findElements("image_url")?.first?.text?.toString();
-        if (image.contains('nophoto')) image = '';
-        List<String> authors = [];
-        e.findAllElements("author").forEach((a) =>
-            authors.add(a.findElements("name")?.first?.text?.toString()));
-        return new Book(
-            title: title, authors: authors, isbn: isbn, image: image);
+      document.findAllElements('book')?.map((xml.XmlElement e) {return new Book.goodreads(e);
       })?.toList();
 
       books.forEach((b) => addWish(b, user, position));
