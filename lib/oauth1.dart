@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:oauth1/oauth1.dart';
+// ignore_for_file: implementation_imports
 import 'package:oauth1/src/authorization_header_builder.dart';
 import 'package:http/http.dart' as http;
 

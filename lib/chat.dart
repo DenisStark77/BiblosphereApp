@@ -143,7 +143,6 @@ class ChatScreenState extends State<ChatScreen> {
           .collection('messages')
           .document(groupChatId);
 
-      Map chatMap;
       if (isNewChat) {
         Firestore.instance.runTransaction((transaction) async {
           await transaction.set(

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
-import 'dart:io';
 import 'package:oauth1/oauth1.dart' as oauth1;
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -214,8 +213,8 @@ class _GoodreadsState extends State<Goodreads> with WidgetsBindingObserver {
     SharedPreferences prefs = await SharedPreferences.getInstance();
 
     if (credentials == null) {
-      String token = await prefs.getString('goodreadsToken');
-      String tokenSecret = await prefs.getString('goodreadsTokenSecret');
+      String token = prefs.getString('goodreadsToken');
+      String tokenSecret = prefs.getString('goodreadsTokenSecret');
 
       if (token != null && tokenSecret != null) {
         credentials = new oauth1.Credentials(token, tokenSecret);
@@ -230,8 +229,8 @@ class _GoodreadsState extends State<Goodreads> with WidgetsBindingObserver {
 
       var document = xml.parse(res.body);
 
-      id = document.findAllElements('user')?.first.getAttribute('id');
-      name = document.findAllElements('name')?.first.text;
+      id = document.findAllElements('user')?.first?.getAttribute('id');
+      name = document.findAllElements('name')?.first?.text;
 
       if (id != null && name != null) {
         if( mounted )
@@ -316,6 +315,7 @@ class _GoodreadsState extends State<Goodreads> with WidgetsBindingObserver {
       return await checkLink(res.credentials);
     } catch (e) {
       print('Unknown error: $e');
+      return false;
     }
   }
 

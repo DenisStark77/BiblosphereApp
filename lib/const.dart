@@ -291,7 +291,6 @@ typedef BookCallback(Book book);
 Future addBook(Book b, User u, GeoPoint position,
     {String source = 'goodreads'}) async {
   bool existingBook = false;
-  String bookId;
 
   if (b.isbn == null || b.isbn == 'NA')
     throw 'Book ${b?.title}, ${b?.authors?.join()} has no ISBN';
@@ -341,7 +340,6 @@ Future addBook(Book b, User u, GeoPoint position,
 Future addWish(Book b, User u, GeoPoint position,
     {String source = 'goodreads'}) async {
   bool existingBook = false;
-  String bookId;
 
   if (b.isbn == null || b.isbn == 'NA')
     throw 'Book ${b?.title}, ${b?.authors?.join()} has no ISBN';
@@ -446,7 +444,7 @@ Future<List<Book>> searchByTitleAuthorGoodreads(String text) async {
   var document = xml.parse(res.body);
 
   List<Book> books =
-      document.findAllElements('best_book')?.take(5).map((xml.XmlElement e) {
+      document.findAllElements('best_book')?.take(5)?.map((xml.XmlElement e) {
     return new Book.goodreads(e);
     //As Goodreads doesn't have ISBN in search responce keep Goodreads ID instead.
     // It'll be replaced by ISBN by enrichBookRecord function on confirm stage.
@@ -485,7 +483,7 @@ Future<Book> enrichBookRecord(Book book) async {
 Future<Book> searchByIsbnGoogle(String isbn) async {
   Volumes books =
       await LibConnect.getGoogleBookApi().volumes.list('isbn:$isbn');
-  if (books?.items != null && books?.items?.isNotEmpty) {
+  if (books?.items != null && books.items.isNotEmpty) {
     var v = books?.items[0];
     if (v?.volumeInfo?.title != null &&
         v?.volumeInfo?.authors != null &&
@@ -494,7 +492,7 @@ Future<Book> searchByIsbnGoogle(String isbn) async {
         v?.volumeInfo?.imageLinks?.thumbnail != null &&
         v?.volumeInfo?.industryIdentifiers != null &&
         v?.saleInfo != null &&
-        !v?.saleInfo?.isEbook) {
+        !v.saleInfo.isEbook) {
       return new Book.volume(v)..isbn = isbn;
     }
   }
@@ -760,7 +758,6 @@ class _EnterBookState extends State<EnterBook> {
           ],
         ),
         margin: EdgeInsets.only(bottom: 10.0, left: 5.0, right: 5.0));
-    ;
   }
 }
 

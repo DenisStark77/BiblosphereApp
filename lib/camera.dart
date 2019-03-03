@@ -10,7 +10,6 @@ import 'package:share/share.dart';
 import 'package:firebase_dynamic_links/firebase_dynamic_links.dart';
 import 'package:firebase_ml_vision/firebase_ml_vision.dart';
 import 'package:flutter_crashlytics/flutter_crashlytics.dart';
-import 'package:intl/intl.dart';
 
 import 'package:biblosphere/const.dart';
 import 'package:biblosphere/l10n.dart';
@@ -360,17 +359,6 @@ class MyBookshelf extends StatelessWidget {
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
         ),
         margin: EdgeInsets.only(bottom: 10.0, left: 5.0, right: 5.0));
-  }
-}
-
-class MyBookshelfList extends StatelessWidget {
-  MyBookshelfList({Key key, @required this.currentUserId});
-
-  final String currentUserId;
-
-  @override
-  Widget build(BuildContext context) {
-    if (currentUserId == null) return Container();
   }
 }
 

@@ -7,6 +7,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'package:biblosphere/camera.dart';
 import 'package:biblosphere/l10n.dart';
@@ -33,7 +34,7 @@ void main() async {
         locale: Locale('en'),
         home: Home(
             currentUser: new User(
-                id: user.uid, name: user.displayName, photo: user.photoUrl)),
+                id: user.uid, name: user.displayName, photo: user.photoUrl, position: new GeoPoint(32.55, 45.85))),
       );
     }));
 

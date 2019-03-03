@@ -131,8 +131,8 @@ class MyApp extends StatelessWidget {
 
 // Widget with into page
 class IntroPage extends StatelessWidget {
-  VoidCallback onTapDoneButton;
-  VoidCallback onTapSkipButton;
+  final VoidCallback onTapDoneButton;
+  final VoidCallback onTapSkipButton;
 
   IntroPage({Key key, this.onTapDoneButton, this.onTapSkipButton})
       : super(key: key);
@@ -286,7 +286,6 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
         setState(() {
           currentUser.position = position;
         });
-        ;
       });
     }
   }
