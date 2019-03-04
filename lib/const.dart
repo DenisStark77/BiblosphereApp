@@ -13,7 +13,8 @@ import 'package:xml/xml.dart' as xml;
 
 import 'package:biblosphere/l10n.dart';
 
-const String sharingUrl = 'https://biblosphere.org/images/phone-app-screens-2000.png';
+const String sharingUrl =
+    'https://biblosphere.org/images/phone-app-screens-2000.png';
 
 String getTimestamp() => new DateTime.now().millisecondsSinceEpoch.toString();
 
@@ -103,12 +104,12 @@ class Book {
 
   Book.volume(Volume v) {
     try {
-      if (v.volumeInfo.imageLinks != null)
+      if (v.volumeInfo?.imageLinks != null)
         image = v.volumeInfo.imageLinks.thumbnail;
-      title = v.volumeInfo.title;
-      authors = v.volumeInfo.authors;
+      title = v.volumeInfo?.title;
+      authors = v.volumeInfo?.authors;
       //TODO: what if ISBN_13 missing?
-      var industryIds = v.volumeInfo.industryIdentifiers;
+      var industryIds = v.volumeInfo?.industryIdentifiers;
       if (industryIds != null) {
         var isbnId = industryIds.firstWhere((test) => test.type == 'ISBN_13',
             orElse: () => null);
@@ -116,7 +117,7 @@ class Book {
       }
       source = BookSource.google;
     } catch (e) {
-      print('Unknown error: $e');
+      print('Unknown error in Book.volume: $e');
     }
   }
 
@@ -125,7 +126,7 @@ class Book {
     sourceId = xml.findElements("id")?.first?.text?.toString();
     var isbnXml = xml.findElements("isbn13");
     if (isbnXml != null && isbnXml.isNotEmpty)
-        isbn = isbnXml.first?.text?.toString();
+      isbn = isbnXml.first?.text?.toString();
     if (isbn == null) isbn = 'NA';
     title = xml.findElements("title")?.first?.text?.toString();
     if (title.contains(':')) title = title.substring(0, title.indexOf(':'));
@@ -332,7 +333,10 @@ Future addBook(Book b, User u, GeoPoint position,
     //If bookcopy already exist refresh it
     if (q.documents.isNotEmpty) {
       bookcopy.id = q.documents.first.documentID;
-      await Firestore.instance.collection('bookcopies').document(bookcopy.id).updateData(bookcopy.toJson());
+      await Firestore.instance
+          .collection('bookcopies')
+          .document(bookcopy.id)
+          .updateData(bookcopy.toJson());
       return;
     }
   }
@@ -381,7 +385,10 @@ Future addWish(Book b, User u, GeoPoint position,
 
     if (q.documents.isNotEmpty) {
       wish.id = q.documents.first.documentID;
-      await Firestore.instance.collection('wishes').document(wish.id).updateData(wish.toJson());
+      await Firestore.instance
+          .collection('wishes')
+          .document(wish.id)
+          .updateData(wish.toJson());
       return;
     }
   }
@@ -459,63 +466,76 @@ Future<List<Book>> searchByTitleAuthorGoodreads(String text) async {
 Future<Book> enrichBookRecord(Book book) async {
   //As Goodreads search by title/author does not return ISBN it's empty for
   // these records
-  if (book.isbn == null || book.isbn.isEmpty || book.isbn == 'NA') {
-    if (book.sourceId != null && book.sourceId.isNotEmpty) {
-      var res = await LibConnect.getGoodreadClient().get(
-          'https://www.goodreads.com/book/show/${book.sourceId}.xml?key=${LibConnect.goodreadsApiKey}');
+  try {
+    if (book.isbn == null || book.isbn.isEmpty || book.isbn == 'NA') {
+      if (book.sourceId != null && book.sourceId.isNotEmpty) {
+        var res = await LibConnect.getGoodreadClient().get(
+            'https://www.goodreads.com/book/show/${book.sourceId}.xml?key=${LibConnect.goodreadsApiKey}');
 
-      var document = xml.parse(res.body);
-      String isbn = document.findAllElements('isbn13')?.first?.text?.toString();
+        var document = xml.parse(res.body);
+        String isbn =
+            document.findAllElements('isbn13')?.first?.text?.toString();
 
-      if (isbn != null) book.isbn = isbn;
+        if (isbn != null) book.isbn = isbn;
+      }
+      if (book.isbn == null || book.isbn.isEmpty) book.isbn = 'NA';
     }
-    if (book.isbn == null || book.isbn.isEmpty) book.isbn = 'NA';
-  }
 
-  //As many Goodreads books doesn't have images enrich it from Google
-  if (book.image == null || book.image.isEmpty) {
-    if (book.isbn != 'NA' && book.source != BookSource.google) {
-      Book b = await searchByIsbnGoogle(book.isbn);
-      if (b?.image != null) book.image = b.image;
+    //As many Goodreads books doesn't have images enrich it from Google
+    if (book.image == null || book.image.isEmpty) {
+      if (book.isbn != 'NA' && book.source != BookSource.google) {
+        Book b = await searchByIsbnGoogle(book.isbn);
+        if (b?.image != null) book.image = b.image;
+      }
     }
-  }
 
-  return book;
+    return book;
+  } catch (e) {
+    print('Unknown error in enrichBookRecord: $e');
+    return book;
+  }
 }
 
 Future<Book> searchByIsbnGoogle(String isbn) async {
-  Volumes books =
-      await LibConnect.getGoogleBookApi().volumes.list('isbn:$isbn');
-  if (books?.items != null && books.items.isNotEmpty) {
-    var v = books?.items[0];
-    if (v?.volumeInfo?.title != null &&
-        v?.volumeInfo?.authors != null &&
-        v.volumeInfo.authors.isNotEmpty &&
-        v?.volumeInfo?.imageLinks != null &&
-        v?.volumeInfo?.imageLinks?.thumbnail != null &&
-        v?.volumeInfo?.industryIdentifiers != null &&
-        v?.saleInfo != null &&
-        !v.saleInfo.isEbook) {
-      return new Book.volume(v)..isbn = isbn;
+  try {
+    Volumes books =
+        await LibConnect.getGoogleBookApi().volumes.list('isbn:$isbn');
+    if (books?.items != null && books.items.isNotEmpty) {
+      var v = books?.items[0];
+      if (v?.volumeInfo?.title != null &&
+          v?.volumeInfo?.authors != null &&
+          v.volumeInfo.authors.isNotEmpty &&
+          v?.volumeInfo?.imageLinks != null &&
+          v?.volumeInfo?.imageLinks?.thumbnail != null &&
+          v?.volumeInfo?.industryIdentifiers != null &&
+          v?.saleInfo != null &&
+          !v.saleInfo.isEbook) {
+        return new Book.volume(v)..isbn = isbn;
+      }
     }
+    return null;
+  } catch (e) {
+    print('Unknown error in searchByIsbnGoogle: $e');
+    return null;
   }
-  print("No record found for isbn: $isbn");
-  return null;
 }
 
 Future<Book> searchByIsbnGoodreads(String isbn) async {
-  var res = await LibConnect.getGoodreadClient().get(
-      'https://www.goodreads.com/search/index.xml?key=${LibConnect.goodreadsApiKey}&q=$isbn');
+  try {
+    var res = await LibConnect.getGoodreadClient().get(
+        'https://www.goodreads.com/search/index.xml?key=${LibConnect.goodreadsApiKey}&q=$isbn');
 
-  var document = xml.parse(res.body);
+    var document = xml.parse(res.body);
 
-  var bookXml = document?.findAllElements('best_book')?.first;
-  if (bookXml != null) {
-    return new Book.goodreads(bookXml)..isbn = isbn;
+    var bookXml = document?.findAllElements('best_book')?.first;
+    if (bookXml != null) {
+      return new Book.goodreads(bookXml)..isbn = isbn;
+    }
+    return null;
+  } catch (e) {
+    print('Unknown error in searchByIsbnGoodreads: $e');
+    return null;
   }
-
-  print("No record found for isbn: $isbn");
-  return null;
 }
 
 final themeColor = new Color(0xfff5a623);
@@ -609,6 +629,10 @@ class _EnterBookState extends State<EnterBook> {
                           color: Theme.of(context).colorScheme.secondary,
                           child: new Icon(MyIcons.barcode),
                           onPressed: () {
+                            setState(() {
+                              bookToAdd = null;
+                              suggestions.clear();
+                            });
                             scanIsbn(context);
                           },
                           shape: new RoundedRectangleBorder(
@@ -623,8 +647,8 @@ class _EnterBookState extends State<EnterBook> {
                           maxLines: 1,
                           controller: textController,
                           style: Theme.of(context).textTheme.body1,
-                          decoration:
-                              InputDecoration(hintText: S.of(context).enterTitle),
+                          decoration: InputDecoration(
+                              hintText: S.of(context).enterTitle),
                         )),
                         RaisedButton(
                           textColor: Colors.white,
@@ -682,8 +706,10 @@ class _EnterBookState extends State<EnterBook> {
       String barcode = await BarcodeScanner.scan();
       print("Isbn: $barcode");
 
-//      Book book = await searchByIsbnGoogle(barcode);
       Book book = await searchByIsbnGoodreads(barcode);
+
+      //If missing in Goodreads try Google Books
+      if (book == null) book = await searchByIsbnGoogle(barcode);
 
       if (book != null) {
         //Many books on goodreads does not have images. Enreach it from Google
@@ -692,19 +718,20 @@ class _EnterBookState extends State<EnterBook> {
           bookToAdd = book;
         });
       } else {
+        Firestore.instance.collection('noisbn').add({'isbn': barcode});
         print("No record found for isbn: $barcode");
       }
     } on PlatformException catch (e) {
       if (e.code == BarcodeScanner.CameraAccessDenied) {
         print('The user did not grant the camera permission!');
       } else {
-        print('Unknown error: $e');
+        print('Unknown platform error in scanIsbn: $e');
       }
     } on FormatException {
       print(
           'null (User returned using the "back"-button before scanning anything. Result)');
     } catch (e) {
-      print('Unknown error: $e');
+      print('Unknown error in scanIsbn: $e');
     }
   }
 
@@ -744,8 +771,8 @@ class _EnterBookState extends State<EnterBook> {
               child: RaisedButton(
                 textColor: Colors.white,
                 color: Theme.of(context).colorScheme.secondary,
-                child:
-                    new Text(S.of(context).add, style: Theme.of(context).textTheme.title),
+                child: new Text(S.of(context).add,
+                    style: Theme.of(context).textTheme.title),
                 onPressed: () {
                   print('Book \'${book.title}\' to be added.');
                   widget.onConfirm(book);

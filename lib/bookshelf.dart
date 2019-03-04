@@ -190,8 +190,8 @@ class _PersonCardState extends State<PersonCard> {
                     new Text(distanceBetween(
                                 widget.currentUser.position.latitude,
                                 widget.currentUser.position.longitude,
-                                widget.currentUser.position.latitude,
-                                widget.currentUser.position.longitude)
+                                widget.person.position.latitude,
+                                widget.person.position.longitude)
                             .round()
                             .toString() +
                         S.of(context).km),

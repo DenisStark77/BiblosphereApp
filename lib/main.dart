@@ -590,7 +590,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
               new PeopleList(
                   currentUser: currentUser,
                   area: currentUser?.position != null
-                      ? new Area(currentUser.position, 200.0)
+                      ? new Area(currentUser.position, 5000.0)
                       : null),
 
               // Tab for chat
