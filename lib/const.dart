@@ -169,7 +169,10 @@ class User {
       {@required this.id,
       @required this.name,
       @required this.photo,
-      @required this.position});
+      @required this.position,
+      this.bookCount,
+      this.shelfCount,
+      this.wishCount});
 
   User.fromJson(Map json)
       : id = json['id'],

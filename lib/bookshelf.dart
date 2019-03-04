@@ -51,10 +51,10 @@ void openMsg(BuildContext context, String user, String currentUser) async {
   try {
     bool isBlocked = false;
     bool isNewChat = true;
-    DocumentSnapshot chatSnap =
-        await Firestore.instance
+    DocumentSnapshot chatSnap = await Firestore.instance
         .collection('messages')
-        .document(chatId(currentUser, user)).get();
+        .document(chatId(currentUser, user))
+        .get();
     if (chatSnap.exists) {
       isNewChat = false;
       if (chatSnap['blocked'] == 'yes') {
@@ -127,14 +127,29 @@ class _PersonCardState extends State<PersonCard> {
                                       widget.person.photo)))),
                       Expanded(
                         child: Container(
-                          margin: EdgeInsets.only(left: 20.0, bottom: 5.0, right: 5.0),
-                          child: Column(crossAxisAlignment: CrossAxisAlignment.start,
-                              children: <Widget>[Text('${widget.person.name}',
-                              style: Theme.of(context).textTheme.title),
-                          Text(S.of(context).bookCount(widget.person.bookCount), style: Theme.of(context).textTheme.body1),
-                          Text(S.of(context).shelfCount(widget.person.shelfCount), style: Theme.of(context).textTheme.body1),
-                          Text(S.of(context).wishCount(widget.person.wishCount), style: Theme.of(context).textTheme.body1),
-                          ]),
+                          margin: EdgeInsets.only(
+                              left: 20.0, bottom: 5.0, right: 5.0),
+                          child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: <Widget>[
+                                Text('${widget.person.name}',
+                                    style: Theme.of(context).textTheme.title),
+                                Text(
+                                    S
+                                        .of(context)
+                                        .bookCount(widget.person.bookCount),
+                                    style: Theme.of(context).textTheme.body1),
+                                Text(
+                                    S
+                                        .of(context)
+                                        .shelfCount(widget.person.shelfCount),
+                                    style: Theme.of(context).textTheme.body1),
+                                Text(
+                                    S
+                                        .of(context)
+                                        .wishCount(widget.person.wishCount),
+                                    style: Theme.of(context).textTheme.body1),
+                              ]),
                         ),
                       ),
                     ]),
@@ -142,8 +157,11 @@ class _PersonCardState extends State<PersonCard> {
               ),
               wishlist == null || wishlist.isEmpty
                   ? Container()
-                  : Container(margin: EdgeInsets.only(left: 5.0), alignment: Alignment.centerLeft, child: Text(S.of(context).recentWishes,
-                  style: Theme.of(context).textTheme.body1)),
+                  : Container(
+                      margin: EdgeInsets.only(left: 5.0),
+                      alignment: Alignment.centerLeft,
+                      child: Text(S.of(context).recentWishes,
+                          style: Theme.of(context).textTheme.body1)),
               wishlist == null || wishlist.isEmpty
                   ? Container()
                   : new Container(
@@ -151,7 +169,9 @@ class _PersonCardState extends State<PersonCard> {
                           mainAxisAlignment: MainAxisAlignment.start,
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: wishlist.map((book) {
-                            return new Expanded(child: Container( padding: EdgeInsets.all(5.0),
+                            return new Expanded(
+                                child: Container(
+                              padding: EdgeInsets.all(5.0),
                               alignment: Alignment.centerLeft,
                               child: Image(
                                   height: 80,
@@ -211,12 +231,12 @@ class _PersonCardState extends State<PersonCard> {
           .limit(5)
           .getDocuments();
 
-      if( mounted )
+      if (mounted)
         setState(() {
-        wishlist = q.documents.map((doc) {
-          return new Book.fromJson(doc.data['book']);
-        }).toList();
-      });
+          wishlist = q.documents.map((doc) {
+            return new Book.fromJson(doc.data['book']);
+          }).toList();
+        });
     }
   }
 }
@@ -269,7 +289,8 @@ class BookCard extends StatelessWidget {
                   children: <Widget>[
                     new IconButton(
                       onPressed: () async {
-                        addWish(book.book, currentUser, await currentPosition());
+                        addWish(
+                            book.book, currentUser, await currentPosition());
                       },
                       tooltip: S.of(context).favorite,
                       icon: new Icon(MyIcons.heart),
@@ -363,7 +384,9 @@ class BookshelfCard extends StatelessWidget {
                   children: <Widget>[
                     new IconButton(
                       onPressed: () {
-                        showBbsConfirmation(context, S.of(context).confirmReportPhoto).then((confirmed) {
+                        showBbsConfirmation(
+                                context, S.of(context).confirmReportPhoto)
+                            .then((confirmed) {
                           if (confirmed) {
                             reportContent();
                           }
@@ -564,7 +587,12 @@ class _BookshelfListState extends State<BookshelfList> {
                 return Text(S.of(context).loading);
               default:
                 if (!snapshot.hasData || snapshot.data.documents.isEmpty) {
-                  return Container(padding: EdgeInsets.all(10), child: Text(S.of(context).noMatchForWishlist, style: Theme.of(context).textTheme.body1,));
+                  return Container(
+                      padding: EdgeInsets.all(10),
+                      child: Text(
+                        S.of(context).noMatchForWishlist,
+                        style: Theme.of(context).textTheme.body1,
+                      ));
                 }
                 return new ListView(
                   children:
@@ -776,10 +804,14 @@ class _PeopleState extends State<PeopleList> {
               locationFieldNameInDB: 'position',
               mapper: (document) {
                 return new User(
-                    id: document.documentID,
-                    name: document.data['name'],
-                    photo: document.data['photoUrl'],
-                    position: document.data['position']);
+                  id: document.documentID,
+                  name: document.data['name'],
+                  photo: document.data['photoUrl'],
+                  position: document.data['position'],
+                  bookCount: document.data['bookCount'] ?? 0,
+                  shelfCount: document.data['shelfCount'] ?? 0,
+                  wishCount: document.data['wishCount'] ?? 0,
+                );
               },
               locationAccessor: (user) => user.position,
               distanceMapper: (user, distance) {
@@ -818,7 +850,12 @@ class _PeopleState extends State<PeopleList> {
                 return Text(S.of(context).loading);
               default:
                 if (!snapshot.hasData || snapshot.data.documents.isEmpty) {
-                  return Container(padding: EdgeInsets.all(10), child: Text(S.of(context).noMatchForBooks, style: Theme.of(context).textTheme.body1,));
+                  return Container(
+                      padding: EdgeInsets.all(10),
+                      child: Text(
+                        S.of(context).noMatchForBooks,
+                        style: Theme.of(context).textTheme.body1,
+                      ));
                 }
                 return new ListView(
                   children:
@@ -871,9 +908,8 @@ class _PeopleState extends State<PeopleList> {
                 activity = AppActivity.people;
               });
             }, icon: new Icon(MyIcons.people)),
-            activityChip(
-                context, AppActivity.give, S.of(context).share, activity == AppActivity.give,
-                onSelected: (bool selected) {
+            activityChip(context, AppActivity.give, S.of(context).share,
+                activity == AppActivity.give, onSelected: (bool selected) {
               setState(() {
                 activity = AppActivity.give;
               });
@@ -912,7 +948,9 @@ class _PeopleState extends State<PeopleList> {
                       Expanded(
                         child: Container(
                           margin: EdgeInsets.all(5.0),
-                          child: Text(S.of(context).wishToRead(bookcopy.wisher.name, bookcopy.book.title),
+                          child: Text(
+                              S.of(context).wishToRead(
+                                  bookcopy.wisher.name, bookcopy.book.title),
                               style: Theme.of(context).textTheme.body1),
                         ),
                       ),

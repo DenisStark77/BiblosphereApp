@@ -291,7 +291,38 @@ exports.linkBookcopies = functions.firestore
   });
 
 // ADMIN functions
-// Function blockedMessages: 
+// Function updateUsers:
+// update counters and positions of the users
+exports.updateUsers = functions.https.onRequest(async (req, res) => {
+  try {
+    var querySnapshot = await admin.firestore().collection('users').get();
+    querySnapshot.forEach(async (user) => {
+
+      //Select shelves. Count shelves and update shelfCounter
+      //If 'positioned' false use position of first shelf
+      //set books and wishes to 0
+      var q = await admin.firestore().collection('shelves').where('user', '==', user.id).get();
+      var count = q.size;
+      var position;
+      if(count > 0)
+         position = q.docs[0].data().position;
+
+      console.log('User update data: ', user.id, ', ', count, ', ', position);
+
+      if (!user.data().positioned && position) {
+          admin.firestore().collection('users').doc(user.id).update({'shelfCount': count, 'bookCount': 0, 'wishCount': 0, positioned: true, position: position});
+      } else {
+          admin.firestore().collection('users').doc(user.id).update({'shelfCount': count, 'bookCount': 0, 'wishCount': 0});
+      }
+    });
+    return res.status(200).send("Running");
+  } catch(err) {
+    console.log('User update failed: ', err);
+    return res.status(404).send("User update failed");
+  }
+});
+
+// Function blockedMessages:
 // Filling blocked field in messages
 exports.blockedMessages = functions.https.onRequest(async (req, res) => {
   try {
