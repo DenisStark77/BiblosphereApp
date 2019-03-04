@@ -69,7 +69,8 @@ class S {
   }
 
   String get loginAgree1 {
-    return Intl.message('By clicking sign in button below, you agree \n to our ',
+    return Intl.message(
+        'By clicking sign in button below, you agree \n to our ',
         name: 'loginAgree1');
   }
 
@@ -117,7 +118,8 @@ class S {
   }
 
   String get notBooks {
-    return Intl.message('Hey, this does not look like a bookshelf to me.', name: 'notBooks');
+    return Intl.message('Hey, this does not look like a bookshelf to me.',
+        name: 'notBooks');
   }
 
   String get addShelf {
@@ -134,7 +136,8 @@ class S {
   }
 
   String get reportedPhoto {
-    return Intl.message('This photo reported as objectionable content.', name: 'reportedPhoto');
+    return Intl.message('This photo reported as objectionable content.',
+        name: 'reportedPhoto');
   }
 
   String get reportShelf {
@@ -167,7 +170,8 @@ class S {
   }
 
   String get confirmReportPhoto {
-    return Intl.message('Do you want to report this photo as abusive?', name: 'confirmReportPhoto');
+    return Intl.message('Do you want to report this photo as abusive?',
+        name: 'confirmReportPhoto');
   }
 
   String get yes {
@@ -179,9 +183,10 @@ class S {
   }
 
   String get confirmBlockUser {
-    return Intl.message('Do you want to block this user?', name: 'confirmBlockUser');
+    return Intl.message('Do you want to block this user?',
+        name: 'confirmBlockUser');
   }
-  
+
   String get favorite {
     return Intl.message('Add shelf to favorite', name: 'favorite');
   }
@@ -227,15 +232,21 @@ class S {
   }
 
   String get shareBooks {
-    return Intl.message('I\'m sharing my books on Biblosphere. Join me to read it.', name: 'shareBooks');
+    return Intl.message(
+        'I\'m sharing my books on Biblosphere. Join me to read it.',
+        name: 'shareBooks');
   }
 
   String get shareWishlist {
-    return Intl.message('I\'m sharing my book wishlist on Biblosphere. Join me.', name: 'shareWishlist');
+    return Intl.message(
+        'I\'m sharing my book wishlist on Biblosphere. Join me.',
+        name: 'shareWishlist');
   }
 
   String get shareBookshelf {
-    return Intl.message('That\'s my bookshelf. Join Biblosphere to share books and find like-minded people.', name: 'shareBookshelf');
+    return Intl.message(
+        'That\'s my bookshelf. Join Biblosphere to share books and find like-minded people.',
+        name: 'shareBookshelf');
   }
 
   String get addYourBook {
@@ -259,7 +270,9 @@ class S {
   }
 
   String get noBooks {
-    return Intl.message('You don\'t have any books in Biblosphere. Add it manually or import from Goodreads.', name: 'noBooks');
+    return Intl.message(
+        'You don\'t have any books in Biblosphere. Add it manually or import from Goodreads.',
+        name: 'noBooks');
   }
 
   String get myBookshelvesItem {
@@ -271,7 +284,9 @@ class S {
   }
 
   String get noBookshelves {
-    return Intl.message('You don\'t have any bookshelves in Biblosphere. Make a photo of your bookshelf to share with neighbours.', name: 'noBookshelves');
+    return Intl.message(
+        'You don\'t have any bookshelves in Biblosphere. Make a photo of your bookshelf to share with neighbours.',
+        name: 'noBookshelves');
   }
 
   String get myWishlistItem {
@@ -283,7 +298,9 @@ class S {
   }
 
   String get noWishes {
-    return Intl.message('You don\'t have any books in your wishlist. Add it manually or import from Goodreads.', name: 'noWishes');
+    return Intl.message(
+        'You don\'t have any books in your wishlist. Add it manually or import from Goodreads.',
+        name: 'noWishes');
   }
 
   String get addYourBookshelf {
@@ -291,7 +308,8 @@ class S {
   }
 
   String get makePhotoOfShelf {
-    return Intl.message('Make a photo of your bookshelf', name: 'makePhotoOfShelf');
+    return Intl.message('Make a photo of your bookshelf',
+        name: 'makePhotoOfShelf');
   }
 
   String get recentWishes {
@@ -299,7 +317,9 @@ class S {
   }
 
   String get noMatchForWishlist {
-    return Intl.message('Hey, right now nodody around you has the books from your wishlist. They will be shown here once someone registers them.\nSpread the word about Biblosphere to make it happen sooner. And add more books to your wishlist.', name: 'noMatchForWishlist');
+    return Intl.message(
+        'Hey, right now nodody around you has the books from your wishlist. They will be shown here once someone registers them.\nSpread the word about Biblosphere to make it happen sooner. And add more books to your wishlist.',
+        name: 'noMatchForWishlist');
   }
 
   String get shelves {
@@ -311,7 +331,9 @@ class S {
   }
 
   String get noMatchForBooks {
-    return Intl.message('Here you\'ll see people who wish your books once they are registered. To make it happen add more books and spread the word about Biblosphere.', name: 'noMatchForBooks');
+    return Intl.message(
+        'Here you\'ll see people who wish your books once they are registered. To make it happen add more books and spread the word about Biblosphere.',
+        name: 'noMatchForBooks');
   }
 
   String get people {
@@ -319,7 +341,8 @@ class S {
   }
 
   String wishToRead(name, title) {
-    return Intl.message("$name wish to read your book \'$title\'", name: 'wishToRead', args: [name, title]);
+    return Intl.message("$name wish to read your book \'$title\'",
+        name: 'wishToRead', args: [name, title]);
   }
 
   String get yourGoodreads {
@@ -331,7 +354,8 @@ class S {
   }
 
   String get importYouBooks {
-    return Intl.message('Import your books to Biblosphere', name: 'importYouBooks');
+    return Intl.message('Import your books to Biblosphere',
+        name: 'importYouBooks');
   }
 
   String get linkYourAccount {
@@ -339,7 +363,8 @@ class S {
   }
 
   String get useCurrentLocation {
-    return Intl.message('Use current location for import', name: 'useCurrentLocation');
+    return Intl.message('Use current location for import',
+        name: 'useCurrentLocation');
   }
 
   String get importToWishlist {
@@ -351,7 +376,8 @@ class S {
   }
 
   String get scanISBN {
-    return Intl.message('Scan ISBN from the back of the book', name: 'scanISBN');
+    return Intl.message('Scan ISBN from the back of the book',
+        name: 'scanISBN');
   }
 
   String get enterTitle {
@@ -366,6 +392,38 @@ class S {
     return Intl.message('Ok', name: 'ok');
   }
 
+  String bookCount(int count) {
+    return Intl.plural(
+      count,
+      zero: 'No books',
+      one: '$count book',
+      other: '$count books',
+      args: [count],
+      name: 'bookCount',
+    );
+  }
+
+  String shelfCount(int count) {
+    return Intl.plural(
+      count,
+      zero: 'No bookshelves',
+      one: '$count bookshelf',
+      other: '$count bookshelves',
+      args: [count],
+      name: 'shelfCount',
+    );
+  }
+
+  String wishCount(int count) {
+    return Intl.plural(
+      count,
+      zero: 'No wishes',
+      one: '$count wish',
+      other: '$count wishes',
+      args: [count],
+      name: 'wishCount',
+    );
+  }
 }
 
 class AppLocalizationsDelegate extends LocalizationsDelegate<S> {

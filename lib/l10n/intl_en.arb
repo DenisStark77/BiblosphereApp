@@ -413,6 +413,27 @@
      "@ok": {
        "type": "text",
        "placeholders": {}
-     }
+     },
+  "bookCount": "{count,plural, =0{No books}=1{{count} book}other{{count} books}}",
+  "@bookCount": {
+    "type": "text",
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "shelfCount": "{count,plural, =0{No bookshelves}=1{{count} bookshelf}other{{count} bookshelves}}",
+  "@shelfCount": {
+    "type": "text",
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "wishCount": "{count,plural, =0{No wishes}=1{{count} wish}other{{count} wishes}}",
+  "@wishCount": {
+    "type": "text",
+    "placeholders": {
+      "count": {}
+    }
+  }
 
 }

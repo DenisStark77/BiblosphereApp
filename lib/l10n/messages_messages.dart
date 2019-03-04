@@ -18,7 +18,13 @@ typedef MessageIfAbsent(String message_str, List args);
 class MessageLookup extends MessageLookupByLibrary {
   get localeName => 'messages';
 
-  static m0(name, title) => "${name} wish to read your book \'${title}\'";
+  static m0(count) => "${Intl.plural(count, zero: 'No books', one: '${count} book', other: '${count} books')}";
+
+  static m1(count) => "${Intl.plural(count, zero: 'No bookshelves', one: '${count} bookshelf', other: '${count} bookshelves')}";
+
+  static m2(count) => "${Intl.plural(count, zero: 'No wishes', one: '${count} wish', other: '${count} wishes')}";
+
+  static m3(name, title) => "${name} wish to read your book \'${title}\'";
 
   final messages = _notInlinedMessages(_notInlinedMessages);
   static _notInlinedMessages(_) => <String, Function> {
@@ -29,6 +35,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "addYourBookshelf" : MessageLookupByLibrary.simpleMessage("Add your bookshelf"),
     "blockUser" : MessageLookupByLibrary.simpleMessage("Block abusive user"),
     "blockedChat" : MessageLookupByLibrary.simpleMessage("Blocked"),
+    "bookCount" : m0,
     "books" : MessageLookupByLibrary.simpleMessage("Books"),
     "bookshelves" : MessageLookupByLibrary.simpleMessage("Bookshelves"),
     "borrow" : MessageLookupByLibrary.simpleMessage("Borrow"),
@@ -92,13 +99,15 @@ class MessageLookup extends MessageLookupByLibrary {
     "shareBookshelf" : MessageLookupByLibrary.simpleMessage("That\'s my bookshelf. Join Biblosphere to share books and find like-minded people."),
     "shareShelf" : MessageLookupByLibrary.simpleMessage("Share your bookshelf"),
     "shareWishlist" : MessageLookupByLibrary.simpleMessage("I\'m sharing my book wishlist on Biblosphere. Join me."),
+    "shelfCount" : m1,
     "shelfSettings" : MessageLookupByLibrary.simpleMessage("Bookshelf settings"),
     "shelves" : MessageLookupByLibrary.simpleMessage("Shelves"),
     "title" : MessageLookupByLibrary.simpleMessage("Biblosphere"),
     "typeMsg" : MessageLookupByLibrary.simpleMessage("Type your message..."),
     "useCurrentLocation" : MessageLookupByLibrary.simpleMessage("Use current location for import"),
     "welcome" : MessageLookupByLibrary.simpleMessage("Welcome"),
-    "wishToRead" : m0,
+    "wishCount" : m2,
+    "wishToRead" : m3,
     "wished" : MessageLookupByLibrary.simpleMessage("Wished"),
     "yes" : MessageLookupByLibrary.simpleMessage("Yes"),
     "yourBiblosphere" : MessageLookupByLibrary.simpleMessage("Your Biblosphere"),

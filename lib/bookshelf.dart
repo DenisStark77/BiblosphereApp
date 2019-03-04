@@ -125,16 +125,16 @@ class _PersonCardState extends State<PersonCard> {
                                   fit: BoxFit.fill,
                                   image: new CachedNetworkImageProvider(
                                       widget.person.photo)))),
-/*                      Image(
-                          image: new CachedNetworkImageProvider(
-                              bookcopy.wisher.photo),
-                          width: 50,
-                          fit: BoxFit.cover),*/
                       Expanded(
                         child: Container(
-                          margin: EdgeInsets.all(5.0),
-                          child: Text('${widget.person.name}',
+                          margin: EdgeInsets.only(left: 20.0, bottom: 5.0, right: 5.0),
+                          child: Column(crossAxisAlignment: CrossAxisAlignment.start,
+                              children: <Widget>[Text('${widget.person.name}',
                               style: Theme.of(context).textTheme.title),
+                          Text(S.of(context).bookCount(widget.person.bookCount), style: Theme.of(context).textTheme.body1),
+                          Text(S.of(context).shelfCount(widget.person.shelfCount), style: Theme.of(context).textTheme.body1),
+                          Text(S.of(context).wishCount(widget.person.wishCount), style: Theme.of(context).textTheme.body1),
+                          ]),
                         ),
                       ),
                     ]),
@@ -268,7 +268,9 @@ class BookCard extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: <Widget>[
                     new IconButton(
-                      onPressed: () {},
+                      onPressed: () async {
+                        addWish(book.book, currentUser, await currentPosition());
+                      },
                       tooltip: S.of(context).favorite,
                       icon: new Icon(MyIcons.heart),
                     ),

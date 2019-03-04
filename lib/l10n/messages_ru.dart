@@ -18,7 +18,13 @@ typedef MessageIfAbsent(String message_str, List args);
 class MessageLookup extends MessageLookupByLibrary {
   get localeName => 'ru';
 
-  static m0(name, title) => "${name} хочет почитать Вашу книгу \'${title}\'";
+  static m0(count) => "${Intl.plural(count, zero: 'Нет книг', one: '${count} книга', other: '${count} книг')}";
+
+  static m1(count) => "${Intl.plural(count, zero: 'Нет полок', one: '${count} полка', other: '${count} полок')}";
+
+  static m2(count) => "${Intl.plural(count, zero: 'Нет желанных книг', one: '${count} желанная книга', other: '${count} желанных книг')}";
+
+  static m3(name, title) => "${name} хочет почитать Вашу книгу \'${title}\'";
 
   final messages = _notInlinedMessages(_notInlinedMessages);
   static _notInlinedMessages(_) => <String, Function> {
@@ -29,6 +35,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "addYourBookshelf" : MessageLookupByLibrary.simpleMessage("Добавьте вашу полку"),
     "blockUser" : MessageLookupByLibrary.simpleMessage("Заблокировать пользователя"),
     "blockedChat" : MessageLookupByLibrary.simpleMessage("Пользователь заблокирован"),
+    "bookCount" : m0,
     "books" : MessageLookupByLibrary.simpleMessage("Книги"),
     "bookshelves" : MessageLookupByLibrary.simpleMessage("Полки"),
     "borrow" : MessageLookupByLibrary.simpleMessage("Возьми"),
@@ -44,12 +51,12 @@ class MessageLookup extends MessageLookupByLibrary {
     "importToBooks" : MessageLookupByLibrary.simpleMessage("Загрузить в список моих книг:"),
     "importToWishlist" : MessageLookupByLibrary.simpleMessage("Загрузить в список желаемых книг:"),
     "importYouBooks" : MessageLookupByLibrary.simpleMessage("Загрузи книги в Библосферу"),
-    "introDone" : MessageLookupByLibrary.simpleMessage("ПРОПУСТИТЬ"),
+    "introDone" : MessageLookupByLibrary.simpleMessage("НАЧАТЬ"),
     "introMeet" : MessageLookupByLibrary.simpleMessage("Встречайся"),
     "introMeetHint" : MessageLookupByLibrary.simpleMessage("Свяжись с владельцем понравившейся книги и договорись о встрече, чтобы взять книгу почитать."),
     "introShoot" : MessageLookupByLibrary.simpleMessage("Снимай"),
     "introShootHint" : MessageLookupByLibrary.simpleMessage("Сфотографируй и покажи свои книжные полки. Твои книги привлекут единомышленников."),
-    "introSkip" : MessageLookupByLibrary.simpleMessage("ДАЛЬШЕ"),
+    "introSkip" : MessageLookupByLibrary.simpleMessage("ПРОПУСТИТЬ"),
     "introSurf" : MessageLookupByLibrary.simpleMessage("Исследуй"),
     "introSurfHint" : MessageLookupByLibrary.simpleMessage("Приложение показвыает книжные полки в радиусе 200 км. Получи доступ к книгам соседей."),
     "km" : MessageLookupByLibrary.simpleMessage(" км"),
@@ -92,13 +99,15 @@ class MessageLookup extends MessageLookupByLibrary {
     "shareBookshelf" : MessageLookupByLibrary.simpleMessage("Эта моя книжная полка. Заходи в Библосферу, чтобы делиться книгами и знакомиться с читающими людьми."),
     "shareShelf" : MessageLookupByLibrary.simpleMessage("Поделиться фотографией полки"),
     "shareWishlist" : MessageLookupByLibrary.simpleMessage("Я публикую в Библосфере список книг, которые хочу почитать. А ты?"),
+    "shelfCount" : m1,
     "shelfSettings" : MessageLookupByLibrary.simpleMessage("Настройки книжной полки"),
     "shelves" : MessageLookupByLibrary.simpleMessage("Полки"),
     "title" : MessageLookupByLibrary.simpleMessage("Библосфера"),
     "typeMsg" : MessageLookupByLibrary.simpleMessage("Наберите сообщение..."),
     "useCurrentLocation" : MessageLookupByLibrary.simpleMessage("Использовать текущее местоположение для загрузки"),
     "welcome" : MessageLookupByLibrary.simpleMessage("Добро пожаловать"),
-    "wishToRead" : m0,
+    "wishCount" : m2,
+    "wishToRead" : m3,
     "wished" : MessageLookupByLibrary.simpleMessage("Избранное"),
     "yourBiblosphere" : MessageLookupByLibrary.simpleMessage("Моя Библосфера"),
     "yourGoodreads" : MessageLookupByLibrary.simpleMessage("Ваш Goodreads"),

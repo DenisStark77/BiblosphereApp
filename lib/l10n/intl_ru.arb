@@ -31,12 +31,12 @@
     "type": "text",
     "placeholders": {}
   },
-  "introDone": "ПРОПУСТИТЬ",
+  "introDone": "НАЧАТЬ",
   "@introDone": {
     "type": "text",
     "placeholders": {}
   },
-  "introSkip": "ДАЛЬШЕ",
+  "introSkip": "ПРОПУСТИТЬ",
   "@introSkip": {
     "type": "text",
     "placeholders": {}
@@ -413,6 +413,26 @@
      "@ok": {
        "type": "text",
        "placeholders": {}
-     }
-
+     },
+  "bookCount": "{count,plural, =0{Нет книг}=1{{count} книга}other{{count} книг}}",
+  "@bookCount": {
+    "type": "text",
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "shelfCount": "{count,plural, =0{Нет полок}=1{{count} полка}other{{count} полок}}",
+  "@shelfCount": {
+    "type": "text",
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "wishCount": "{count,plural, =0{Нет желанных книг}=1{{count} желанная книга}other{{count} желанных книг}}",
+  "@wishCount": {
+    "type": "text",
+    "placeholders": {
+      "count": {}
+    }
+  }
 }
