@@ -72,7 +72,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "makePhotoOfShelf" : MessageLookupByLibrary.simpleMessage("Сделайте фотографию вашей книжной полки"),
     "meet" : MessageLookupByLibrary.simpleMessage("Люди"),
     "messageOwner" : MessageLookupByLibrary.simpleMessage("Написать владельцу"),
-    "myBooksItem" : MessageLookupByLibrary.simpleMessage("Мои кнги"),
+    "myBooksItem" : MessageLookupByLibrary.simpleMessage("Мои книги"),
     "myBooksTitle" : MessageLookupByLibrary.simpleMessage("МОИ КНИГИ"),
     "myBookshelvesItem" : MessageLookupByLibrary.simpleMessage("Мои полки"),
     "myBookshelvesTitle" : MessageLookupByLibrary.simpleMessage("МОИ ПОЛКИ"),

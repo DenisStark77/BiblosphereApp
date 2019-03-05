@@ -266,7 +266,7 @@
     "type": "text",
     "placeholders": {}
   },
-  "myBooksItem": "Мои кнги",
+  "myBooksItem": "Мои книги",
   "@myBooksItem": {
     "type": "text",
     "placeholders": {}
