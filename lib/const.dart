@@ -644,13 +644,14 @@ class _EnterBookState extends State<EnterBook> {
                 widget.search
                     ? Row(children: <Widget>[
                         Flexible(
-                            child: TextField(
+                            //Workaround for bug on iOS with paste to text field https://github.com/flutter/flutter/issues/22624
+                            child: Theme(data: ThemeData(platform: TargetPlatform.android), child: TextField(
                           maxLines: 1,
                           controller: textController,
                           style: Theme.of(context).textTheme.body1,
                           decoration: InputDecoration(
                               hintText: S.of(context).enterTitle),
-                        )),
+                        ))),
                         RaisedButton(
                           textColor: Colors.white,
                           color: Theme.of(context).colorScheme.secondary,

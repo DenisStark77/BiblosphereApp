@@ -419,7 +419,7 @@ class ChatScreenState extends State<ChatScreen> {
           Flexible(
             child: Container(
               margin: new EdgeInsets.only(left: 10.0, right: 1.0),
-              child: TextField(
+              child: Theme(data: ThemeData(platform: TargetPlatform.android), child: TextField(
                 style: TextStyle(color: primaryColor, fontSize: 15.0),
                 controller: textEditingController,
                 decoration: InputDecoration.collapsed(
@@ -427,7 +427,7 @@ class ChatScreenState extends State<ChatScreen> {
                   hintStyle: TextStyle(color: greyColor),
                 ),
                 focusNode: focusNode,
-              ),
+              )),
             ),
           ),
 
