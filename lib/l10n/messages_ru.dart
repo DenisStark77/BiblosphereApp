@@ -62,6 +62,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "km" : MessageLookupByLibrary.simpleMessage(" км"),
     "linkToGoodreads" : MessageLookupByLibrary.simpleMessage("Подключи свой Goodreads"),
     "linkYourAccount" : MessageLookupByLibrary.simpleMessage("Подключи учётную запись Goodreads"),
+    "loadPhotoOfShelf" : MessageLookupByLibrary.simpleMessage("Загрузи фото полки из галереи"),
     "loading" : MessageLookupByLibrary.simpleMessage("Загружается..."),
     "loginAgree1" : MessageLookupByLibrary.simpleMessage("Заходя в приложение вы соглашаетесь\n с нашим "),
     "loginAgree2" : MessageLookupByLibrary.simpleMessage("пользовательским соглашением"),

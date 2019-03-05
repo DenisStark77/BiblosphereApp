@@ -65,6 +65,7 @@ class MyIcons {
   static const IconData chain = const IconData(0xf1bf, fontFamily: fontFamily);
   static const IconData open = const IconData(0xf173, fontFamily: fontFamily);
   static const IconData synch = const IconData(0xf15b, fontFamily: fontFamily);
+  static const IconData galery = const IconData(0xf201, fontFamily: fontFamily);
 }
 
 enum AppActivity { books, shelves, wished, people, give, earn }

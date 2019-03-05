@@ -434,6 +434,10 @@
     "placeholders": {
       "count": {}
     }
+  },
+  "loadPhotoOfShelf": "Load shelf photo from galery",
+  "@loadPhotoOfShelf": {
+    "type": "text",
+    "placeholders": {}
   }
-
 }

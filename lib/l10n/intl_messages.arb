@@ -1,5 +1,5 @@
 {
-  "@@last_modified": "2019-03-04T18:20:18.061575",
+  "@@last_modified": "2019-03-05T08:48:01.326892",
   "title": "Biblosphere",
   "@title": {
     "description": "The application title",
@@ -434,5 +434,10 @@
     "placeholders": {
       "count": {}
     }
+  },
+  "loadPhotoOfShelf": "Load shelf photo from galery",
+  "@loadPhotoOfShelf": {
+    "type": "text",
+    "placeholders": {}
   }
 }

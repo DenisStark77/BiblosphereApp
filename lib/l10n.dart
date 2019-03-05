@@ -424,6 +424,10 @@ class S {
       name: 'wishCount',
     );
   }
+
+  String get loadPhotoOfShelf {
+    return Intl.message('Load shelf photo from galery', name: 'loadPhotoOfShelf');
+  }
 }
 
 class AppLocalizationsDelegate extends LocalizationsDelegate<S> {

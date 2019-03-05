@@ -370,10 +370,10 @@ class Home extends StatelessWidget {
 
   final User currentUser;
 
-  Future getImage(BuildContext context) async {
+  Future getImage(BuildContext context, {ImageSource source=ImageSource.camera}) async {
     try {
       File image = await ImagePicker.pickImage(
-          source: ImageSource.camera, maxWidth: 1024.0);
+          source: source, maxWidth: 1024.0);
 
       if (image == null) return;
 
@@ -755,6 +755,21 @@ class Home extends StatelessWidget {
                       child: new Icon(MyIcons.camera),
                       onPressed: () {
                         getImage(context);
+                      },
+                      shape: new RoundedRectangleBorder(
+                          borderRadius: new BorderRadius.circular(20.0)),
+                    ),
+                  ]),
+                  Row(children: <Widget>[
+                    Expanded(
+                        child: Text(S.of(context).loadPhotoOfShelf,
+                            style: Theme.of(context).textTheme.body1)),
+                    RaisedButton(
+                      textColor: Colors.white,
+                      color: Theme.of(context).colorScheme.secondary,
+                      child: new Icon(MyIcons.galery),
+                      onPressed: () {
+                        getImage(context, source: ImageSource.gallery);
                       },
                       shape: new RoundedRectangleBorder(
                           borderRadius: new BorderRadius.circular(20.0)),

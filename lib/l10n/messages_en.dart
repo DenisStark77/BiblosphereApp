@@ -62,6 +62,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "km" : MessageLookupByLibrary.simpleMessage(" km"),
     "linkToGoodreads" : MessageLookupByLibrary.simpleMessage("Link your Goodreads"),
     "linkYourAccount" : MessageLookupByLibrary.simpleMessage("Link your Goodreads account"),
+    "loadPhotoOfShelf" : MessageLookupByLibrary.simpleMessage("Load shelf photo from galery"),
     "loading" : MessageLookupByLibrary.simpleMessage("Loading..."),
     "loginAgree1" : MessageLookupByLibrary.simpleMessage("By clicking sign in button below, you agree \n to our "),
     "loginAgree2" : MessageLookupByLibrary.simpleMessage("end user license agreement"),
