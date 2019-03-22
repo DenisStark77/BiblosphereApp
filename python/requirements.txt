@@ -1,0 +1,5 @@
+numpy
+opencv-python
+flask
+cloudstorage
+google-cloud-storage
