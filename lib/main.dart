@@ -15,6 +15,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:firestore_helpers/firestore_helpers.dart';
 import 'package:flutter/gestures.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:intl/intl.dart';
 //Temporary for visual debugging
 //import 'package:flutter/rendering.dart';
 
@@ -350,10 +351,24 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
           'id': firebaseUser.uid
         });
       } else {
+        currentUser.balance = documents[0].data['balance'] != null ? (documents[0].data['balance'] as num).toDouble() : 0;
         currentUser.wishCount = documents[0].data['wishCount'] ?? 0;
-        currentUser.wishCount = documents[0].data['bookCount'] ?? 0;
-        currentUser.wishCount = documents[0].data['shelfCount'] ?? 0;
+        currentUser.bookCount = documents[0].data['bookCount'] ?? 0;
+        currentUser.shelfCount = documents[0].data['shelfCount'] ?? 0;
       }
+
+      DocumentReference userRef = Firestore.instance
+          .collection('users')
+          .document(firebaseUser.uid);
+      
+      userRef.snapshots().listen((DocumentSnapshot doc) {
+        setState(() {
+          currentUser.balance = doc.data['balance'] != null ? (doc.data['balance'] as num).toDouble() : 0;
+          currentUser.wishCount = doc.data['wishCount'] ?? 0;
+          currentUser.bookCount = doc.data['bookCount'] ?? 0;
+          currentUser.shelfCount = doc.data['shelfCount'] ?? 0;
+        });
+      });
 
       _firebaseMessaging.getToken().then((token) {
         // Update FCM token for notifications
@@ -542,6 +557,58 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
             // Here we take the value from the MyHomePage object that was created by
             // the App.build method, and use it to set our appbar title.
             actions: <Widget>[
+              FlatButton(
+                child: Row(children: <Widget>[
+                  new Container(margin: EdgeInsets.only(right: 5.0), child: new Icon(MyIcons.money, color: Colors.white)),
+                  new Text('${(new NumberFormat("##0.00")).format(currentUser?.balance??0)} \u{03BB}', style: Theme.of(context).textTheme.body1
+                      .apply(color: Colors.white))
+                ]),
+                onPressed: () {},
+                padding: EdgeInsets.all(0.0),
+              ),
+              new IconButton(
+                onPressed: () {
+                  Navigator.push(
+                      context,
+                      cardListPage(
+                          user: currentUser,
+                          stream: Firestore.instance
+                              .collection('transit')
+                              .where("from.id", isEqualTo: currentUser.id)
+                              .snapshots(),
+                          mapper: (doc, user) {
+                            //TODO: Change MyBook to MyOutbox
+                            return new MyOutbox(
+                                new Transit.fromJson(doc.data), currentUser);
+                          },
+                          title: S.of(context).myOutboxTitle,
+                          empty: S.of(context).noItemsInOutbox));
+                },
+                tooltip: S.of(context).outbox,
+                icon: new Icon(MyIcons.outbox),
+              ),
+              new IconButton(
+                onPressed: () {
+                  Navigator.push(
+                      context,
+                      cardListPage(
+                          user: currentUser,
+                          stream: Firestore.instance
+                              .collection('transit')
+                              .where("to.id", isEqualTo: currentUser.id)
+                              .snapshots(),
+                          mapper: (doc, user) {
+                            //TODO: Change MyBook to MyCart
+                            return new MyCart(
+                                new Transit.fromJson(doc.data), currentUser);
+                          },
+                          title: S.of(context).myCartTitle,
+                          empty: S.of(context).noItemsInCart));
+                },
+                tooltip: S.of(context).cart,
+                icon: new Icon(MyIcons.cart),
+              ),
+/*
               new IconButton(
                 onPressed: () {
 //                  Navigator.of(context).pushReplacementNamed('/set');
@@ -549,6 +616,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                 tooltip: S.of(context).settings,
                 icon: new Icon(MyIcons.settings),
               ),
+*/
               new IconButton(
                 onPressed: () => signOutProviders(),
                 tooltip: S.of(context).logout,
@@ -644,7 +712,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
               ),
             ],
           ),
-       ),
+        ),
       );
     }
   }

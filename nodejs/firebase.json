@@ -12,7 +12,21 @@
       "**/.*",
       "**/node_modules/**"
     ],
+    "appAssociation": "AUTO",
     "rewrites": [
+      { "source": "/links/**", "dynamicLinks": true },
+      {
+        "source": "/createBalances", "function": "createBalances"
+      },
+      {
+        "source": "/addHolders", "function": "addHolders"
+      },
+      {
+        "source": "/recogniseShelfHttp", "function": "recogniseShelfHttp"
+      },
+      {
+        "source": "/exportUsers", "function": "exportUsers"
+      },
       {
         "source": "/updateUsers", "function": "updateUsers"
       },

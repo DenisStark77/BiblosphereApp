@@ -8,6 +8,9 @@ const spawn = require('child-process-promise').spawn;
 const path = require('path');
 const os = require('os');
 const fs = require('fs');
+const json2csv = require("json2csv").parse;
+//const rq = require('request');
+const request = require("request-promise");
 
 // Imports the Google Cloud client library
 const vision = require('@google-cloud/vision');
@@ -183,13 +186,23 @@ exports.deleteWish = functions.firestore
        });
   });
 
+// Deploy with:
+// firebase deploy --only functions:linkWishes
 exports.linkWishes = functions.firestore
   .document("bookcopies/{bookcopyId}")
   .onCreate(async (bookcopy, context) => {
 
        admin.firestore().collection('bookcopies').doc(bookcopy.id).update({id: bookcopy.id});
 
-       var minDistance = 40000.0;
+      if (bookcopy.data().holder === null || bookcopy.data().holder === undefined ) {
+          admin.firestore().collection('bookcopies').doc(bookcopy.id).update({holder: bookcopy.data().owner});
+      }
+
+      if (bookcopy.data().status === null || bookcopy.data().status === undefined) {
+          admin.firestore().collection('bookcopies').doc(bookcopy.id).update({status: 'available'});
+      }
+
+      var minDistance = 40000.0;
        var nearestWisher;
        var nearestWishId;
 
@@ -290,7 +303,198 @@ exports.linkBookcopies = functions.firestore
        return false;
   });
 
+// Deploy with:
+// firebase deploy --only functions:userOnCreate
+exports.userOnCreate = functions.firestore
+    .document("users/{userId}")
+    .onCreate(async (user, context) => {
+
+       if (user.data().balance === null || user.data().balance === undefined) {
+            admin.firestore().collection('users').doc(user.id).update({balance: 0});
+        }
+
+        return true;
+    });
+
+
 // ADMIN functions
+// Function addHolders:
+// Copy owners to holders if holder is not populated
+// Deploy with:
+// firebase deploy --only functions:createBalances
+exports.createBalances = functions.https.onRequest(async (req, res) => {
+    try {
+        var querySnapshot = await admin.firestore().collection('users').get();
+        querySnapshot.forEach(async (user) => {
+
+            // Ifholder is missing update it from owner
+            if (user.data().balance === null || user.data().balance === undefined) {
+                admin.firestore().collection('users').doc(user.id).update({balance: 0});
+                console.log('User updated for balance: ', user.id);
+            }
+        });
+        return res.status(200).send("Running");
+    } catch(err) {
+        console.log('Users balance update failed: ', err);
+        return res.status(404).send("Users balance update failed");
+    }
+});
+
+
+// Function addHolders:
+// Copy owners to holders if holder is not populated
+// Deploy with:
+// firebase deploy --only functions:addHolders
+exports.addHolders = functions.https.onRequest(async (req, res) => {
+    try {
+        var querySnapshot = await admin.firestore().collection('bookcopies').get();
+        querySnapshot.forEach(async (bookcopy) => {
+
+            // Ifholder is missing update it from owner
+            if (! bookcopy.data().holder) {
+                admin.firestore().collection('bookcopies').doc(bookcopy.id).update({holder: bookcopy.data().owner});
+                console.log('Bookcopy updated for holder: ', bookcopy.id);
+            }
+
+            if (! bookcopy.data().status) {
+                admin.firestore().collection('bookcopies').doc(bookcopy.id).update({status: 'available'});
+                console.log('Bookcopy updated for status: ', bookcopy.id);
+            }
+        });
+        return res.status(200).send("Running");
+    } catch(err) {
+        console.log('Bookcopies holder update failed: ', err);
+        return res.status(404).send("Bookcopies holder update failed");
+    }
+});
+
+// Function recogniseShelfHttp:
+// Recognise books from shelf image (store segmented book's images and book/bookcopy records)
+// Deploy with:
+// firebase deploy --only functions:recogniseShelfHttp
+
+const runtimeOpts = {
+    timeoutSeconds: 300,
+    memory: '1GB'
+}
+
+exports.recogniseShelfHttp = functions.runWith(runtimeOpts).https.onRequest(async (req, res) => {
+    try {
+        const shelfId = req.query.id;
+        console.log('Book recognition requested for shelf (v0.10): ', shelfId);
+
+        const shelf = await admin.firestore().collection('shelves').doc(shelfId).get();
+        console.log('Shelf found ', shelfId);
+
+        const imgPath = `images/${shelf.data().user}/${shelf.data().file}`;
+        const body = await request(`https://us-central1-biblosphere-210106.cloudfunctions.net/segment_shelf?gcs=${imgPath}`);
+
+        console.log('RESPONSE reseived:', body);
+
+        const info = JSON.parse(body);
+        let response = [];
+
+        const promises = info.map(async (segment) => {
+            console.log('Segment path: ', segment['gcs']);
+            const imgUri = segment['gcs'];
+            const rq = {
+                image: {
+                    source: {imageUri: imgUri}
+                },
+            };
+
+            const results = await client.documentTextDetection(rq);
+            if (results && results[0] && results[0].fullTextAnnotation && results[0].fullTextAnnotation.text) {
+                console.log('Text detected: ', results[0].fullTextAnnotation.text);
+                segment['text'] = results[0].fullTextAnnotation.text;
+                segment['status'] = 'recognized';
+
+                const body = await request(`https://www.googleapis.com/books/v1/volumes?key=AIzaSyDJR_BnU_JVJyGTfaWcj086UuQxXP3LoTU&country=RU&printType=books&q=${encodeURIComponent(segment['text'])}`);
+                const library = JSON.parse(body);
+                if (library && library.items && library.items[0] && library.items[0].volumeInfo && library.items[0].volumeInfo.title) {
+                    console.log('Book found: ', library.items[0].volumeInfo.title);
+                    segment['book'] = library.items[0].volumeInfo.title;
+                    segment['status'] = 'found';
+                } else {
+                    console.log('Book not found: ', segment['text']);
+                    segment['status'] = 'notfound';
+                }
+            } else {
+                console.log('Text detection failed for: ', imgUri);
+                segment['status'] = 'unrecognized';
+            }
+
+            response.push(segment);
+            return true;
+        });
+
+        await Promise.all(promises);
+        console.log('All promisses completed');
+
+        return res.status(200).send(response);
+    } catch(err) {
+        console.log('Shelf recognition failed: ', err);
+        return res.status(404).send("Shelf recognition failed");
+    }
+});
+
+// Function exportUsers:
+// export users with emails and counters
+exports.exportUsers = functions.https.onRequest(async (req, res) => {
+  try {
+    const fields = ['id', 'name', 'shelfCount', 'bookCount', 'wishCount', 'email'];
+    const opts = { fields };
+
+    var users = [];
+    var querySnapshot = await admin.firestore().collection('users').get();
+
+    const promises = querySnapshot.docs.map(async (user) => {
+       try {
+         const authUser = await admin.auth().getUser(user.id); // this returns a promise, so use await or .then()
+         var userJson = user.data();
+         //console.log('User record: ', userJson);
+
+         userJson['email'] = authUser.email;
+         //console.log('User record with email: ', userJson);
+
+         users.push(userJson);
+         return true;
+       } catch (err) {
+         console.log('Data failed for: ', user.id, ' with error: ', err);
+         return false;
+       }
+    });
+
+    await Promise.all(promises).then(async (values) => {
+       console.log('Promisses completed');
+
+       // console.log('User list: ', users);
+
+       console.log('Init storage');
+       const bucket = admin.storage().bucket();
+
+       const tempFile = path.join(os.tmpdir(), 'users.csv');
+       console.log('Temp filepath: ', tempFile);
+
+       const csv = json2csv(users, opts)
+
+       console.log('Saving to file: ', tempFile);
+       fs.writeFileSync(tempFile, csv)
+
+       console.log('Uploading file: ', tempFile);
+       await bucket.upload(tempFile, {destination: 'user.csv'});
+       console.log('File uploaded to Storage at', 'user.csv');
+
+       return true;
+    });
+
+    return res.status(200).send("Running (version 0.18)");
+  } catch(err) {
+    console.log('User export failed: ', err);
+    return res.status(404).send("User export failed (version 0.18");
+  }
+});
+
 // Function updateUsers:
 // update counters and positions of the users
 exports.updateUsers = functions.https.onRequest(async (req, res) => {

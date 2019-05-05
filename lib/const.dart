@@ -10,11 +10,15 @@ import 'package:http/http.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:xml/xml.dart' as xml;
+import 'dart:convert';
 
 import 'package:biblosphere/l10n.dart';
 
 const String sharingUrl =
     'https://biblosphere.org/images/phone-app-screens-2000.png';
+
+const String nocoverUrl =
+    'https://firebasestorage.googleapis.com/v0/b/biblosphere-210106.appspot.com/o/images%2Fnocover.png?alt=media&token=fb68e614-d34e-4b47-bf2c-47e742b4786d';
 
 String getTimestamp() => new DateTime.now().millisecondsSinceEpoch.toString();
 
@@ -66,6 +70,9 @@ class MyIcons {
   static const IconData open = const IconData(0xf173, fontFamily: fontFamily);
   static const IconData synch = const IconData(0xf15b, fontFamily: fontFamily);
   static const IconData galery = const IconData(0xf201, fontFamily: fontFamily);
+  static const IconData given = const IconData(0xf1e9, fontFamily: fontFamily);
+  static const IconData taken = const IconData(0xf273, fontFamily: fontFamily);
+  static const IconData outbox = const IconData(0xf1ee, fontFamily: fontFamily);
 }
 
 enum AppActivity { books, shelves, wished, people, give, earn }
@@ -95,6 +102,9 @@ class Book {
   String image;
   String sourceId;
   BookSource source = BookSource.none;
+  double price = 0.0;
+  String genre;
+  String language;
 
   Book(
       {this.id,
@@ -103,12 +113,14 @@ class Book {
       @required this.isbn,
       this.image});
 
+  //TODO: Add price, genre, language
   Book.volume(Volume v) {
     try {
       if (v.volumeInfo?.imageLinks != null)
         image = v.volumeInfo.imageLinks.thumbnail;
       title = v.volumeInfo?.title;
       authors = v.volumeInfo?.authors;
+      language = v.volumeInfo?.language;
       //TODO: what if ISBN_13 missing?
       var industryIds = v.volumeInfo?.industryIdentifiers;
       if (industryIds != null) {
@@ -122,6 +134,7 @@ class Book {
     }
   }
 
+  //TODO: Add price, genre, language
   Book.goodreads(xml.XmlElement xml) {
 //      isbn = xml.findElements("isbn13")?.first?.text?.toString();
     sourceId = xml.findElements("id")?.first?.text?.toString();
@@ -144,7 +157,10 @@ class Book {
         title = json['title'],
         authors = (json['authors'] as List).cast<String>(),
         isbn = json['isbn'],
-        image = json['image'];
+        image = json['image'],
+        price = json['price'],
+        language = json['language'],
+        genre = json['genre'];
 
   Map<String, dynamic> toJson() {
     return {
@@ -152,7 +168,10 @@ class Book {
       'title': title,
       'authors': authors,
       'isbn': isbn,
-      'image': image
+      'image': image,
+      'price': price,
+      'genre': genre,
+      'language': language
     };
   }
 }
@@ -165,6 +184,7 @@ class User {
   int wishCount = 0;
   int bookCount = 0;
   int shelfCount = 0;
+  double balance = 0;
   double d;
 
   User(
@@ -172,6 +192,7 @@ class User {
       @required this.name,
       @required this.photo,
       @required this.position,
+      this.balance = 0,
       this.bookCount,
       this.shelfCount,
       this.wishCount});
@@ -183,7 +204,9 @@ class User {
         position = json['position'] as GeoPoint,
         wishCount = json['wishCount'] ?? 0,
         bookCount = json['bookCount'] ?? 0,
-        shelfCount = json['shelfCount'] ?? 0;
+        shelfCount = json['shelfCount'] ?? 0,
+        balance =
+            json['balance'] != null ? (json['balance'] as num).toDouble() : 0;
 
   Map<String, dynamic> toJson() {
     return {'id': id, 'name': name, 'photo': photo, 'position': position};
@@ -193,9 +216,12 @@ class User {
 class Bookcopy {
   String id;
   User owner;
+  User holder;
   Book book;
   GeoPoint position;
+  String status;
   bool matched;
+  bool lent;
   String wishId;
   User wisher;
   double distance;
@@ -205,17 +231,25 @@ class Bookcopy {
       {@required this.owner,
       @required this.book,
       @required this.position,
+      this.status = 'available',
+      this.holder,
       this.matched = false,
+      this.lent = false,
       this.wishId,
       this.wisher,
-      this.distance});
+      this.distance}) {
+    if (holder == null) holder = owner;
+  }
 
   Bookcopy.fromJson(Map json)
       : id = json['id'],
         owner = User.fromJson(json['owner']),
+        holder = User.fromJson(json['holder']),
         book = Book.fromJson(json['book']),
         position = json['position'] as GeoPoint,
+        status = json['status'],
         matched = json['matched'],
+        lent = json['lent'],
         wishId = json['wishId'],
         wisher = json['wisher'] != null ? User.fromJson(json['wisher']) : null,
         distance = json['distance'] != null
@@ -226,9 +260,12 @@ class Bookcopy {
     return {
       'id': id,
       'owner': owner.toJson(),
+      'holder': holder.toJson(),
       'book': book.toJson(),
       'position': position,
+      'status': status,
       'matched': matched,
+      'lent': lent,
       'wishId': wishId,
       'wisher': wisher?.toJson(),
       'distance': distance
@@ -290,18 +327,227 @@ class Wish {
   }
 }
 
+class Transit {
+  static const Request = 'request';
+  static const Return = 'return';
+  static const Offer = 'offer';
+  static const Requested = 'requested';
+  static const Accepted = 'accepted';
+  static const Confirmed = 'confirmed';
+  static const Rejected = 'rejected';
+  static const Canceled = 'canceled';
+  static const Accept = 'accept';
+  static const Confirm = 'confirm';
+  static const Reject = 'reject';
+  static const Cancel = 'cancel';
+  static const Ok = 'ok';
+
+  String id;
+  Bookcopy bookcopy;
+  User from;
+  User to;
+  String action;
+  String status;
+  DateTime date;
+
+  Transit(
+      {@required this.bookcopy,
+      @required this.from,
+      @required this.to,
+      this.action = 'request',
+      this.status = 'requested',
+      this.id,
+      this.date = null});
+
+  Transit.fromJson(Map json)
+      : id = json['id'],
+        bookcopy = Bookcopy.fromJson(json['bookcopy']),
+        from = User.fromJson(json['from']),
+        to = User.fromJson(json['to']),
+        action = json['action'],
+        status = json['status'],
+        date = json['date'];
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'bookcopy': bookcopy.toJson(),
+      'from': from.toJson(),
+      'to': to.toJson(),
+      'action': action,
+      'status': status,
+      'date': date
+    };
+  }
+
+  static String stepText(String step, BuildContext context) {
+    switch (step) {
+      case Accept:
+        return S.of(context).transitAccept;
+      case Confirm:
+        return S.of(context).transitConfirm;
+      case Reject:
+        return S.of(context).transitReject;
+      case Cancel:
+        return S.of(context).transitCancel;
+      case Ok:
+        return S.of(context).transitOk;
+      default:
+        return '';
+    }
+  }
+
+  bool showInCart() {
+    if (action == Request && status == Requested ||
+        action == Request && status == Accepted ||
+        action == Request && status == Rejected ||
+        action == Return && status == Accepted ||
+        action == Offer && status == Accepted)
+      return true;
+    else
+      return false;
+  }
+
+  bool showInOutbox() {
+    if (action == Request && status == Requested ||
+        action == Request && status == Accepted ||
+        action == Request && status == Confirmed ||
+        action == Request && status == Canceled ||
+        action == Return && status == Accepted ||
+        action == Return && status == Confirmed ||
+        action == Offer && status == Accepted ||
+        action == Offer && status == Confirmed ||
+        action == Offer && status == Rejected)
+      return true;
+    else
+      return false;
+  }
+
+  String getCartText(BuildContext context) {
+    if (action == Request && status == Requested) {
+      // Cancel
+      return S.of(context).cartRequestCancel(from.name, bookcopy.book.title);
+    } else if (action == Request && status == Accepted) {
+      // Confirm, Cancel
+      return S.of(context).cartRequestAccepted(from.name, bookcopy.book.title);
+    } else if (action == Request && status == Rejected) {
+      // Ok
+      return S.of(context).cartRequestRejected(from.name, bookcopy.book.title);
+    } else if (action == Return && status == Accepted) {
+      // Confirm
+      return S.of(context).cartReturnConfirm(from.name, bookcopy.book.title);
+    } else if (action == Offer && status == Accepted) {
+      // Confirm, Reject
+      return S
+          .of(context)
+          .cartOfferConfirmReject(from.name, bookcopy.book.title);
+    } else {
+      return '';
+    }
+  }
+
+  List<String> getCartSteps() {
+    if (action == Request && status == Requested) {
+      // Cancel
+      return <String>[Cancel];
+    } else if (action == Request && status == Accepted) {
+      // Confirm, Cancel
+      return <String>[Confirm, Cancel];
+    } else if (action == Request && status == Rejected) {
+      // Ok
+      return <String>[Ok];
+    } else if (action == Return && status == Accepted) {
+      // Confirm
+      return <String>[Confirm];
+    } else if (action == Offer && status == Accepted) {
+      // Confirm, Reject
+      return <String>[Confirm, Reject];
+    } else {
+      return <String>[];
+    }
+  }
+
+  String getOutboxText(BuildContext context) {
+    if (action == Request && status == Requested) {
+      // Accept, Reject
+      return S
+          .of(context)
+          .outboxRequestAcceptReject(to.name, bookcopy.book.title);
+    } else if (action == Request && status == Accepted) {
+      // Reject
+      return S.of(context).outboxRequestAccepted(to.name, bookcopy.book.title);
+    } else if (action == Request && status == Confirmed) {
+      // Ok
+      return S.of(context).outboxRequestConfirmed(to.name, bookcopy.book.title);
+    } else if (action == Request && status == Canceled) {
+      // Ok
+      return S.of(context).outboxRequestCanceled(to.name, bookcopy.book.title);
+    } else if (action == Return && status == Accepted) {
+      // Cancel
+      return S.of(context).outboxReturnAccepted(to.name, bookcopy.book.title);
+    } else if (action == Return && status == Confirmed) {
+      // Ok
+      return S.of(context).outboxReturnConfirmed(to.name, bookcopy.book.title);
+    } else if (action == Offer && status == Accepted) {
+      // Cancel
+      return S.of(context).outboxOfferAccepted(to.name, bookcopy.book.title);
+    } else if (action == Offer && status == Confirmed) {
+      // Ok
+      return S.of(context).outboxOfferConfirmed(to.name, bookcopy.book.title);
+    } else if (action == Offer && status == Rejected) {
+      // Ok
+      return S.of(context).outboxOfferRejected(to.name, bookcopy.book.title);
+    } else {
+      return '';
+    }
+  }
+
+  List<String> getOutboxSteps() {
+    if (action == Request && status == Requested) {
+      // Accept, Reject
+      return <String>[Accept, Reject];
+    } else if (action == Request && status == Accepted) {
+      // Reject
+      return <String>[Reject];
+    } else if (action == Request && status == Confirmed) {
+      // Ok
+      return <String>[Ok];
+    } else if (action == Request && status == Canceled) {
+      // Ok
+      return <String>[Ok];
+    } else if (action == Return && status == Accepted) {
+      // Cancel
+      return <String>[Cancel];
+    } else if (action == Return && status == Confirmed) {
+      // Ok
+      return <String>[Ok];
+    } else if (action == Offer && status == Accepted) {
+      // Cancel
+      return <String>[Cancel];
+    } else if (action == Offer && status == Confirmed) {
+      // Ok
+      return <String>[Ok];
+    } else if (action == Offer && status == Rejected) {
+      // Ok
+      return <String>[Ok];
+    } else {
+      return <String>[];
+    }
+  }
+}
+
 //Callback function type definition
 typedef BookCallback(Book book);
 
-Future addBook(Book b, User u, GeoPoint position,
-    {String source = 'goodreads'}) async {
+Future addBook(BuildContext context, Book b, User u, GeoPoint position,
+    {String source = 'goodreads', bool snackbar = true}) async {
   bool existingBook = false;
 
   if (b.isbn == null || b.isbn == 'NA')
     throw 'Book ${b?.title}, ${b?.authors?.join()} has no ISBN';
 
   //Try to get image if missing
-  if (b.image == null || b.image.isEmpty) {
+  if (b.image == null || b.image.isEmpty || b.language == null || b.language.isEmpty ) {
     b = await enrichBookRecord(b);
   }
 
@@ -343,17 +589,18 @@ Future addBook(Book b, User u, GeoPoint position,
   }
 
   await Firestore.instance.collection('bookcopies').add(bookcopy.toJson());
+  if (snackbar) showSnackBar(context, S.of(context).bookAdded);
 }
 
-Future addWish(Book b, User u, GeoPoint position,
-    {String source = 'goodreads'}) async {
+Future addWish(BuildContext context, Book b, User u, GeoPoint position,
+    {String source = 'goodreads', bool snackbar = true}) async {
   bool existingBook = false;
 
   if (b.isbn == null || b.isbn == 'NA')
     throw 'Book ${b?.title}, ${b?.authors?.join()} has no ISBN';
 
   //Try to get image if missing
-  if (b.image == null || b.image.isEmpty) {
+  if (b.image == null || b.image.isEmpty || b.language == null || b.language.isEmpty ) {
     b = await enrichBookRecord(b);
   }
 
@@ -395,6 +642,229 @@ Future addWish(Book b, User u, GeoPoint position,
   }
 
   await Firestore.instance.collection('wishes').add(wish.toJson());
+  if (snackbar) showSnackBar(context, S.of(context).wishAdded);
+}
+
+Future startTransit(BuildContext context, String bookcopyId, User from, User to,
+    String action) async {
+  // Create firestore transaction
+  // Check that status of bookcopy is 'available'
+  // Change status of bookcopy to 'transit'
+  // Create and store transit record
+
+  final DocumentReference bookcopyRef =
+      Firestore.instance.document('bookcopies/${bookcopyId}');
+
+  print('DEBUG: transit bookcopy id: ${bookcopyRef.documentID}');
+
+  try {
+    Firestore.instance.runTransaction((Transaction tx) async {
+      DocumentSnapshot bookcopySnapshot = await tx.get(bookcopyRef);
+      print('DEBUG: transit bookcopy snapshot: ${bookcopySnapshot}');
+      if (bookcopySnapshot.exists) {
+        Bookcopy fresh = new Bookcopy.fromJson(bookcopySnapshot.data);
+        print('DEBUG: transit bookcopy: ${fresh}');
+        String status;
+        if (fresh.status == 'available') {
+          // Adjust status
+          if (action == 'request')
+            status = 'requested';
+          else if (action == 'return' || action == 'offer') status = 'accepted';
+          // Autogenerate new reference
+          final DocumentReference transitRef =
+              Firestore.instance.collection('transit').document();
+          print('DEBUG: transit referrence: ${transitRef.documentID}');
+          // Create transit record and insert it to Firestore
+          Transit transit = new Transit(
+              id: transitRef.documentID,
+              bookcopy: fresh,
+              from: from,
+              to: to,
+              action: action,
+              status: status);
+          print('DEBUG: transit record: ${transit}');
+          await tx.update(bookcopyRef, {'status': 'transit'});
+          await tx.set(transitRef, transit.toJson());
+          print('DEBUG: transit record updated');
+          showSnackBar(context, S.of(context).transitInitiated);
+        } else {
+          print('DEBUG: book already in transit: ${bookcopyRef.documentID}');
+        }
+      }
+    });
+  } catch (e) {
+    print('DEBUG: Exception happens: ${e}');
+  }
+}
+
+Future changeTransit(Transit t, User user, String step) async {
+  // Create firestore transaction
+  // Check that status of transit
+  // Validate if step is valid and calculate next status
+  // Update transit record
+  // Commit transaction
+
+  print('DEBUG: User id: ${user.id}, step: ${step}');
+
+  final DocumentReference transitRef =
+      Firestore.instance.document('transit/${t.id}');
+
+  Firestore.instance.runTransaction((Transaction tx) async {
+    DocumentSnapshot transitSnapshot = await tx.get(transitRef);
+    if (transitSnapshot.exists) {
+      Transit tr = new Transit.fromJson(transitSnapshot.data);
+      // Input transit record inconsistent with Firestore record
+      if (tr.status != t.status || tr.action != t.action)
+        // TODO: Not sure should I throw exception or just return new record to get transit Widget refreshed.
+        //throw 'Transit record in db has been changed';
+        return;
+
+      bool toUpdate = false;
+      bool toDelete = false;
+      String nextStatus;
+
+      print('DEBUG: TO user: ${tr.to.id}, FROM user: ${tr.from.id}');
+
+      if (tr.action == Transit.Request &&
+          tr.status == Transit.Requested &&
+          user.id == tr.to.id) {
+        // Cancel
+        if (step == Transit.Cancel) {
+          toDelete = true;
+        }
+      } else if (tr.action == Transit.Request &&
+          tr.status == Transit.Requested &&
+          user.id == tr.from.id) {
+        // Accept, Reject
+        if (step == Transit.Accept) {
+          toUpdate = true;
+          nextStatus = Transit.Accepted;
+        } else if (step == Transit.Reject) {
+          toUpdate = true;
+          nextStatus = Transit.Rejected;
+        }
+      } else if (tr.action == Transit.Request &&
+          tr.status == Transit.Accepted &&
+          user.id == tr.to.id) {
+        // Confirm, Cancel
+        if (step == Transit.Confirm) {
+          toUpdate = true;
+          nextStatus = Transit.Confirmed;
+        } else if (step == Transit.Cancel) {
+          toUpdate = true;
+          nextStatus = Transit.Canceled;
+        }
+      } else if (tr.action == Transit.Request &&
+          tr.status == Transit.Accepted &&
+          user.id == tr.from.id) {
+        // Reject
+        if (step == Transit.Reject) {
+          toUpdate = true;
+          nextStatus = Transit.Rejected;
+        }
+      } else if (tr.action == Transit.Request &&
+          tr.status == Transit.Confirmed &&
+          user.id == tr.from.id) {
+        // Ok
+        if (step == Transit.Ok) toDelete = true;
+      } else if (tr.action == Transit.Request &&
+          tr.status == Transit.Rejected &&
+          user.id == tr.to.id) {
+        // Ok
+        if (step == Transit.Ok) toDelete = true;
+      } else if (tr.action == Transit.Request &&
+          tr.status == Transit.Canceled &&
+          user.id == tr.from.id) {
+        // Ok
+        if (step == Transit.Ok) toDelete = true;
+      } else if (tr.action == Transit.Return &&
+          tr.status == Transit.Accepted &&
+          user.id == tr.from.id) {
+        // Cancel
+        if (step == Transit.Cancel) toDelete = true;
+      } else if (tr.action == Transit.Return &&
+          tr.status == Transit.Accepted &&
+          user.id == tr.to.id) {
+        // Confirm
+        if (step == Transit.Confirm) {
+          toUpdate = true;
+          nextStatus = Transit.Confirmed;
+        }
+      } else if (tr.action == Transit.Return &&
+          tr.status == Transit.Confirmed &&
+          user.id == tr.from.id) {
+        // Ok
+        if (step == Transit.Ok) toDelete = true;
+      } else if (tr.action == Transit.Offer &&
+          tr.status == Transit.Accepted &&
+          user.id == tr.from.id) {
+        // Cancel
+        if (step == Transit.Cancel) toDelete = true;
+      } else if (tr.action == Transit.Offer &&
+          tr.status == Transit.Accepted &&
+          user.id == tr.to.id) {
+        // Confirm, Reject
+        if (step == Transit.Confirm) {
+          toUpdate = true;
+          nextStatus = Transit.Confirmed;
+        } else if (step == Transit.Reject) {
+          toUpdate = true;
+          nextStatus = Transit.Rejected;
+        }
+      } else if (tr.action == Transit.Offer &&
+          tr.status == Transit.Confirmed &&
+          user.id == tr.from.id) {
+        // Ok
+        if (step == Transit.Ok) toDelete = true;
+      } else if (tr.action == Transit.Offer &&
+          tr.status == Transit.Rejected &&
+          user.id == tr.from.id) {
+        // Ok
+        if (step == Transit.Ok) toDelete = true;
+      }
+
+      print(
+          'Action: ${tr.action}, Status: ${tr.status}, NextStatus: ${nextStatus}, Delete: ${toDelete}, Update: ${toUpdate}');
+
+      if (toUpdate) {
+        if (step == Transit.Confirm) {
+          bool lent;
+          // Update bookcopy holder and status
+          if (tr.action == Transit.Return) {
+            lent = false;
+          } else if (tr.action == Transit.Request ||
+              tr.action == Transit.Offer) {
+            lent = true;
+          }
+          //TODO: Use firestore increment to avoid reading (only available from version 0.10 of cloud_firestore)
+          final DocumentReference fromRef =
+              Firestore.instance.document('users/${tr.from.id}');
+          final DocumentReference toRef =
+              Firestore.instance.document('users/${tr.to.id}');
+          final DocumentReference sysRef =
+              Firestore.instance.document('system/commission');
+
+          DocumentSnapshot fromSnapshot = await tx.get(fromRef);
+          DocumentSnapshot toSnapshot = await tx.get(toRef);
+          DocumentSnapshot sysSnapshot = await tx.get(sysRef);
+
+          await tx
+              .update(fromRef, {"balance": fromSnapshot.data['balance'] + 4});
+          await tx.update(toRef, {"balance": toSnapshot.data['balance'] - 5});
+          await tx.update(sysRef, {"balance": sysSnapshot.data['balance'] + 1});
+
+          final DocumentReference bookcopyRef = Firestore.instance
+              .collection('bookcopies')
+              .document(tr.bookcopy.id);
+          await tx.update(bookcopyRef,
+              {'lent': lent, 'status': 'available', 'holder': tr.to.toJson()});
+        }
+        await tx.update(transitRef, {'status': nextStatus});
+      } else if (toDelete) {
+        tx.delete(transitRef);
+      }
+    }
+  });
 }
 
 //TODO: Not sure it's good idea to have it as global valiables. Need to find
@@ -406,6 +876,12 @@ class LibConnect {
   static BooksApi _booksApi;
   static String goodreadsApiKey = 'SXMWtbHvcnbTgRTLT7isA';
   static Client _goodreadsClient;
+  static Client _commonClient;
+
+  static Client getClient() {
+    if (_commonClient == null) _commonClient = new Client();
+    return _commonClient;
+  }
 
   static Client getGoodreadClient() {
     if (_goodreadsClient == null) _goodreadsClient = new Client();
@@ -487,6 +963,7 @@ Future<Book> enrichBookRecord(Book book) async {
       if (book.isbn != 'NA' && book.source != BookSource.google) {
         Book b = await searchByIsbnGoogle(book.isbn);
         if (b?.image != null) book.image = b.image;
+        if (b?.language != null) book.language = b.language;
       }
     }
 
@@ -535,6 +1012,131 @@ Future<Book> searchByIsbnGoodreads(String isbn) async {
     return null;
   } catch (e) {
     print('Unknown error in searchByIsbnGoodreads: $e');
+    return null;
+  }
+}
+
+Future<Book> searchByIsbnRsl(String isbn) async {
+  // Two requests neede. One to get CSRF cookie and second one to make a query.
+  // Undocumented API reverse-engineered from search.rsl.ru/ru/search
+  try {
+    var headers = {
+      'Upgrade-Insecure-Requests': '1',
+    };
+
+    String uri = 'https://search.rsl.ru/ru/search';
+    var res = await LibConnect.getClient().get(uri, headers: headers);
+
+    String cookie = res.headers['set-cookie'];
+    RegExp exp1 = new RegExp(r"(.*?)=(.*?)(?:$|,(?!\s))");
+    RegExp exp2 = new RegExp(r"(.*?)=(.*?)(?:$|;|,)");
+    Iterable<Match> matches = exp1.allMatches(cookie);
+
+    List<String> cleanCookie = [];
+    for (var i = 0; i < matches.length; i++) {
+      String c = cookie.substring(
+          matches.elementAt(i).start, matches.elementAt(i).end);
+      Match match2 = exp2.firstMatch(c);
+      cleanCookie.add(c.substring(match2.start, match2.end - 1));
+    }
+
+    int tag, start, end;
+    String token;
+
+    tag = res.body.indexOf('csrf-token');
+    if (tag != -1) {
+      start = res.body.indexOf('"', tag + 11) + 1;
+      end = res.body.indexOf('"', start);
+      token = res.body.substring(start, end);
+    }
+
+    uri = 'https://search.rsl.ru/site/ajax-search';
+    headers = {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'Accept': 'application/json, text/javascript, */*; q=0.01',
+//                     'X-CSRF-Token': token,
+      'Origin': 'https://search.rsl.ru',
+      'User-Agent':
+          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.108 Safari/537.36',
+      'Accept-Language':
+          'en-GB,en;q=0.9,ru-RU;q=0.8,ru;q=0.7,ka-GE;q=0.6,ka;q=0.5,en-US;q=0.4',
+      'Accept-Encoding': 'gzip, deflate, br',
+      'Cookie': cleanCookie.join(';') + ';'
+    };
+
+    String body =
+        'SearchFilterForm[search]=isbn:$isbn&_csrf=${Uri.encodeQueryComponent(token)}';
+
+    //Use Request to control Content-Type header. Client.post add charset to it
+    // which does not work with RSL
+    Request request = new Request('POST', Uri.parse(uri));
+    request.body = body;
+    request.headers.clear();
+    request.headers.addAll(headers);
+
+    StreamedResponse strRes = await LibConnect.getClient().send(request);
+    String resBody = await strRes.stream.bytesToString();
+
+    var jsonRes = json.decode(resBody);
+
+    String resStr = jsonRes['content'];
+
+    String author, title;
+
+    tag = resStr.indexOf('js-item-authorinfo');
+    if (tag != -1) {
+      start = resStr.indexOf('>', tag) + 1;
+      end = resStr.indexOf('<', start);
+      author = resStr.substring(start, end);
+    }
+
+    tag = resStr.indexOf('js-item-maininfo');
+    if (tag != -1) {
+      start = resStr.indexOf('>', tag) + 1;
+      end = resStr.indexOf('[', start);
+      title = resStr.substring(start, end);
+    }
+
+    if (title != null || author != null) {
+      return new Book(title: title, authors: [author], isbn: isbn);
+    }
+    return null;
+  } catch (e) {
+    print('Unknown error in searchByIsbnRsi: $e');
+    return null;
+  }
+}
+
+/*
+
+Response response = await post(
+uri,
+headers: headers,
+body: jsonBody,
+encoding: encoding,
+);
+
+int statusCode = response.statusCode;
+String responseBody = response.body;
+*/
+
+Future<Book> searchByIsbn(String isbn) async {
+  try {
+    QuerySnapshot q = await Firestore.instance
+        .collection('books')
+        .where('book.isbn', isEqualTo: isbn)
+        .getDocuments();
+
+    if (q.documents.isEmpty) {
+      //No books found
+      return null;
+    } else {
+      Book b = new Book.fromJson(q.documents.first.data['book']);
+      b.id = q.documents.first.documentID;
+      return b;
+    }
+  } catch (e) {
+    print('Unknown error in searchByIsbn: $e');
     return null;
   }
 }
@@ -645,13 +1247,16 @@ class _EnterBookState extends State<EnterBook> {
                     ? Row(children: <Widget>[
                         Flexible(
                             //Workaround for bug on iOS with paste to text field https://github.com/flutter/flutter/issues/22624
-                            child: Theme(data: ThemeData(platform: TargetPlatform.android), child: TextField(
-                          maxLines: 1,
-                          controller: textController,
-                          style: Theme.of(context).textTheme.body1,
-                          decoration: InputDecoration(
-                              hintText: S.of(context).enterTitle),
-                        ))),
+                            child: Theme(
+                                data:
+                                    ThemeData(platform: TargetPlatform.android),
+                                child: TextField(
+                                  maxLines: 1,
+                                  controller: textController,
+                                  style: Theme.of(context).textTheme.body1,
+                                  decoration: InputDecoration(
+                                      hintText: S.of(context).enterTitle),
+                                ))),
                         RaisedButton(
                           textColor: Colors.white,
                           color: Theme.of(context).colorScheme.secondary,
@@ -706,12 +1311,15 @@ class _EnterBookState extends State<EnterBook> {
   Future scanIsbn(BuildContext context) async {
     try {
       String barcode = await BarcodeScanner.scan();
-      print("Isbn: $barcode");
 
       Book book = await searchByIsbnGoodreads(barcode);
 
-      //If missing in Goodreads try Google Books
-      if (book == null) book = await searchByIsbnGoogle(barcode);
+      if (book == null) {
+        if (barcode.startsWith('9785'))
+          book = await searchByIsbnRsl(barcode);
+        else
+          book = await searchByIsbnGoogle(barcode);
+      }
 
       if (book != null) {
         //Many books on goodreads does not have images. Enreach it from Google
@@ -721,7 +1329,8 @@ class _EnterBookState extends State<EnterBook> {
         });
       } else {
         Firestore.instance.collection('noisbn').add({'isbn': barcode});
-        print("No record found for isbn: $barcode");
+        //print("No record found for isbn: $barcode");
+        showSnackBar(context, S.of(context).isbnNotFound);
       }
     } on PlatformException catch (e) {
       if (e.code == BarcodeScanner.CameraAccessDenied) {
@@ -747,7 +1356,8 @@ class _EnterBookState extends State<EnterBook> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
                     Image(
-                        image: new CachedNetworkImageProvider(book.image),
+                        image: new CachedNetworkImageProvider(
+                            book.image != null ? book.image : nocoverUrl),
                         width: 50,
                         fit: BoxFit.cover),
                     Expanded(
@@ -903,4 +1513,68 @@ Future<GeoPoint> currentPosition() async {
     print("POSITION: GeoPisition failed");
     return null;
   }
+}
+
+typedef Widget CardCallback(DocumentSnapshot document, User user);
+
+MaterialPageRoute cardListPage(
+    {User user,
+    Stream stream,
+    CardCallback mapper,
+    String title,
+    String empty}) {
+  return new MaterialPageRoute(
+      builder: (context) => new Scaffold(
+          appBar: new AppBar(
+            title: new Text(
+              title,
+              style:
+                  Theme.of(context).textTheme.title.apply(color: Colors.white),
+            ),
+            centerTitle: true,
+          ),
+          body: new StreamBuilder<QuerySnapshot>(
+              stream: stream,
+              builder: (BuildContext context,
+                  AsyncSnapshot<QuerySnapshot> snapshot) {
+                if (snapshot.hasError) {
+                  return Text('Error: ${snapshot.error}');
+                }
+                switch (snapshot.connectionState) {
+                  case ConnectionState.waiting:
+                    return Text(S.of(context).loading);
+                  default:
+                    if (!snapshot.hasData || snapshot.data.documents.isEmpty) {
+                      return Container(
+                          padding: EdgeInsets.all(10),
+                          child: Text(
+                            empty,
+                            style: Theme.of(context).textTheme.body1,
+                          ));
+                    }
+                    return new ListView(
+                      children: snapshot.data.documents
+                          .map((DocumentSnapshot document) {
+                        return mapper(document, user);
+                      }).toList(),
+                    );
+                }
+              })));
+}
+
+showSnackBar(BuildContext context, String text) {
+  final snackBar = SnackBar(
+    content: Text(text),
+    /*
+    action: SnackBarAction(
+      label: 'Undo',
+      onPressed: () {
+        // Some code to undo the change!
+      },
+    ),
+    */
+  );
+
+// Find the Scaffold in the Widget tree and use it to show a SnackBar!
+  Scaffold.of(context).showSnackBar(snackBar);
 }

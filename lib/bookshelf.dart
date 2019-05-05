@@ -7,6 +7,7 @@ import 'package:firestore_helpers/firestore_helpers.dart';
 import 'package:photo_view/photo_view.dart';
 import 'dart:math' as math;
 import 'package:flutter_crashlytics/flutter_crashlytics.dart';
+import 'package:intl/intl.dart';
 
 import 'package:biblosphere/const.dart';
 import 'package:biblosphere/l10n.dart';
@@ -44,44 +45,6 @@ void openMap(GeoPoint pos) async {
     await launch(url);
   } else {
     throw 'Could not launch $url';
-  }
-}
-
-void openMsg(BuildContext context, String user, String currentUser) async {
-  try {
-    bool isBlocked = false;
-    bool isNewChat = true;
-    DocumentSnapshot chatSnap = await Firestore.instance
-        .collection('messages')
-        .document(chatId(currentUser, user))
-        .get();
-    if (chatSnap.exists) {
-      isNewChat = false;
-      if (chatSnap['blocked'] == 'yes') {
-        isBlocked = true;
-      }
-    }
-
-    if (isBlocked) {
-      showBbsDialog(context, S.of(context).blockedChat);
-      return;
-    }
-
-    DocumentSnapshot userSnap =
-        await Firestore.instance.collection('users').document(user).get();
-    Navigator.push(
-        context,
-        new MaterialPageRoute(
-            builder: (context) => new Chat(
-                  myId: currentUser,
-                  peerId: user,
-                  peerAvatar: userSnap["photoUrl"],
-                  peerName: userSnap["name"],
-                  isNewChat: isNewChat,
-                )));
-  } catch (ex, stack) {
-    print("Chat screen failed: " + ex.toString());
-    FlutterCrashlytics().logException(ex, stack);
   }
 }
 
@@ -134,6 +97,10 @@ class _PersonCardState extends State<PersonCard> {
                               children: <Widget>[
                                 Text('${widget.person.name}',
                                     style: Theme.of(context).textTheme.title),
+                                Text(
+                                    S.of(context)
+                                        .userBalance((new NumberFormat("##0.00")).format(widget.person.balance??0)),
+                                    style: Theme.of(context).textTheme.body1),
                                 Text(
                                     S
                                         .of(context)
@@ -274,6 +241,9 @@ class BookCard extends StatelessWidget {
                                 Text(book.book.title,
                                     style:
                                         Theme.of(context).textTheme.subtitle),
+                                book.book.language == null ? Container() : Text(S.of(context).bookLanguage(book.book.language.toUpperCase()),
+                                    style:
+                                    Theme.of(context).textTheme.caption),
                               ]),
                           margin: EdgeInsets.all(5.0),
                           alignment: Alignment.topLeft,
@@ -289,8 +259,7 @@ class BookCard extends StatelessWidget {
                   children: <Widget>[
                     new IconButton(
                       onPressed: () async {
-                        addWish(
-                            book.book, currentUser, await currentPosition());
+                        addWish(context, book.book, currentUser, await currentPosition());
                       },
                       tooltip: S.of(context).favorite,
                       icon: new Icon(MyIcons.heart),
@@ -310,6 +279,14 @@ class BookCard extends StatelessWidget {
                       },
                       tooltip: S.of(context).seeLocation,
                       icon: new Icon(MyIcons.navigation1),
+                    ),
+                    new IconButton(
+                      onPressed: () {
+                        print('DEBUG: Initiate transit');
+                        startTransit(context, book.id, book.holder, currentUser, Transit.Request);
+                      },
+                      tooltip: S.of(context).addToCart,
+                      icon: new Icon(MyIcons.cart),
                     ),
                     new IconButton(
                       onPressed: () {
@@ -745,6 +722,13 @@ class _BookshelfListState extends State<BookshelfList> {
                     ),
                     new IconButton(
                       onPressed: () {
+                        startTransit(context, wish.bookcopyId, wish.owner, currentUser, Transit.Request);
+                      },
+                      tooltip: S.of(context).addToCart,
+                      icon: new Icon(MyIcons.cart),
+                    ),
+                    new IconButton(
+                      onPressed: () {
                         openMsg(context, wish.wisher.id, wish.owner.id);
                       },
                       tooltip: S.of(context).messageOwner,
@@ -811,6 +795,7 @@ class _PeopleState extends State<PeopleList> {
                   bookCount: document.data['bookCount'] ?? 0,
                   shelfCount: document.data['shelfCount'] ?? 0,
                   wishCount: document.data['wishCount'] ?? 0,
+                  balance: document.data['balance'] != null ? (document.data['balance'] as num).toDouble() : 0,
                 );
               },
               locationAccessor: (user) => user.position,
@@ -1005,6 +990,13 @@ class _PeopleState extends State<PeopleList> {
                       },
                       tooltip: S.of(context).seeLocation,
                       icon: new Icon(MyIcons.navigation1),
+                    ),
+                    new IconButton(
+                      onPressed: () {
+                        startTransit(context, bookcopy.id, currentUser, bookcopy.wisher, Transit.Offer);
+                      },
+                      tooltip: S.of(context).addToOutbox,
+                      icon: new Icon(MyIcons.outbox),
                     ),
                     new IconButton(
                       onPressed: () {

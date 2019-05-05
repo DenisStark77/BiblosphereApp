@@ -7,6 +7,45 @@ import 'package:biblosphere/const.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl/intl.dart';
 import 'package:biblosphere/l10n.dart';
+import 'package:flutter_crashlytics/flutter_crashlytics.dart';
+
+void openMsg(BuildContext context, String user, String currentUser) async {
+  try {
+    bool isBlocked = false;
+    bool isNewChat = true;
+    DocumentSnapshot chatSnap = await Firestore.instance
+        .collection('messages')
+        .document(chatId(currentUser, user))
+        .get();
+    if (chatSnap.exists) {
+      isNewChat = false;
+      if (chatSnap['blocked'] == 'yes') {
+        isBlocked = true;
+      }
+    }
+
+    if (isBlocked) {
+      showBbsDialog(context, S.of(context).blockedChat);
+      return;
+    }
+
+    DocumentSnapshot userSnap =
+    await Firestore.instance.collection('users').document(user).get();
+    Navigator.push(
+        context,
+        new MaterialPageRoute(
+            builder: (context) => new Chat(
+              myId: currentUser,
+              peerId: user,
+              peerAvatar: userSnap["photoUrl"],
+              peerName: userSnap["name"],
+              isNewChat: isNewChat,
+            )));
+  } catch (ex, stack) {
+    print("Chat screen failed: " + ex.toString());
+    FlutterCrashlytics().logException(ex, stack);
+  }
+}
 
 class Chat extends StatelessWidget {
   static runChat(BuildContext context, String myId, String userId) async {

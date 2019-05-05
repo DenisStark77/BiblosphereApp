@@ -1,5 +1,5 @@
 {
-  "@@last_modified": "2019-03-05T08:48:01.326892",
+  "@@last_modified": "2019-05-05T20:59:21.787919",
   "title": "Biblosphere",
   "@title": {
     "description": "The application title",
@@ -439,5 +439,287 @@
   "@loadPhotoOfShelf": {
     "type": "text",
     "placeholders": {}
+  },
+  "myBorrowedBooksItem": "Borrowed books",
+  "@myBorrowedBooksItem": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "myBorrowedBooksTitle": "BORROWED BOOKS",
+  "@myBorrowedBooksTitle": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "myLendedBooksItem": "Lent books",
+  "@myLendedBooksItem": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "myLendedBooksTitle": "LENT BOOKS",
+  "@myLendedBooksTitle": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "noBorrowedBooks": "You do not have any borrowed books",
+  "@noBorrowedBooks": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "noLendedBooks": "You do not have any lent books",
+  "@noLendedBooks": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "outbox": "Books you are giving away",
+  "@outbox": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "cart": "Books you are going to take",
+  "@cart": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "addToCart": "Add book to your cart",
+  "@addToCart": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "addToOutbox": "Add book to your outbox",
+  "@addToOutbox": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "myCartTitle": "MY CART",
+  "@myCartTitle": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "noItemsInCart": "Your cart is empty. Add books from the list of the books or your matched wishes.",
+  "@noItemsInCart": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "myOutboxTitle": "MY OUTBOX",
+  "@myOutboxTitle": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "noItemsInOutbox": "Your outbox is empty. Wait for people to request your books or offer your books in matched books.",
+  "@noItemsInOutbox": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "messageRecepient": "Chat with book recepient.",
+  "@messageRecepient": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "cartRequestCancel": "Wait for user '{name}' to accept your request of his book '{title}'. Chat to facilitate.",
+  "@cartRequestCancel": {
+    "type": "text",
+    "placeholders": {
+      "name": {},
+      "title": {}
+    }
+  },
+  "cartRequestAccepted": "User '{name}' has accepted your request for his book '{title}'. Please arrange handover and confirm on receive.",
+  "@cartRequestAccepted": {
+    "type": "text",
+    "placeholders": {
+      "name": {},
+      "title": {}
+    }
+  },
+  "cartRequestRejected": "User '{name}' has rejected your request for his book '{title}'. You can chat to get explamations.",
+  "@cartRequestRejected": {
+    "type": "text",
+    "placeholders": {
+      "name": {},
+      "title": {}
+    }
+  },
+  "cartReturnConfirm": "User '{name}' wish to return your book '{title}'. Please arrange handover.",
+  "@cartReturnConfirm": {
+    "type": "text",
+    "placeholders": {
+      "name": {},
+      "title": {}
+    }
+  },
+  "cartOfferConfirmReject": "User '{name}' offer you his book '{title}'. Please arrange handover and confirm on receive. Or reject in case you are not interested.",
+  "@cartOfferConfirmReject": {
+    "type": "text",
+    "placeholders": {
+      "name": {},
+      "title": {}
+    }
+  },
+  "outboxRequestAcceptReject": "User '{name}' request your book '{title}'. Please accept or reject. Chat for more details.",
+  "@outboxRequestAcceptReject": {
+    "type": "text",
+    "placeholders": {
+      "name": {},
+      "title": {}
+    }
+  },
+  "outboxRequestAccepted": "Please arrange handover of book '{title}' to user '{name}'. Chat to coordinate.",
+  "@outboxRequestAccepted": {
+    "type": "text",
+    "placeholders": {
+      "name": {},
+      "title": {}
+    }
+  },
+  "outboxRequestConfirmed": "Handover of book '{title}' to user '{name}' confirmed. You can see this book in MY LENT books.",
+  "@outboxRequestConfirmed": {
+    "type": "text",
+    "placeholders": {
+      "name": {},
+      "title": {}
+    }
+  },
+  "outboxRequestCanceled": "User '{name}' canceled request for your book '{title}'.",
+  "@outboxRequestCanceled": {
+    "type": "text",
+    "placeholders": {
+      "name": {},
+      "title": {}
+    }
+  },
+  "outboxReturnAccepted": "Arrange handover of book '{title}' to user '{name}'. Chat to facilitate.",
+  "@outboxReturnAccepted": {
+    "type": "text",
+    "placeholders": {
+      "name": {},
+      "title": {}
+    }
+  },
+  "outboxReturnConfirmed": "User '{name}' confirmed handover of the book '{title}'.",
+  "@outboxReturnConfirmed": {
+    "type": "text",
+    "placeholders": {
+      "name": {},
+      "title": {}
+    }
+  },
+  "outboxOfferAccepted": "You've offered book '{title}' to user '{name}'. Please chat to arrange handover.",
+  "@outboxOfferAccepted": {
+    "type": "text",
+    "placeholders": {
+      "name": {},
+      "title": {}
+    }
+  },
+  "outboxOfferConfirmed": "User '{name}' confirmed handover of book '{title}'. You can see this book in your MY LENT books.",
+  "@outboxOfferConfirmed": {
+    "type": "text",
+    "placeholders": {
+      "name": {},
+      "title": {}
+    }
+  },
+  "outboxOfferRejected": "User '{name}' rejected your offer for book '{title}'. You can chat to get details.",
+  "@outboxOfferRejected": {
+    "type": "text",
+    "placeholders": {
+      "name": {},
+      "title": {}
+    }
+  },
+  "transitAccept": "Accept",
+  "@transitAccept": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "transitConfirm": "Confirm",
+  "@transitConfirm": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "transitReject": "Reject",
+  "@transitReject": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "transitCancel": "Cancel",
+  "@transitCancel": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "transitOk": "Ok",
+  "@transitOk": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "lentBookText": "Your book '{title}' now with user '{name}'. Chat with him to remind about return.",
+  "@lentBookText": {
+    "type": "text",
+    "placeholders": {
+      "name": {},
+      "title": {}
+    }
+  },
+  "borrowedBookText": "Book '{title}' belong to user '{name}'. Press outbox button below to initiate return.",
+  "@borrowedBookText": {
+    "type": "text",
+    "placeholders": {
+      "name": {},
+      "title": {}
+    }
+  },
+  "shelfDeleted": "Bookshelf has been deleted",
+  "@shelfDeleted": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "shelfAdded": "New bookshelf has been added",
+  "@shelfAdded": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "wishDeleted": "Book has been deleted from your wishlist",
+  "@wishDeleted": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "wishAdded": "Book has been added to your wishlist",
+  "@wishAdded": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "bookDeleted": "Book has been deleted from your library",
+  "@bookDeleted": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "bookAdded": "Book has been added to your library",
+  "@bookAdded": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "isbnNotFound": "Book is not found by ISBN",
+  "@isbnNotFound": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "transitInitiated": "Handover process initiated for the book",
+  "@transitInitiated": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "userBalance": "Balance {balance} λ",
+  "@userBalance": {
+    "type": "text",
+    "placeholders": {
+      "balance": {}
+    }
+  },
+  "bookLanguage": "Language: {lang}",
+  "@bookLanguage": {
+    "type": "text",
+    "placeholders": {
+      "lang": {}
+    }
   }
 }

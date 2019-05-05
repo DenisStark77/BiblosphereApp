@@ -428,6 +428,210 @@ class S {
   String get loadPhotoOfShelf {
     return Intl.message('Load shelf photo from galery', name: 'loadPhotoOfShelf');
   }
+
+
+  String get myBorrowedBooksItem {
+    return Intl.message('Borrowed books', name: 'myBorrowedBooksItem');
+  }
+
+
+  String get myBorrowedBooksTitle {
+    return Intl.message('BORROWED BOOKS', name: 'myBorrowedBooksTitle');
+  }
+
+  String get myLendedBooksItem {
+    return Intl.message('Lent books', name: 'myLendedBooksItem');
+  }
+
+  String get myLendedBooksTitle {
+    return Intl.message('LENT BOOKS', name: 'myLendedBooksTitle');
+  }
+
+  String get noBorrowedBooks {
+    return Intl.message('You do not have any borrowed books', name: 'noBorrowedBooks');
+  }
+
+  String get noLendedBooks {
+    return Intl.message('You do not have any lent books', name: 'noLendedBooks');
+  }
+
+  String get outbox {
+    return Intl.message('Books you are giving away', name: 'outbox');
+  }
+
+  String get cart {
+    return Intl.message('Books you are going to take', name: 'cart');
+  }
+
+  String get addToCart {
+    return Intl.message('Add book to your cart', name: 'addToCart');
+  }
+
+  String get addToOutbox {
+    return Intl.message('Add book to your outbox', name: 'addToOutbox');
+  }
+
+  String get myCartTitle {
+    return Intl.message('MY CART', name: 'myCartTitle');
+  }
+
+  String get noItemsInCart {
+    return Intl.message('Your cart is empty. Add books from the list of the books or your matched wishes.', name: 'noItemsInCart');
+  }
+
+  String get myOutboxTitle {
+    return Intl.message('MY OUTBOX', name: 'myOutboxTitle');
+  }
+
+  String get noItemsInOutbox {
+    return Intl.message('Your outbox is empty. Wait for people to request your books or offer your books in matched books.', name: 'noItemsInOutbox');
+  }
+
+  String get messageRecepient {
+    return Intl.message('Chat with book recepient.', name: 'messageRecepient');
+  }
+
+  String cartRequestCancel(name, title) {
+    return Intl.message("Wait for user \'$name\' to accept your request of his book \'$title\'. Chat to facilitate.",
+        name: 'cartRequestCancel', args: [name, title]);
+  }
+
+  String cartRequestAccepted(name, title) {
+    return Intl.message("User \'$name\' has accepted your request for his book \'$title\'. Please arrange handover and confirm on receive.",
+        name: 'cartRequestAccepted', args: [name, title]);
+  }
+
+  String cartRequestRejected(name, title) {
+    return Intl.message("User \'$name\' has rejected your request for his book \'$title\'. You can chat to get explamations.",
+        name: 'cartRequestRejected', args: [name, title]);
+  }
+
+  String cartReturnConfirm(name, title) {
+    return Intl.message("User \'$name\' wish to return your book \'$title\'. Please arrange handover.",
+        name: 'cartReturnConfirm', args: [name, title]);
+  }
+
+  String cartOfferConfirmReject(name, title) {
+    return Intl.message("User \'$name\' offer you his book \'$title\'. Please arrange handover and confirm on receive. Or reject in case you are not interested.",
+        name: 'cartOfferConfirmReject', args: [name, title]);
+  }
+
+  String outboxRequestAcceptReject(name, title) {
+    return Intl.message("User \'$name\' request your book \'$title\'. Please accept or reject. Chat for more details.",
+        name: 'outboxRequestAcceptReject', args: [name, title]);
+  }
+
+  String outboxRequestAccepted(name, title) {
+    return Intl.message("Please arrange handover of book \'$title\' to user \'$name\'. Chat to coordinate.",
+        name: 'outboxRequestAccepted', args: [name, title]);
+  }
+
+  String outboxRequestConfirmed(name, title) {
+    return Intl.message("Handover of book \'$title\' to user \'$name\' confirmed. You can see this book in MY LENT books.",
+        name: 'outboxRequestConfirmed', args: [name, title]);
+  }
+
+  String outboxRequestCanceled(name, title) {
+    return Intl.message("User \'$name\' canceled request for your book \'$title\'.",
+        name: 'outboxRequestCanceled', args: [name, title]);
+  }
+
+  String outboxReturnAccepted(name, title) {
+    return Intl.message("Arrange handover of book \'$title\' to user \'$name\'. Chat to facilitate.",
+        name: 'outboxReturnAccepted', args: [name, title]);
+  }
+
+  String outboxReturnConfirmed(name, title) {
+    return Intl.message("User \'$name\' confirmed handover of the book \'$title\'.",
+        name: 'outboxReturnConfirmed', args: [name, title]);
+  }
+
+  String outboxOfferAccepted(name, title) {
+    return Intl.message("You've offered book \'$title\' to user \'$name\'. Please chat to arrange handover.",
+        name: 'outboxOfferAccepted', args: [name, title]);
+  }
+
+  String outboxOfferConfirmed(name, title) {
+    return Intl.message("User \'$name\' confirmed handover of book \'$title\'. You can see this book in your MY LENT books.",
+        name: 'outboxOfferConfirmed', args: [name, title]);
+  }
+
+  String outboxOfferRejected(name, title) {
+    return Intl.message("User \'$name\' rejected your offer for book \'$title\'. You can chat to get details.",
+        name: 'outboxOfferRejected', args: [name, title]);
+  }
+
+  String get transitAccept {
+    return Intl.message('Accept', name: 'transitAccept');
+  }
+
+  String get transitConfirm {
+    return Intl.message('Confirm', name: 'transitConfirm');
+  }
+
+  String get transitReject {
+    return Intl.message('Reject', name: 'transitReject');
+  }
+
+  String get transitCancel {
+    return Intl.message('Cancel', name: 'transitCancel');
+  }
+
+  String get transitOk {
+    return Intl.message('Ok', name: 'transitOk');
+  }
+
+  String lentBookText(name, title) {
+    return Intl.message("Your book \'$title\' now with user \'$name\'. Chat with him to remind about return.",
+        name: 'lentBookText', args: [name, title]);
+  }
+
+  String borrowedBookText(name, title) {
+    return Intl.message("Book \'$title\' belong to user \'$name\'. Press outbox button below to initiate return.",
+        name: 'borrowedBookText', args: [name, title]);
+  }
+
+  String get shelfDeleted {
+    return Intl.message('Bookshelf has been deleted', name: 'shelfDeleted');
+  }
+
+  String get shelfAdded {
+    return Intl.message('New bookshelf has been added', name: 'shelfAdded');
+  }
+
+  String get wishDeleted {
+    return Intl.message('Book has been deleted from your wishlist', name: 'wishDeleted');
+  }
+
+  String get wishAdded {
+    return Intl.message('Book has been added to your wishlist', name: 'wishAdded');
+  }
+
+  String get bookDeleted {
+    return Intl.message('Book has been deleted from your library', name: 'bookDeleted');
+  }
+
+  String get bookAdded {
+    return Intl.message('Book has been added to your library', name: 'bookAdded');
+  }
+
+  String get isbnNotFound {
+    return Intl.message('Book is not found by ISBN', name: 'isbnNotFound');
+  }
+
+  String get transitInitiated {
+    return Intl.message('Handover process initiated for the book', name: 'transitInitiated');
+  }
+
+  String userBalance(balance) {
+    return Intl.message("Balance ${balance} \u{03BB}",
+        name: 'userBalance', args: [balance]);
+  }
+
+  String bookLanguage(lang) {
+    return Intl.message("Language: $lang",
+        name: 'bookLanguage', args: [lang]);
+  }
 }
 
 class AppLocalizationsDelegate extends LocalizationsDelegate<S> {

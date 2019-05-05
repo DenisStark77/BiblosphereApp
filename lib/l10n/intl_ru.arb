@@ -439,5 +439,287 @@
   "@loadPhotoOfShelf": {
     "type": "text",
     "placeholders": {}
+  },
+  "myBorrowedBooksItem": "Взятые книги",
+  "@myBorrowedBooksItem": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "myBorrowedBooksTitle": "ВЗЯТЫЕ КНИГИ",
+  "@myBorrowedBooksTitle": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "myLendedBooksItem": "Отданные книги",
+  "@myLendedBooksItem": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "myLendedBooksTitle": "ОТДАННЫЕ КНИГИ",
+  "@myLendedBooksTitle": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "noBorrowedBooks": "У вас нет взятых книг",
+  "@noBorrowedBooks": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "noLendedBooks": "У вас нет отданных книг",
+  "@noLendedBooks": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "outbox": "Книги, которые вы отдаёте",
+  "@outbox": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "cart": "Книги, которые вы берёте",
+  "@cart": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "addToCart": "Добавить в корзину",
+  "@addToCart": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "addToOutbox": "Добавить в отгрузку",
+  "@addToOutbox": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "myCartTitle": "МОЯ КОРЗИНА",
+  "@myCartTitle": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "noItemsInCart": "Ваша корзина пуста. Добавьте книги из списка доступных книг или избранного.",
+  "@noItemsInCart": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "myOutboxTitle": "МОЯ ОТГРУЗКА",
+  "@myOutboxTitle": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "noItemsInOutbox": "Ваша отгрузка пуста. Подождите пока кто-нибудь запросит ваши книги или предложите вашу книгу во вкладке \"Поделись\".",
+  "@noItemsInOutbox": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "messageRecepient": "Спишись с получателем книги.",
+  "@messageRecepient": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "cartRequestCancel": "Дождитесь пока пользователь '{name}' подтвердит ваш запрос книги '{title}'. Спишитесь, чтобы договориться.",
+  "@cartRequestCancel": {
+    "type": "text",
+    "placeholders": {
+      "name": {},
+      "title": {}
+    }
+  },
+  "cartRequestAccepted": "Пользователь '{name}' подтвердил ваш запрос книги '{title}'. Договоритесь о встрече и подтвердите получение книги при получении.",
+  "@cartRequestAccepted": {
+    "type": "text",
+    "placeholders": {
+      "name": {},
+      "title": {}
+    }
+  },
+  "cartRequestRejected": "Пользователь '{name}' отклонил ваш запрос книги '{title}'. Вы можете написать ему, чтобы уточнить причину.",
+  "@cartRequestRejected": {
+    "type": "text",
+    "placeholders": {
+      "name": {},
+      "title": {}
+    }
+  },
+  "cartReturnConfirm": "Пользователь '{name}' хочет вернуть вашу книгу '{title}'. Пожалуйста, договоритесь о встрече.",
+  "@cartReturnConfirm": {
+    "type": "text",
+    "placeholders": {
+      "name": {},
+      "title": {}
+    }
+  },
+  "cartOfferConfirmReject": "Пользователь '{name}' предлагает вам книгу '{title}'. Пожалуйста, договоритесь о встрече и подтвердите получение книги. Или откажитесь, если вы не заинтересованы.",
+  "@cartOfferConfirmReject": {
+    "type": "text",
+    "placeholders": {
+      "name": {},
+      "title": {}
+    }
+  },
+  "outboxRequestAcceptReject": "Пользователь '{name}' запросил вашу книгу '{title}'. Пожалуйста, подтвердите или откажите. Спишитесь, чтобы познакомиться и договориться.",
+  "@outboxRequestAcceptReject": {
+    "type": "text",
+    "placeholders": {
+      "name": {},
+      "title": {}
+    }
+  },
+  "outboxRequestAccepted": "Передайте книгу '{title}' пользователю '{name}'. Спишитесь, чтобы договориться.",
+  "@outboxRequestAccepted": {
+    "type": "text",
+    "placeholders": {
+      "name": {},
+      "title": {}
+    }
+  },
+  "outboxRequestConfirmed": "Пользователь '{name}' подтвердил получение книги '{title}'. Книга добавлена в ваши \"Взятые книги\".",
+  "@outboxRequestConfirmed": {
+    "type": "text",
+    "placeholders": {
+      "name": {},
+      "title": {}
+    }
+  },
+  "outboxRequestCanceled": "Пользователь '{name}' отменил запрос на вашу книгу '{title}'.",
+  "@outboxRequestCanceled": {
+    "type": "text",
+    "placeholders": {
+      "name": {},
+      "title": {}
+    }
+  },
+  "outboxReturnAccepted": "Передайте книгу '{title}' пользователю '{name}'. Спишитесь, чтобы договориться.",
+  "@outboxReturnAccepted": {
+    "type": "text",
+    "placeholders": {
+      "name": {},
+      "title": {}
+    }
+  },
+  "outboxReturnConfirmed": "Пользователь '{name}' подтвердил получение книги '{title}'.",
+  "@outboxReturnConfirmed": {
+    "type": "text",
+    "placeholders": {
+      "name": {},
+      "title": {}
+    }
+  },
+  "outboxOfferAccepted": "Вы предложили книгу '{title}' пользователю '{name}'. Спишитесь, чтобы договориться о передаче книги.",
+  "@outboxOfferAccepted": {
+    "type": "text",
+    "placeholders": {
+      "name": {},
+      "title": {}
+    }
+  },
+  "outboxOfferConfirmed": "Пользователь '{name}' подтвердил получение книги '{title}'. Книга добавлена в ваши \"Отданные книги\".",
+  "@outboxOfferConfirmed": {
+    "type": "text",
+    "placeholders": {
+      "name": {},
+      "title": {}
+    }
+  },
+  "outboxOfferRejected": "Пользователь '{name}' отказался от предложенной вами книги '{title}'. Вы можете списаться, чтобы уточнить причину.",
+  "@outboxOfferRejected": {
+    "type": "text",
+    "placeholders": {
+      "name": {},
+      "title": {}
+    }
+  },
+  "transitAccept": "Принять",
+  "@transitAccept": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "transitConfirm": "Подтвердить",
+  "@transitConfirm": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "transitReject": "Отклонить",
+  "@transitReject": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "transitCancel": "Отменить",
+  "@transitCancel": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "transitOk": "Ок",
+  "@transitOk": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "lentBookText": "Ваша книга '{title}' сейчас у пользователя '{name}'. Спишитесь, чтобы напомнить о возвращении книги.",
+  "@lentBookText": {
+    "type": "text",
+    "placeholders": {
+      "name": {},
+      "title": {}
+    }
+  },
+  "borrowedBookText": "Книга '{title}' принадлежит пользователю '{name}'. Нажмите кнопку \"Отгрузка\" ниже, чтобы сообщить о возврате книги.",
+  "@borrowedBookText": {
+    "type": "text",
+    "placeholders": {
+      "name": {},
+      "title": {}
+    }
+  },
+  "shelfDeleted": "Книжная полка была удалена",
+  "@shelfDeleted": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "shelfAdded": "Новая книжная полка добавлена",
+  "@shelfAdded": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "wishDeleted": "Книга была удалена из списка желаемых книг",
+  "@wishDeleted": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "wishAdded": "Книга была добавлена в список желаемых книг",
+  "@wishAdded": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "bookDeleted": "Книга была удалена из вашего каталога",
+  "@bookDeleted": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "bookAdded": "Книга была добавлена в ваш каталог",
+  "@bookAdded": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "isbnNotFound": "Книга не найдена по ISBN",
+  "@isbnNotFound": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "transitInitiated": "Вы запустили процесс передачи книги",
+  "@transitInitiated": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "userBalance": "Баланс {balance} λ",
+  "@userBalance": {
+    "type": "text",
+    "placeholders": {
+      "balance": {}
+    }
+  },
+  "bookLanguage": "Язык: {lang}",
+  "@bookLanguage": {
+    "type": "text",
+    "placeholders": {
+      "lang": {}
+    }
   }
 }
