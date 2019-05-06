@@ -1288,7 +1288,7 @@ class _EnterBookState extends State<EnterBook> {
                                     width: 30,
                                     child: Image(
                                         image: new CachedNetworkImageProvider(
-                                            b.image),
+                                            (b.image != null && b.image.isNotEmpty) ? b.image : nocoverUrl),
                                         width: 25,
                                         fit: BoxFit.cover),
                                   ),
@@ -1357,7 +1357,7 @@ class _EnterBookState extends State<EnterBook> {
                   children: <Widget>[
                     Image(
                         image: new CachedNetworkImageProvider(
-                            book.image != null ? book.image : nocoverUrl),
+                            (book.image != null && book.image.isNotEmpty) ? book.image : nocoverUrl),
                         width: 50,
                         fit: BoxFit.cover),
                     Expanded(

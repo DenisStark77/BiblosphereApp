@@ -143,7 +143,7 @@ class _PersonCardState extends State<PersonCard> {
                               child: Image(
                                   height: 80,
                                   image: new CachedNetworkImageProvider(
-                                      book.image),
+                                      (book.image != null && book.image.isNotEmpty) ? book.image : nocoverUrl),
                                   fit: BoxFit.cover),
                             ));
                           }).toList()),
@@ -172,7 +172,7 @@ class _PersonCardState extends State<PersonCard> {
                     new IconButton(
                       onPressed: () {
                         openMsg(
-                            context, widget.currentUser.id, widget.person.id);
+                            context, widget.person.id, widget.currentUser.id);
                       },
                       tooltip: S.of(context).messageOwner,
                       icon: new Icon(MyIcons.chat),
@@ -228,7 +228,7 @@ class BookCard extends StatelessWidget {
                       Image(
                           width: 120,
                           image:
-                              new CachedNetworkImageProvider(book.book.image),
+                              new CachedNetworkImageProvider((book.book.image != null && book.book.image.isNotEmpty) ? book.book.image : nocoverUrl),
                           fit: BoxFit.cover),
                       Expanded(
                         child: Container(
@@ -672,7 +672,7 @@ class _BookshelfListState extends State<BookshelfList> {
                     children: <Widget>[
                       Image(
                           image:
-                              new CachedNetworkImageProvider(wish.book.image),
+                              new CachedNetworkImageProvider((wish.book.image != null && wish.book.image.isNotEmpty) ? wish.book.image : nocoverUrl),
                           width: 120,
                           fit: BoxFit.cover),
                       Expanded(
@@ -729,7 +729,7 @@ class _BookshelfListState extends State<BookshelfList> {
                     ),
                     new IconButton(
                       onPressed: () {
-                        openMsg(context, wish.wisher.id, wish.owner.id);
+                        openMsg(context, wish.owner.id, currentUser.id);
                       },
                       tooltip: S.of(context).messageOwner,
                       icon: new Icon(MyIcons.chat),
@@ -949,7 +949,7 @@ class _PeopleState extends State<PeopleList> {
                     children: <Widget>[
                       Image(
                           image: new CachedNetworkImageProvider(
-                              bookcopy.book.image),
+                              (bookcopy.book.image != null && bookcopy.book.image.isNotEmpty) ? bookcopy.book.image : nocoverUrl),
                           width: 50,
                           fit: BoxFit.cover),
                       Expanded(
@@ -1000,7 +1000,7 @@ class _PeopleState extends State<PeopleList> {
                     ),
                     new IconButton(
                       onPressed: () {
-                        openMsg(context, bookcopy.owner.id, bookcopy.wisher.id);
+                        openMsg(context, bookcopy.wisher.id, currentUser.id);
                       },
                       tooltip: S.of(context).messageOwner,
                       icon: new Icon(MyIcons.chat),

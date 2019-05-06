@@ -51,7 +51,7 @@ class MyBook extends StatelessWidget {
                       Image(
                           width: 120,
                           image: new CachedNetworkImageProvider(
-                              bookcopy.book.image),
+                              (bookcopy.book.image != null && bookcopy.book.image.isNotEmpty) ? bookcopy.book.image : nocoverUrl),
                           fit: BoxFit.cover),
                       Expanded(
                         child: Container(
@@ -169,7 +169,7 @@ class MyWish extends StatelessWidget {
                       Image(
                           width: 120,
                           image:
-                              new CachedNetworkImageProvider(wish.book.image),
+                              new CachedNetworkImageProvider((wish.book.image != null && wish.book.image.isNotEmpty) ? wish.book.image : nocoverUrl),
                           fit: BoxFit.cover),
                       Expanded(
                         child: Container(
@@ -386,7 +386,7 @@ class MyLentBook extends StatelessWidget {
                       Image(
                           width: 60,
                           image: new CachedNetworkImageProvider(
-                              bookcopy.book.image),
+                              (bookcopy.book.image != null && bookcopy.book.image.isNotEmpty) ? bookcopy.book.image : nocoverUrl),
                           fit: BoxFit.cover),
                       Expanded(
                         child: Container(
@@ -411,7 +411,7 @@ class MyLentBook extends StatelessWidget {
                   children: <Widget>[
                     new IconButton(
                       onPressed: () {
-                        openMsg(context, currentUser.id, bookcopy.holder.id);
+                        openMsg(context, bookcopy.holder.id, currentUser.id);
                       },
                       tooltip: S.of(context).messageRecepient,
                       icon: new Icon(MyIcons.chat),
@@ -449,7 +449,7 @@ class MyBorrowedBook extends StatelessWidget {
                       Image(
                           width: 60,
                           image: new CachedNetworkImageProvider(
-                              bookcopy.book.image),
+                              (bookcopy.book.image != null && bookcopy.book.image.isNotEmpty) ? bookcopy.book.image : nocoverUrl),
                           fit: BoxFit.cover),
                       Expanded(
                         child: Container(
@@ -481,7 +481,7 @@ class MyBorrowedBook extends StatelessWidget {
                     ),
                     new IconButton(
                       onPressed: () {
-                        openMsg(context, currentUser.id, bookcopy.owner.id);
+                        openMsg(context, bookcopy.owner.id, currentUser.id);
                       },
                       tooltip: S.of(context).messageRecepient,
                       icon: new Icon(MyIcons.chat),
@@ -532,7 +532,7 @@ class MyOutbox extends StatelessWidget {
 
     actions.add(new IconButton(
       onPressed: () {
-        openMsg(context, transit.from.id, transit.to.id);
+        openMsg(context, transit.to.id, transit.from.id);
       },
       tooltip: S.of(context).messageRecepient,
       icon: new Icon(MyIcons.chat),
@@ -550,7 +550,7 @@ class MyOutbox extends StatelessWidget {
                       Image(
                           width: 60,
                           image: new CachedNetworkImageProvider(
-                              transit.bookcopy.book.image),
+                              (transit.bookcopy.book.image != null && transit.bookcopy.book.image.isNotEmpty) ? transit.bookcopy.book.image : nocoverUrl),
                           fit: BoxFit.cover),
                       Expanded(
                         child: Container(
@@ -617,7 +617,7 @@ class MyCart extends StatelessWidget {
 
     actions.add(new IconButton(
       onPressed: () {
-        openMsg(context, transit.to.id, transit.from.id);
+        openMsg(context, transit.from.id, transit.to.id);
       },
       tooltip: S.of(context).messageRecepient,
       icon: new Icon(MyIcons.chat),
@@ -635,7 +635,7 @@ class MyCart extends StatelessWidget {
                       Image(
                           width: 60,
                           image: new CachedNetworkImageProvider(
-                              transit.bookcopy.book.image),
+                              (transit.bookcopy.book.image != null && transit.bookcopy.book.image.isNotEmpty) ? transit.bookcopy.book.image : nocoverUrl),
                           fit: BoxFit.cover),
                       Expanded(
                         child: Container(
