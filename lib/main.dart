@@ -3,7 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter_firebase_ui/flutter_firebase_ui.dart';
+import 'package:firebase_ui/flutter_firebase_ui.dart';
+import 'package:firebase_ui/utils.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -32,10 +33,6 @@ final FirebaseAuth _auth = FirebaseAuth.instance;
 void main() async {
   bool isInDebugMode = false;
 //  debugPaintSizeEnabled=true;
-
-  profile(() {
-    isInDebugMode = true;
-  });
 
   FlutterError.onError = (FlutterErrorDetails details) {
     if (isInDebugMode) {
