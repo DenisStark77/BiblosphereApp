@@ -65,7 +65,7 @@ dependencies:
 
   googleapis_auth: ^0.2.6
 
-  flutter_firebase_ui: ^0.0.13
+  firebase_ui: ^1.0.0
 
 
   flutter_launcher_icons: "^0.6.1"
