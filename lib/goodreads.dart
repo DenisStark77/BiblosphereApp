@@ -47,7 +47,7 @@ class _GoodreadsState extends State<Goodreads> with WidgetsBindingObserver {
       // resource owner authorization
       'https://www.goodreads.com/oauth/access_token',
       // token credentials request
-      oauth1.SignatureMethods.HMAC_SHA1 // signature method
+      oauth1.SignatureMethods.hmacSha1 // signature method
       );
 
   @override
