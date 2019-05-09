@@ -92,8 +92,8 @@ class MyBook extends StatelessWidget {
                     new IconButton(
                       onPressed: () async {
                         final DynamicLinkParameters parameters =
-                            DynamicLinkParameters(
-                          domain: 'biblosphere.page.link',
+                            new DynamicLinkParameters(
+                          uriPrefix: 'biblosphere.page.link',
                           link: Uri.parse('https://biblosphere.org'),
                           androidParameters: AndroidParameters(
                             packageName: 'com.biblosphere.biblosphere',
@@ -211,7 +211,7 @@ class MyWish extends StatelessWidget {
                       onPressed: () async {
                         final DynamicLinkParameters parameters =
                             DynamicLinkParameters(
-                          domain: 'biblosphere.page.link',
+                          uriPrefix: 'biblosphere.page.link',
                           link: Uri.parse('https://biblosphere.org'),
                           androidParameters: AndroidParameters(
                             packageName: 'com.biblosphere.biblosphere',
@@ -322,7 +322,7 @@ class MyBookshelf extends StatelessWidget {
                       onPressed: () async {
                         final DynamicLinkParameters parameters =
                             DynamicLinkParameters(
-                          domain: 'biblosphere.page.link',
+                          uriPrefix: 'biblosphere.page.link',
                           link: Uri.parse('https://biblosphere.org'),
                           androidParameters: AndroidParameters(
                             packageName: 'com.biblosphere.biblosphere',
@@ -1026,17 +1026,14 @@ class Home extends StatelessWidget {
         FirebaseVisionImage.fromFile(imageFile);
 
     // Cloud detection
-    FirebaseVisionDetector detector =
-        FirebaseVision.instance.cloudLabelDetector();
-    //On-device detection
-    //FirebaseVisionDetector detector = FirebaseVision.instance.labelDetector();
+    final ImageLabeler detector = FirebaseVision.instance.cloudImageLabeler();
 
-    final List<Label> results = await detector.detectInImage(visionImage);
+    final List<ImageLabel> results = await detector.processImage(visionImage);
 
     if (results != null) {
       var books = results.where((label) =>
-          label.label.toLowerCase() == 'bookcase' ||
-          label.label.toLowerCase() == 'book');
+          label.text.toLowerCase() == 'bookcase' ||
+          label.text.toLowerCase() == 'book');
       return books.length > 0;
     }
 

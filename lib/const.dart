@@ -220,8 +220,8 @@ class Bookcopy {
   Book book;
   GeoPoint position;
   String status;
-  bool matched;
-  bool lent;
+  bool matched=false;
+  bool lent=false;
   String wishId;
   User wisher;
   double distance;
@@ -248,8 +248,8 @@ class Bookcopy {
         book = Book.fromJson(json['book']),
         position = json['position'] as GeoPoint,
         status = json['status'],
-        matched = json['matched'],
-        lent = json['lent'],
+        matched = json['matched']??false,
+        lent = json['lent']??false,
         wishId = json['wishId'],
         wisher = json['wisher'] != null ? User.fromJson(json['wisher']) : null,
         distance = json['distance'] != null
@@ -279,7 +279,7 @@ class Wish {
   GeoPoint position;
   Book book;
   String created;
-  bool matched;
+  bool matched=false;
   String bookcopyId;
   GeoPoint bookcopyPosition;
   User owner;
@@ -303,7 +303,7 @@ class Wish {
         position = json['position'] as GeoPoint,
         book = Book.fromJson(json['book']),
         created = json['created'],
-        matched = json['matched'],
+        matched = json['matched']??false,
         bookcopyId = json['bookcopyId'],
         bookcopyPosition = json['bookcopyPosition'] as GeoPoint,
         owner = json['owner'] != null ? User.fromJson(json['owner']) : null,
@@ -828,7 +828,7 @@ Future changeTransit(Transit t, User user, String step) async {
 
       if (toUpdate) {
         if (step == Transit.Confirm) {
-          bool lent;
+          bool lent=false;
           // Update bookcopy holder and status
           if (tr.action == Transit.Return) {
             lent = false;

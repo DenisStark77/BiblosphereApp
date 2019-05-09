@@ -479,6 +479,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
     } else if (firebaseUser == null) {
       return new SignInScreen(
         title: S.of(context).welcome,
+        showBar: true,
         header: new Padding(
           padding: const EdgeInsets.symmetric(vertical: 16.0),
           child: new Padding(
