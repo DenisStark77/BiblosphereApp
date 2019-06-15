@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:barcode_scan/barcode_scan.dart';
 import 'package:googleapis/books/v1.dart';
 import 'package:googleapis_auth/auth_io.dart';
@@ -590,6 +591,11 @@ Future addBook(BuildContext context, Book b, User u, GeoPoint position,
 
   await Firestore.instance.collection('bookcopies').add(bookcopy.toJson());
   if (snackbar) showSnackBar(context, S.of(context).bookAdded);
+  await FirebaseAnalytics().logEvent(
+      name: 'add_book',
+      parameters: <String, dynamic>{
+        'language': bookcopy.book.language??''
+      });
 }
 
 Future addWish(BuildContext context, Book b, User u, GeoPoint position,
@@ -643,6 +649,12 @@ Future addWish(BuildContext context, Book b, User u, GeoPoint position,
 
   await Firestore.instance.collection('wishes').add(wish.toJson());
   if (snackbar) showSnackBar(context, S.of(context).wishAdded);
+  // Log event for the analytics
+  await FirebaseAnalytics().logEvent(
+      name: 'add_wish',
+      parameters: <String, dynamic>{
+        'language': wish.book.language??''
+      });
 }
 
 Future startTransit(BuildContext context, String bookcopyId, User from, User to,
@@ -687,6 +699,13 @@ Future startTransit(BuildContext context, String bookcopyId, User from, User to,
           await tx.set(transitRef, transit.toJson());
           print('DEBUG: transit record updated');
           showSnackBar(context, S.of(context).transitInitiated);
+          // Log event for the analytics
+          await FirebaseAnalytics().logEvent(
+              name: '${action}_book',
+              parameters: <String, dynamic>{
+                'language': fresh.book.language??''
+              });
+
         } else {
           print('DEBUG: book already in transit: ${bookcopyRef.documentID}');
         }
@@ -709,7 +728,7 @@ Future changeTransit(Transit t, User user, String step) async {
   final DocumentReference transitRef =
       Firestore.instance.document('transit/${t.id}');
 
-  Firestore.instance.runTransaction((Transaction tx) async {
+  await Firestore.instance.runTransaction((Transaction tx) async {
     DocumentSnapshot transitSnapshot = await tx.get(transitRef);
     if (transitSnapshot.exists) {
       Transit tr = new Transit.fromJson(transitSnapshot.data);
@@ -865,6 +884,23 @@ Future changeTransit(Transit t, User user, String step) async {
       }
     }
   });
+
+  if (step == Transit.Confirm) {
+    // Log event for the analytics
+    await FirebaseAnalytics().logEvent(
+        name: 'handover_book',
+        parameters: <String, dynamic>{
+          'language': t.bookcopy.book.language ?? ''
+        });
+  } else if (step == Transit.Reject) {
+    // Log event for the analytics
+    await FirebaseAnalytics().logEvent(
+        name: 'reject_request_book',
+        parameters: <String, dynamic>{
+          'language': t.bookcopy.book.language ?? ''
+        });
+
+  }
 }
 
 //TODO: Not sure it's good idea to have it as global valiables. Need to find
@@ -1312,7 +1348,11 @@ class _EnterBookState extends State<EnterBook> {
     try {
       String barcode = await BarcodeScanner.scan();
 
-      Book book = await searchByIsbnGoodreads(barcode);
+      Book book = await searchByIsbn(barcode);
+
+      if (book == null) {
+        book = await searchByIsbnGoodreads(barcode);
+      }
 
       if (book == null) {
         if (barcode.startsWith('9785'))

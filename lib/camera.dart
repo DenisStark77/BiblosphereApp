@@ -3,6 +3,7 @@ import 'dart:async';
 import 'dart:io';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -709,6 +710,10 @@ class Home extends StatelessWidget {
         'file': name
       });
       showSnackBar(context, S.of(context).shelfAdded);
+      // Log event for the analytics
+      await FirebaseAnalytics().logEvent(
+          name: 'add_shelf');
+
     } catch (ex, stack) {
       print("Failed to take image: " + ex.toString());
       FlutterCrashlytics().logException(ex, stack);
