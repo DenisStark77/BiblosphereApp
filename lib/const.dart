@@ -1537,10 +1537,10 @@ class BookrecordWidget extends StatefulWidget {
       this.filter = const {}})
       : super(key: key);
 
-  Bookrecord bookrecord;
+  final Bookrecord bookrecord;
   final User currentUser;
   final BookrecordWidgetBuilder builder;
-  Set<String> filter = {};
+  final Set<String> filter;
 
   @override
   _BookrecordWidgetState createState() => new _BookrecordWidgetState(
@@ -1589,7 +1589,8 @@ class _BookrecordWidgetState extends State<BookrecordWidget> {
     if (bookrecord == null ||
         !bookrecord.hasData ||
         bookrecord.book == null ||
-        !bookrecord?.book?.keys.containsAll(widget.filter)) {
+        bookrecord.book.keys == null ||
+        !bookrecord.book.keys.containsAll(widget.filter)) {
       return Container();
     } else {
       return builder(context, bookrecord);

@@ -111,7 +111,7 @@ class _AddBookWidgetState extends State<AddBookWidget> {
           ),
           new Expanded(
               child: ListView(
-                  children: suggestions?.map((Book book) {
+                  children: suggestions != null ? suggestions.map((Book book) {
             return Container(
                 margin: EdgeInsets.all(3.0),
                 child: GestureDetector(
@@ -141,7 +141,7 @@ class _AddBookWidgetState extends State<AddBookWidget> {
                                             Theme.of(context).textTheme.body1)
                                   ])))
                     ])));
-          }).toList()))
+          }).toList() : Container()))
         ],
       ),
     );
@@ -298,7 +298,7 @@ class _FindBookWidgetState extends State<FindBookWidget> {
           new Expanded(
               child: Scrollbar(
                   child: ListView(
-                      children: suggestions?.map((Book book) {
+                      children: suggestions != null ? suggestions.map((Book book) {
             return Container(
                 margin: EdgeInsets.all(3.0),
                 child: GestureDetector(
@@ -331,7 +331,7 @@ class _FindBookWidgetState extends State<FindBookWidget> {
                                             Theme.of(context).textTheme.body1)
                                   ])))
                     ])));
-          }).toList())))
+          }).toList() : Container() )))
         ],
       ),
     );
@@ -340,7 +340,6 @@ class _FindBookWidgetState extends State<FindBookWidget> {
   Future searchByTitleAuthor(String text) async {
     Set<Book> books = {};
     Set<String> keys = getKeys(text);
-
 
     List<Future> futures = <Future>[
       searchByTitleAuthorBiblosphere(text).then((list) {
@@ -403,7 +402,6 @@ class _FindBookWidgetState extends State<FindBookWidget> {
     }
   }
 }
-
 
 class GetBookWidget extends StatefulWidget {
   GetBookWidget({
@@ -474,10 +472,14 @@ class _GetBookWidgetState extends State<GetBookWidget> {
                         .updateData({
                       'transit': true,
                       'transitId': widget.currentUser.id,
-                      'users': [bookrecord.ownerId, bookrecord.holderId, widget.currentUser.id]
+                      'users': [
+                        bookrecord.ownerId,
+                        bookrecord.holderId,
+                        widget.currentUser.id
+                      ]
                     });
-                    Chat.runChat(
-                        context, widget.currentUser, bookrecord.holder, message: 'Можно взять у вас \"${widget.book.title}\"?');
+                    Chat.runChat(context, widget.currentUser, bookrecord.holder,
+                        message: 'Можно взять у вас \"${widget.book.title}\"?');
                   },
                   child: Card(
                     child: Row(children: <Widget>[
@@ -511,10 +513,14 @@ class _GetBookWidgetState extends State<GetBookWidget> {
                         .updateData({
                       'transit': true,
                       'transitId': widget.currentUser.id,
-                      'users': [bookrecord.ownerId, bookrecord.holderId, widget.currentUser.id]
+                      'users': [
+                        bookrecord.ownerId,
+                        bookrecord.holderId,
+                        widget.currentUser.id
+                      ]
                     });
-                    Chat.runChat(
-                        context, widget.currentUser, bookrecord.holder, message: 'Можно взять у вас \"${widget.book.title}\"?');
+                    Chat.runChat(context, widget.currentUser, bookrecord.holder,
+                        message: 'Можно взять у вас \"${widget.book.title}\"?');
                   },
                   child: Card(
                     child: Row(children: <Widget>[
@@ -543,7 +549,9 @@ class _GetBookWidgetState extends State<GetBookWidget> {
           inLibraries
               ? new Card(
                   child: Row(children: <Widget>[
-                    bookImage(widget.book, 50.0, padding: 10.0),                    //child: new Icon(MyIcons.library, size: 50)),
+                    bookImage(widget.book, 50.0,
+                        padding:
+                            10.0), //child: new Icon(MyIcons.library, size: 50)),
                     new Container(
                       padding: new EdgeInsets.all(10.0),
                       child: new Column(
@@ -696,7 +704,6 @@ class _GetBookWidgetState extends State<GetBookWidget> {
   Future<void> searchBookstores() async {}
 }
 
-
 // Class to show my books (own, wishlist and borrowed/lent)
 class ShowBooksWidget extends StatefulWidget {
   ShowBooksWidget({
@@ -705,7 +712,6 @@ class ShowBooksWidget extends StatefulWidget {
   }) : super(key: key);
 
   final User currentUser;
-  bool transit = true, own = true, lent = true, borrowed = true, wish = true;
 
   @override
   _ShowBooksWidgetState createState() => new _ShowBooksWidgetState();
@@ -715,6 +721,7 @@ class _ShowBooksWidgetState extends State<ShowBooksWidget> {
   Set<String> keys = {};
   List<Book> suggestions = [];
   TextEditingController textController;
+  bool transit = true, own = true, lent = true, borrowed = true, wish = true;
 
   @override
   void initState() {
@@ -785,10 +792,10 @@ class _ShowBooksWidgetState extends State<ShowBooksWidget> {
                         //avatar: icon,
                         label: Text('Мои книги',
                             style: Theme.of(context).textTheme.body1),
-                        selected: widget.own,
+                        selected: own,
                         onSelected: (bool s) {
                           setState(() {
-                            widget.own = s;
+                            own = s;
                           });
                         },
                       ),
@@ -796,10 +803,10 @@ class _ShowBooksWidgetState extends State<ShowBooksWidget> {
                         //avatar: icon,
                         label: Text('Отданные',
                             style: Theme.of(context).textTheme.body1),
-                        selected: widget.lent,
+                        selected: lent,
                         onSelected: (bool s) {
                           setState(() {
-                            widget.lent = s;
+                            lent = s;
                           });
                         },
                       ),
@@ -807,10 +814,10 @@ class _ShowBooksWidgetState extends State<ShowBooksWidget> {
                         //avatar: icon,
                         label: Text('Взятые',
                             style: Theme.of(context).textTheme.body1),
-                        selected: widget.borrowed,
+                        selected: borrowed,
                         onSelected: (bool s) {
                           setState(() {
-                            widget.borrowed = s;
+                            borrowed = s;
                           });
                         },
                       ),
@@ -818,10 +825,10 @@ class _ShowBooksWidgetState extends State<ShowBooksWidget> {
                         //avatar: icon,
                         label: Text('Хочу',
                             style: Theme.of(context).textTheme.body1),
-                        selected: widget.wish,
+                        selected: wish,
                         onSelected: (bool s) {
                           setState(() {
-                            widget.wish = s;
+                            wish = s;
                           });
                         },
                       ),
@@ -829,10 +836,10 @@ class _ShowBooksWidgetState extends State<ShowBooksWidget> {
                         //avatar: icon,
                         label: Text('Транзит',
                             style: Theme.of(context).textTheme.body1),
-                        selected: widget.transit,
+                        selected: transit,
                         onSelected: (bool s) {
                           setState(() {
-                            widget.transit = s;
+                            transit = s;
                           });
                         },
                       ),
@@ -867,33 +874,33 @@ class _ShowBooksWidgetState extends State<ShowBooksWidget> {
                               .map((DocumentSnapshot document) {
                             Bookrecord rec =
                                 new Bookrecord.fromJson(document.data);
-                            if (widget.own && rec.isOwn(widget.currentUser.id))
+                            if (own && rec.isOwn(widget.currentUser.id))
                               return new MyBook(
                                   bookrecord: rec,
                                   currentUser: widget.currentUser,
-                              filter: keys);
-                            else if (widget.wish &&
+                                  filter: keys);
+                            else if (wish &&
                                 rec.isWish(widget.currentUser.id))
                               //TODO: Change to MyWish
                               return new MyBook(
                                   bookrecord: rec,
                                   currentUser: widget.currentUser,
                                   filter: keys);
-                            else if (widget.lent &&
+                            else if (lent &&
                                 rec.isLent(widget.currentUser.id))
                               //TODO: Change to MyLent
                               return new MyBook(
                                   bookrecord: rec,
                                   currentUser: widget.currentUser,
                                   filter: keys);
-                            else if (widget.borrowed &&
+                            else if (borrowed &&
                                 rec.isBorrowed(widget.currentUser.id))
                               //TODO: Change to MyBorrowed
                               return new MyBook(
                                   bookrecord: rec,
                                   currentUser: widget.currentUser,
                                   filter: keys);
-                            else if (widget.transit &&
+                            else if (transit &&
                                 rec.isTransit(widget.currentUser.id))
                               //TODO: Change to MyTransit
                               return new MyBook(
@@ -913,43 +920,50 @@ class _ShowBooksWidgetState extends State<ShowBooksWidget> {
 }
 
 class MyBook extends StatefulWidget {
-  MyBook({
-    Key key,
-    @required this.bookrecord,
-    @required this.currentUser,
-    this.filter
-  }) : super(key: key);
+  MyBook(
+      {Key key,
+      @required this.bookrecord,
+      @required this.currentUser,
+      this.filter = const {}})
+      : super(key: key);
 
-  Bookrecord bookrecord;
+  final Bookrecord bookrecord;
   final User currentUser;
-  Set<String> filter = {};
+  final Set<String> filter;
 
   @override
-  _MyBookWidgetState createState() => new _MyBookWidgetState();
+  _MyBookWidgetState createState() => new _MyBookWidgetState(bookrecord: bookrecord, filter: filter);
 }
 
 class _MyBookWidgetState extends State<MyBook> {
+  Bookrecord bookrecord;
+  Set<String> filter = {};
+
+
   @override
   void initState() {
     super.initState();
-    widget.bookrecord.getBookrecord(widget.currentUser).whenComplete(() {
+    bookrecord.getBookrecord(widget.currentUser).whenComplete(() {
       setState(() {});
     });
   }
 
-  _MyBookWidgetState();
+  _MyBookWidgetState({Key key,
+  @required this.bookrecord,
+  @required this.filter}
+  );
 
   Future<void> deleteBook(BuildContext context) async {
     try {
       //Delete bookshelf record in Firestore database
       DocumentReference doc = Firestore.instance
           .collection('bookcopies')
-          .document("${widget.bookrecord.id}");
+          .document("${bookrecord.id}");
       await doc.delete();
       showSnackBar(context, S.of(context).bookDeleted);
     } catch (ex, stack) {
       print(
-          'Bookcopy delete failed for [${widget.bookrecord.id}, ${widget.currentUser.id}]: ' +
+          'Bookcopy delete failed for [${bookrecord.id}, ${widget.currentUser.id}]: ' +
               ex.toString());
       FlutterCrashlytics().logException(ex, stack);
     }
@@ -957,7 +971,9 @@ class _MyBookWidgetState extends State<MyBook> {
 
   @override
   Widget build(BuildContext context) {
-    if (widget.bookrecord?.bookId == null || !widget.bookrecord.hasData || !widget.bookrecord.book.keys.containsAll(widget.filter))
+    if (bookrecord?.bookId == null ||
+        !bookrecord.hasData ||
+        !bookrecord.book.keys.containsAll(filter))
       return Container();
     else
       return new Container(
@@ -969,7 +985,7 @@ class _MyBookWidgetState extends State<MyBook> {
                       mainAxisAlignment: MainAxisAlignment.start,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: <Widget>[
-                        bookImage(widget.bookrecord.book, 80, padding: 5.0),
+                        bookImage(bookrecord.book, 80, padding: 5.0),
                         Expanded(
                           child: Container(
                             child: Column(
@@ -977,10 +993,10 @@ class _MyBookWidgetState extends State<MyBook> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: <Widget>[
                                   Text(
-                                      widget.bookrecord.book.authors.join(', '),
+                                      bookrecord.book.authors.join(', '),
                                       style:
                                           Theme.of(context).textTheme.caption),
-                                  Text(widget.bookrecord.book.title,
+                                  Text(bookrecord.book.title,
                                       style:
                                           Theme.of(context).textTheme.subtitle),
                                   bookCardText(),
@@ -998,7 +1014,7 @@ class _MyBookWidgetState extends State<MyBook> {
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: <Widget>[
                       // Search button for the wishes
-                      widget.bookrecord.isWish(widget.currentUser.id)
+                      bookrecord.isWish(widget.currentUser.id)
                           ? new IconButton(
                               //TODO: Search wished book
                               onPressed: () {},
@@ -1007,13 +1023,16 @@ class _MyBookWidgetState extends State<MyBook> {
                             )
                           : Container(),
                       // Button to return book only it it's borrowed
-                      widget.bookrecord.isBorrowed(widget.currentUser.id)
+                      bookrecord.isBorrowed(widget.currentUser.id)
                           ? new IconButton(
                               //TODO: Initiate book return
                               onPressed: () {
-                                Firestore.instance.collection('bookrecords').document(widget.bookrecord.id).updateData({
+                                Firestore.instance
+                                    .collection('bookrecords')
+                                    .document(bookrecord.id)
+                                    .updateData({
                                   'transit': true,
-                                  'transitId': widget.bookrecord.ownerId
+                                  'transitId': bookrecord.ownerId
                                 });
                               },
                               tooltip: S.of(context).deleteShelf,
@@ -1021,8 +1040,8 @@ class _MyBookWidgetState extends State<MyBook> {
                             )
                           : Container(),
                       // Delete button only for OWN book and WISH
-                      widget.bookrecord.isWish(widget.currentUser.id) ||
-                              widget.bookrecord.isOwn(widget.currentUser.id)
+                      bookrecord.isWish(widget.currentUser.id) ||
+                              bookrecord.isOwn(widget.currentUser.id)
                           ? new IconButton(
                               //TODO: Delete book/wish
                               onPressed: () => deleteBook(context),
@@ -1031,7 +1050,7 @@ class _MyBookWidgetState extends State<MyBook> {
                             )
                           : Container(),
                       // Setting only for OWN books
-                      widget.bookrecord.isOwn(widget.currentUser.id)
+                      bookrecord.isOwn(widget.currentUser.id)
                           ? new IconButton(
                               //TODO: Add setting screen for a book
                               onPressed: () {},
@@ -1088,7 +1107,7 @@ class _MyBookWidgetState extends State<MyBook> {
   }
 
   Widget bookCardText() {
-    switch (widget.bookrecord.type(widget.currentUser.id)) {
+    switch (bookrecord.type(widget.currentUser.id)) {
       case BookrecordType.own:
         return Text('Эта книга находится у вас',
             style: Theme.of(context).textTheme.body1);
@@ -1097,11 +1116,11 @@ class _MyBookWidgetState extends State<MyBook> {
             style: Theme.of(context).textTheme.body1);
       case BookrecordType.lent:
         return Text(
-            'Эту книгу вы дали почитать пользователю ${widget.bookrecord.holder.name}',
+            'Эту книгу вы дали почитать пользователю ${bookrecord.holder.name}',
             style: Theme.of(context).textTheme.body1);
       case BookrecordType.borrowed:
         return Text(
-            'Эту книгу вы взяли почитать у пользователя ${widget.bookrecord.owner.name}',
+            'Эту книгу вы взяли почитать у пользователя ${bookrecord.owner.name}',
             style: Theme.of(context).textTheme.body1);
       case BookrecordType.transit:
         return Text('По этой книге не завершён процесс передачи',

@@ -126,7 +126,6 @@ class S {
     return Intl.message('Add your bookshelf', name: 'addShelf');
   }
 
-// bookshelf.dart
   String get zoom {
     return Intl.message('ZOOM', name: 'zoom');
   }

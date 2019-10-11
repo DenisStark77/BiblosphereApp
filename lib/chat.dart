@@ -205,34 +205,37 @@ class ChatCard extends StatefulWidget {
   }) : super(key: key);
 
   //TODO: data in Widget not State
-  Messages chat;
+  final Messages chat;
   final User currentUser;
   final ChatCardBuilder builder;
 
   @override
-  _ChatCardState createState() => new _ChatCardState();
+  _ChatCardState createState() => new _ChatCardState(chat: chat);
 }
 
 class _ChatCardState extends State<ChatCard> {
   User partner;
+  Messages chat;
 
   @override
   void initState() {
     super.initState();
-    widget.chat.getDetails(widget.currentUser).whenComplete(() {
-      partner = widget.chat.partner(widget.currentUser.id);
+    chat.getDetails(widget.currentUser).whenComplete(() {
+      partner = chat.partner(widget.currentUser.id);
       setState(() {});
     });
   }
 
-  _ChatCardState();
+  _ChatCardState({
+  Key key,
+  @required this.chat});
 
   @override
   Widget build(BuildContext context) {
-    if (widget.chat == null || !widget.chat.hasData)
+    if (chat == null || !chat.hasData)
       return Container();
     else
-      return widget.builder(context, widget.chat, partner);
+      return widget.builder(context, chat, partner);
   }
 }
 
@@ -296,8 +299,8 @@ class Chat extends StatefulWidget {
 
   final User currentUser;
   final User partner;
-  bool isNewChat;
-  String message;
+  final bool isNewChat;
+  final String message;
 
   @override
   _ChatState createState() => new _ChatState(
@@ -357,7 +360,7 @@ class _ChatState extends State<Chat> {
       @required this.currentUser,
       @required this.partner,
       @required this.isNewChat,
-      this.message});
+      this.message = ''});
 
   @override
   Widget build(BuildContext context) {
@@ -443,14 +446,14 @@ class ChatScreen extends StatefulWidget {
   final String myId;
   final User partner;
   final bool isNewChat;
-  String message;
+  final String message;
 
   ChatScreen(
       {Key key,
       @required this.myId,
       @required this.partner,
       @required this.isNewChat,
-      this.message})
+      this.message = ''})
       : super(key: key);
 
   @override

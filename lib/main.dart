@@ -247,14 +247,15 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
         setState(() {
           unreadMessage = true;
         });
+        return;
       },
       onResume: (Map<String, dynamic> message) {
-        new Future.delayed(Duration.zero, () {
+        return new Future.delayed(Duration.zero, () {
           Chat.runChat(context, currentUser, message['sender']);
         });
       },
       onLaunch: (Map<String, dynamic> message) {
-        new Future.delayed(Duration.zero, () {
+        return new Future.delayed(Duration.zero, () {
           Chat.runChat(context, currentUser, message['sender']);
         });
       },
@@ -280,6 +281,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   @override
   void dispose() {
     _listener.cancel();
+    _subscription.cancel();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
