@@ -32,7 +32,7 @@ void main() async {
         ],
         supportedLocales: [Locale("en"), Locale("ru")],
         locale: Locale('en'),
-        home: Home(
+        home: new AddBookWidget (
             currentUser: new User(
                 id: user.uid, name: user.displayName, photo: user.photoUrl, position: new GeoPoint(32.55, 45.85))),
       );
