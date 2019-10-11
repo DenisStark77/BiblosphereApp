@@ -6,23 +6,21 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_ui/flutter_firebase_ui.dart';
 import 'package:firebase_ui/utils.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_crashlytics/flutter_crashlytics.dart';
 import 'package:intro_views_flutter/Models/page_view_model.dart';
 import 'package:intro_views_flutter/intro_views_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:firestore_helpers/firestore_helpers.dart';
 import 'package:flutter/gestures.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:intl/intl.dart';
 //Temporary for visual debugging
-//import 'package:flutter/rendering.dart';
+import 'package:flutter/rendering.dart';
 
 import 'package:biblosphere/const.dart';
 import 'package:biblosphere/camera.dart';
-import 'package:biblosphere/bookshelf.dart';
 import 'package:biblosphere/chat.dart';
 import 'package:biblosphere/l10n.dart';
 
@@ -32,7 +30,7 @@ final FirebaseAuth _auth = FirebaseAuth.instance;
 
 void main() async {
   bool isInDebugMode = false;
-//  debugPaintSizeEnabled=true;
+  debugPaintSizeEnabled = false; //true;
 
   FlutterError.onError = (FlutterErrorDetails details) {
     if (isInDebugMode) {
@@ -192,18 +190,17 @@ class IntroPage extends StatelessWidget {
 
     return new Builder(
       builder: (context) => new IntroViewsFlutter(
-            pages,
-            doneText: Text(S.of(context).introDone),
-            skipText: Text(S.of(context).introSkip),
-            onTapDoneButton: onTapDoneButton,
-            onTapSkipButton: onTapSkipButton,
-            showSkipButton:
-                true, //Whether you want to show the skip button or not.
-            pageButtonTextStyles: TextStyle(
-              color: Colors.white,
-              fontSize: 18.0,
-            ),
-          ), //IntroViewsFlutter
+        pages,
+        doneText: Text(S.of(context).introDone),
+        skipText: Text(S.of(context).introSkip),
+        onTapDoneButton: onTapDoneButton,
+        onTapSkipButton: onTapSkipButton,
+        showSkipButton: true, //Whether you want to show the skip button or not.
+        pageButtonTextStyles: TextStyle(
+          color: Colors.white,
+          fontSize: 18.0,
+        ),
+      ), //IntroViewsFlutter
     );
   }
 }
@@ -229,6 +226,9 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
 
   final FirebaseMessaging _firebaseMessaging = FirebaseMessaging();
 
+  // Subscription for in-app purchases
+  StreamSubscription<List<PurchaseDetails>> _subscription;
+
   StreamSubscription<FirebaseUser> _listener;
   FirebaseUser firebaseUser;
   bool unreadMessage = false;
@@ -250,12 +250,12 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
       },
       onResume: (Map<String, dynamic> message) {
         new Future.delayed(Duration.zero, () {
-          Chat.runChat(context, currentUser?.id, message['sender']);
+          Chat.runChat(context, currentUser, message['sender']);
         });
       },
       onLaunch: (Map<String, dynamic> message) {
         new Future.delayed(Duration.zero, () {
-          Chat.runChat(context, currentUser?.id, message['sender']);
+          Chat.runChat(context, currentUser, message['sender']);
         });
       },
     );
@@ -267,6 +267,14 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
     //       _initUserRecord and after setState in _initLocationState.
     //       Better to minimize rebuilding. For example by providing currentUser
     //       as parameter on widget push (is it possible?).
+
+    // Listen to in-app purchases updete
+    final Stream purchaseUpdates =
+        InAppPurchaseConnection.instance.purchaseUpdatedStream;
+    _subscription = purchaseUpdates.listen((purchases) {
+      print('!!!DEBUG: Purchase received ${purchases}');
+      //_handlePurchaseUpdates(purchases);
+    });
   }
 
   @override
@@ -348,19 +356,24 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
           'id': firebaseUser.uid
         });
       } else {
-        currentUser.balance = documents[0].data['balance'] != null ? (documents[0].data['balance'] as num).toDouble() : 0;
+        currentUser.balance = documents[0].data['balance'] != null
+            ? (documents[0].data['balance'] as num).toDouble()
+            : 0;
         currentUser.wishCount = documents[0].data['wishCount'] ?? 0;
         currentUser.bookCount = documents[0].data['bookCount'] ?? 0;
         currentUser.shelfCount = documents[0].data['shelfCount'] ?? 0;
+        currentUser.accountId = documents[0].data['accountId'];
+        currentUser.secretSeed = documents[0].data['secretSeed'];
       }
 
-      DocumentReference userRef = Firestore.instance
-          .collection('users')
-          .document(firebaseUser.uid);
-      
+      DocumentReference userRef =
+          Firestore.instance.collection('users').document(firebaseUser.uid);
+
       userRef.snapshots().listen((DocumentSnapshot doc) {
         setState(() {
-          currentUser.balance = doc.data['balance'] != null ? (doc.data['balance'] as num).toDouble() : 0;
+          currentUser.balance = doc.data['balance'] != null
+              ? (doc.data['balance'] as num).toDouble()
+              : 0;
           currentUser.wishCount = doc.data['wishCount'] ?? 0;
           currentUser.bookCount = doc.data['bookCount'] ?? 0;
           currentUser.shelfCount = doc.data['shelfCount'] ?? 0;
@@ -376,93 +389,25 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
           'token': token,
         });
       });
+
+      //If user does not have Stellar account crete one
+      if (currentUser.accountId == null) {
+        createStellarAccount(currentUser);
+      }
+
+      //Update balance from Stellar
+      currentUser.getStellarBalance().then((balance) {
+        setState(() {});
+      });
     } catch (ex, stack) {
       print(ex);
       FlutterCrashlytics().logException(ex, stack);
     }
   }
 
-  Future<DocumentSnapshot> _fetchUser(String peerId) async {
-    DocumentSnapshot userSnap =
-        await Firestore.instance.collection('users').document(peerId).get();
-
-    return userSnap;
-  }
-
-  void blockUser(String blockingUser, String blockedUser) {
-    Firestore.instance
-        .collection('messages')
-        .document(chatId(blockingUser, blockedUser))
-        .updateData({'blocked': 'yes'});
-  }
-
-  Widget buildItem(BuildContext context, DocumentSnapshot userSnap) {
-    return Container(
-      child: FlatButton(
-        child: Row(children: <Widget>[
-          Container(
-              width: 50.0,
-              height: 50.0,
-              decoration: new BoxDecoration(
-                  shape: BoxShape.circle,
-                  image: new DecorationImage(
-                      fit: BoxFit.fill,
-                      image: new CachedNetworkImageProvider(
-                          userSnap['photoUrl'])))),
-          new Flexible(
-              child: Container(
-            child: Text(
-              userSnap['name'],
-              style: TextStyle(color: themeColor),
-            ),
-            alignment: Alignment.centerLeft,
-            margin: new EdgeInsets.fromLTRB(20.0, 0.0, 0.0, 20.0),
-          )),
-          new IconButton(
-            onPressed: () {
-              showBbsConfirmation(context, S.of(context).confirmBlockUser)
-                  .then((confirmed) {
-                if (confirmed) {
-                  blockUser(currentUser?.id, userSnap['id']);
-                }
-              });
-            },
-            tooltip: S.of(context).blockUser,
-            icon: new Icon(MyIcons.stop),
-          ),
-        ]),
-        onPressed: () {
-          setState(() {
-            unreadMessage = false;
-          });
-          Navigator.push(
-              context,
-              new MaterialPageRoute(
-                  builder: (context) => new Chat(
-                        myId: currentUser?.id,
-                        peerId: userSnap.documentID,
-                        peerAvatar: userSnap['photoUrl'],
-                        peerName: userSnap['name'],
-                        isNewChat: false,
-                      )));
-        },
-        color: greyColor2,
-        padding: EdgeInsets.fromLTRB(25.0, 10.0, 25.0, 10.0),
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
-      ),
-      margin: EdgeInsets.only(bottom: 10.0, left: 5.0, right: 5.0),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
+    print('!!!DEBUG build');
 
     if (!skipIntro && firebaseUser == null) {
       return new IntroPage(onTapDoneButton: () {
@@ -477,7 +422,11 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
         prefs.setBool('skipIntro', true);
       });
     } else if (firebaseUser == null) {
+      print('!!!DEBUG signin');
       return new SignInScreen(
+        avoidBottomInset: true,
+        bottomPadding: 10.0,
+        horizontalPadding: 20.0,
         title: S.of(context).welcome,
         showBar: true,
         header: new Padding(
@@ -548,64 +497,45 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
         ],
       );
     } else {
-      return new DefaultTabController(
-        length: 4,
-        child: Scaffold(
-          appBar: new AppBar(
-            // Here we take the value from the MyHomePage object that was created by
-            // the App.build method, and use it to set our appbar title.
-            actions: <Widget>[
-              FlatButton(
-                child: Row(children: <Widget>[
-                  new Container(margin: EdgeInsets.only(right: 5.0), child: new Icon(MyIcons.money, color: Colors.white)),
-                  new Text('${(new NumberFormat("##0.00")).format(currentUser?.balance??0)} \u{03BB}', style: Theme.of(context).textTheme.body1
-                      .apply(color: Colors.white))
-                ]),
-                onPressed: () {},
-                padding: EdgeInsets.all(0.0),
-              ),
-              new IconButton(
-                onPressed: () {
-                  Navigator.push(
-                      context,
-                      cardListPage(
-                          user: currentUser,
-                          stream: Firestore.instance
-                              .collection('transit')
-                              .where("from.id", isEqualTo: currentUser.id)
-                              .snapshots(),
-                          mapper: (doc, user) {
-                            //TODO: Change MyBook to MyOutbox
-                            return new MyOutbox(
-                                new Transit.fromJson(doc.data), currentUser);
-                          },
-                          title: S.of(context).myOutboxTitle,
-                          empty: S.of(context).noItemsInOutbox));
-                },
-                tooltip: S.of(context).outbox,
-                icon: new Icon(MyIcons.outbox),
-              ),
-              new IconButton(
-                onPressed: () {
-                  Navigator.push(
-                      context,
-                      cardListPage(
-                          user: currentUser,
-                          stream: Firestore.instance
-                              .collection('transit')
-                              .where("to.id", isEqualTo: currentUser.id)
-                              .snapshots(),
-                          mapper: (doc, user) {
-                            //TODO: Change MyBook to MyCart
-                            return new MyCart(
-                                new Transit.fromJson(doc.data), currentUser);
-                          },
-                          title: S.of(context).myCartTitle,
-                          empty: S.of(context).noItemsInCart));
-                },
-                tooltip: S.of(context).cart,
-                icon: new Icon(MyIcons.cart),
-              ),
+      return new Scaffold(
+        appBar: new AppBar(
+          // Here we take the value from the MyHomePage object that was created by
+          // the App.build method, and use it to set our appbar title.
+          actions: <Widget>[
+            new IconButton(
+              onPressed: () {
+                Navigator.push(
+                    context,
+                    new MaterialPageRoute(
+                        //TODO: translation
+                        builder: (context) => buildScaffold(
+                            context,
+                            "СООБЩЕНИЯ",
+                            new ChatListWidget(currentUser: currentUser))));
+              },
+              //TODO: Change tooltip
+              tooltip: S.of(context).cart,
+              icon: new Icon(MyIcons.chat),
+            ),
+            Container(
+                margin: EdgeInsets.only(right: 5.0),
+                child: FlatButton(
+                  child: Row(children: <Widget>[
+                    new Container(
+                        margin: EdgeInsets.only(right: 5.0),
+                        child: new Icon(MyIcons.money, color: Colors.white)),
+                    new Text(
+                        '${(new NumberFormat("##0.00")).format(currentUser?.balance ?? 0)} \u{03BB}',
+                        style: Theme.of(context)
+                            .textTheme
+                            .body1
+                            .apply(color: Colors.white))
+                  ]),
+                  onPressed: () {
+                    currentUser.getStellarBalance().then((bal) => Navigator.push(context, myFinanceRoute(currentUser)));
+                  },
+                  padding: EdgeInsets.all(0.0),
+                )),
 /*
               new IconButton(
                 onPressed: () {
@@ -615,103 +545,404 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                 icon: new Icon(MyIcons.settings),
               ),
 */
-              new IconButton(
-                onPressed: () => signOutProviders(),
-                tooltip: S.of(context).logout,
-                icon: new Icon(MyIcons.exit),
-              ),
-            ],
-            bottom: TabBar(
-              tabs: [
-                Tab(icon: Icon(MyIcons.home)),
-                Tab(icon: Icon(MyIcons.book)),
-                Tab(icon: Icon(MyIcons.people)),
-                Tab(
-                    icon: unreadMessage
-                        ? Icon(MyIcons.girl)
-                        : Icon(MyIcons.chat)),
-              ],
+/*
+            new IconButton(
+              onPressed: () => signOutProviders(),
+              tooltip: S.of(context).logout,
+              icon: new Icon(MyIcons.exit),
             ),
-            title: new Text(S.of(context).title,
-                style: Theme.of(context)
-                    .textTheme
-                    .title
-                    .apply(color: Colors.white)),
-          ),
-          body: TabBarView(
+*/
+          ],
+          title: new Text(S.of(context).title,
+              style:
+                  Theme.of(context).textTheme.title.apply(color: Colors.white)),
+        ),
+        body: new Container(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
-              // Camera tab
-              Home(
-                currentUser: currentUser,
-              ),
-
-              // Main tab with bookshelves
-              new BookshelfList(
-                  currentUser: currentUser,
-                  area: currentUser?.position != null
-                      ? new Area(currentUser.position, 200.0)
-                      : null),
-
-              // Main tab with bookshelves
-              new PeopleList(
-                  currentUser: currentUser,
-                  area: currentUser?.position != null
-                      ? new Area(currentUser.position, 5000.0)
-                      : null),
-
-              // Tab for chat
-              Container(
-                child: StreamBuilder(
-                  stream: Firestore.instance
-                      .collection('messages')
-                      .where("ids", arrayContains: currentUser?.id)
-                      .where("blocked", isEqualTo: "no")
-                      .orderBy("timestamp", descending: true)
-                      .snapshots(),
-                  builder: (context, snapshot) {
-                    if (!snapshot.hasData) {
-                      return Center(
-                        child: CircularProgressIndicator(
-                          valueColor:
-                              AlwaysStoppedAnimation<Color>(Colors.teal),
-                        ),
-                      );
-                    } else {
-                      return ListView.builder(
-                        padding: EdgeInsets.all(10.0),
-                        itemBuilder: (context, index) {
-                          String peerId = snapshot.data.documents[index]['ids']
-                              .firstWhere((id) => id != currentUser?.id,
-                                  orElse: () => null);
-
-                          return FutureBuilder(
-                            future: _fetchUser(peerId),
-                            builder: (context, snapshot) {
-                              switch (snapshot.connectionState) {
-                                case ConnectionState.active:
-                                case ConnectionState.none:
-                                case ConnectionState.waiting:
-                                  return Container();
-                                case ConnectionState.done:
-                                  if (snapshot.hasError) {
-                                    return Text('Error: ${snapshot.error}');
-                                  } else {
-                                    return buildItem(context, snapshot.data);
-                                  }
-                              }
-                            },
-                          );
-                        },
-                        itemCount: snapshot.data.documents.length,
-                      );
-                    }
+              new Expanded(
+                child: new InkWell(
+                  onTap: () {
+                    Navigator.push(
+                        context,
+                        new MaterialPageRoute(
+                            builder: (context) => buildScaffold(
+                                context,
+                                "ДОБАВЬ КНИГУ",
+                                new AddBookWidget(currentUser: currentUser))));
                   },
+                  child: new Card(
+                    child: new Container(
+                      padding: new EdgeInsets.all(10.0),
+                      child: new Column(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: <Widget>[
+                          new Icon(MyIcons.add, size: 60),
+                          new Text('Добавить книгу',
+                              style: Theme.of(context).textTheme.title)
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              new Expanded(
+                child: new InkWell(
+                  onTap: () {
+                    Navigator.push(
+                        context,
+                        new MaterialPageRoute(
+                            builder: (context) => buildScaffold(
+                                context,
+                                "НАЙДИ КНИГУ",
+                                new FindBookWidget(currentUser: currentUser))));
+                  },
+                  child: new Card(
+                    child: new Container(
+                      padding: new EdgeInsets.all(10.0),
+                      child: new Column(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: <Widget>[
+                          new Icon(MyIcons.search, size: 60),
+                          new Text('Найти книгу',
+                              style: Theme.of(context).textTheme.title)
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              new Expanded(
+                child: new InkWell(
+                  onTap: () {
+                    Navigator.push(
+                        context,
+                        new MaterialPageRoute(
+                            builder: (context) => buildScaffold(
+                                context,
+                                "МОИ КНИГИ",
+                                new ShowBooksWidget(
+                                    currentUser: currentUser))));
+                  },
+                  child: new Card(
+                    child: new Container(
+                      padding: new EdgeInsets.all(10.0),
+                      child: new Column(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: <Widget>[
+                          new Icon(MyIcons.book, size: 60),
+                          new Text('Мои книги',
+                              style: Theme.of(context).textTheme.title)
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ],
           ),
         ),
+        drawer: Scaffold(
+          // The extra Scaffold needed to show Snackbar above the Drawer menu.
+          // Stack and GestureDetector are workaround to return to app if tap
+          // outside Drawer.
+          backgroundColor: Colors.transparent,
+          body: Stack(//fit: StackFit.expand,
+              children: <Widget>[
+            GestureDetector(onTap: () {
+              Navigator.pop(context);
+            }),
+            Drawer(
+              child: ListView(
+                // Important: Remove any padding from the ListView.
+                padding: EdgeInsets.zero,
+                children: <Widget>[
+                  DrawerHeader(
+                    child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          //TODO: Explore why currentUser is null at start
+                          currentUser != null
+                              ? Row(
+                                  mainAxisAlignment: MainAxisAlignment.start,
+                                  children: <Widget>[
+                                      userPhoto(currentUser, 90),
+                                      Expanded(
+                                          child: Container(
+                                              padding:
+                                                  EdgeInsets.only(left: 10.0),
+                                              child: Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: <Widget>[
+                                                    Text(currentUser.name,
+                                                        style: Theme.of(context)
+                                                            .textTheme
+                                                            .title
+                                                            .apply(
+                                                                color: Colors
+                                                                    .white)),
+                                                    Row(children: <Widget>[
+                                                      new Container(
+                                                          margin:
+                                                              EdgeInsets.only(
+                                                                  right: 5.0),
+                                                          child: new Icon(
+                                                              MyIcons.money,
+                                                              color: Colors
+                                                                  .white)),
+                                                      new Text(
+                                                          '${(new NumberFormat("##0.00")).format(currentUser?.balance ?? 0)} \u{03BB}',
+                                                          style: Theme.of(
+                                                                  context)
+                                                              .textTheme
+                                                              .body1
+                                                              .apply(
+                                                                  color: Colors
+                                                                      .white))
+                                                    ]),
+                                                  ]))),
+                                    ])
+                              : Container(),
+                          Container(
+                              padding: EdgeInsets.only(top: 5.0),
+                              child: Text('Ваша партнёрская ссылка:',
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .body1
+                                      .apply(color: Colors.white))),
+                          Container(
+                              padding: EdgeInsets.all(0.0),
+                              child: Builder(
+                                  // Create an inner BuildContext so that the onPressed methods
+                                  // can refer to the Scaffold with Scaffold.of().
+                                  builder: (BuildContext context) {
+                                return InkWell(
+                                    onTap: () {
+                                      //TODO: replace with real link
+                                      Clipboard.setData(new ClipboardData(
+                                          text:
+                                              "https://biblosphere.org/sxhgd"));
+                                      //Navigator.pop(context);
+                                      showSnackBar(context,
+                                          'Ссылка скопирована в буфер обмена');
+                                    },
+                                    child: Text('biblosphere.org/sxhgd',
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .body1
+                                            .apply(
+                                                color: Colors.white,
+                                                decoration:
+                                                    TextDecoration.underline)));
+                              })),
+                        ]),
+                    decoration: BoxDecoration(
+                      color: Colors.teal[800],
+                    ),
+                  ),
+                  ListTile(
+                    title: Text('Сообщения'),
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.push(
+                          context,
+                          new MaterialPageRoute(
+                              //TODO: translation
+                              builder: (context) => buildScaffold(
+                                  context,
+                                  "СООБЩЕНИЯ",
+                                  new ChatListWidget(
+                                      currentUser: currentUser))));
+                    },
+                  ),
+                  ListTile(
+                    title: Text('Настройки'),
+                    onTap: () {
+                      // Update the state of the app
+                      // ...
+                      // Then close the drawer
+                      Navigator.pop(context);
+                    },
+                  ),
+                  ListTile(
+                    title: Text('Баланс'),
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.push(context, myFinanceRoute(currentUser));
+                    },
+                  ),
+                  ListTile(
+                    title: Text('Реферальная программа'),
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.push(context, myReferalsRoute(currentUser));
+                    },
+                  ),
+                  ListTile(
+                    title: Text('Поддержка'),
+                    onTap: () {
+                      // Update the state of the app
+                      // ...
+                      // Then close the drawer
+                      Navigator.pop(context);
+                    },
+                  ),
+                  ListTile(
+                    title: Text('Выйти'),
+                    onTap: () {
+                      signOutProviders();
+                      // Update the state of the app
+                      // ...
+                      // Then close the drawer
+                      Navigator.pop(context);
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ]),
+        ),
       );
     }
   }
+}
+
+MaterialPageRoute myFinanceRoute(User user) {
+  return new MaterialPageRoute(
+    builder: (context) => new Scaffold(
+      appBar: new AppBar(
+        title: new Text(
+          "МОЙ БАЛАНС: ${(new NumberFormat("##0.00")).format(user?.balance ?? 0)} \u{03BB}",
+          style: Theme.of(context).textTheme.title.apply(color: Colors.white),
+        ),
+        centerTitle: true,
+      ),
+      body: new Container(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: <Widget>[
+            new Card(
+                child: new Container(
+                    padding: new EdgeInsets.all(10.0),
+                    child: new Wrap(children: <Widget>[
+                      Padding(
+                          padding: const EdgeInsets.all(1.0),
+                          child: FilterChip(
+                            //avatar: icon,
+                            label: Text('Пополнения',
+                                style: Theme.of(context).textTheme.button),
+                            selected: true,
+                            onSelected: (bool s) {
+                              print(s);
+                            },
+                          )),
+                      Padding(
+                          padding: const EdgeInsets.all(1.0),
+                          child: FilterChip(
+                            //avatar: icon,
+                            label: Text('Выплаты',
+                                style: Theme.of(context).textTheme.button),
+                            selected: true,
+                            onSelected: (bool s) {
+                              print(s);
+                            },
+                          )),
+                      Padding(
+                          padding: const EdgeInsets.all(1.0),
+                          child: FilterChip(
+                            //avatar: icon,
+                            label: Text('Расходы',
+                                style: Theme.of(context).textTheme.button),
+                            selected: true,
+                            onSelected: (bool s) {
+                              print(s);
+                            },
+                          )),
+                      Padding(
+                          padding: const EdgeInsets.all(1.0),
+                          child: FilterChip(
+                            //avatar: icon,
+                            label: Text('Доходы',
+                                style: Theme.of(context).textTheme.button),
+                            selected: true,
+                            onSelected: (bool s) {
+                              print(s);
+                            },
+                          )),
+                      Padding(
+                          padding: const EdgeInsets.all(1.0),
+                          child: FilterChip(
+                            //avatar: icon,
+                            label: Text('Рефералы',
+                                style: Theme.of(context).textTheme.button),
+                            selected: true,
+                            onSelected: (bool s) {
+                              print(s);
+                            },
+                          )),
+                    ]))),
+          ],
+        ),
+      ),
+    ),
+  );
+}
+
+MaterialPageRoute myReferalsRoute(User user) {
+  return new MaterialPageRoute(
+    builder: (context) => new Scaffold(
+      appBar: new AppBar(
+        title: new Text(
+          "МОИ РЕФЕРАЛЫ",
+          style: Theme.of(context).textTheme.title.apply(color: Colors.white),
+        ),
+        centerTitle: true,
+      ),
+      body: Builder(
+          // Create an inner BuildContext so that the onPressed methods
+          // can refer to the Scaffold with Scaffold.of().
+          builder: (BuildContext context) {
+        return new Container(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: <Widget>[
+              new Card(
+                child: Container(
+                  padding: EdgeInsets.all(5.0),
+                  child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Container(
+                            child: Text('Ваша партнёрская ссылка:',
+                                style: Theme.of(context).textTheme.title)),
+                        Container(
+                            child: InkWell(
+                                onTap: () {
+                                  //TODO: replace with real link
+                                  Clipboard.setData(new ClipboardData(
+                                      text: "https://biblosphere.org/sxhgd"));
+                                  //Navigator.pop(context);
+                                  showSnackBar(context,
+                                      'Ссылка скопирована в буфер обмена');
+                                },
+                                child: Text('biblosphere.org/sxhgd',
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .body1
+                                        .apply(
+                                            decoration:
+                                                TextDecoration.underline))))
+                      ]),
+                ),
+              ),
+            ],
+          ),
+        );
+      }),
+    ),
+  );
 }

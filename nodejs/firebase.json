@@ -19,6 +19,9 @@
         "source": "/createBalances", "function": "createBalances"
       },
       {
+        "source": "/addKeys", "function": "addKeys"
+      },
+      {
         "source": "/addHolders", "function": "addHolders"
       },
       {

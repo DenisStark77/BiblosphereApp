@@ -1,1065 +1,1115 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'dart:async';
-import 'dart:io';
-import 'package:firebase_storage/firebase_storage.dart';
+import 'package:geoflutterfire/geoflutterfire.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_analytics/firebase_analytics.dart';
-import 'package:geolocator/geolocator.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:cached_network_image/cached_network_image.dart';
+import 'package:barcode_scan/barcode_scan.dart';
 import 'package:share/share.dart';
 import 'package:firebase_dynamic_links/firebase_dynamic_links.dart';
-import 'package:firebase_ml_vision/firebase_ml_vision.dart';
 import 'package:flutter_crashlytics/flutter_crashlytics.dart';
 
 import 'package:biblosphere/const.dart';
-import 'package:biblosphere/l10n.dart';
-import 'package:biblosphere/goodreads.dart';
 import 'package:biblosphere/chat.dart';
+import 'package:biblosphere/l10n.dart';
+import 'package:intl/intl.dart';
 
-class MyBook extends StatelessWidget {
-  MyBook(this.bookcopy, this.currentUser);
+class AddBookWidget extends StatefulWidget {
+  AddBookWidget({
+    Key key,
+    @required this.currentUser,
+  }) : super(key: key);
 
-  final Bookcopy bookcopy;
   final User currentUser;
+
+  @override
+  _AddBookWidgetState createState() => new _AddBookWidgetState();
+}
+
+class _AddBookWidgetState extends State<AddBookWidget> {
+  List<Book> suggestions = [];
+
+  TextEditingController textController;
+
+  @override
+  void initState() {
+    super.initState();
+
+    textController = new TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    textController.dispose();
+    super.dispose();
+  }
+
+  _AddBookWidgetState();
+
+  @override
+  Widget build(BuildContext context) {
+    return new Container(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[
+          new Card(
+            child: Column(children: <Widget>[
+              new Container(
+                padding: new EdgeInsets.all(10.0),
+                child: new Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: <Widget>[
+                    new Text('Сканировать ISBN',
+                        style: Theme.of(context).textTheme.title),
+                    RaisedButton(
+                      textColor: Colors.white,
+                      color: Theme.of(context).colorScheme.secondary,
+                      child: new Icon(MyIcons.barcode, size: 30),
+                      onPressed: () {
+                        scanIsbn(context);
+                      },
+                      shape: new RoundedRectangleBorder(
+                          borderRadius: new BorderRadius.circular(20.0)),
+                    ),
+                  ],
+                ),
+              ),
+              new Container(
+                padding: new EdgeInsets.all(10.0),
+                child: new Row(
+                  //mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: <Widget>[
+                    new Expanded(
+                      child: Theme(
+                          data: ThemeData(platform: TargetPlatform.android),
+                          child: TextField(
+                            maxLines: 1,
+                            controller: textController,
+                            style: Theme.of(context).textTheme.title,
+                            decoration: InputDecoration(
+                                //border: InputBorder.none,
+                                hintText: 'Автор или название'),
+                          )),
+                    ),
+                    Container(
+                        padding: EdgeInsets.only(left: 20.0),
+                        child: RaisedButton(
+                          textColor: Colors.white,
+                          color: Theme.of(context).colorScheme.secondary,
+                          child: new Icon(MyIcons.search, size: 30),
+                          onPressed: () {
+                            FocusScope.of(context).unfocus();
+                            searchByTitleAuthor(textController.text);
+                          },
+                          shape: new RoundedRectangleBorder(
+                              borderRadius: new BorderRadius.circular(20.0)),
+                        )),
+                  ],
+                ),
+              ),
+            ]),
+          ),
+          new Expanded(
+              child: ListView(
+                  children: suggestions?.map((Book book) {
+            return Container(
+                margin: EdgeInsets.all(3.0),
+                child: GestureDetector(
+                    onTap: () async {
+                      setState(() {
+                        suggestions.clear();
+                      });
+                      book = await enrichBookRecord(book);
+                      addBookrecord(context, book, widget.currentUser, false,
+                          await currentLocation(),
+                          source: 'googlebooks');
+                      //showSnackBar(context, S.of(context).bookAdded);
+                    },
+                    child: Row(children: <Widget>[
+                      bookImage(book, 50, padding: 5.0),
+                      Expanded(
+                          child: Container(
+                              margin: EdgeInsets.only(left: 10.0),
+                              child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: <Widget>[
+                                    Text('${book.authors[0]}',
+                                        style:
+                                            Theme.of(context).textTheme.body1),
+                                    Text('\"${book.title}\"',
+                                        style:
+                                            Theme.of(context).textTheme.body1)
+                                  ])))
+                    ])));
+          }).toList()))
+        ],
+      ),
+    );
+  }
+
+  Future searchByTitleAuthor(String text) async {
+    List<Book> books = await searchByTitleAuthorBiblosphere(text);
+    //List<Book> books = await searchByTitleAuthorGoogle(text);
+    setState(() {
+      suggestions = books;
+    });
+  }
+
+  Future scanIsbn(BuildContext context) async {
+    try {
+      String barcode = await BarcodeScanner.scan();
+
+      Book book = await searchByIsbn(barcode);
+
+      if (book == null) {
+        book = await searchByIsbnGoodreads(barcode);
+      }
+
+      if (book == null) {
+        if (barcode.startsWith('9785'))
+          book = await searchByIsbnRsl(barcode);
+        else
+          book = await searchByIsbnGoogle(barcode);
+      }
+
+      if (book != null) {
+        //Many books on goodreads does not have images. Enreach it from Google
+        book = await enrichBookRecord(book);
+        setState(() {
+          suggestions = <Book>[book];
+        });
+      } else {
+        Firestore.instance.collection('noisbn').add({'isbn': barcode});
+        //print("No record found for isbn: $barcode");
+        showSnackBar(context, S.of(context).isbnNotFound);
+      }
+    } on PlatformException catch (e) {
+      if (e.code == BarcodeScanner.CameraAccessDenied) {
+        print('The user did not grant the camera permission!');
+      } else {
+        print('Unknown platform error in scanIsbn: $e');
+      }
+    } on FormatException {
+      print(
+          'null (User returned using the "back"-button before scanning anything. Result)');
+    } catch (e) {
+      print('Unknown error in scanIsbn: $e');
+    }
+  }
+}
+
+class FindBookWidget extends StatefulWidget {
+  FindBookWidget({
+    Key key,
+    @required this.currentUser,
+  }) : super(key: key);
+
+  final User currentUser;
+
+  @override
+  _FindBookWidgetState createState() => new _FindBookWidgetState();
+}
+
+class _FindBookWidgetState extends State<FindBookWidget> {
+  List<Book> suggestions = [];
+
+  TextEditingController textController;
+
+  @override
+  void initState() {
+    super.initState();
+
+    textController = new TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    textController.dispose();
+    super.dispose();
+  }
+
+  _FindBookWidgetState();
+
+  @override
+  Widget build(BuildContext context) {
+    return new Container(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[
+          new Card(
+            child: Column(children: <Widget>[
+              new Container(
+                padding: new EdgeInsets.all(10.0),
+                child: new Row(
+                  //mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: <Widget>[
+                    new Expanded(
+                      child: Theme(
+                          data: ThemeData(platform: TargetPlatform.android),
+                          child: TextField(
+                            maxLines: 1,
+                            controller: textController,
+                            style: Theme.of(context).textTheme.title,
+                            decoration: InputDecoration(
+                                //border: InputBorder.none,
+                                hintText: 'Автор или название'),
+                          )),
+                    ),
+                    Container(
+                        padding: EdgeInsets.only(left: 20.0),
+                        child: RaisedButton(
+                          textColor: Colors.white,
+                          color: Theme.of(context).colorScheme.secondary,
+                          child: new Icon(MyIcons.search, size: 30),
+                          onPressed: () {
+                            FocusScope.of(context).unfocus();
+                            searchByTitleAuthor(textController.text);
+                          },
+                          shape: new RoundedRectangleBorder(
+                              borderRadius: new BorderRadius.circular(20.0)),
+                        )),
+                  ],
+                ),
+              ),
+              new Container(
+                padding: new EdgeInsets.all(10.0),
+                child: new Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: <Widget>[
+                    new Text('Сканировать ISBN',
+                        style: Theme.of(context).textTheme.title),
+                    RaisedButton(
+                      textColor: Colors.white,
+                      color: Theme.of(context).colorScheme.secondary,
+                      child: new Icon(MyIcons.barcode, size: 30),
+                      onPressed: () {
+                        scanIsbn(context);
+                      },
+                      shape: new RoundedRectangleBorder(
+                          borderRadius: new BorderRadius.circular(20.0)),
+                    ),
+                  ],
+                ),
+              ),
+            ]),
+          ),
+          new Expanded(
+              child: Scrollbar(
+                  child: ListView(
+                      children: suggestions?.map((Book book) {
+            return Container(
+                margin: EdgeInsets.all(3.0),
+                child: GestureDetector(
+                    onTap: () async {
+                      book = await enrichBookRecord(book);
+                      Navigator.push(
+                          context,
+                          new MaterialPageRoute(
+                              //TODO: translation
+                              builder: (context) => buildScaffold(
+                                  context,
+                                  "ПОЛУЧИ КНИГУ",
+                                  new GetBookWidget(
+                                      currentUser: widget.currentUser,
+                                      book: book))));
+                    },
+                    child: Row(children: <Widget>[
+                      bookImage(book, 50, padding: 5.0),
+                      Expanded(
+                          child: Container(
+                              margin: EdgeInsets.only(left: 10.0),
+                              child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: <Widget>[
+                                    Text('${book.authors[0]}',
+                                        style:
+                                            Theme.of(context).textTheme.body1),
+                                    Text('\"${book.title}\"',
+                                        style:
+                                            Theme.of(context).textTheme.body1)
+                                  ])))
+                    ])));
+          }).toList())))
+        ],
+      ),
+    );
+  }
+
+  Future searchByTitleAuthor(String text) async {
+    Set<Book> books = {};
+    Set<String> keys = getKeys(text);
+
+
+    List<Future> futures = <Future>[
+      searchByTitleAuthorBiblosphere(text).then((list) {
+        books.addAll(list);
+      }),
+      searchByTitleAuthorGoogle(text).then((list) {
+        books.addAll(list.where((book) => book.keys.containsAll(keys)));
+      }),
+      searchByTitleAuthorGoodreads(text).then((list) {
+        books.addAll(list.where((book) => book.keys.containsAll(keys)));
+      })
+    ];
+
+    await Future.wait(futures);
+
+    setState(() {
+      suggestions = books.toList();
+    });
+  }
+
+  Future scanIsbn(BuildContext context) async {
+    try {
+      String barcode = await BarcodeScanner.scan();
+
+      Book book = await searchByIsbn(barcode);
+
+      if (book == null) {
+        book = await searchByIsbnGoodreads(barcode);
+      }
+
+      if (book == null) {
+        if (barcode.startsWith('9785'))
+          book = await searchByIsbnRsl(barcode);
+        else
+          book = await searchByIsbnGoogle(barcode);
+      }
+
+      if (book != null) {
+        //Many books on goodreads does not have images. Enreach it from Google
+        book = await enrichBookRecord(book);
+        setState(() {
+          suggestions = <Book>[book];
+        });
+      } else {
+        Firestore.instance.collection('noisbn').add({'isbn': barcode});
+        //print("No record found for isbn: $barcode");
+        showSnackBar(context, S.of(context).isbnNotFound);
+      }
+    } on PlatformException catch (e) {
+      if (e.code == BarcodeScanner.CameraAccessDenied) {
+        print('The user did not grant the camera permission!');
+      } else {
+        print('Unknown platform error in scanIsbn: $e');
+      }
+    } on FormatException {
+      print(
+          'null (User returned using the "back"-button before scanning anything. Result)');
+    } catch (e) {
+      print('Unknown error in scanIsbn: $e');
+    }
+  }
+}
+
+
+class GetBookWidget extends StatefulWidget {
+  GetBookWidget({
+    Key key,
+    @required this.currentUser,
+    @required this.book,
+  }) : super(key: key);
+
+  final User currentUser;
+  final Book book;
+
+  @override
+  _GetBookWidgetState createState() => new _GetBookWidgetState();
+}
+
+class _GetBookWidgetState extends State<GetBookWidget> {
+  //List<Book> suggestions = [];
+  Bookrecord bookrecord;
+  bool inMyBooks = false;
+  bool inNeigbourhood = false;
+  bool inBiblosphere = false;
+  bool inLibraries = true;
+  bool inBookstores = true;
+
+  @override
+  void initState() {
+    super.initState();
+    searchBiblosphere();
+    searchLibraries();
+    searchBookstores();
+  }
+
+  _GetBookWidgetState();
+
+  @override
+  Widget build(BuildContext context) {
+    return new Container(
+      child: ListView(
+//        mainAxisSize: MainAxisSize.min,
+//        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[
+          // If book available near
+          inMyBooks
+              ? new Card(
+                  child: Row(children: <Widget>[
+                    bookImage(widget.book, 50.0, padding: 10.0),
+                    //new Icon(MyIcons.home, size: 50)),
+                    new Container(
+                      padding: new EdgeInsets.all(10.0),
+                      child: new Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: <Widget>[
+                          new Text('Эта книга есть у вас',
+                              style: Theme.of(context).textTheme.subtitle),
+                        ],
+                      ),
+                    ),
+                  ]),
+                )
+              : Container(),
+          inNeigbourhood
+              ? new GestureDetector(
+                  onTap: () async {
+                    await Firestore.instance
+                        .collection('bookrecords')
+                        .document(bookrecord.id)
+                        .updateData({
+                      'transit': true,
+                      'transitId': widget.currentUser.id,
+                      'users': [bookrecord.ownerId, bookrecord.holderId, widget.currentUser.id]
+                    });
+                    Chat.runChat(
+                        context, widget.currentUser, bookrecord.holder, message: 'Можно взять у вас \"${widget.book.title}\"?');
+                  },
+                  child: Card(
+                    child: Row(children: <Widget>[
+                      bookImage(widget.book, 50.0, padding: 10.0),
+                      //new Icon(MyIcons.face, size: 50)),
+                      new Container(
+                        padding: new EdgeInsets.all(10.0),
+                        child: new Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: <Widget>[
+                            new Text('Книга поблизости',
+                                style: Theme.of(context).textTheme.body1),
+                            new Text('У пользователя ${bookrecord.holder.name}',
+                                style: Theme.of(context).textTheme.body1),
+                            new Text(
+                                'Расстояние: ${bookrecord.distance.round()} км',
+                                style: Theme.of(context).textTheme.body1),
+                          ],
+                        ),
+                      ),
+                    ]),
+                  ))
+              : Container(),
+          inBiblosphere
+              ? new GestureDetector(
+                  onTap: () async {
+                    await Firestore.instance
+                        .collection('bookrecords')
+                        .document(bookrecord.id)
+                        .updateData({
+                      'transit': true,
+                      'transitId': widget.currentUser.id,
+                      'users': [bookrecord.ownerId, bookrecord.holderId, widget.currentUser.id]
+                    });
+                    Chat.runChat(
+                        context, widget.currentUser, bookrecord.holder, message: 'Можно взять у вас \"${widget.book.title}\"?');
+                  },
+                  child: Card(
+                    child: Row(children: <Widget>[
+                      bookImage(widget.book, 50.0, padding: 10.0),
+                      //child: new Icon(MyIcons.envelop, size: 50)),
+                      new Container(
+                        padding: new EdgeInsets.all(10.0),
+                        child: new Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: <Widget>[
+                            new Text('Получи по почте',
+                                style: Theme.of(context).textTheme.body1),
+                            new Text(
+                                'от пользователя ${bookrecord.holder.name}',
+                                style: Theme.of(context).textTheme.body1),
+                            new Text(
+                                'Расстояние: ${bookrecord.distance.round()} км',
+                                style: Theme.of(context).textTheme.body1),
+                          ],
+                        ),
+                      ),
+                    ]),
+                  ))
+              : Container(),
+          inLibraries
+              ? new Card(
+                  child: Row(children: <Widget>[
+                    bookImage(widget.book, 50.0, padding: 10.0),                    //child: new Icon(MyIcons.library, size: 50)),
+                    new Container(
+                      padding: new EdgeInsets.all(10.0),
+                      child: new Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: <Widget>[
+                          new Text('Возьми в библиотеке',
+                              style: Theme.of(context).textTheme.body1),
+                          new Text('Пушкинская библиотека',
+                              style: Theme.of(context).textTheme.body1),
+                          new Text('Расстояние: 12 км',
+                              style: Theme.of(context).textTheme.body1),
+                        ],
+                      ),
+                    ),
+                  ]),
+                )
+              : Container(),
+          inBookstores
+              ? new Card(
+                  child: Row(children: <Widget>[
+                    bookImage(widget.book, 50.0, padding: 10.0),
+                    new Container(
+                      padding: new EdgeInsets.all(10.0),
+                      child: new Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: <Widget>[
+                          new Text('Купи Online',
+                              style: Theme.of(context).textTheme.body1),
+                          new Text('на www.amazon.com',
+                              style: Theme.of(context).textTheme.body1),
+                          new Text('Цена: \$22',
+                              style: Theme.of(context).textTheme.body1),
+                        ],
+                      ),
+                    ),
+                  ]),
+                )
+              : Container(),
+          new Card(
+              child: GestureDetector(
+            onTap: () async {
+              setState(() {
+                print('s');
+              });
+              addBookrecord(context, widget.book, widget.currentUser, true,
+                  await currentLocation(),
+                  source: 'googlebooks');
+              //showSnackBar(context, S.of(context).bookAdded);
+            },
+            child: Row(children: <Widget>[
+              bookImage(widget.book, 50.0, padding: 10.0),
+              new Container(
+                padding: new EdgeInsets.all(10.0),
+                child: new Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: <Widget>[
+                    new Text('Если вы не нашли книгу вы можете:',
+                        style: Theme.of(context).textTheme.body1),
+                    new Text('Добавить её в wishlist',
+                        style: Theme.of(context).textTheme.body1),
+                  ],
+                ),
+              ),
+            ]),
+          )),
+        ],
+      ),
+    );
+  }
+
+  Future<void> searchBiblosphere() async {
+    // Create a geoFirePoint
+    GeoFirePoint center = await currentLocation();
+
+// get the collection reference or query
+    var collectionReference = Firestore.instance
+        .collection('bookrecords')
+        .where("bookId", isEqualTo: widget.book.id);
+
+    Stream<List<DocumentSnapshot>> stream = Geoflutterfire()
+        .collection(collectionRef: collectionReference)
+        .within(
+            center: center, radius: 100.0, field: 'location', strictMode: true);
+
+    List<DocumentSnapshot> l = await stream.first;
+    if (l.length > 0) {
+      // There are books found
+      List<Bookrecord> records = l.map((snap) {
+        return new Bookrecord.fromJson(snap.data);
+      }).toList();
+      records.sort((a, b) {
+        return (a.distance - b.distance).round();
+      });
+      if (records.first.ownerId == widget.currentUser.id ||
+          records.first.holderId == widget.currentUser.id) {
+        // Book belong to me. Show widget that it's in my library
+        setState(() {
+          inMyBooks = true;
+        });
+      } else {
+        // Book available from neighbours
+        bookrecord = records.first;
+        await bookrecord.getBookrecord(widget.currentUser);
+        setState(() {
+          inNeigbourhood = true;
+        });
+      }
+    } else {
+      // Books are not found in neighbourhood. Search without distance filter
+      QuerySnapshot docs = await collectionReference.limit(10).getDocuments();
+      if (docs.documents.length > 0) {
+        List<Bookrecord> records = docs.documents.map((snap) {
+          return new Bookrecord.fromJson(snap.data);
+        }).toList();
+        records.sort((a, b) {
+          a.distance = distanceBetween(
+              widget.currentUser.position.latitude,
+              widget.currentUser.position.longitude,
+              a.location.latitude,
+              a.location.longitude);
+          b.distance = distanceBetween(
+              widget.currentUser.position.latitude,
+              widget.currentUser.position.longitude,
+              b.location.latitude,
+              b.location.longitude);
+          return (a.distance - b.distance).round();
+        });
+        if (records.first.ownerId == widget.currentUser.id ||
+            records.first.holderId == widget.currentUser.id) {
+          // Book belong to me. Show widget that it's in my library
+          setState(() {
+            inMyBooks = true;
+          });
+        } else {
+          // Book available by post
+          bookrecord = records.first;
+          await bookrecord.getBookrecord(widget.currentUser);
+          setState(() {
+            inBiblosphere = true;
+          });
+        }
+      }
+    }
+  }
+
+  Future<void> searchLibraries() async {}
+  Future<void> searchBookstores() async {}
+}
+
+
+// Class to show my books (own, wishlist and borrowed/lent)
+class ShowBooksWidget extends StatefulWidget {
+  ShowBooksWidget({
+    Key key,
+    @required this.currentUser,
+  }) : super(key: key);
+
+  final User currentUser;
+  bool transit = true, own = true, lent = true, borrowed = true, wish = true;
+
+  @override
+  _ShowBooksWidgetState createState() => new _ShowBooksWidgetState();
+}
+
+class _ShowBooksWidgetState extends State<ShowBooksWidget> {
+  Set<String> keys = {};
+  List<Book> suggestions = [];
+  TextEditingController textController;
+
+  @override
+  void initState() {
+    super.initState();
+
+    textController = new TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    textController.dispose();
+    super.dispose();
+  }
+
+  _ShowBooksWidgetState();
+
+  @override
+  Widget build(BuildContext context) {
+    return new Container(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[
+          new Card(
+              child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                new Container(
+                  padding: new EdgeInsets.all(5.0),
+                  child: new Row(
+                    //mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: <Widget>[
+                      new Expanded(
+                        child: Theme(
+                            data: ThemeData(platform: TargetPlatform.android),
+                            child: TextField(
+                              maxLines: 1,
+                              controller: textController,
+                              style: Theme.of(context).textTheme.title,
+                              decoration: InputDecoration(
+                                  //border: InputBorder.none,
+                                  hintText: 'Автор или название'),
+                            )),
+                      ),
+                      Container(
+                          padding: EdgeInsets.only(left: 20.0),
+                          child: RaisedButton(
+                            textColor: Colors.white,
+                            color: Theme.of(context).colorScheme.secondary,
+                            child: new Icon(MyIcons.search, size: 30),
+                            onPressed: () {
+                              FocusScope.of(context).unfocus();
+                              setState(() {
+                                keys = getKeys(textController.text);
+                              });
+                            },
+                            shape: new RoundedRectangleBorder(
+                                borderRadius: new BorderRadius.circular(20.0)),
+                          )),
+                    ],
+                  ),
+                ),
+                new Container(
+                    padding: new EdgeInsets.all(0.0),
+                    child: new Wrap(spacing: 2.0, children: <Widget>[
+                      FilterChip(
+                        //avatar: icon,
+                        label: Text('Мои книги',
+                            style: Theme.of(context).textTheme.body1),
+                        selected: widget.own,
+                        onSelected: (bool s) {
+                          setState(() {
+                            widget.own = s;
+                          });
+                        },
+                      ),
+                      FilterChip(
+                        //avatar: icon,
+                        label: Text('Отданные',
+                            style: Theme.of(context).textTheme.body1),
+                        selected: widget.lent,
+                        onSelected: (bool s) {
+                          setState(() {
+                            widget.lent = s;
+                          });
+                        },
+                      ),
+                      FilterChip(
+                        //avatar: icon,
+                        label: Text('Взятые',
+                            style: Theme.of(context).textTheme.body1),
+                        selected: widget.borrowed,
+                        onSelected: (bool s) {
+                          setState(() {
+                            widget.borrowed = s;
+                          });
+                        },
+                      ),
+                      FilterChip(
+                        //avatar: icon,
+                        label: Text('Хочу',
+                            style: Theme.of(context).textTheme.body1),
+                        selected: widget.wish,
+                        onSelected: (bool s) {
+                          setState(() {
+                            widget.wish = s;
+                          });
+                        },
+                      ),
+                      FilterChip(
+                        //avatar: icon,
+                        label: Text('Транзит',
+                            style: Theme.of(context).textTheme.body1),
+                        selected: widget.transit,
+                        onSelected: (bool s) {
+                          setState(() {
+                            widget.transit = s;
+                          });
+                        },
+                      ),
+                    ]))
+              ])),
+          new Expanded(
+              child: new StreamBuilder<QuerySnapshot>(
+                  stream: Firestore.instance
+                      .collection('bookrecords')
+                      .where("users", arrayContains: widget.currentUser.id)
+                      .snapshots(),
+                  builder: (BuildContext context,
+                      AsyncSnapshot<QuerySnapshot> snapshot) {
+                    if (snapshot.hasError) {
+                      return Text('Error: ${snapshot.error}');
+                    }
+                    switch (snapshot.connectionState) {
+                      case ConnectionState.waiting:
+                        return Text(S.of(context).loading);
+                      default:
+                        if (!snapshot.hasData ||
+                            snapshot.data.documents.isEmpty) {
+                          return Container(
+                              padding: EdgeInsets.all(10),
+                              child: Text(
+                                'No books',
+                                style: Theme.of(context).textTheme.body1,
+                              ));
+                        }
+                        return new ListView(
+                          children: snapshot.data.documents
+                              .map((DocumentSnapshot document) {
+                            Bookrecord rec =
+                                new Bookrecord.fromJson(document.data);
+                            if (widget.own && rec.isOwn(widget.currentUser.id))
+                              return new MyBook(
+                                  bookrecord: rec,
+                                  currentUser: widget.currentUser,
+                              filter: keys);
+                            else if (widget.wish &&
+                                rec.isWish(widget.currentUser.id))
+                              //TODO: Change to MyWish
+                              return new MyBook(
+                                  bookrecord: rec,
+                                  currentUser: widget.currentUser,
+                                  filter: keys);
+                            else if (widget.lent &&
+                                rec.isLent(widget.currentUser.id))
+                              //TODO: Change to MyLent
+                              return new MyBook(
+                                  bookrecord: rec,
+                                  currentUser: widget.currentUser,
+                                  filter: keys);
+                            else if (widget.borrowed &&
+                                rec.isBorrowed(widget.currentUser.id))
+                              //TODO: Change to MyBorrowed
+                              return new MyBook(
+                                  bookrecord: rec,
+                                  currentUser: widget.currentUser,
+                                  filter: keys);
+                            else if (widget.transit &&
+                                rec.isTransit(widget.currentUser.id))
+                              //TODO: Change to MyTransit
+                              return new MyBook(
+                                  bookrecord: rec,
+                                  currentUser: widget.currentUser,
+                                  filter: keys);
+                            else
+                              return Container();
+                          }).toList(),
+                        );
+                    }
+                  })),
+        ],
+      ),
+    );
+  }
+}
+
+class MyBook extends StatefulWidget {
+  MyBook({
+    Key key,
+    @required this.bookrecord,
+    @required this.currentUser,
+    this.filter
+  }) : super(key: key);
+
+  Bookrecord bookrecord;
+  final User currentUser;
+  Set<String> filter = {};
+
+  @override
+  _MyBookWidgetState createState() => new _MyBookWidgetState();
+}
+
+class _MyBookWidgetState extends State<MyBook> {
+  @override
+  void initState() {
+    super.initState();
+    widget.bookrecord.getBookrecord(widget.currentUser).whenComplete(() {
+      setState(() {});
+    });
+  }
+
+  _MyBookWidgetState();
 
   Future<void> deleteBook(BuildContext context) async {
     try {
       //Delete bookshelf record in Firestore database
       DocumentReference doc = Firestore.instance
           .collection('bookcopies')
-          .document("${bookcopy.id}");
+          .document("${widget.bookrecord.id}");
       await doc.delete();
       showSnackBar(context, S.of(context).bookDeleted);
     } catch (ex, stack) {
-      print('Bookcopy delete failed for [${bookcopy.id}, ${currentUser.id}]: ' +
-          ex.toString());
+      print(
+          'Bookcopy delete failed for [${widget.bookrecord.id}, ${widget.currentUser.id}]: ' +
+              ex.toString());
       FlutterCrashlytics().logException(ex, stack);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return new Container(
-        child: new Card(
-          child: new Column(
-            children: <Widget>[
-              new Container(
-                child: new Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      Image(
-                          width: 120,
-                          image: new CachedNetworkImageProvider(
-                              (bookcopy.book.image != null && bookcopy.book.image.isNotEmpty) ? bookcopy.book.image : nocoverUrl),
-                          fit: BoxFit.cover),
-                      Expanded(
-                        child: Container(
-                          child: Column(
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: <Widget>[
-                                Text(bookcopy.book.authors.join(', '),
-                                    style: Theme.of(context).textTheme.caption),
-                                Text(bookcopy.book.title,
-                                    style:
-                                        Theme.of(context).textTheme.subtitle),
-                              ]),
-                          margin: EdgeInsets.all(5.0),
-                          alignment: Alignment.topLeft,
+    if (widget.bookrecord?.bookId == null || !widget.bookrecord.hasData || !widget.bookrecord.book.keys.containsAll(widget.filter))
+      return Container();
+    else
+      return new Container(
+          child: new Card(
+            child: new Column(
+              children: <Widget>[
+                new Container(
+                  child: new Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        bookImage(widget.bookrecord.book, 80, padding: 5.0),
+                        Expanded(
+                          child: Container(
+                            child: Column(
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: <Widget>[
+                                  Text(
+                                      widget.bookrecord.book.authors.join(', '),
+                                      style:
+                                          Theme.of(context).textTheme.caption),
+                                  Text(widget.bookrecord.book.title,
+                                      style:
+                                          Theme.of(context).textTheme.subtitle),
+                                  bookCardText(),
+                                ]),
+                            margin: EdgeInsets.all(5.0),
+                            alignment: Alignment.topLeft,
+                          ),
                         ),
-                      ),
-                    ]),
-                margin: EdgeInsets.only(top: 7.0, left: 7.0, right: 7.0),
-              ),
-              new Align(
-                alignment: Alignment(1.0, 1.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: <Widget>[
-                    new IconButton(
-                      onPressed: () => deleteBook(context),
-                      tooltip: S.of(context).deleteShelf,
-                      icon: new Icon(MyIcons.trash),
-                    ),
-/*  Nothing to do in settings right now
-                    new IconButton(
-                      onPressed: () {},
-                      tooltip: S.of(context).shelfSettings,
-                      icon: new Icon(MyIcons.settings),
-                    ),
-*/
-                    new IconButton(
-                      onPressed: () async {
-                        final DynamicLinkParameters parameters =
-                            new DynamicLinkParameters(
-                          uriPrefix: 'biblosphere.page.link',
-                          link: Uri.parse('https://biblosphere.org'),
-                          androidParameters: AndroidParameters(
-                            packageName: 'com.biblosphere.biblosphere',
-                            minimumVersion: 0,
-                          ),
-                          dynamicLinkParametersOptions:
-                              DynamicLinkParametersOptions(
-                            shortDynamicLinkPathLength:
-                                ShortDynamicLinkPathLength.short,
-                          ),
-                          iosParameters: IosParameters(
-                            bundleId: 'com.biblosphere.biblosphere',
-                            minimumVersion: '0',
-                          ),
-                          socialMetaTagParameters: SocialMetaTagParameters(
-                              title: S.of(context).title,
-                              description: S.of(context).shareBooks,
-                              imageUrl: Uri.parse(sharingUrl)),
-                        );
-
-                        final ShortDynamicLink shortLink =
-                            await parameters.buildShortLink();
-
-                        Share.share(shortLink.shortUrl.toString());
-                      },
-                      tooltip: S.of(context).shareShelf,
-                      icon: new Icon(MyIcons.share1),
-                    ),
-                  ],
+                      ]),
+                  margin: EdgeInsets.only(top: 7.0, left: 7.0, right: 7.0),
                 ),
-              ),
-            ],
-          ),
-          color: greyColor2,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
-        ),
-        margin: EdgeInsets.only(bottom: 10.0, left: 5.0, right: 5.0));
-  }
-}
-
-class MyWish extends StatelessWidget {
-  MyWish(this.wish, this.currentUser);
-
-  final Wish wish;
-  final User currentUser;
-
-  Future<void> deleteWish(BuildContext context) async {
-    try {
-      //Delete bookshelf record in Firestore database
-      DocumentReference doc =
-          Firestore.instance.collection('wishes').document("${wish.id}");
-      await doc.delete();
-      showSnackBar(context, S.of(context).wishDeleted);
-    } catch (ex, stack) {
-      print('Wish delete failed for [${wish.id}, ${currentUser.id}]: ' +
-          ex.toString());
-      FlutterCrashlytics().logException(ex, stack);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return new Container(
-        child: new Card(
-          child: new Column(
-            children: <Widget>[
-              new Container(
-                child: new Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      Image(
-                          width: 120,
-                          image:
-                              new CachedNetworkImageProvider((wish.book.image != null && wish.book.image.isNotEmpty) ? wish.book.image : nocoverUrl),
-                          fit: BoxFit.cover),
-                      Expanded(
-                        child: Container(
-                          child: Column(
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: <Widget>[
-                                Text(wish.book.authors.join(', '),
-                                    style: Theme.of(context).textTheme.caption),
-                                Text(wish.book.title,
-                                    style:
-                                        Theme.of(context).textTheme.subtitle),
-                              ]),
-                          margin: EdgeInsets.all(5.0),
-                          alignment: Alignment.topLeft,
-                        ),
-                      ),
-                    ]),
-                margin: EdgeInsets.only(top: 7.0, left: 7.0, right: 7.0),
-              ),
-              new Align(
-                alignment: Alignment(1.0, 1.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: <Widget>[
-                    new IconButton(
-                      onPressed: () => deleteWish(context),
-                      tooltip: S.of(context).deleteShelf,
-                      icon: new Icon(MyIcons.trash),
-                    ),
-/*  Nothing to do in settings right now
-                    new IconButton(
-                      onPressed: () {},
-                      tooltip: S.of(context).shelfSettings,
-                      icon: new Icon(MyIcons.settings),
-                    ),
-*/
-                    new IconButton(
-                      onPressed: () async {
-                        final DynamicLinkParameters parameters =
-                            DynamicLinkParameters(
-                          uriPrefix: 'biblosphere.page.link',
-                          link: Uri.parse('https://biblosphere.org'),
-                          androidParameters: AndroidParameters(
-                            packageName: 'com.biblosphere.biblosphere',
-                            minimumVersion: 0,
-                          ),
-                          dynamicLinkParametersOptions:
-                              DynamicLinkParametersOptions(
-                            shortDynamicLinkPathLength:
-                                ShortDynamicLinkPathLength.short,
-                          ),
-                          iosParameters: IosParameters(
-                            bundleId: 'com.biblosphere.biblosphere',
-                            minimumVersion: '0',
-                          ),
-                          socialMetaTagParameters: SocialMetaTagParameters(
-                              title: S.of(context).title,
-                              description: S.of(context).shareWishlist,
-                              imageUrl: Uri.parse(sharingUrl)),
-                        );
-
-                        final ShortDynamicLink shortLink =
-                            await parameters.buildShortLink();
-
-                        Share.share(shortLink.shortUrl.toString());
-                      },
-                      tooltip: S.of(context).shareShelf,
-                      icon: new Icon(MyIcons.share1),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          color: greyColor2,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
-        ),
-        margin: EdgeInsets.only(bottom: 10.0, left: 5.0, right: 5.0));
-  }
-}
-
-class MyBookshelf extends StatelessWidget {
-  MyBookshelf(
-      {Key key,
-      @required this.currentUserId,
-      @required this.shelfId,
-      @required this.imageURL,
-      @required this.position,
-      @required this.fileName});
-
-  final String shelfId;
-  final String imageURL;
-  final GeoPoint position;
-  final String currentUserId;
-  final String fileName;
-
-  Future<void> deleteShelf(BuildContext context) async {
-    try {
-      //Delete bookshelf record in Firestore database
-      DocumentReference doc =
-          Firestore.instance.collection('shelves').document("$shelfId");
-      await doc.delete();
-
-      //Delete image file from Firebase storage
-      final StorageReference ref = FirebaseStorage.instance
-          .ref()
-          .child('images')
-          .child(currentUserId)
-          .child(fileName);
-      await ref.delete();
-      showSnackBar(context, S.of(context).shelfDeleted);
-    } catch (ex, stack) {
-      print('Shelf delete failed for [$shelfId, $currentUserId, $fileName]: ' +
-          ex.toString());
-      FlutterCrashlytics().logException(ex, stack);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return new Container(
-        child: new Card(
-          child: new Column(
-            children: <Widget>[
-              new Container(
-                  child: Image(
-                      image: new CachedNetworkImageProvider(imageURL),
-                      fit: BoxFit.cover),
-                  margin: EdgeInsets.only(top: 7.0, left: 7.0, right: 7.0)),
-              new Align(
-                alignment: Alignment(1.0, 1.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: <Widget>[
-                    new IconButton(
-                      onPressed: () => deleteShelf(context),
-                      tooltip: S.of(context).deleteShelf,
-                      icon: new Icon(MyIcons.trash),
-                    ),
-/*  Nothing to do in settings right now
-                    new IconButton(
-                      onPressed: () {},
-                      tooltip: S.of(context).shelfSettings,
-                      icon: new Icon(MyIcons.settings),
-                    ),
-*/
-                    new IconButton(
-                      onPressed: () async {
-                        final DynamicLinkParameters parameters =
-                            DynamicLinkParameters(
-                          uriPrefix: 'biblosphere.page.link',
-                          link: Uri.parse('https://biblosphere.org'),
-                          androidParameters: AndroidParameters(
-                            packageName: 'com.biblosphere.biblosphere',
-                            minimumVersion: 0,
-                          ),
-                          dynamicLinkParametersOptions:
-                              DynamicLinkParametersOptions(
-                            shortDynamicLinkPathLength:
-                                ShortDynamicLinkPathLength.short,
-                          ),
-                          iosParameters: IosParameters(
-                            bundleId: 'com.biblosphere.biblosphere',
-                            minimumVersion: '0',
-                          ),
-                          socialMetaTagParameters: SocialMetaTagParameters(
-                              title: S.of(context).title,
-                              description: S.of(context).shareBookshelf,
-                              imageUrl: Uri.parse(imageURL)),
-                        );
-
-                        final ShortDynamicLink shortLink =
-                            await parameters.buildShortLink();
-                        Share.share(shortLink.shortUrl.toString());
-
-//                        final Uri link = await parameters.buildUrl();
-//                        Share.share(link.toString());
-                      },
-                      tooltip: S.of(context).shareShelf,
-                      icon: new Icon(MyIcons.share1),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          color: greyColor2,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
-        ),
-        margin: EdgeInsets.only(bottom: 10.0, left: 5.0, right: 5.0));
-  }
-}
-
-class MyLentBook extends StatelessWidget {
-  MyLentBook(this.bookcopy, this.currentUser);
-
-  final Bookcopy bookcopy;
-  final User currentUser;
-
-  @override
-  Widget build(BuildContext context) {
-    return new Container(
-        child: new Card(
-          child: new Column(
-            children: <Widget>[
-              new Container(
-                child: new Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      Image(
-                          width: 60,
-                          image: new CachedNetworkImageProvider(
-                              (bookcopy.book.image != null && bookcopy.book.image.isNotEmpty) ? bookcopy.book.image : nocoverUrl),
-                          fit: BoxFit.cover),
-                      Expanded(
-                        child: Container(
-                          child: Column(
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: <Widget>[
-                                Text(S.of(context).lentBookText(bookcopy.holder.name, bookcopy.book.title),
-                                    style: Theme.of(context).textTheme.body1)
-                              ]),
-                          margin: EdgeInsets.all(5.0),
-                          alignment: Alignment.topLeft,
-                        ),
-                      ),
-                    ]),
-                margin: EdgeInsets.only(top: 7.0, left: 7.0, right: 7.0),
-              ),
-              new Align(
-                alignment: Alignment(1.0, 1.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: <Widget>[
-                    new IconButton(
-                      onPressed: () {
-                        openMsg(context, bookcopy.holder.id, currentUser.id);
-                      },
-                      tooltip: S.of(context).messageRecepient,
-                      icon: new Icon(MyIcons.chat),
-                    )
-                  ],
-                ),
-              ),
-            ],
-          ),
-          color: greyColor2,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
-        ),
-        margin: EdgeInsets.only(bottom: 10.0, left: 5.0, right: 5.0));
-  }
-}
-
-class MyBorrowedBook extends StatelessWidget {
-  MyBorrowedBook(this.bookcopy, this.currentUser);
-
-  final Bookcopy bookcopy;
-  final User currentUser;
-
-  @override
-  Widget build(BuildContext context) {
-    return new Container(
-        child: new Card(
-          child: new Column(
-            children: <Widget>[
-              new Container(
-                child: new Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      Image(
-                          width: 60,
-                          image: new CachedNetworkImageProvider(
-                              (bookcopy.book.image != null && bookcopy.book.image.isNotEmpty) ? bookcopy.book.image : nocoverUrl),
-                          fit: BoxFit.cover),
-                      Expanded(
-                        child: Container(
-                          child: Column(
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: <Widget>[
-                                Text(S.of(context).borrowedBookText(bookcopy.owner.name, bookcopy.book.title),
-                                    style: Theme.of(context).textTheme.body1)
-                              ]),
-                          margin: EdgeInsets.all(5.0),
-                          alignment: Alignment.topLeft,
-                        ),
-                      ),
-                    ]),
-                margin: EdgeInsets.only(top: 7.0, left: 7.0, right: 7.0),
-              ),
-              new Align(
-                alignment: Alignment(1.0, 1.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: <Widget>[
-                    new IconButton(
-                      onPressed: () {
-                        startTransit(context, bookcopy.id, currentUser, bookcopy.owner, Transit.Return);
-                      },
-                      tooltip: S.of(context).addToOutbox,
-                      icon: new Icon(MyIcons.outbox),
-                    ),
-                    new IconButton(
-                      onPressed: () {
-                        openMsg(context, bookcopy.owner.id, currentUser.id);
-                      },
-                      tooltip: S.of(context).messageRecepient,
-                      icon: new Icon(MyIcons.chat),
-                    )
-                  ],
-                ),
-              ),
-            ],
-          ),
-          color: greyColor2,
-          shape:
-          RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
-        ),
-        margin: EdgeInsets.only(bottom: 10.0, left: 5.0, right: 5.0));
-  }
-}
-
-class MyOutbox extends StatelessWidget {
-  MyOutbox(this.transit, this.currentUser);
-
-  final Transit transit;
-  final User currentUser;
-
-  @override
-  Widget build(BuildContext context) {
-    // Skip if not intended to show
-    if (!transit.showInOutbox()) return new Container();
-
-    List<Widget> actions = (transit.getOutboxSteps().map((step) {
-      Widget wid = new Container(
-          margin: EdgeInsets.only(left: 5.0, right: 5.0),
-          child: new RaisedButton(
-            color: Theme.of(context).colorScheme.secondary,
-            child: new Text(Transit.stepText(step, context),
-                style: Theme.of(context)
-                    .textTheme
-                    .body1
-                    .apply(color: Colors.white)),
-            onPressed: () {
-              changeTransit(transit, currentUser, step);
-            },
-            shape: new RoundedRectangleBorder(
-                borderRadius: new BorderRadius.circular(20.0)),
-          ));
-      return wid;
-    }))
-        .toList();
-
-    actions.add(new IconButton(
-      onPressed: () {
-        openMsg(context, transit.to.id, transit.from.id);
-      },
-      tooltip: S.of(context).messageRecepient,
-      icon: new Icon(MyIcons.chat),
-    ));
-
-    return new Container(
-        child: new Card(
-          child: new Column(
-            children: <Widget>[
-              new Container(
-                child: new Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      Image(
-                          width: 60,
-                          image: new CachedNetworkImageProvider(
-                              (transit.bookcopy.book.image != null && transit.bookcopy.book.image.isNotEmpty) ? transit.bookcopy.book.image : nocoverUrl),
-                          fit: BoxFit.cover),
-                      Expanded(
-                        child: Container(
-                          child: Column(
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: <Widget>[
-                                Text(transit.getOutboxText(context),
-                                    style: Theme.of(context).textTheme.body1)
-                              ]),
-                          margin: EdgeInsets.all(5.0),
-                          alignment: Alignment.topLeft,
-                        ),
-                      ),
-                    ]),
-                margin: EdgeInsets.only(top: 7.0, left: 7.0, right: 7.0),
-              ),
-              new Align(
-                alignment: Alignment(1.0, 1.0),
-                child: Row(
+                new Align(
+                  alignment: Alignment(1.0, 1.0),
+                  child: Row(
                     mainAxisAlignment: MainAxisAlignment.end,
-                    children: actions),
-              ),
-            ],
-          ),
-          color: greyColor2,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
-        ),
-        margin: EdgeInsets.only(bottom: 10.0, left: 5.0, right: 5.0));
-  }
-}
-
-class MyCart extends StatelessWidget {
-  MyCart(this.transit, this.currentUser);
-
-  final Transit transit;
-  final User currentUser;
-
-  @override
-  Widget build(BuildContext context) {
-    // Skip if not intended to show
-    if (!transit.showInCart()) return new Container();
-
-    List<Widget> actions = (transit.getCartSteps().map((step) {
-      Widget wid = new Container(
-          margin: EdgeInsets.only(left: 5.0, right: 5.0),
-          child: new RaisedButton(
-            color: Theme.of(context).colorScheme.secondary,
-            child: new Text(Transit.stepText(step, context),
-                style: Theme.of(context)
-                    .textTheme
-                    .body1
-                    .apply(color: Colors.white)),
-            onPressed: () {
-              changeTransit(transit, currentUser, step);
-            },
-            shape: new RoundedRectangleBorder(
-                borderRadius: new BorderRadius.circular(20.0)),
-          ));
-      return wid;
-    }))
-        .toList();
-
-    actions.add(new IconButton(
-      onPressed: () {
-        openMsg(context, transit.from.id, transit.to.id);
-      },
-      tooltip: S.of(context).messageRecepient,
-      icon: new Icon(MyIcons.chat),
-    ));
-
-    return new Container(
-        child: new Card(
-          child: new Column(
-            children: <Widget>[
-              new Container(
-                child: new Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
-                      Image(
-                          width: 60,
-                          image: new CachedNetworkImageProvider(
-                              (transit.bookcopy.book.image != null && transit.bookcopy.book.image.isNotEmpty) ? transit.bookcopy.book.image : nocoverUrl),
-                          fit: BoxFit.cover),
-                      Expanded(
-                        child: Container(
-                          child: Column(
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: <Widget>[
-                                Text(transit.getCartText(context),
-                                    style: Theme.of(context).textTheme.body1)
-                              ]),
-                          margin: EdgeInsets.all(5.0),
-                          alignment: Alignment.topLeft,
-                        ),
+                      // Search button for the wishes
+                      widget.bookrecord.isWish(widget.currentUser.id)
+                          ? new IconButton(
+                              //TODO: Search wished book
+                              onPressed: () {},
+                              tooltip: S.of(context).deleteShelf,
+                              icon: new Icon(MyIcons.search),
+                            )
+                          : Container(),
+                      // Button to return book only it it's borrowed
+                      widget.bookrecord.isBorrowed(widget.currentUser.id)
+                          ? new IconButton(
+                              //TODO: Initiate book return
+                              onPressed: () {
+                                Firestore.instance.collection('bookrecords').document(widget.bookrecord.id).updateData({
+                                  'transit': true,
+                                  'transitId': widget.bookrecord.ownerId
+                                });
+                              },
+                              tooltip: S.of(context).deleteShelf,
+                              icon: new Icon(MyIcons.returning),
+                            )
+                          : Container(),
+                      // Delete button only for OWN book and WISH
+                      widget.bookrecord.isWish(widget.currentUser.id) ||
+                              widget.bookrecord.isOwn(widget.currentUser.id)
+                          ? new IconButton(
+                              //TODO: Delete book/wish
+                              onPressed: () => deleteBook(context),
+                              tooltip: S.of(context).deleteShelf,
+                              icon: new Icon(MyIcons.trash),
+                            )
+                          : Container(),
+                      // Setting only for OWN books
+                      widget.bookrecord.isOwn(widget.currentUser.id)
+                          ? new IconButton(
+                              //TODO: Add setting screen for a book
+                              onPressed: () {},
+                              tooltip: S.of(context).shelfSettings,
+                              icon: new Icon(MyIcons.settings),
+                            )
+                          : Container(),
+                      // Sharing button for everything
+                      new IconButton(
+                        //TODO: Modify dynamic link to point to seach screen for
+                        // particular book
+                        onPressed: () async {
+                          final DynamicLinkParameters parameters =
+                              new DynamicLinkParameters(
+                            uriPrefix: 'biblosphere.page.link',
+                            link: Uri.parse('https://biblosphere.org'),
+                            androidParameters: AndroidParameters(
+                              packageName: 'com.biblosphere.biblosphere',
+                              minimumVersion: 0,
+                            ),
+                            dynamicLinkParametersOptions:
+                                DynamicLinkParametersOptions(
+                              shortDynamicLinkPathLength:
+                                  ShortDynamicLinkPathLength.short,
+                            ),
+                            iosParameters: IosParameters(
+                              bundleId: 'com.biblosphere.biblosphere',
+                              minimumVersion: '0',
+                            ),
+                            socialMetaTagParameters: SocialMetaTagParameters(
+                                title: S.of(context).title,
+                                description: S.of(context).shareBooks,
+                                imageUrl: Uri.parse(sharingUrl)),
+                          );
+
+                          final ShortDynamicLink shortLink =
+                              await parameters.buildShortLink();
+
+                          Share.share(shortLink.shortUrl.toString());
+                        },
+                        tooltip: S.of(context).shareShelf,
+                        icon: new Icon(MyIcons.share1),
                       ),
-                    ]),
-                margin: EdgeInsets.only(top: 7.0, left: 7.0, right: 7.0),
-              ),
-              new Align(
-                alignment: Alignment(1.0, 1.0),
-                child: Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: actions),
-              ),
-            ],
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            color: greyColor2,
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10.0)),
           ),
-          color: greyColor2,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
-        ),
-        margin: EdgeInsets.only(bottom: 10.0, left: 5.0, right: 5.0));
+          margin: EdgeInsets.only(bottom: 10.0, left: 5.0, right: 5.0));
   }
-}
 
-class Home extends StatelessWidget {
-  Home({
-    Key key,
-    @required this.currentUser,
-  });
-
-  final User currentUser;
-
-  Future getImage(BuildContext context,
-      {ImageSource source = ImageSource.camera}) async {
-    try {
-      File image =
-          await ImagePicker.pickImage(source: source, maxWidth: 1024.0);
-
-      if (image == null) return;
-
-      bool imageAccepted = await isBookcase(image);
-
-      if (!imageAccepted) {
-        showSnackBar(context, S.of(context).notBooks);
-        //showBbsDialog(context, );
-        return;
-      }
-
-      String name = getTimestamp() + ".jpg";
-
-      final String storageUrl =
-          await uploadPicture(image, currentUser.id, name);
-
-      final position = await Geolocator().getLastKnownPosition();
-
-      //Create record in Firestore database with location, URL, and user
-      await Firestore.instance.collection('shelves').add({
-        "user": currentUser.id,
-        "userName": currentUser.name,
-        'URL': storageUrl,
-        'position': new GeoPoint(position.latitude, position.longitude),
-        'file': name
-      });
-      showSnackBar(context, S.of(context).shelfAdded);
-      // Log event for the analytics
-      await FirebaseAnalytics().logEvent(
-          name: 'add_shelf');
-
-    } catch (ex, stack) {
-      print("Failed to take image: " + ex.toString());
-      FlutterCrashlytics().logException(ex, stack);
+  Widget bookCardText() {
+    switch (widget.bookrecord.type(widget.currentUser.id)) {
+      case BookrecordType.own:
+        return Text('Эта книга находится у вас',
+            style: Theme.of(context).textTheme.body1);
+      case BookrecordType.wish:
+        return Text('Эту книгу вы хотите почитать',
+            style: Theme.of(context).textTheme.body1);
+      case BookrecordType.lent:
+        return Text(
+            'Эту книгу вы дали почитать пользователю ${widget.bookrecord.holder.name}',
+            style: Theme.of(context).textTheme.body1);
+      case BookrecordType.borrowed:
+        return Text(
+            'Эту книгу вы взяли почитать у пользователя ${widget.bookrecord.owner.name}',
+            style: Theme.of(context).textTheme.body1);
+      case BookrecordType.transit:
+        return Text('По этой книге не завершён процесс передачи',
+            style: Theme.of(context).textTheme.body1);
+      case BookrecordType.none:
+      default:
+        return Container();
     }
-  }
-  /*
-  //Demo record for User Actions:
-  //TODO: remove it and replace with actual code
-  List<UserActionRecord> actions = [
-    new UserActionRecord(
-        '-LYqzfH9ZbqLhMCixUoK',
-        'The Five Dysfunctions of a Team',
-        'http://books.google.com/books/content?id=dsN3CgAAQBAJ&printsec=frontcover&img=1&zoom=1&edge=curl&source=gbs_api',
-        'TzbOEGICy0XVPCUA6XUbTOKPXap2',
-        'Denis Stark',
-        DateTime.now(),
-        UserAction.giveBook),
-    new UserActionRecord(
-        '-LYrAXkPVxMIBlV2BUHP',
-        'Rethinking Money',
-        'http://books.google.com/books/content?id=hBfQdF3EhXAC&printsec=frontcover&img=1&zoom=1&edge=curl&source=gbs_api',
-        'TzbOEGICy0XVPCUA6XUbTOKPXap2',
-        'Denis Stark',
-        DateTime.now(),
-        UserAction.returnBook),
-    new UserActionRecord(
-        '-LYrA_SNUAT02-kLFP1X',
-        'Great by Choice',
-        'http://books.google.com/books/content?id=ZLQ04ypPx7UC&printsec=frontcover&img=1&zoom=1&source=gbs_api',
-        'TzbOEGICy0XVPCUA6XUbTOKPXap2',
-        'Denis Stark',
-        DateTime.now(),
-        UserAction.getBook),
-  ];
-
-  Widget userActionWidget(BuildContext context, UserActionRecord a) {
-    var formatter = new DateFormat('yyyy-MM-dd');
-    return new Container(
-        margin: EdgeInsets.all(10.0),
-        child: Row(children: <Widget>[
-          Container(
-            height: 60,
-            child: Image(
-                image: new CachedNetworkImageProvider(a.bookImage),
-                fit: BoxFit.cover),
-          ),
-          Expanded(
-              child: Container(
-                  margin: EdgeInsets.all(5.0),
-                  child: Text(
-                      'Return book \'${a.bookTitle}\' to user ${a.userName} by ${formatter.format(a.on)}',
-                      style: Theme.of(context).textTheme.body1))),
-          RaisedButton(
-            textColor: Colors.white,
-            color: Theme.of(context).colorScheme.secondary,
-            child: new Text('Done', style: Theme.of(context).textTheme.title),
-            onPressed: () {
-              print("X");
-            },
-            shape: new RoundedRectangleBorder(
-                borderRadius: new BorderRadius.circular(20.0)),
-          ),
-        ]));
-  }
-  */
-
-  @override
-  Widget build(BuildContext context) {
-    return new ListView(
-      shrinkWrap: true,
-      padding: const EdgeInsets.all(5.0),
-      children: <Widget>[
-        EnterBook(
-            title: S.of(context).addYourBook,
-            onConfirm: (Book book) async {
-              addBook(context, book, currentUser, await currentPosition(),
-                  source: 'googlebooks');
-            },
-            scan: true,
-            search: true),
-        //Add wishlist section
-        EnterBook(
-            title: S.of(context).addToWishlist,
-            onConfirm: (Book book) async {
-              addWish(context, book, currentUser, await currentPosition(),
-                  source: 'googlebooks');
-            },
-            scan: false,
-            search: true),
-/*
-        // Actions to do (return, get, confirm, etc)
-        Card(
-            color: greyColor2,
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10.0)),
-            child: new Column(children: <Widget>[
-              Text('Actions', style: Theme.of(context).textTheme.subtitle),
-              userActionWidget(context, actions[0]),
-              userActionWidget(context, actions[1]),
-              userActionWidget(context, actions[2]),
-            ])),
-            */
-        // Statistics about library (books, shelves, authors) and links to manage it
-        Card(
-            color: greyColor2,
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10.0)),
-            child: Container(
-                margin: EdgeInsets.all(10.0),
-                child: new Column(children: <Widget>[
-                  Text(S.of(context).yourBiblosphere,
-                      style: Theme.of(context).textTheme.subtitle),
-                  Row(children: <Widget>[
-                    Expanded(
-                        child: Text(S.of(context).myBooksItem,
-                            style: Theme.of(context).textTheme.body1)),
-                    RaisedButton(
-                      textColor: Colors.white,
-                      color: Theme.of(context).colorScheme.secondary,
-                      child: new Icon(MyIcons.book),
-                      onPressed: () {
-                        Navigator.push(
-                            context,
-                            cardListPage(
-                                user: currentUser,
-                                stream: Firestore.instance
-                                    .collection('bookcopies')
-                                    .where("owner.id",
-                                        isEqualTo: currentUser.id)
-                                    .snapshots(),
-                                mapper: (doc, user) {
-                                  return new MyBook(
-                                      new Bookcopy.fromJson(doc.data),
-                                      currentUser);
-                                },
-                                title: S.of(context).myBooksTitle,
-                                empty: S.of(context).noBooks));
-                      },
-                      shape: new RoundedRectangleBorder(
-                          borderRadius: new BorderRadius.circular(20.0)),
-                    ),
-                  ]),
-                  Row(children: <Widget>[
-                    Expanded(
-                        child: Text(S.of(context).myBookshelvesItem,
-                            style: Theme.of(context).textTheme.body1)),
-                    RaisedButton(
-                      textColor: Colors.white,
-                      color: Theme.of(context).colorScheme.secondary,
-                      child: new Icon(MyIcons.open),
-                      onPressed: () {
-                        Navigator.push(
-                            context,
-                            cardListPage(
-                                user: currentUser,
-                                stream: Firestore.instance
-                                    .collection('shelves')
-                                    .where("user", isEqualTo: currentUser.id)
-                                    .snapshots(),
-                                mapper: (doc, user) {
-                                  return new MyBookshelf(
-                                      currentUserId: currentUser.id,
-                                      shelfId: doc.documentID,
-                                      imageURL: doc['URL'],
-                                      position: doc['position'],
-                                      fileName: doc['file']);
-                                },
-                                title: S.of(context).myBookshelvesTitle,
-                                empty: S.of(context).noBookshelves));
-                      },
-                      shape: new RoundedRectangleBorder(
-                          borderRadius: new BorderRadius.circular(20.0)),
-                    ),
-                  ]),
-                  Row(children: <Widget>[
-                    Expanded(
-                        child: Text(S.of(context).myBorrowedBooksItem,
-                            style: Theme.of(context).textTheme.body1)),
-                    RaisedButton(
-                      textColor: Colors.white,
-                      color: Theme.of(context).colorScheme.secondary,
-                      child: new Icon(MyIcons.taken),
-                      onPressed: () {
-                        Navigator.push(
-                            context,
-                            cardListPage(
-                                user: currentUser,
-                                stream: Firestore.instance
-                                    .collection('bookcopies')
-                                    .where("holder.id",
-                                        isEqualTo: currentUser.id)
-                                    .where("lent", isEqualTo: true)
-                                    .snapshots(),
-                                mapper: (doc, user) {
-                                  return new MyBorrowedBook(
-                                      new Bookcopy.fromJson(doc.data),
-                                      currentUser);
-                                },
-                                title: S.of(context).myBorrowedBooksTitle,
-                                empty: S.of(context).noBorrowedBooks));
-                      },
-                      shape: new RoundedRectangleBorder(
-                          borderRadius: new BorderRadius.circular(20.0)),
-                    ),
-                  ]),
-                  Row(children: <Widget>[
-                    Expanded(
-                        child: Text(S.of(context).myLendedBooksItem,
-                            style: Theme.of(context).textTheme.body1)),
-                    RaisedButton(
-                      textColor: Colors.white,
-                      color: Theme.of(context).colorScheme.secondary,
-                      child: new Icon(MyIcons.given),
-                      onPressed: () {
-                        Navigator.push(
-                            context,
-                            cardListPage(
-                                user: currentUser,
-                                stream: Firestore.instance
-                                    .collection('bookcopies')
-                                    .where("owner.id",
-                                        isEqualTo: currentUser.id)
-                                    .where("lent", isEqualTo: true)
-                                    .snapshots(),
-                                mapper: (doc, user) {
-                                  return new MyLentBook(
-                                      new Bookcopy.fromJson(doc.data), user);
-                                },
-                                title: S.of(context).myLendedBooksTitle,
-                                empty: S.of(context).noLendedBooks));
-                      },
-                      shape: new RoundedRectangleBorder(
-                          borderRadius: new BorderRadius.circular(20.0)),
-                    ),
-                  ]),
-                  Row(children: <Widget>[
-                    Expanded(
-                        child: Text(S.of(context).myWishlistItem,
-                            style: Theme.of(context).textTheme.body1)),
-                    RaisedButton(
-                      textColor: Colors.white,
-                      color: Theme.of(context).colorScheme.secondary,
-                      child: new Icon(MyIcons.heart),
-                      onPressed: () {
-                        Navigator.push(
-                            context,
-                            cardListPage(
-                                user: currentUser,
-                                stream: Firestore.instance
-                                    .collection('wishes')
-                                    .where("wisher.id",
-                                        isEqualTo: currentUser.id)
-                                    .snapshots(),
-                                mapper: (doc, user) {
-                                  return new MyWish(
-                                      new Wish.fromJson(doc.data), currentUser);
-                                },
-                                title: S.of(context).myWishlistTitle,
-                                empty: S.of(context).noWishes));
-                      },
-                      shape: new RoundedRectangleBorder(
-                          borderRadius: new BorderRadius.circular(20.0)),
-                    ),
-                  ]),
-                ]))),
-        // Linked accounts: Librarything, Goodreads, Bookcrossing, Bookmooch
-        Goodreads(),
-        Card(
-            color: greyColor2,
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10.0)),
-            child: Container(
-                margin: EdgeInsets.all(10.0),
-                child:
-                    Column(mainAxisSize: MainAxisSize.min, children: <Widget>[
-                  Text(S.of(context).addYourBookshelf,
-                      style: Theme.of(context).textTheme.subtitle),
-                  Row(children: <Widget>[
-                    Expanded(
-                        child: Text(S.of(context).makePhotoOfShelf,
-                            style: Theme.of(context).textTheme.body1)),
-                    RaisedButton(
-                      textColor: Colors.white,
-                      color: Theme.of(context).colorScheme.secondary,
-                      child: new Icon(MyIcons.camera),
-                      onPressed: () {
-                        getImage(context);
-                      },
-                      shape: new RoundedRectangleBorder(
-                          borderRadius: new BorderRadius.circular(20.0)),
-                    ),
-                  ]),
-                  Row(children: <Widget>[
-                    Expanded(
-                        child: Text(S.of(context).loadPhotoOfShelf,
-                            style: Theme.of(context).textTheme.body1)),
-                    RaisedButton(
-                      textColor: Colors.white,
-                      color: Theme.of(context).colorScheme.secondary,
-                      child: new Icon(MyIcons.galery),
-                      onPressed: () {
-                        getImage(context, source: ImageSource.gallery);
-                      },
-                      shape: new RoundedRectangleBorder(
-                          borderRadius: new BorderRadius.circular(20.0)),
-                    ),
-                  ]),
-                ]))),
-      ],
-    );
-  }
-
-  Future<bool> isBookcase(File imageFile) async {
-    final FirebaseVisionImage visionImage =
-        FirebaseVisionImage.fromFile(imageFile);
-
-    // Cloud detection
-    final ImageLabeler detector = FirebaseVision.instance.cloudImageLabeler();
-
-    final List<ImageLabel> results = await detector.processImage(visionImage);
-
-    if (results != null) {
-      var books = results.where((label) =>
-          label.text.toLowerCase() == 'bookcase' ||
-          label.text.toLowerCase() == 'book');
-      return books.length > 0;
-    }
-
-    return false;
-  }
-
-  Future<String> uploadPicture(File image, String user, String name) async {
-    final StorageReference ref =
-        FirebaseStorage.instance.ref().child('images').child(user).child(name);
-    final StorageUploadTask uploadTask = ref.putFile(
-      image,
-      new StorageMetadata(
-        contentType: 'image/jpeg',
-        // To enable Client-side caching you can set the Cache-Control headers here. Uncomment below.
-        cacheControl: 'public,max-age=3600',
-        customMetadata: <String, String>{'activity': 'test'},
-      ),
-    );
-    StorageTaskSnapshot storageTaskSnapshot = await uploadTask.onComplete;
-    final String imageUrl = await storageTaskSnapshot.ref.getDownloadURL();
-
-    return imageUrl;
   }
 }

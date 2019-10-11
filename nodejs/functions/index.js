@@ -341,6 +341,31 @@ exports.createBalances = functions.https.onRequest(async (req, res) => {
 });
 
 
+// Function addKeys:
+// Add keys to books
+// Deploy with:
+// firebase deploy --only functions:addKeys
+exports.addKeys = functions.https.onRequest(async (req, res) => {
+    try {
+        var querySnapshot = await admin.firestore().collection('books').where("book.id", ">=", "-LlBDNa2_tOyrEnsc3Zi")
+        .orderBy("book.id", "asc").get();
+
+        querySnapshot.forEach(async (book) => {
+
+            // Ifholder is missing update it from owner
+            if (book.data().book.keys === null || book.data().book.keys === undefined) {
+                var str = book.data().book.authors.join(' ') + ' ' + book.data().book.title + ' ' + book.data().book.isbn;
+                var keys = [...new Set(str.toLowerCase().replace(/([\s.)(,;!:]+)/g,'|').split('|').filter((str) => str.length > 2))];
+                admin.firestore().collection('books').doc(book.id).update({'book.keys': keys});
+            }
+        });
+        return res.status(200).send("Running 1.6");
+    } catch(err) {
+        console.log('Users balance update failed: ', err);
+        return res.status(404).send("Book keys update failed");
+    }
+});
+
 // Function addHolders:
 // Copy owners to holders if holder is not populated
 // Deploy with:

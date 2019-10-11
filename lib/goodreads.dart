@@ -371,7 +371,7 @@ class _GoodreadsState extends State<Goodreads> with WidgetsBindingObserver {
       List<Book> books =
           document.findAllElements('book')?.map((xml.XmlElement e) { return new Book.goodreads(e); })?.toList();
 
-      books.forEach((b) => addBook(context, b, user, position, snackbar: false));
+      //books.forEach((b) => addBook(context, b, user, position, snackbar: false));
     }
 
     for (String shelf in toWishlist) {
@@ -384,7 +384,7 @@ class _GoodreadsState extends State<Goodreads> with WidgetsBindingObserver {
       document.findAllElements('book')?.map((xml.XmlElement e) {return new Book.goodreads(e);
       })?.toList();
 
-      books.forEach((b) => addWish(context, b, user, position, snackbar: false));
+      //books.forEach((b) => addWish(context, b, user, position, snackbar: false));
     }
 
     //DEBUG ONLY

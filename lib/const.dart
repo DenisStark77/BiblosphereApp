@@ -2,9 +2,9 @@ import 'dart:ui';
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:geoflutterfire/geoflutterfire.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
-import 'package:barcode_scan/barcode_scan.dart';
 import 'package:googleapis/books/v1.dart';
 import 'package:googleapis_auth/auth_io.dart';
 import 'package:http/http.dart';
@@ -12,6 +12,9 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:xml/xml.dart' as xml;
 import 'dart:convert';
+import 'dart:math' as math;
+import 'package:stellar/stellar.dart' as stellar;
+import 'package:http/http.dart' as http;
 
 import 'package:biblosphere/l10n.dart';
 
@@ -26,7 +29,28 @@ String getTimestamp() => new DateTime.now().millisecondsSinceEpoch.toString();
 class MyIcons {
   static const fontFamily = 'MyIcons';
 
+  static const IconData add = const IconData(0xf208, fontFamily: fontFamily);
+  static const IconData arrow_left =
+      const IconData(0xf116, fontFamily: fontFamily);
+  static const IconData arrow_right =
+      const IconData(0xf117, fontFamily: fontFamily);
+  static const IconData envelop =
+      const IconData(0xf1cd, fontFamily: fontFamily);
+  static const IconData cancel_cross =
+      const IconData(0xf161, fontFamily: fontFamily);
+  static const IconData cancel_cross2 =
+      const IconData(0xf13a, fontFamily: fontFamily);
+  static const IconData cancel_cross3 =
+      const IconData(0xf13b, fontFamily: fontFamily);
+  static const IconData face = const IconData(0xf131, fontFamily: fontFamily);
+  static const IconData library =
+      const IconData(0xf107, fontFamily: fontFamily);
+  static const IconData mobile = const IconData(0xf1fd, fontFamily: fontFamily);
   static const IconData money = const IconData(0xf14d, fontFamily: fontFamily);
+  static const IconData plus = const IconData(0xf208, fontFamily: fontFamily);
+  static const IconData plus1 = const IconData(0xf102, fontFamily: fontFamily);
+  static const IconData returning =
+      const IconData(0xf21d, fontFamily: fontFamily);
   static const IconData settings =
       const IconData(0xf14c, fontFamily: fontFamily);
   static const IconData book = const IconData(0xf12c, fontFamily: fontFamily);
@@ -74,23 +98,8 @@ class MyIcons {
   static const IconData given = const IconData(0xf1e9, fontFamily: fontFamily);
   static const IconData taken = const IconData(0xf273, fontFamily: fontFamily);
   static const IconData outbox = const IconData(0xf1ee, fontFamily: fontFamily);
-}
-
-enum AppActivity { books, shelves, wished, people, give, earn }
-
-enum UserAction { getBook, returnBook, giveBook, confirmHandover }
-
-class UserActionRecord {
-  UserActionRecord(this.bookId, this.bookTitle, this.bookImage, this.userId,
-      this.userName, this.on, this.action);
-
-  String bookId;
-  String bookTitle;
-  String bookImage;
-  String userId;
-  String userName;
-  DateTime on;
-  UserAction action;
+  static const IconData wishlist =
+      const IconData(0xf193, fontFamily: fontFamily);
 }
 
 enum BookSource { none, google, goodreads }
@@ -104,15 +113,20 @@ class Book {
   String sourceId;
   BookSource source = BookSource.none;
   double price = 0.0;
+  // Price in original currency from the platforms
+  Price listPrice;
   String genre;
   String language;
+  Set<String> keys;
 
   Book(
       {this.id,
       @required this.title,
       @required this.authors,
       @required this.isbn,
-      this.image});
+      this.image}) {
+    keys = getKeys(authors.join(' ') + ' ' + title + ' ' + isbn);
+  }
 
   //TODO: Add price, genre, language
   Book.volume(Volume v) {
@@ -129,7 +143,15 @@ class Book {
             orElse: () => null);
         if (isbnId != null) isbn = isbnId.identifier;
       }
+      if (v.saleInfo?.listPrice != null)
+        listPrice = new Price(
+            amount: v.saleInfo.listPrice.amount,
+            currency: v.saleInfo.listPrice.currencyCode);
+
+      print(
+          '!!!DEBUG: price for ${title} = ${listPrice?.amount} ${listPrice?.currency}');
       source = BookSource.google;
+      keys = getKeys(authors.join(' ') + ' ' + title + ' ' + isbn);
     } catch (e) {
       print('Unknown error in Book.volume: $e');
     }
@@ -151,6 +173,7 @@ class Book {
     xml.findAllElements("author").forEach(
         (a) => authors.add(a.findElements("name")?.first?.text?.toString()));
     source = BookSource.goodreads;
+    keys = getKeys(authors.join(' ') + ' ' + title + ' ' + isbn);
   }
 
   Book.fromJson(Map json)
@@ -161,7 +184,15 @@ class Book {
         image = json['image'],
         price = json['price'],
         language = json['language'],
-        genre = json['genre'];
+        keys = (json['keys'] as List).cast<String>().toSet(),
+        listPrice = json['listPrice'] != null
+            ? new Price.fromJson(json['listPrice'])
+            : null,
+        genre = json['genre'] {
+    if (keys == null) {
+      keys = getKeys(authors.join(' ') + ' ' + title + ' ' + isbn);
+    }
+  }
 
   Map<String, dynamic> toJson() {
     return {
@@ -171,9 +202,32 @@ class Book {
       'isbn': isbn,
       'image': image,
       'price': price,
+      'listPrice': listPrice?.toJson(),
       'genre': genre,
+      'keys': keys,
       'language': language
     };
+  }
+
+  double getPrice() {
+    return 25.0;
+  }
+
+  @override
+  operator ==(other) {
+    if (other is! Book) {
+      return false;
+    }
+    return isbn == (other as Book).isbn;
+  }
+
+  int _hashCode;
+  @override
+  int get hashCode {
+    if (_hashCode == null) {
+      _hashCode = isbn.hashCode;
+    }
+    return _hashCode;
   }
 }
 
@@ -186,6 +240,8 @@ class User {
   int bookCount = 0;
   int shelfCount = 0;
   double balance = 0;
+  String accountId;
+  String secretSeed;
   double d;
 
   User(
@@ -201,16 +257,327 @@ class User {
   User.fromJson(Map json)
       : id = json['id'],
         name = json['name'],
-        photo = json['photo'],
+        photo = json['photo'] ?? json['photoUrl'],
         position = json['position'] as GeoPoint,
         wishCount = json['wishCount'] ?? 0,
         bookCount = json['bookCount'] ?? 0,
         shelfCount = json['shelfCount'] ?? 0,
         balance =
-            json['balance'] != null ? (json['balance'] as num).toDouble() : 0;
+            json['balance'] != null ? (json['balance'] as num).toDouble() : 0,
+        accountId = json['accountId'],
+        secretSeed = json['secretSeed'];
 
   Map<String, dynamic> toJson() {
-    return {'id': id, 'name': name, 'photo': photo, 'position': position};
+    return {
+      'id': id,
+      'name': name,
+      'photo': photo,
+      'position': position,
+      'accountId': accountId,
+      'secretSeed': secretSeed
+    };
+  }
+
+  // Retrieve balance from Stellar account
+  Future<double> getStellarBalance() async {
+    if (accountId == null) return 0.0;
+
+    stellar.KeyPair pair = stellar.KeyPair.fromAccountId(accountId);
+
+    stellar.Network.useTestNetwork();
+    stellar.Server server =
+        stellar.Server("https://horizon-testnet.stellar.org");
+    stellar.AccountResponse account = await server.accounts.account(pair);
+    String strBalance = account.balances
+        .where((bal) => bal.assetType == "native")
+        .first
+        .balance;
+
+    balance = double.parse(strBalance);
+    return balance;
+  }
+}
+
+enum BookrecordType { none, own, wish, lent, borrowed, transit }
+
+class Bookrecord {
+  String id;
+  String bookId;
+  String ownerId;
+  String holderId;
+  String transitId;
+  // Both users owner and holder to use array-contains instead of OR
+  List<String> users;
+  // Daily rent and full price
+  double price;
+  Deal deal;
+  // Status of the book copy
+  bool transit = false;
+  bool wish = false;
+  bool lent = false;
+  // If book are matched (wish and available book)
+  bool matched = false;
+  String matchedBookId;
+  // Position of the book and distance to the closest match
+  GeoFirePoint location;
+  double distance;
+
+  //Below data are from different Firestore tables and filled on client side
+  Book book;
+  User owner;
+  User holder;
+  // User with whom book are at transit
+  User transitee;
+  // Flag if extra data is loaded
+  bool hasData = false;
+
+  Bookrecord(
+      {@required this.ownerId,
+      @required this.bookId,
+      @required this.location,
+      this.holderId,
+      this.matched = false,
+      this.wish = false,
+      this.lent = false,
+      this.transit = false,
+      this.distance}) {
+    if (holderId == null) holderId = ownerId;
+  }
+
+  Bookrecord.fromJson(Map json)
+      : id = json['id'],
+        ownerId = json['ownerId'],
+        holderId = json['holderId'],
+        transitId = json['transitId'],
+        bookId = json['bookId'],
+        location = Geoflutterfire().point(
+            latitude: json['location']['geopoint'].latitude,
+            longitude: json['location']['geopoint'].longitude),
+        matched = json['matched'] ?? false,
+        matchedBookId = json['matchedBookId'],
+        lent = json['lent'] ?? false,
+        wish = json['wish'] ?? false,
+        transit = json['transit'] ?? false,
+        price = json['price'] != null ? (json['price'] as num).toDouble() : 0.0,
+        deal = json['deal'] != null ? Deal.fromJson(json['deal']) : null,
+        distance = json['distance'] != null
+            ? (json['distance'] as num).toDouble()
+            : double.infinity;
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'ownerId': ownerId,
+      'holderId': holderId,
+      'transitId': transitId,
+      'users': <String>[ownerId, holderId],
+      'bookId': bookId,
+      'location': location.data,
+      'matched': matched,
+      'matchedBookId': matchedBookId,
+      'lent': lent,
+      'wish': wish,
+      'transit': transit,
+      'deal': deal ?? toJson(),
+      'price': price,
+      'distance': distance
+    };
+  }
+
+  bool isOwn(String userId) {
+    return ownerId == userId && !transit && !lent && !wish;
+  }
+
+  bool isWish(String userId) {
+    return ownerId == userId && wish && !transit && !lent;
+  }
+
+  bool isLent(String userId) {
+    return ownerId == userId && ownerId != holderId && lent && !wish;
+  }
+
+  bool isBorrowed(String userId) {
+    return holderId == userId &&
+        ownerId != holderId &&
+        lent &&
+        !wish &&
+        !transit;
+  }
+
+  bool isTransit(String userId) {
+    return (transitId == userId || holderId == userId) && transit && !wish;
+  }
+
+  BookrecordType type(String userId) {
+    if (isOwn(userId))
+      return BookrecordType.own;
+    else if (isLent(userId))
+      return BookrecordType.lent;
+    else if (isBorrowed(userId))
+      return BookrecordType.borrowed;
+    else if (isTransit(userId))
+      return BookrecordType.transit;
+    else if (isWish(userId))
+      return BookrecordType.wish;
+    else
+      return BookrecordType.none;
+  }
+
+  Future<void> getBookrecord(User user) async {
+    if (hasData) {
+      return this;
+    } else {
+      // Read BOOK data
+      DocumentSnapshot doc =
+          await Firestore.instance.collection('books').document(bookId).get();
+      book = new Book.fromJson(doc.data['book']);
+
+      // Read owner user data
+      if (ownerId == user.id) {
+        owner = user;
+      } else {
+        DocumentSnapshot doc = await Firestore.instance
+            .collection('users')
+            .document(ownerId)
+            .get();
+        owner = new User.fromJson(doc?.data);
+      }
+
+      // Read holder user data if different from owner
+      if (holderId == ownerId) {
+        holder = owner;
+      } else if (holderId == user.id) {
+        holder = user;
+      } else {
+        DocumentSnapshot doc = await Firestore.instance
+            .collection('users')
+            .document(holderId)
+            .get();
+        holder = new User.fromJson(doc?.data);
+      }
+
+      // Read transit user data if book are in transit
+      if (transit && transitId != null) {
+        DocumentSnapshot doc = await Firestore.instance
+            .collection('users')
+            .document(transitId)
+            .get();
+        transitee = new User.fromJson(doc?.data);
+      }
+
+      hasData = true;
+    }
+  }
+
+  double getPrice() {
+    return 25.0;
+  }
+}
+
+class Deal {
+  DateTime date;
+  double price;
+
+  Deal({@required this.date, @required this.price});
+
+  Deal.fromJson(Map json)
+      : date = (json['date'] as Timestamp).toDate(),
+        price = json['price'] != null ? (json['price'] as num).toDouble() : 0.0;
+
+  Map<String, dynamic> toJson() {
+    return {'date': date, 'price': price};
+  }
+}
+
+class Price {
+  double amount;
+  String currency;
+
+  Price({@required this.amount, @required this.currency});
+
+  Price.fromJson(Map json)
+      : amount = json['amount'] as double,
+        currency = json['currency'];
+
+  Map<String, dynamic> toJson() {
+    return {'amount': amount, 'currency': currency};
+  }
+}
+
+class Messages {
+  String id;
+  List<String> ids;
+  DateTime timestamp;
+  String message;
+  int unread;
+
+  // Flag if extra data is loaded
+  bool hasData = false;
+
+  //Below data are from different Firestore tables and filled on client side
+  List<User> users;
+
+  Messages({@required this.users}) {
+    id = Firestore.instance.collection('messages').document().documentID;
+  }
+
+  Messages.fromJson(Map json)
+      : id = json['id'],
+        ids = json['ids'].cast<String>(),
+        message = json['message'],
+        timestamp = new DateTime.fromMillisecondsSinceEpoch(
+            int.parse(json['timestamp'])),
+        unread = int.parse(json['unread'] ?? '0');
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'ids': ids,
+      'message': message,
+      'timestamp': timestamp.millisecondsSinceEpoch.toString(),
+      'unread': unread
+    };
+  }
+
+  // Return userId of the counterparty
+  String partnerId(String userId) {
+    return ids[0] == userId ? ids[1] : ids[0];
+  }
+
+  // Return userId of the counterparty
+  User partner(String userId) {
+    if (hasData)
+      return ids[0] == userId ? users[1] : users[0];
+    else
+      return null;
+  }
+
+  Future<void> getDetails(User user) async {
+    if (hasData) {
+      return;
+    } else {
+      users = [null, null];
+
+      // Read first user data
+      if (ids[0] == user.id) {
+        users[0] = user;
+      } else {
+        DocumentSnapshot doc =
+            await Firestore.instance.collection('users').document(ids[0]).get();
+        users[0] = new User.fromJson(doc?.data);
+      }
+
+      // Read first user data
+      if (ids[1] == user.id) {
+        users[1] = user;
+      } else {
+        DocumentSnapshot doc =
+            await Firestore.instance.collection('users').document(ids[1]).get();
+        users[1] = new User.fromJson(doc?.data);
+      }
+
+      hasData = true;
+    }
   }
 }
 
@@ -221,8 +588,8 @@ class Bookcopy {
   Book book;
   GeoPoint position;
   String status;
-  bool matched=false;
-  bool lent=false;
+  bool matched = false;
+  bool lent = false;
   String wishId;
   User wisher;
   double distance;
@@ -249,8 +616,8 @@ class Bookcopy {
         book = Book.fromJson(json['book']),
         position = json['position'] as GeoPoint,
         status = json['status'],
-        matched = json['matched']??false,
-        lent = json['lent']??false,
+        matched = json['matched'] ?? false,
+        lent = json['lent'] ?? false,
         wishId = json['wishId'],
         wisher = json['wisher'] != null ? User.fromJson(json['wisher']) : null,
         distance = json['distance'] != null
@@ -280,7 +647,7 @@ class Wish {
   GeoPoint position;
   Book book;
   String created;
-  bool matched=false;
+  bool matched = false;
   String bookcopyId;
   GeoPoint bookcopyPosition;
   User owner;
@@ -304,7 +671,7 @@ class Wish {
         position = json['position'] as GeoPoint,
         book = Book.fromJson(json['book']),
         created = json['created'],
-        matched = json['matched']??false,
+        matched = json['matched'] ?? false,
         bookcopyId = json['bookcopyId'],
         bookcopyPosition = json['bookcopyPosition'] as GeoPoint,
         owner = json['owner'] != null ? User.fromJson(json['owner']) : null,
@@ -540,7 +907,8 @@ class Transit {
 //Callback function type definition
 typedef BookCallback(Book book);
 
-Future addBook(BuildContext context, Book b, User u, GeoPoint position,
+Future addBookrecord(
+    BuildContext context, Book b, User u, bool wish, GeoFirePoint location,
     {String source = 'goodreads', bool snackbar = true}) async {
   bool existingBook = false;
 
@@ -548,7 +916,10 @@ Future addBook(BuildContext context, Book b, User u, GeoPoint position,
     throw 'Book ${b?.title}, ${b?.authors?.join()} has no ISBN';
 
   //Try to get image if missing
-  if (b.image == null || b.image.isEmpty || b.language == null || b.language.isEmpty ) {
+  if (b.image == null ||
+      b.image.isEmpty ||
+      b.language == null ||
+      b.language.isEmpty) {
     b = await enrichBookRecord(b);
   }
 
@@ -568,339 +939,44 @@ Future addBook(BuildContext context, Book b, User u, GeoPoint position,
     b.id = q.documents.first.documentID;
   }
 
-  Bookcopy bookcopy = new Bookcopy(owner: u, book: b, position: position);
+  Bookrecord bookrecord = new Bookrecord(
+      ownerId: u.id, bookId: b.id, wish: wish, location: location);
 
-  //Check if bookcopy already exist. Make sense only if isb is registered
+  //Check if bookrecord already exist. Make sense only if isbn is registered
   if (existingBook) {
     QuerySnapshot q = await Firestore.instance
-        .collection('bookcopies')
-        .where('book.id', isEqualTo: b.id)
-        .where('owner.id', isEqualTo: u.id)
+        .collection('bookrecords')
+        .where('bookId', isEqualTo: b.id)
+        .where('ownerId', isEqualTo: u.id)
+        .where('wish', isEqualTo: wish)
         .getDocuments();
 
     //If bookcopy already exist refresh it
     if (q.documents.isNotEmpty) {
-      bookcopy.id = q.documents.first.documentID;
+      bookrecord.id = q.documents.first.documentID;
       await Firestore.instance
-          .collection('bookcopies')
-          .document(bookcopy.id)
-          .updateData(bookcopy.toJson());
+          .collection('bookrecords')
+          .document(bookrecord.id)
+          .updateData(bookrecord.toJson());
+      if (snackbar) showSnackBar(context, 'KuKu');
       return;
     }
   }
 
-  await Firestore.instance.collection('bookcopies').add(bookcopy.toJson());
-  if (snackbar) showSnackBar(context, S.of(context).bookAdded);
+  DocumentReference rec =
+      await Firestore.instance.collection('bookrecords').document();
+  bookrecord.id = rec.documentID;
+  await rec.setData(bookrecord.toJson());
+  if (snackbar) {
+    if (wish)
+      showSnackBar(context, S.of(context).wishAdded);
+    else
+      showSnackBar(context, S.of(context).bookAdded);
+  }
+
   await FirebaseAnalytics().logEvent(
       name: 'add_book',
-      parameters: <String, dynamic>{
-        'language': bookcopy.book.language??''
-      });
-}
-
-Future addWish(BuildContext context, Book b, User u, GeoPoint position,
-    {String source = 'goodreads', bool snackbar = true}) async {
-  bool existingBook = false;
-
-  if (b.isbn == null || b.isbn == 'NA')
-    throw 'Book ${b?.title}, ${b?.authors?.join()} has no ISBN';
-
-  //Try to get image if missing
-  if (b.image == null || b.image.isEmpty || b.language == null || b.language.isEmpty ) {
-    b = await enrichBookRecord(b);
-  }
-
-  QuerySnapshot q = await Firestore.instance
-      .collection('books')
-      .where('book.isbn', isEqualTo: b.isbn)
-      .getDocuments();
-
-  if (q.documents.isEmpty) {
-    DocumentReference d = await Firestore.instance
-        .collection('books')
-        .add({'book': b.toJson(), 'source': source});
-
-    b.id = d.documentID;
-  } else {
-    existingBook = true;
-    b.id = q.documents.first.documentID;
-  }
-
-  Wish wish = new Wish(
-      wisher: u, position: u.position, book: b, created: getTimestamp());
-
-  //Check if wish already exist. Make sense only if isb is registered
-  if (existingBook) {
-    QuerySnapshot q = await Firestore.instance
-        .collection('wishes')
-        .where('book.id', isEqualTo: b.id)
-        .where('wisher.id', isEqualTo: u.id)
-        .getDocuments();
-
-    if (q.documents.isNotEmpty) {
-      wish.id = q.documents.first.documentID;
-      await Firestore.instance
-          .collection('wishes')
-          .document(wish.id)
-          .updateData(wish.toJson());
-      return;
-    }
-  }
-
-  await Firestore.instance.collection('wishes').add(wish.toJson());
-  if (snackbar) showSnackBar(context, S.of(context).wishAdded);
-  // Log event for the analytics
-  await FirebaseAnalytics().logEvent(
-      name: 'add_wish',
-      parameters: <String, dynamic>{
-        'language': wish.book.language??''
-      });
-}
-
-Future startTransit(BuildContext context, String bookcopyId, User from, User to,
-    String action) async {
-  // Create firestore transaction
-  // Check that status of bookcopy is 'available'
-  // Change status of bookcopy to 'transit'
-  // Create and store transit record
-
-  final DocumentReference bookcopyRef =
-      Firestore.instance.document('bookcopies/${bookcopyId}');
-
-  print('DEBUG: transit bookcopy id: ${bookcopyRef.documentID}');
-
-  try {
-    Firestore.instance.runTransaction((Transaction tx) async {
-      DocumentSnapshot bookcopySnapshot = await tx.get(bookcopyRef);
-      print('DEBUG: transit bookcopy snapshot: ${bookcopySnapshot}');
-      if (bookcopySnapshot.exists) {
-        Bookcopy fresh = new Bookcopy.fromJson(bookcopySnapshot.data);
-        print('DEBUG: transit bookcopy: ${fresh}');
-        String status;
-        if (fresh.status == 'available') {
-          // Adjust status
-          if (action == 'request')
-            status = 'requested';
-          else if (action == 'return' || action == 'offer') status = 'accepted';
-          // Autogenerate new reference
-          final DocumentReference transitRef =
-              Firestore.instance.collection('transit').document();
-          print('DEBUG: transit referrence: ${transitRef.documentID}');
-          // Create transit record and insert it to Firestore
-          Transit transit = new Transit(
-              id: transitRef.documentID,
-              bookcopy: fresh,
-              from: from,
-              to: to,
-              action: action,
-              status: status);
-          print('DEBUG: transit record: ${transit}');
-          await tx.update(bookcopyRef, {'status': 'transit'});
-          await tx.set(transitRef, transit.toJson());
-          print('DEBUG: transit record updated');
-          showSnackBar(context, S.of(context).transitInitiated);
-          // Log event for the analytics
-          await FirebaseAnalytics().logEvent(
-              name: '${action}_book',
-              parameters: <String, dynamic>{
-                'language': fresh.book.language??''
-              });
-
-        } else {
-          print('DEBUG: book already in transit: ${bookcopyRef.documentID}');
-        }
-      }
-    });
-  } catch (e) {
-    print('DEBUG: Exception happens: ${e}');
-  }
-}
-
-Future changeTransit(Transit t, User user, String step) async {
-  // Create firestore transaction
-  // Check that status of transit
-  // Validate if step is valid and calculate next status
-  // Update transit record
-  // Commit transaction
-
-  print('DEBUG: User id: ${user.id}, step: ${step}');
-
-  final DocumentReference transitRef =
-      Firestore.instance.document('transit/${t.id}');
-
-  await Firestore.instance.runTransaction((Transaction tx) async {
-    DocumentSnapshot transitSnapshot = await tx.get(transitRef);
-    if (transitSnapshot.exists) {
-      Transit tr = new Transit.fromJson(transitSnapshot.data);
-      // Input transit record inconsistent with Firestore record
-      if (tr.status != t.status || tr.action != t.action)
-        // TODO: Not sure should I throw exception or just return new record to get transit Widget refreshed.
-        //throw 'Transit record in db has been changed';
-        return;
-
-      bool toUpdate = false;
-      bool toDelete = false;
-      String nextStatus;
-
-      print('DEBUG: TO user: ${tr.to.id}, FROM user: ${tr.from.id}');
-
-      if (tr.action == Transit.Request &&
-          tr.status == Transit.Requested &&
-          user.id == tr.to.id) {
-        // Cancel
-        if (step == Transit.Cancel) {
-          toDelete = true;
-        }
-      } else if (tr.action == Transit.Request &&
-          tr.status == Transit.Requested &&
-          user.id == tr.from.id) {
-        // Accept, Reject
-        if (step == Transit.Accept) {
-          toUpdate = true;
-          nextStatus = Transit.Accepted;
-        } else if (step == Transit.Reject) {
-          toUpdate = true;
-          nextStatus = Transit.Rejected;
-        }
-      } else if (tr.action == Transit.Request &&
-          tr.status == Transit.Accepted &&
-          user.id == tr.to.id) {
-        // Confirm, Cancel
-        if (step == Transit.Confirm) {
-          toUpdate = true;
-          nextStatus = Transit.Confirmed;
-        } else if (step == Transit.Cancel) {
-          toUpdate = true;
-          nextStatus = Transit.Canceled;
-        }
-      } else if (tr.action == Transit.Request &&
-          tr.status == Transit.Accepted &&
-          user.id == tr.from.id) {
-        // Reject
-        if (step == Transit.Reject) {
-          toUpdate = true;
-          nextStatus = Transit.Rejected;
-        }
-      } else if (tr.action == Transit.Request &&
-          tr.status == Transit.Confirmed &&
-          user.id == tr.from.id) {
-        // Ok
-        if (step == Transit.Ok) toDelete = true;
-      } else if (tr.action == Transit.Request &&
-          tr.status == Transit.Rejected &&
-          user.id == tr.to.id) {
-        // Ok
-        if (step == Transit.Ok) toDelete = true;
-      } else if (tr.action == Transit.Request &&
-          tr.status == Transit.Canceled &&
-          user.id == tr.from.id) {
-        // Ok
-        if (step == Transit.Ok) toDelete = true;
-      } else if (tr.action == Transit.Return &&
-          tr.status == Transit.Accepted &&
-          user.id == tr.from.id) {
-        // Cancel
-        if (step == Transit.Cancel) toDelete = true;
-      } else if (tr.action == Transit.Return &&
-          tr.status == Transit.Accepted &&
-          user.id == tr.to.id) {
-        // Confirm
-        if (step == Transit.Confirm) {
-          toUpdate = true;
-          nextStatus = Transit.Confirmed;
-        }
-      } else if (tr.action == Transit.Return &&
-          tr.status == Transit.Confirmed &&
-          user.id == tr.from.id) {
-        // Ok
-        if (step == Transit.Ok) toDelete = true;
-      } else if (tr.action == Transit.Offer &&
-          tr.status == Transit.Accepted &&
-          user.id == tr.from.id) {
-        // Cancel
-        if (step == Transit.Cancel) toDelete = true;
-      } else if (tr.action == Transit.Offer &&
-          tr.status == Transit.Accepted &&
-          user.id == tr.to.id) {
-        // Confirm, Reject
-        if (step == Transit.Confirm) {
-          toUpdate = true;
-          nextStatus = Transit.Confirmed;
-        } else if (step == Transit.Reject) {
-          toUpdate = true;
-          nextStatus = Transit.Rejected;
-        }
-      } else if (tr.action == Transit.Offer &&
-          tr.status == Transit.Confirmed &&
-          user.id == tr.from.id) {
-        // Ok
-        if (step == Transit.Ok) toDelete = true;
-      } else if (tr.action == Transit.Offer &&
-          tr.status == Transit.Rejected &&
-          user.id == tr.from.id) {
-        // Ok
-        if (step == Transit.Ok) toDelete = true;
-      }
-
-      print(
-          'Action: ${tr.action}, Status: ${tr.status}, NextStatus: ${nextStatus}, Delete: ${toDelete}, Update: ${toUpdate}');
-
-      if (toUpdate) {
-        if (step == Transit.Confirm) {
-          bool lent=false;
-          // Update bookcopy holder and status
-          if (tr.action == Transit.Return) {
-            lent = false;
-          } else if (tr.action == Transit.Request ||
-              tr.action == Transit.Offer) {
-            lent = true;
-          }
-          //TODO: Use firestore increment to avoid reading (only available from version 0.10 of cloud_firestore)
-          final DocumentReference fromRef =
-              Firestore.instance.document('users/${tr.from.id}');
-          final DocumentReference toRef =
-              Firestore.instance.document('users/${tr.to.id}');
-          final DocumentReference sysRef =
-              Firestore.instance.document('system/commission');
-
-          DocumentSnapshot fromSnapshot = await tx.get(fromRef);
-          DocumentSnapshot toSnapshot = await tx.get(toRef);
-          DocumentSnapshot sysSnapshot = await tx.get(sysRef);
-
-          await tx
-              .update(fromRef, {"balance": fromSnapshot.data['balance'] + 4});
-          await tx.update(toRef, {"balance": toSnapshot.data['balance'] - 5});
-          await tx.update(sysRef, {"balance": sysSnapshot.data['balance'] + 1});
-
-          final DocumentReference bookcopyRef = Firestore.instance
-              .collection('bookcopies')
-              .document(tr.bookcopy.id);
-          await tx.update(bookcopyRef,
-              {'lent': lent, 'status': 'available', 'holder': tr.to.toJson()});
-        }
-        await tx.update(transitRef, {'status': nextStatus});
-      } else if (toDelete) {
-        tx.delete(transitRef);
-      }
-    }
-  });
-
-  if (step == Transit.Confirm) {
-    // Log event for the analytics
-    await FirebaseAnalytics().logEvent(
-        name: 'handover_book',
-        parameters: <String, dynamic>{
-          'language': t.bookcopy.book.language ?? ''
-        });
-  } else if (step == Transit.Reject) {
-    // Log event for the analytics
-    await FirebaseAnalytics().logEvent(
-        name: 'reject_request_book',
-        parameters: <String, dynamic>{
-          'language': t.bookcopy.book.language ?? ''
-        });
-
-  }
+      parameters: <String, dynamic>{'language': b.language ?? ''});
 }
 
 //TODO: Not sure it's good idea to have it as global valiables. Need to find
@@ -933,6 +1009,30 @@ class LibConnect {
 
     return _booksApi;
   }
+}
+
+Future<List<Book>> searchByTitleAuthorBiblosphere(String text) async {
+  //TODO: Redesign search as now it only use ONE keyword
+  // and doing rest of filtering on client side
+  Set<String> keys = getKeys(text);
+  QuerySnapshot snapshot;
+
+  if (keys.length == 0)
+    return [];
+  else
+    snapshot = await Firestore.instance
+        .collection('books')
+        .where('book.keys', arrayContains: keys.elementAt(0))
+        .getDocuments();
+
+  List<Book> books = snapshot.documents.where((doc) {
+    return doc.data['book']['keys'].toSet().containsAll(keys);
+  }).map((doc) {
+    Book book = new Book.fromJson(doc.data['book']);
+    return book;
+  }).toList();
+
+  return books;
 }
 
 Future<List<Book>> searchByTitleAuthorGoogle(String text) async {
@@ -1182,267 +1282,6 @@ final primaryColor = new Color(0xff203152);
 final greyColor = new Color(0xffaeaeae);
 final greyColor2 = new Color(0xffE8E8E8);
 
-class EnterBook extends StatefulWidget {
-  EnterBook(
-      {Key key,
-      @required this.title,
-      @required this.onConfirm,
-      this.scan = true,
-      this.search = true})
-      : super(key: key);
-
-  final BookCallback onConfirm;
-  final String title;
-  final bool scan;
-  final bool search;
-
-  @override
-  _EnterBookState createState() => new _EnterBookState();
-}
-
-class _EnterBookState extends State<EnterBook> {
-  List<Book> suggestions = [];
-  Book bookToAdd;
-
-  TextEditingController textController;
-
-  @override
-  void initState() {
-    super.initState();
-
-    textController = new TextEditingController();
-    textController.addListener(searchAutocomplete);
-  }
-
-  @override
-  void dispose() {
-    textController.dispose();
-    super.dispose();
-  }
-
-  _EnterBookState();
-
-  searchAutocomplete() async {
-    String text = textController.text;
-    if (text.length > 5) {
-      //Goodreads search does not have ISBN in response, so using Google
-      //List<Book> newSuggestions = await searchByTitleAuthorGoodreads(text);
-
-      List<Book> newSuggestions = await searchByTitleAuthorGoogle(text);
-      setState(() {
-        suggestions = newSuggestions;
-        bookToAdd = null;
-      });
-    } else {
-      setState(() {
-        bookToAdd = null;
-      });
-      //Clear previous suggestions if new text is typing
-      if (suggestions.isNotEmpty) {
-        setState(() {
-          suggestions.clear();
-        });
-      }
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-        color: greyColor2,
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
-        child: Container(
-          margin: EdgeInsets.all(10.0),
-          child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: <Widget>[
-                Text(widget.title, style: Theme.of(context).textTheme.subtitle),
-                widget.scan
-                    ? Row(children: <Widget>[
-                        Expanded(
-                            child: Text(S.of(context).scanISBN,
-                                style: Theme.of(context).textTheme.body1)),
-                        RaisedButton(
-                          textColor: Colors.white,
-                          color: Theme.of(context).colorScheme.secondary,
-                          child: new Icon(MyIcons.barcode),
-                          onPressed: () {
-                            setState(() {
-                              bookToAdd = null;
-                              suggestions.clear();
-                            });
-                            scanIsbn(context);
-                          },
-                          shape: new RoundedRectangleBorder(
-                              borderRadius: new BorderRadius.circular(20.0)),
-                        ),
-                      ])
-                    : Container(),
-                widget.search
-                    ? Row(children: <Widget>[
-                        Flexible(
-                            //Workaround for bug on iOS with paste to text field https://github.com/flutter/flutter/issues/22624
-                            child: Theme(
-                                data:
-                                    ThemeData(platform: TargetPlatform.android),
-                                child: TextField(
-                                  maxLines: 1,
-                                  controller: textController,
-                                  style: Theme.of(context).textTheme.body1,
-                                  decoration: InputDecoration(
-                                      hintText: S.of(context).enterTitle),
-                                ))),
-                        RaisedButton(
-                          textColor: Colors.white,
-                          color: Theme.of(context).colorScheme.secondary,
-                          child: new Icon(MyIcons.search),
-                          onPressed: () {
-                            print("X");
-                          },
-                          shape: new RoundedRectangleBorder(
-                              borderRadius: new BorderRadius.circular(20.0)),
-                        ),
-                      ])
-                    : Container(),
-//              Expanded(child: Column(children: )),
-              ]
-                ..addAll(suggestions != null
-                    ? suggestions.map((Book b) {
-                        return Container(
-                            margin: EdgeInsets.all(3.0),
-                            child: GestureDetector(
-                                onTap: () async {
-                                  b = await enrichBookRecord(b);
-                                  setState(() {
-                                    bookToAdd = b;
-                                    suggestions.clear();
-                                  });
-                                },
-                                child: Row(children: <Widget>[
-                                  Container(
-                                    width: 30,
-                                    child: Image(
-                                        image: new CachedNetworkImageProvider(
-                                            (b.image != null && b.image.isNotEmpty) ? b.image : nocoverUrl),
-                                        width: 25,
-                                        fit: BoxFit.cover),
-                                  ),
-                                  Expanded(
-                                      child: Container(
-                                          margin: EdgeInsets.only(left: 3.0),
-                                          child: Text(
-                                              '\'${b.title}\' ${b.authors[0]}')))
-                                ])));
-                      }).toList()
-                    : [Container()])
-                ..addAll([
-                  bookToAdd != null
-                      ? confirmBook(context, bookToAdd)
-                      : Container()
-                ])),
-        ));
-  }
-
-  Future scanIsbn(BuildContext context) async {
-    try {
-      String barcode = await BarcodeScanner.scan();
-
-      Book book = await searchByIsbn(barcode);
-
-      if (book == null) {
-        book = await searchByIsbnGoodreads(barcode);
-      }
-
-      if (book == null) {
-        if (barcode.startsWith('9785'))
-          book = await searchByIsbnRsl(barcode);
-        else
-          book = await searchByIsbnGoogle(barcode);
-      }
-
-      if (book != null) {
-        //Many books on goodreads does not have images. Enreach it from Google
-        book = await enrichBookRecord(book);
-        setState(() {
-          bookToAdd = book;
-        });
-      } else {
-        Firestore.instance.collection('noisbn').add({'isbn': barcode});
-        //print("No record found for isbn: $barcode");
-        showSnackBar(context, S.of(context).isbnNotFound);
-      }
-    } on PlatformException catch (e) {
-      if (e.code == BarcodeScanner.CameraAccessDenied) {
-        print('The user did not grant the camera permission!');
-      } else {
-        print('Unknown platform error in scanIsbn: $e');
-      }
-    } on FormatException {
-      print(
-          'null (User returned using the "back"-button before scanning anything. Result)');
-    } catch (e) {
-      print('Unknown error in scanIsbn: $e');
-    }
-  }
-
-  Widget confirmBook(BuildContext context, Book book) {
-    return new Container(
-        child: new Column(
-          children: <Widget>[
-            new Container(
-              child: new Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Image(
-                        image: new CachedNetworkImageProvider(
-                            (book.image != null && book.image.isNotEmpty) ? book.image : nocoverUrl),
-                        width: 50,
-                        fit: BoxFit.cover),
-                    Expanded(
-                      child: Container(
-                        child: Column(
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: <Widget>[
-                              Text(book.authors.join(", "),
-                                  style: Theme.of(context).textTheme.caption),
-                              Text(book.title,
-                                  style: Theme.of(context).textTheme.subtitle),
-                            ]),
-                        margin: EdgeInsets.all(5.0),
-                        alignment: Alignment.topLeft,
-                      ),
-                    ),
-                  ]),
-              margin: EdgeInsets.only(top: 7.0, left: 7.0, right: 7.0),
-            ),
-            new Align(
-              alignment: Alignment.centerRight,
-              child: RaisedButton(
-                textColor: Colors.white,
-                color: Theme.of(context).colorScheme.secondary,
-                child: new Text(S.of(context).add,
-                    style: Theme.of(context).textTheme.title),
-                onPressed: () {
-                  print('Book \'${book.title}\' to be added.');
-                  widget.onConfirm(book);
-                  setState(() {
-                    bookToAdd = null;
-                    textController.clear();
-                  });
-                },
-                shape: new RoundedRectangleBorder(
-                    borderRadius: new BorderRadius.circular(20.0)),
-              ),
-            ),
-          ],
-        ),
-        margin: EdgeInsets.only(bottom: 10.0, left: 5.0, right: 5.0));
-  }
-}
-
 void showBbsDialog(BuildContext context, String text) {
   showDialog<Null>(
     context: context,
@@ -1555,6 +1394,17 @@ Future<GeoPoint> currentPosition() async {
   }
 }
 
+Future<GeoFirePoint> currentLocation() async {
+  try {
+    final position = await Geolocator().getLastKnownPosition();
+    return Geoflutterfire()
+        .point(latitude: position.latitude, longitude: position.longitude);
+  } on PlatformException {
+    print("POSITION: GeoPisition failed");
+    return null;
+  }
+}
+
 typedef Widget CardCallback(DocumentSnapshot document, User user);
 
 MaterialPageRoute cardListPage(
@@ -1617,4 +1467,230 @@ showSnackBar(BuildContext context, String text) {
 
 // Find the Scaffold in the Widget tree and use it to show a SnackBar!
   Scaffold.of(context).showSnackBar(snackBar);
+}
+
+Scaffold buildScaffold(BuildContext context, String title, Widget body) {
+  return new Scaffold(
+      appBar: new AppBar(
+        title: new Text(
+          title,
+          style: Theme.of(context).textTheme.title.apply(color: Colors.white),
+        ),
+        centerTitle: true,
+      ),
+      body: body);
+}
+
+double distanceBetween(double lat1, double lon1, double lat2, double lon2) {
+  double R = 6378.137; // Radius of earth in KM
+  double dLat = lat2 * math.pi / 180 - lat1 * math.pi / 180;
+  double dLon = lon2 * math.pi / 180 - lon1 * math.pi / 180;
+  double a = math.sin(dLat / 2) * math.sin(dLat / 2) +
+      math.cos(lat1 * math.pi / 180) *
+          math.cos(lat2 * math.pi / 180) *
+          math.sin(dLon / 2) *
+          math.sin(dLon / 2);
+  double c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a));
+  double d = R * c;
+  return d; // meters
+}
+
+Widget bookImage(Book book, double size, {padding = 3.0}) {
+  if (book == null)
+    return Container();
+  else
+    return new Container(
+        margin: EdgeInsets.all(padding),
+        child: Image(
+            image: new CachedNetworkImageProvider(
+                (book.image != null && book.image.isNotEmpty)
+                    ? book.image
+                    : nocoverUrl),
+            width: size,
+            fit: BoxFit.cover));
+}
+
+Widget userPhoto(User user, double size, {double padding = 0.0}) {
+  if (user == null) {
+    return Container();
+  } else {
+    return Container(
+        margin: EdgeInsets.all(padding),
+        width: size,
+        height: size,
+        decoration: new BoxDecoration(
+            shape: BoxShape.circle,
+            image: new DecorationImage(
+                fit: BoxFit.fill,
+                image: new CachedNetworkImageProvider(user.photo))));
+  }
+}
+
+typedef BookrecordWidgetBuilder = Widget Function(
+    BuildContext context, Bookrecord bookrecord);
+
+class BookrecordWidget extends StatefulWidget {
+  BookrecordWidget(
+      {Key key,
+      @required this.bookrecord,
+      @required this.currentUser,
+      @required this.builder,
+      this.filter = const {}})
+      : super(key: key);
+
+  Bookrecord bookrecord;
+  final User currentUser;
+  final BookrecordWidgetBuilder builder;
+  Set<String> filter = {};
+
+  @override
+  _BookrecordWidgetState createState() => new _BookrecordWidgetState(
+      bookrecord: bookrecord, currentUser: currentUser, builder: builder);
+}
+
+class _BookrecordWidgetState extends State<BookrecordWidget> {
+  Bookrecord bookrecord;
+  User currentUser;
+  final BookrecordWidgetBuilder builder;
+
+  @override
+  void initState() {
+    super.initState();
+    bookrecord.getBookrecord(currentUser).whenComplete(() {
+      setState(() {});
+    });
+  }
+
+  _BookrecordWidgetState({
+    Key key,
+    @required this.bookrecord,
+    @required this.currentUser,
+    @required this.builder,
+  });
+
+  @override
+  void didUpdateWidget(BookrecordWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (oldWidget.currentUser.id != widget.currentUser.id) {
+      currentUser = widget.currentUser;
+    }
+
+    if (oldWidget.bookrecord.id != widget.bookrecord.id) {
+      bookrecord = widget.bookrecord;
+      if (!bookrecord.hasData)
+        bookrecord.getBookrecord(currentUser).whenComplete(() {
+          setState(() {});
+        });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (bookrecord == null ||
+        !bookrecord.hasData ||
+        bookrecord.book == null ||
+        !bookrecord?.book?.keys.containsAll(widget.filter)) {
+      return Container();
+    } else {
+      return builder(context, bookrecord);
+    }
+  }
+}
+
+Set<String> getKeys(String s) {
+  List<String> keys = s
+      .toLowerCase()
+      .split(new RegExp(r"[\s,!?:;.]+"))
+      .where((s) => s.length > 2)
+      .toList();
+  keys.sort((a, b) {
+    return b.length - a.length;
+  });
+  return keys.toSet();
+}
+
+createStellarAccount(User user) async {
+  stellar.KeyPair pair = stellar.KeyPair.random();
+
+  /* Add balance to test account
+  var url = "https://friendbot.stellar.org/?addr=${pair.accountId}";
+  http.get(url).then((response) {
+    switch (response.statusCode) {
+      case 200:
+        {
+          print(
+              "!!!DEBUG: SUCCESS! You have a new account : \n${response.body}");
+          print("!!!DEBUG: Response body: ${response.body}");
+          break;
+        }
+      default:
+        {
+          print("ERROR! : \n${response.body}");
+        }
+    }
+  });
+  */
+
+  user.accountId = pair.accountId;
+  user.secretSeed = pair.secretSeed;
+  await Firestore.instance
+      .collection('users')
+      .document(user.id)
+      .updateData({'accountId': user.accountId, 'secretSeed': user.secretSeed});
+}
+
+void charge(User buyer, double amount, stellar.TransactionBuilder builder) {
+  amount = (amount * 100).roundToDouble() / 100;
+
+  //Check if book holder has Stellar account, create if needed
+  if (buyer.secretSeed == null) {
+    print('!!!DEBUG: source account does not exist ${buyer.id}');
+    throw ('Stellar account does not exist for user ${buyer.name}');
+  }
+
+  // Biblospher account
+  stellar.KeyPair destination = stellar.KeyPair.fromAccountId(
+      'GA2VIBWLNPLRY3SPUAFPIDLNFJJR4HJV5RONNQZJO4OA4LSXJ6UZV3MS');
+
+  print('!!!DEBUG adding operation');
+  builder.addOperation(new stellar.PaymentOperationBuilder(destination,
+                  new stellar.AssetTypeNative(), amount.toString()).build());
+}
+
+void refund(User buyer, User owner, Deal deal, stellar.TransactionBuilder builder) async {
+  if (deal == null) throw ('Transaction tried on empty deal');
+
+  double refund =
+      (deal.date.difference(DateTime.now()).inDays * deal.price / 183 * 100)
+          .roundToDouble() / 100;
+
+  // Could not be negative (in case of calculation after last day)
+  if (refund < 0.0) refund = 0.0;
+
+  // Reward owner
+  double reward = deal.price - refund;
+
+  // Refund fee as well
+  refund = (refund * 1.2 * 100).roundToDouble() / 100;
+
+  print('!!!DEBUG: price/refund/reward: ${deal.price}, ${refund}, ${reward}');
+
+  if (refund > 0.0) {
+    stellar.KeyPair destination =
+        stellar.KeyPair.fromAccountId(buyer.accountId);
+
+    builder.addOperation(new stellar.PaymentOperationBuilder(
+            destination, new stellar.AssetTypeNative(), refund.toString())
+        .build());
+  }
+
+  if (reward > 0.0) {
+    stellar.KeyPair destination =
+        stellar.KeyPair.fromAccountId(owner.accountId);
+
+    builder.addOperation(new stellar.PaymentOperationBuilder(
+            destination, new stellar.AssetTypeNative(), reward.toString())
+        .build());
+  }
 }
