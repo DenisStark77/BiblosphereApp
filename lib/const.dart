@@ -14,7 +14,6 @@ import 'package:xml/xml.dart' as xml;
 import 'dart:convert';
 import 'dart:math' as math;
 import 'package:stellar/stellar.dart' as stellar;
-import 'package:http/http.dart' as http;
 
 import 'package:biblosphere/l10n.dart';
 

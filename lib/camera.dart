@@ -11,7 +11,6 @@ import 'package:flutter_crashlytics/flutter_crashlytics.dart';
 import 'package:biblosphere/const.dart';
 import 'package:biblosphere/chat.dart';
 import 'package:biblosphere/l10n.dart';
-import 'package:intl/intl.dart';
 
 class AddBookWidget extends StatefulWidget {
   AddBookWidget({
