@@ -146,9 +146,6 @@ class Book {
         listPrice = new Price(
             amount: v.saleInfo.listPrice.amount,
             currency: v.saleInfo.listPrice.currencyCode);
-
-      print(
-          '!!!DEBUG: price for ${title} = ${listPrice?.amount} ${listPrice?.currency}');
       source = BookSource.google;
       keys = getKeys(authors.join(' ') + ' ' + title + ' ' + isbn);
     } catch (e) {
@@ -1037,7 +1034,7 @@ Future<List<Book>> searchByTitleAuthorBiblosphere(String text) async {
 Future<List<Book>> searchByTitleAuthorGoogle(String text) async {
   Volumes books = await LibConnect.getGoogleBookApi()
       .volumes
-      .list(text, printType: 'books', maxResults: 10);
+      .list(text, printType: 'books', maxResults: 20);
 
   if (books.items != null && books.items.isNotEmpty) {
     return books.items
@@ -1591,7 +1588,7 @@ class _BookrecordWidgetState extends State<BookrecordWidget> {
         bookrecord.book == null ||
         bookrecord.book.keys == null ||
         !bookrecord.book.keys.containsAll(widget.filter)) {
-      return Container();
+      return Container(width: 0.0, height: 0.0);
     } else {
       return builder(context, bookrecord);
     }

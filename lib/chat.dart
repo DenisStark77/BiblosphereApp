@@ -226,9 +226,7 @@ class _ChatCardState extends State<ChatCard> {
     });
   }
 
-  _ChatCardState({
-  Key key,
-  @required this.chat});
+  _ChatCardState({Key key, @required this.chat});
 
   @override
   Widget build(BuildContext context) {
@@ -865,6 +863,9 @@ class _RequestBooksWidgetState extends State<RequestBooksWidget> {
   TextEditingController textController;
   final User currentUser;
   final User partner;
+  double amountToPay = 0.0;
+  List<Bookrecord> books = [];
+  StreamSubscription<QuerySnapshot> bookSubscription;
 
   Set<String> keys = {};
 
@@ -873,11 +874,52 @@ class _RequestBooksWidgetState extends State<RequestBooksWidget> {
     super.initState();
 
     textController = new TextEditingController();
+
+    books = [];
+    amountToPay = 0.0;
+    bookSubscription = Firestore.instance
+        .collection('bookrecords')
+        .where("holderId", isEqualTo: partner.id)
+        .where("transit", isEqualTo: true)
+        .where("transitId", isEqualTo: currentUser.id)
+        .where("wish", isEqualTo: false)
+        .snapshots()
+        .listen((snap) {
+      print(
+          '!!!DEBUG: documents: ${snap.documents.length} changes: ${snap.documentChanges.length}.');
+      if (snap.documentChanges.length > 0) {
+        snap.documentChanges.forEach((doc) {
+          print(
+              '!!!DEBUG: document change: type=${doc.type} indexes: ${doc.oldIndex} =>.${doc.newIndex}');
+          if (doc.type == DocumentChangeType.added) {
+            Bookrecord rec = new Bookrecord.fromJson(doc.document.data);
+            rec.getBookrecord(currentUser);
+            books.insert(doc.newIndex, rec);
+            amountToPay += rec.getPrice();
+          } else if (doc.type == DocumentChangeType.modified) {
+            //TODO: Check if redraw correctly especially for child records (users and book)
+            Bookrecord rec = new Bookrecord.fromJson(doc.document.data);
+            rec.getBookrecord(currentUser);
+            amountToPay -= books[doc.oldIndex].getPrice();
+            books[doc.oldIndex] = rec;
+            amountToPay += rec.getPrice();
+          } else if (doc.type == DocumentChangeType.removed) {
+            amountToPay -= books[doc.oldIndex].getPrice();
+            books.removeAt(doc.oldIndex);
+          }
+          print('!!!DEBUG books modified, amount ${amountToPay}');
+        });
+        if (mounted) setState(() {
+          print('!!!DEBUG Set state');
+        });
+      }
+    });
   }
 
   @override
   void dispose() {
     textController.dispose();
+    bookSubscription.cancel();
     super.dispose();
   }
 
@@ -896,120 +938,104 @@ class _RequestBooksWidgetState extends State<RequestBooksWidget> {
                 Column(crossAxisAlignment: CrossAxisAlignment.start, children: <
                     Widget>[
               new Container(
-                  child: new StreamBuilder<QuerySnapshot>(
-                      stream: Firestore.instance
-                          .collection('bookrecords')
-                          .where("holderId", isEqualTo: partner.id)
-                          .where("transit", isEqualTo: true)
-                          .where("transitId", isEqualTo: currentUser.id)
-                          .where("wish", isEqualTo: false)
-                          .snapshots(),
-                      builder: (BuildContext context,
-                          AsyncSnapshot<QuerySnapshot> snapshot) {
-                        if (snapshot.hasError) {
-                          return Text('Error: ${snapshot.error}');
-                        }
-                        switch (snapshot.connectionState) {
-                          case ConnectionState.waiting:
-                            return Container();
-                          default:
-                            if (!snapshot.hasData ||
-                                snapshot.data.documents.isEmpty) {
-                              return Container();
-                            }
-                            return new Wrap(
-                              children: snapshot.data.documents
-                                  .map((DocumentSnapshot document) {
-                                Bookrecord rec =
-                                    new Bookrecord.fromJson(document.data);
-                                return BookrecordWidget(
-                                    bookrecord: rec,
-                                    currentUser: currentUser,
-                                    builder: (context, rec) {
-                                      return Stack(children: <Widget>[
-                                        bookImage(rec.book, 50.0),
-                                        Positioned.fill(
-                                            child: Container(
-                                                alignment: Alignment.topRight,
-                                                child: GestureDetector(
-                                                    onTap: () {
-                                                      Firestore.instance
-                                                          .collection(
-                                                              'bookrecords')
-                                                          .document(rec.id)
-                                                          .updateData({
-                                                        'transit': false,
-                                                        'transitId': null,
-                                                        'users': [
-                                                          rec.holderId,
-                                                          rec.ownerId
-                                                        ]
-                                                      });
-                                                    },
-                                                    child: ClipOval(
-                                                      child: Container(
-                                                        color: Colors.red,
-                                                        height:
-                                                            20.0, // height of the button
-                                                        width:
-                                                            20.0, // width of the button
-                                                        child: Center(
-                                                            child: new Icon(
-                                                                MyIcons
-                                                                    .cancel_cross,
-                                                                color: Colors
-                                                                    .white,
-                                                                size: 10)),
-                                                      ),
-                                                    ))))
-                                      ]);
-                                    });
-                              }).toList(),
-                            );
-                        }
-                      })),
+                child: Wrap(
+                  children: books.map((Bookrecord rec) {
+                    print('!!!DEBUG mapping for books');
+                    return BookrecordWidget(
+                        bookrecord: rec,
+                        currentUser: currentUser,
+                        builder: (context, rec) {
+                          return Stack(children: <Widget>[
+                            bookImage(rec.book, 50.0),
+                            Positioned.fill(
+                                child: Container(
+                                    alignment: Alignment.topRight,
+                                    child: GestureDetector(
+                                        onTap: () {
+                                          Firestore.instance
+                                              .collection('bookrecords')
+                                              .document(rec.id)
+                                              .updateData({
+                                            'transit': false,
+                                            'transitId': null,
+                                            'users': [rec.holderId, rec.ownerId]
+                                          });
+                                        },
+                                        child: ClipOval(
+                                          child: Container(
+                                            color: Colors.red,
+                                            height:
+                                                20.0, // height of the button
+                                            width: 20.0, // width of the button
+                                            child: Center(
+                                                child: new Icon(
+                                                    MyIcons.cancel_cross,
+                                                    color: Colors.white,
+                                                    size: 10)),
+                                          ),
+                                        ))))
+                          ]);
+                        });
+                  }).toList(),
+                ),
+              ),
+              amountToPay > 0.0
+                  ? Container(
+                  child: amountToPay * 1.2 < currentUser.balance ?
+                      Text(
+                          'Депозит за книги: ${amountToPay * 1.2}, оплата за месяц ${amountToPay * 1.2 /6.0}') :
+                  Text(
+                      'Вам нехватает ${(amountToPay * 1.2 - currentUser.balance).ceilToDouble()}. Депозит за книги: ${amountToPay * 1.2}, оплата за месяц ${amountToPay * 1.2 /6.0}')
+              )
+                  : Container(),
               new Row(children: <Widget>[
-                new Container(
+                amountToPay > 0.0 && amountToPay * 1.2 + 1 >= currentUser.balance ? new Container(
                     child: RaisedButton(
-                      textColor: Colors.white,
-                      color: Theme.of(context).colorScheme.secondary,
-                      child: new Text('Пополнить счёт \u{02713}',
-                          style: Theme.of(context)
-                              .textTheme
-                              .body1
-                              .apply(color: Colors.white)),
-                      onPressed: () async {
-                        final bool available = await InAppPurchaseConnection.instance.isAvailable();
-                        if (available) {
-                          print('!!!DEBUG: In-App store not available');
-                        }
-                        const Set<String> _kIds = {'book'};
-                        final ProductDetailsResponse response = await InAppPurchaseConnection.instance.queryProductDetails(_kIds);
-                        if (!response.notFoundIDs.isEmpty) {
-                          print('!!!DEBUG: Ids not found');
-                        }
-                        List<ProductDetails> products = response.productDetails;
-                        final PurchaseParam purchaseParam = PurchaseParam(productDetails: products.first, sandboxTesting: true);
-                        InAppPurchaseConnection.instance.buyConsumable(purchaseParam: purchaseParam);
-                      },
-                      shape: new RoundedRectangleBorder(
-                          borderRadius: new BorderRadius.circular(20.0)),
-                    )),
-                new Container(
-                  child: RaisedButton(
-                textColor: Colors.white,
-                color: Theme.of(context).colorScheme.secondary,
-                child: new Text('Книги получил \u{02713}',
-                    style: Theme.of(context)
-                        .textTheme
-                        .body1
-                        .apply(color: Colors.white)),
-                onPressed: () {
-                  transferBooks(partner);
-                },
-                shape: new RoundedRectangleBorder(
-                    borderRadius: new BorderRadius.circular(20.0)),
-              ))]),
+                  textColor: Colors.white,
+                  color: Theme.of(context).colorScheme.secondary,
+                  child: new Text('Пополнить счёт',
+                      style: Theme.of(context)
+                          .textTheme
+                          .body1
+                          .apply(color: Colors.white)),
+                  onPressed: () async {
+                    final bool available =
+                        await InAppPurchaseConnection.instance.isAvailable();
+                    if (available) {
+                      print('!!!DEBUG: In-App store not available');
+                    }
+                    const Set<String> _kIds = {'book'};
+                    final ProductDetailsResponse response =
+                        await InAppPurchaseConnection.instance
+                            .queryProductDetails(_kIds);
+                    if (!response.notFoundIDs.isEmpty) {
+                      print('!!!DEBUG: Ids not found');
+                    }
+                    List<ProductDetails> products = response.productDetails;
+                    final PurchaseParam purchaseParam = PurchaseParam(
+                        productDetails: products.first, sandboxTesting: true);
+                    InAppPurchaseConnection.instance
+                        .buyConsumable(purchaseParam: purchaseParam);
+                  },
+                  shape: new RoundedRectangleBorder(
+                      borderRadius: new BorderRadius.circular(20.0)),
+                )) : Container(),
+                amountToPay > 0 && amountToPay * 1.2 + 1 < currentUser.balance ? new Container(
+                    child: RaisedButton(
+                  textColor: Colors.white,
+                  color: Theme.of(context).colorScheme.secondary,
+                  child: new Text('Книги получил \u{02713}',
+                      style: Theme.of(context)
+                          .textTheme
+                          .body1
+                          .apply(color: Colors.white)),
+                  onPressed: () {
+                    transferBooks(partner);
+                  },
+                  shape: new RoundedRectangleBorder(
+                      borderRadius: new BorderRadius.circular(20.0)),
+                )) : Container()
+              ]),
               new Container(
                 padding: new EdgeInsets.all(10.0),
                 child: new Row(
@@ -1146,8 +1172,10 @@ class _RequestBooksWidgetState extends State<RequestBooksWidget> {
       return rec;
     }).toList();
 
-    List<Bookrecord> booksTaken = books.where((rec) => rec.ownerId != currentUser.id).toList();
-    List<Bookrecord> booksReturned = books.where((rec) => rec.ownerId == currentUser.id).toList();
+    List<Bookrecord> booksTaken =
+        books.where((rec) => rec.ownerId != currentUser.id).toList();
+    List<Bookrecord> booksReturned =
+        books.where((rec) => rec.ownerId == currentUser.id).toList();
     print('!!!DEBUG: lists ${booksTaken} ${booksReturned}');
 
     if (partner.accountId == null) {
@@ -1158,22 +1186,22 @@ class _RequestBooksWidgetState extends State<RequestBooksWidget> {
     // Initiate Stellar transaction
     stellar.Network.useTestNetwork();
     stellar.Server server =
-    new stellar.Server("https://horizon-testnet.stellar.org");
+        new stellar.Server("https://horizon-testnet.stellar.org");
 
     if (booksTaken.length > 0) {
       //TODO: protect secret key
-      stellar.KeyPair source = stellar.KeyPair.fromSecretSeed(
-          currentUser.secretSeed);
+      stellar.KeyPair source =
+          stellar.KeyPair.fromSecretSeed(currentUser.secretSeed);
       var sourceAccount = await server.accounts.account(source);
-      stellar.TransactionBuilder builder = new stellar.TransactionBuilder(
-          sourceAccount);
+      stellar.TransactionBuilder builder =
+          new stellar.TransactionBuilder(sourceAccount);
 
       // Add Stellar operations for each book to Stellar transaction
       await booksTaken.forEach((rec) {
-          print('!!!DEBUG charge');
-          // Book to rent
-          double price = rec.getPrice();
-          charge(currentUser, price * 1.2, builder);
+        print('!!!DEBUG charge');
+        // Book to rent
+        double price = rec.getPrice();
+        charge(currentUser, price * 1.2, builder);
       });
 
       // Add memo and sign Stellar transaction
@@ -1191,40 +1219,41 @@ class _RequestBooksWidgetState extends State<RequestBooksWidget> {
       //TODO: run it as transaction to have it atomic
       if (response.success) {
         booksTaken.forEach((rec) {
-            Deal deal = new Deal(
-                date: DateTime.now().add(Duration(days: 183)),
-                price: rec.getPrice());
+          Deal deal = new Deal(
+              date: DateTime.now().add(Duration(days: 183)),
+              price: rec.getPrice());
 
-            Firestore.instance
-                .collection('bookrecords')
-                .document(rec.id)
-                .updateData({
-              'deal': deal.toJson(),
-              'holderId': currentUser.id,
-              'transit': false,
-              'lent': true,
-              'transitId': null,
-              'users': [currentUser.id, rec.ownerId]
-            });
+          Firestore.instance
+              .collection('bookrecords')
+              .document(rec.id)
+              .updateData({
+            'deal': deal.toJson(),
+            'holderId': currentUser.id,
+            'transit': false,
+            'lent': true,
+            'transitId': null,
+            'users': [currentUser.id, rec.ownerId]
+          });
         });
       }
     }
 
     if (booksReturned.length > 0) {
       //TODO: protect secret key
-      stellar.KeyPair source = stellar.KeyPair.fromSecretSeed('SBUXJGJAI7MPORWH6DIA4NUZ4PG4E4M2RKEMZYU5LSHMGWNEXGOMGBDU');
+      stellar.KeyPair source = stellar.KeyPair.fromSecretSeed(
+          'SBUXJGJAI7MPORWH6DIA4NUZ4PG4E4M2RKEMZYU5LSHMGWNEXGOMGBDU');
 
       var sourceAccount = await server.accounts.account(source);
-      stellar.TransactionBuilder builder = new stellar.TransactionBuilder(
-          sourceAccount);
+      stellar.TransactionBuilder builder =
+          new stellar.TransactionBuilder(sourceAccount);
 
       // Add Stellar operations for each book to Stellar transaction
       await booksReturned.forEach((rec) {
-          print('!!!DEBUG refund');
-          // Book to return
-          refund(partner, currentUser, rec.deal, builder);
-          //TODO: make fee payments
-          print('!!!DEBUG refund end');
+        print('!!!DEBUG refund');
+        // Book to return
+        refund(partner, currentUser, rec.deal, builder);
+        //TODO: make fee payments
+        print('!!!DEBUG refund end');
       });
 
       // Add memo and sign Stellar transaction
@@ -1243,18 +1272,18 @@ class _RequestBooksWidgetState extends State<RequestBooksWidget> {
       //TODO: run it as transaction to have it atomic
       if (response.success) {
         booksReturned.forEach((rec) {
-            // Clean deal
-            Firestore.instance
-                .collection('bookrecords')
-                .document(rec.id)
-                .updateData({
-              'deal': null,
-              'holderId': currentUser.id,
-              'transit': false,
-              'lent': false,
-              'transitId': null,
-              'users': [currentUser.id, rec.ownerId]
-            });
+          // Clean deal
+          Firestore.instance
+              .collection('bookrecords')
+              .document(rec.id)
+              .updateData({
+            'deal': null,
+            'holderId': currentUser.id,
+            'transit': false,
+            'lent': false,
+            'transitId': null,
+            'users': [currentUser.id, rec.ownerId]
+          });
         });
       }
     }
