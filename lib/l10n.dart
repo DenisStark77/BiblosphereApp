@@ -104,7 +104,6 @@ class S {
 
   // end of main.dart
 
-  // camera.dart
   String get deleteShelf {
     return Intl.message('Delete your bookshelf', name: 'deleteShelf');
   }
@@ -375,7 +374,7 @@ class S {
   }
 
   String get scanISBN {
-    return Intl.message('Scan ISBN from the back of the book',
+    return Intl.message('Scan ISBN code',
         name: 'scanISBN');
   }
 
@@ -631,6 +630,330 @@ class S {
     return Intl.message("Language: $lang",
         name: 'bookLanguage', args: [lang]);
   }
+
+  String financeTitle(balance) {
+    return Intl.message("МОЙ БАЛАНС: $balance",
+        name: 'financeTitle', args: [balance]);
+  }
+
+  String get addbookTitle{
+    return Intl.message('ДОБАВЬ КНИГУ', name: 'addbookTitle');
+  }
+
+  String get addBook{
+    return Intl.message('Добавить книгу', name: 'addBook');
+  }
+
+  String get findbookTitle{
+    return Intl.message('НАЙДИ КНИГУ', name: 'findbookTitle');
+  }
+
+  String get findBook{
+    return Intl.message('Найти книгу', name: 'findBook');
+  }
+
+  String get mybooksTitle{
+    return Intl.message('МОИ КНИГИ', name: 'mybooksTitle');
+  }
+
+  String get myBooks{
+    return Intl.message('Мои книги', name: 'myBooks');
+  }
+
+  String get referralLink{
+    return Intl.message('Ваша партнёрская ссылка:', name: 'referralLink');
+  }
+
+  String get linkCopied{
+    return Intl.message('Ссылка скопирована в буфер обмена', name: 'linkCopied');
+  }
+
+  String get menuMessages{
+    return Intl.message('Сообщения', name: 'menuMessages');
+  }
+
+  String get titleMessages{
+    return Intl.message('СООБЩЕНИЯ', name: 'titleMessages');
+  }
+
+  String get menuSettings{
+    return Intl.message('Настройки', name: 'menuSettings');
+  }
+
+  String get titleSettings{
+    return Intl.message('НАСТРОЙКИ', name: 'titleSettings');
+  }
+
+  String get menuBalance{
+    return Intl.message('Баланс', name: 'menuBalance');
+  }
+
+  String get menuReferral{
+    return Intl.message('Реферальная программа', name: 'menuReferral');
+  }
+
+  String get referralTitle{
+    return Intl.message('МОИ РЕФЕРАЛЫ', name: 'referralTitle');
+  }
+
+  String get menuSupport{
+    return Intl.message('Поддержка', name: 'menuSupport');
+  }
+
+  String get supportTitle{
+    return Intl.message('ПОДДЕРЖКА', name: 'supportTitle');
+  }
+
+  String get hintAuthorTitle{
+    return Intl.message('Автор или название', name: 'hintAuthorTitle');
+  }
+
+  String get chipMyBooks{
+    return Intl.message('Мои книги', name: 'chipMyBooks');
+  }
+
+  String get chipLent{
+    return Intl.message('Отданные', name: 'chipLent');
+  }
+
+  String get chipBorrowed{
+    return Intl.message('Взятые', name: 'chipBorrowed');
+  }
+
+  String get chipWish{
+    return Intl.message('Хочу', name: 'chipWish');
+  }
+
+  String get chipTransit{
+    return Intl.message('Транзит', name: 'chipTransit');
+  }
+
+  String get youHaveThisBook{
+    return Intl.message('Эта книга находится у вас', name: 'youHaveThisBook');
+  }
+
+  String get youWishThisBook{
+    return Intl.message('Эту книгу вы хотите почитать', name: 'youWishThisBook');
+  }
+
+  String youLentThisBook(user) {
+    return Intl.message("Эту книгу вы дали почитать пользователю $user",
+        name: 'youLentThisBook', args: [user]);
+  }
+
+  String youBorrowThisBook(user) {
+    return Intl.message('Эту книгу вы взяли почитать у пользователя $user',
+        name: 'youBorrowThisBook', args: [user]);
+  }
+
+  String get youTransitThisBook{
+    return Intl.message('По этой книге не завершён процесс передачи', name: 'youTransitThisBook');
+  }
+
+  String get chipPayin{
+    return Intl.message('Пополнения', name: 'chipPayin');
+  }
+
+  String get chipPayout{
+    return Intl.message('Выплаты', name: 'chipPayout');
+  }
+
+  String get chipLeasing{
+    return Intl.message('Расходы', name: 'chipLeasing');
+  }
+
+  String get chipReward{
+    return Intl.message('Доходы', name: 'chipReward');
+  }
+
+  String get chipReferrals{
+    return Intl.message('Рефералы', name: 'chipReferrals');
+  }
+
+  String get noOperations{
+    return Intl.message('No operations', name: 'noOperations');
+  }
+
+  String get opLeasing{
+    return Intl.message('Оплата/залог за книгу', name: 'opLeasing');
+  }
+
+  String get opReward{
+    return Intl.message('Вознаграждение за книгу', name: 'opReward');
+  }
+
+  String get opInAppPurchase{
+    return Intl.message('Пополнение счёта в приложении', name: 'opInAppPurchase');
+  }
+
+  String get opInStellar{
+    return Intl.message('Пополнение счёта через Stellar', name: 'opInStellar');
+  }
+
+  String get opOutStellar{
+    return Intl.message('Вывод средств через Stellar', name: 'opOutStellar');
+  }
+
+  String get opReferral{
+    return Intl.message('Партнёрский доход', name: 'opReferral');
+  }
+
+  String get noReferrals{
+    return Intl.message('No referrals', name: 'noReferrals');
+  }
+
+  String sharedFeeLine(amount) {
+    return Intl.message('Общий доход: +$amount',
+        name: 'sharedFeeLine', args: [amount]);
+  }
+
+  String get inputStellarAcount{
+    return Intl.message('Счёт Stellar для пополнения:', name: 'inputStellarAcount');
+  }
+
+  String get accountCopied{
+    return Intl.message('Счёт скопирован в буфер обмена', name: 'accountCopied');
+  }
+
+  String get outputStellarAccount{
+    return Intl.message('Счёт Stellar для выплат:', name: 'outputStellarAccount');
+  }
+
+  String get wrongAccount{
+    return Intl.message('Неверный счёт', name: 'wrongAccount');
+  }
+
+  String get hintOutptAcount{
+    return Intl.message('Ваш Stellar счёт для вывода средств', name: 'hintOutptAcount');
+  }
+
+  String get stellarOutput{
+    return Intl.message('Вывод средств на Stellar счёт:', name: 'stellarOutput');
+  }
+
+  String hintNotMore(amount) {
+    return Intl.message('Введите сумму не более $amount',
+        name: 'hintNotMore', args: [amount]);
+  }
+
+  String get emptyAmount{
+    return Intl.message('Сумма не может быть пустой', name: 'emptyAmount');
+  }
+
+  String get negativeAmount{
+    return Intl.message('Сумма должна быть больше нуля', name: 'negativeAmount');
+  }
+
+  String get exceedAmount{
+    return Intl.message('Сумма должна быть меньше доступного остатка', name: 'exceedAmount');
+  }
+
+  String get successfulPayment{
+    return Intl.message('Платёж успешно прошёл', name: 'successfulPayment');
+  }
+
+  String get paymentError{
+    return Intl.message('Что-то пошло не так, напишите администратору', name: 'paymentError');
+  }
+
+  String get buttonTransfer{
+    return Intl.message('Перевести', name: 'buttonTransfer');
+  }
+
+  String get titleGetBook{
+    return Intl.message('ПОЛУЧИ КНИГУ', name: 'titleGetBook');
+  }
+
+  String get inMyWishes{
+    return Intl.message('Эта книга в вашем списке желаний', name: 'inMyWishes');
+  }
+
+  String get inMyBooks{
+    return Intl.message('Эта книга есть у вас', name: 'inMyBooks');
+  }
+
+  String requestBook(book) {
+    return Intl.message('Можно взять у вас \"$book\"?',
+        name: 'requestBook', args: [book]);
+  }
+
+  String get bookAround{
+    return Intl.message('Книга поблизости', name: 'bookAround');
+  }
+
+  String userHave(user) {
+    return Intl.message('У пользователя $user',
+        name: 'userHave', args: [user]);
+  }
+
+  String distanceLine(distance) {
+    return Intl.message('Расстояние: $distance км',
+        name: 'distanceLine', args: [distance]);
+  }
+
+  String requestPost(book) {
+    return Intl.message('Можете прислать мне \"$book\"?',
+        name: 'requestPost', args: [book]);
+  }
+
+  String get bookByPost{
+    return Intl.message('Получи по почте', name: 'bookByPost');
+  }
+
+  String get bookInLibrary{
+    return Intl.message('Найди в библиотеке через', name: 'bookInLibrary');
+  }
+
+  String get buyBook{
+    return Intl.message('Купи на', name: 'buyBook');
+  }
+
+  String get ifNotFound{
+    return Intl.message('Если вы не нашли книгу вы можете:', name: 'ifNotFound');
+  }
+
+  String get noMessages{
+    return Intl.message('Нет сообщений', name: 'noMessages');
+  }
+
+  String get titleReceiveBooks{
+    return Intl.message('ВЗЯТЬ КНИГИ', name: 'titleReceiveBooks');
+  }
+
+  String receiveBooks(num) {
+    return Intl.message('Взять книги ($num)',
+        name: 'receiveBooks', args: [num]);
+  }
+
+  String get titleSendBooks{
+    return Intl.message('ОТДАЮ КНИГИ', name: 'titleSendBooks');
+  }
+
+  String sendBooks(num) {
+    return Intl.message('Отдаю книги ($num)',
+        name: 'sendBooks', args: [num]);
+  }
+
+  String leaseAgreement(total, month) {
+    return Intl.message('Депозит за книги: $total, оплата за месяц $month',
+        name: 'leaseAgreement', args: [total, month]);
+  }
+
+  String notSufficientForAgreement(missing, total, month) {
+    return Intl.message('Вам нехватает $missing. Депозит за книги: $total, оплата за месяц $month',
+        name: 'notSufficientForAgreement', args: [missing, total, month]);
+  }
+
+  String get buttonPayin{
+    return Intl.message('Пополнить счёт', name: 'buttonPayin');
+  }
+
+  String get buttonConfirmBooks{
+    return Intl.message('Книги получил \u{02713}', name: 'buttonConfirmBooks');
+  }
+
+
+
 }
 
 class AppLocalizationsDelegate extends LocalizationsDelegate<S> {
@@ -651,3 +974,4 @@ class AppLocalizationsDelegate extends LocalizationsDelegate<S> {
     return false;
   }
 }
+

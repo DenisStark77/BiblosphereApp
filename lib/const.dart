@@ -1,21 +1,11 @@
-import 'dart:ui';
-import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:geoflutterfire/geoflutterfire.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:googleapis/books/v1.dart';
-import 'package:googleapis_auth/auth_io.dart';
-import 'package:http/http.dart';
-import 'package:cached_network_image/cached_network_image.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:xml/xml.dart' as xml;
-import 'dart:convert';
-import 'dart:math' as math;
-import 'package:stellar/stellar.dart' as stellar;
 
-import 'package:biblosphere/l10n.dart';
+Firestore db = Firestore.instance;
 
 const String sharingUrl =
     'https://biblosphere.org/images/phone-app-screens-2000.png';
@@ -118,12 +108,20 @@ class Book {
   String language;
   Set<String> keys;
 
-  Book(
-      {this.id,
-      @required this.title,
-      @required this.authors,
-      @required this.isbn,
-      this.image}) {
+  Book({
+    this.id,
+    @required this.title,
+    @required this.authors,
+    @required this.isbn,
+    this.image,
+    this.sourceId,
+    this.source = BookSource.none,
+    this.price,
+    this.listPrice,
+    this.genre,
+    this.language,
+  }) {
+    if (id == null) id = Ref().documentID;
     keys = getKeys(authors.join(' ') + ' ' + title + ' ' + isbn);
   }
 
@@ -151,6 +149,7 @@ class Book {
     } catch (e) {
       print('Unknown error in Book.volume: $e');
     }
+    if (id == null) id = Ref().documentID;
   }
 
   //TODO: Add price, genre, language
@@ -170,6 +169,7 @@ class Book {
         (a) => authors.add(a.findElements("name")?.first?.text?.toString()));
     source = BookSource.goodreads;
     keys = getKeys(authors.join(' ') + ' ' + title + ' ' + isbn);
+    if (id == null) id = Ref().documentID;
   }
 
   Book.fromJson(Map json)
@@ -178,6 +178,8 @@ class Book {
         authors = (json['authors'] as List).cast<String>(),
         isbn = json['isbn'],
         image = json['image'],
+        sourceId = json['sourceId'],
+        source = BookSource.values.elementAt(json['source']??0),
         price = json['price'],
         language = json['language'],
         keys = (json['keys'] as List).cast<String>().toSet(),
@@ -197,10 +199,12 @@ class Book {
       'authors': authors,
       'isbn': isbn,
       'image': image,
+      'sourceId': sourceId,
+      'source': source?.index,
       'price': price,
       'listPrice': listPrice?.toJson(),
       'genre': genre,
-      'keys': keys,
+      'keys': keys.toList(),
       'language': language
     };
   }
@@ -225,42 +229,75 @@ class Book {
     }
     return _hashCode;
   }
+
+  DocumentReference ref() {
+    return db.collection('books').document(id);
+  }
+
+  static DocumentReference Ref([String id]) {
+    return db.collection('books').document(id);
+  }
 }
 
 class User {
   String id;
   String name;
   String photo;
+  // Fields for referral program. Referral Link and two persons to split fee to
+  String link;
+  String beneficiary1;
+  double feeShared;
+  String beneficiary2;
   GeoPoint position;
   int wishCount = 0;
   int bookCount = 0;
   int shelfCount = 0;
   double balance = 0;
+  double blocked = 0;
   String accountId;
+  String payoutId;
+  String cursor;
   String secretSeed;
   double d;
 
   User(
-      {@required this.id,
-      @required this.name,
+      {@required this.name,
       @required this.photo,
-      @required this.position,
+      this.id,
+      this.position,
       this.balance = 0,
+      this.blocked = 0,
       this.bookCount,
       this.shelfCount,
-      this.wishCount});
+      this.wishCount,
+      this.link,
+      this.beneficiary1,
+      this.beneficiary2,
+      this.accountId,
+      this.payoutId,
+      this.secretSeed}) {
+    if (id == null) id = Ref().documentID;
+  }
 
   User.fromJson(Map json)
       : id = json['id'],
         name = json['name'],
         photo = json['photo'] ?? json['photoUrl'],
+        link = json['link'],
+        beneficiary1 = json['beneficiary1'],
+        beneficiary2 = json['beneficiary2'],
+        feeShared = json['feeShared'] != null ? (json['feeShared'] as num).toDouble() : 0,
         position = json['position'] as GeoPoint,
         wishCount = json['wishCount'] ?? 0,
         bookCount = json['bookCount'] ?? 0,
         shelfCount = json['shelfCount'] ?? 0,
         balance =
             json['balance'] != null ? (json['balance'] as num).toDouble() : 0,
+        blocked =
+            json['blocked'] != null ? (json['blocked'] as num).toDouble() : 0,
+        cursor = json['cursor'],
         accountId = json['accountId'],
+        payoutId = json['payoutId'],
         secretSeed = json['secretSeed'];
 
   Map<String, dynamic> toJson() {
@@ -268,12 +305,25 @@ class User {
       'id': id,
       'name': name,
       'photo': photo,
+      'link': link,
+      'beneficiary1': beneficiary1,
+      'beneficiary2': beneficiary2,
       'position': position,
+      'wishCount': wishCount,
+      'bookCount': bookCount,
+      'shelfCount': shelfCount,
       'accountId': accountId,
+      'payoutId': payoutId,
       'secretSeed': secretSeed
+      // Not include balance, blocked, cursor and feeShared here. ONLY direct updates for these fields!!!
     };
   }
 
+  double getAvailable() {
+    return balance - blocked;
+  }
+
+  /*
   // Retrieve balance from Stellar account
   Future<double> getStellarBalance() async {
     if (accountId == null) return 0.0;
@@ -292,6 +342,17 @@ class User {
     balance = double.parse(strBalance);
     return balance;
   }
+  */
+  DocumentReference ref() {
+    return db.collection('users').document(id);
+  }
+
+  static DocumentReference Ref([String id=null]) {
+    if(id != null)
+      return db.collection('users').document(id);
+    else
+      return db.collection('users').document();
+  }
 }
 
 enum BookrecordType { none, own, wish, lent, borrowed, transit }
@@ -302,11 +363,12 @@ class Bookrecord {
   String ownerId;
   String holderId;
   String transitId;
+  String rewardId;
+  String leasingId;
   // Both users owner and holder to use array-contains instead of OR
-  List<String> users;
+  Set<String> users;
   // Daily rent and full price
   double price;
-  Deal deal;
   // Status of the book copy
   bool transit = false;
   bool wish = false;
@@ -330,14 +392,20 @@ class Bookrecord {
   Bookrecord(
       {@required this.ownerId,
       @required this.bookId,
-      @required this.location,
+      this.location,
       this.holderId,
+      this.transitId,
+      this.rewardId,
+      this.leasingId,
+      this.price,
       this.matched = false,
+      this.matchedBookId,
       this.wish = false,
       this.lent = false,
       this.transit = false,
       this.distance}) {
     if (holderId == null) holderId = ownerId;
+    if (id == null) id = Ref().documentID;
   }
 
   Bookrecord.fromJson(Map json)
@@ -345,17 +413,21 @@ class Bookrecord {
         ownerId = json['ownerId'],
         holderId = json['holderId'],
         transitId = json['transitId'],
+        //users = (json['users']?.map((s) => s as String))?.toSet(),
+        //users = (json['users']?.map((dynamic s) => s.toString()))?.toSet(),
+        users = (json['users'] as List).cast<String>().toSet(),
         bookId = json['bookId'],
-        location = Geoflutterfire().point(
+        rewardId = json['rewardId'],
+        leasingId = json['leasingId'],
+        location = json['location']!=null ? Geoflutterfire().point(
             latitude: json['location']['geopoint'].latitude,
-            longitude: json['location']['geopoint'].longitude),
+            longitude: json['location']['geopoint'].longitude) : null,
         matched = json['matched'] ?? false,
         matchedBookId = json['matchedBookId'],
         lent = json['lent'] ?? false,
         wish = json['wish'] ?? false,
         transit = json['transit'] ?? false,
         price = json['price'] != null ? (json['price'] as num).toDouble() : 0.0,
-        deal = json['deal'] != null ? Deal.fromJson(json['deal']) : null,
         distance = json['distance'] != null
             ? (json['distance'] as num).toDouble()
             : double.infinity;
@@ -366,15 +438,16 @@ class Bookrecord {
       'ownerId': ownerId,
       'holderId': holderId,
       'transitId': transitId,
-      'users': <String>[ownerId, holderId],
+      'rewardId': rewardId,
+      'leasingId': leasingId,
+      'users': <String>{ownerId, holderId, transitId}.where((s) => s != null).toList(),
       'bookId': bookId,
-      'location': location.data,
+      'location': location?.data,
       'matched': matched,
       'matchedBookId': matchedBookId,
       'lent': lent,
       'wish': wish,
       'transit': transit,
-      'deal': deal ?? toJson(),
       'price': price,
       'distance': distance
     };
@@ -389,7 +462,7 @@ class Bookrecord {
   }
 
   bool isLent(String userId) {
-    return ownerId == userId && ownerId != holderId && lent && !wish;
+    return ownerId == userId && ownerId != holderId && lent && !wish && (!transit || transitId != ownerId);
   }
 
   bool isBorrowed(String userId) {
@@ -426,7 +499,7 @@ class Bookrecord {
       // Read BOOK data
       DocumentSnapshot doc =
           await Firestore.instance.collection('books').document(bookId).get();
-      book = new Book.fromJson(doc.data['book']);
+      book = new Book.fromJson(doc.data);
 
       // Read owner user data
       if (ownerId == user.id) {
@@ -468,20 +541,13 @@ class Bookrecord {
   double getPrice() {
     return 25.0;
   }
-}
 
-class Deal {
-  DateTime date;
-  double price;
+  DocumentReference ref() {
+    return db.collection('bookrecords').document(id);
+  }
 
-  Deal({@required this.date, @required this.price});
-
-  Deal.fromJson(Map json)
-      : date = (json['date'] as Timestamp).toDate(),
-        price = json['price'] != null ? (json['price'] as num).toDouble() : 0.0;
-
-  Map<String, dynamic> toJson() {
-    return {'date': date, 'price': price};
+  static DocumentReference Ref([String id]) {
+    return db.collection('bookrecords').document(id);
   }
 }
 
@@ -497,6 +563,248 @@ class Price {
 
   Map<String, dynamic> toJson() {
     return {'amount': amount, 'currency': currency};
+  }
+}
+
+// Only add values at the end. It's stored in DB as index
+enum OperationType {
+  None,
+  InputInApp,
+  InputStellar,
+  OutputStellar,
+  Leasing,
+  Reward,
+  Buy,
+  Sell
+}
+
+class Operation {
+  String id;
+  OperationType type;
+  Set<String> users;
+  String userId;
+  double amount;
+  DateTime date;
+  // InputInApp & InputStellar & OutputStellar
+  String transactionId;
+  // InputStellar
+  String proxyTransactionId;
+  // Leasing/Buy & Reward/Sell
+  String peerId;
+  String bookrecordId;
+  String bookId;
+  double price;
+  DateTime start;
+  DateTime end;
+  double paid;
+// Leasing/Buy
+  double deposit; // Amount deposited as guaranty
+  double fee; // Biblosphere system fee
+  double ownerFee1; // Referral fee
+  double ownerFee2; // Referral fee
+  double payerFee1; // Referral fee
+  double payerFee2; // Referral fee
+  String ownerFeeUserId1;
+  String ownerFeeUserId2;
+  String payerFeeUserId1;
+  String payerFeeUserId2;
+
+  Operation(
+      {this.id,
+      @required this.type,
+      @required this.userId,
+      @required this.amount,
+      @required this.date,
+      this.transactionId,
+      this.proxyTransactionId,
+      this.peerId,
+      this.bookrecordId,
+      this.bookId,
+      this.price,
+      this.start,
+      this.end,
+      this.deposit,
+      this.fee,
+      this.ownerFee1,
+      this.ownerFee2,
+      this.payerFee1,
+      this.payerFee2,
+      this.ownerFeeUserId1,
+      this.ownerFeeUserId2,
+      this.payerFeeUserId1,
+      this.payerFeeUserId2,
+      this.paid}) {
+    if (id == null)
+      id = db.collection('operations').document().documentID;
+  }
+
+  Operation.fromJson(Map json)
+      : id = json['id'],
+        type = OperationType.values.elementAt(json['type']??0),
+        //users = (json['users']?.map((dynamic s) => s.toString()))?.toSet(),
+        users = (json['users'] as List).cast<String>().toSet(),
+        userId = json['userId'],
+        amount =
+            json['amount'] != null ? (json['amount'] as num).toDouble() : 0.0,
+        date = json['date'] != null ? (json['date'] as Timestamp).toDate() : null,
+        transactionId = json['transactionId'],
+        proxyTransactionId = json['proxyTransactionId'],
+        peerId = json['peerId'],
+        bookId = json['bookId'],
+        bookrecordId = json['bookrecordId'],
+        price = json['price'] != null ? (json['price'] as num).toDouble() : 0.0,
+        start = json['start'] != null ? (json['start'] as Timestamp).toDate() : null,
+        end = json['end'] != null ? (json['end'] as Timestamp).toDate() : null,
+        deposit =
+            json['deposit'] != null ? (json['deposit'] as num).toDouble() : 0.0,
+        fee = json['fee'] != null ? (json['fee'] as num).toDouble() : 0.0,
+        ownerFee1 = json['ownerFee1'] != null
+            ? (json['ownerFee1'] as num).toDouble()
+            : 0.0, // Referral fee
+        ownerFee2 = json['ownerFee2'] != null
+            ? (json['ownerFee2'] as num).toDouble()
+            : 0.0, // Referral fee
+        payerFee1 = json['payerFee1'] != null
+            ? (json['payerFee1'] as num).toDouble()
+            : 0.0, // Referral fee
+        payerFee2 = json['payerFee2'] != null
+            ? (json['payerFee2'] as num).toDouble()
+            : 0.0, // Referral fee
+        ownerFeeUserId1 = json['ownerFeeUserId1'],
+        ownerFeeUserId2 = json['ownerFeeUserId2'],
+        payerFeeUserId1 = json['payerFeeUserId1'],
+        payerFeeUserId2 = json['payerFeeUserId2'],
+        paid = json['paid'] != null ? (json['paid'] as num).toDouble() : 0.0;
+
+  Map<String, dynamic> toJson() {
+    Set<String> users = {};
+    Map<String, dynamic> json = {
+      'id': id,
+      'type': type?.index,
+      'userId': userId,
+      'amount': amount,
+      'date': date != null ? Timestamp.fromDate(date) : null
+    };
+
+    if (userId != null) users.add(userId);
+
+    if (type == OperationType.InputInApp ||
+        type == OperationType.InputStellar ||
+        type == OperationType.OutputStellar)
+      json.addAll({'transactionId': transactionId});
+
+    if (type == OperationType.InputStellar)
+      json.addAll({'proxyTransactionId': proxyTransactionId});
+
+    if (type == OperationType.Leasing ||
+        type == OperationType.Buy ||
+        type == OperationType.Reward ||
+        type == OperationType.Sell) {
+      json.addAll({
+        'peerId': peerId,
+        'bookrecordId': bookrecordId,
+        'bookId': bookId,
+        'price': price,
+        'start': start != null ? Timestamp.fromDate(start) : null,
+        'end': end != null ? Timestamp.fromDate(end) : null,
+        'paid': paid,
+      });
+
+      if (peerId != null) users.add(peerId);
+    }
+
+    if (type == OperationType.Leasing || type == OperationType.Buy) {
+      json.addAll({
+        'deposit': deposit,
+        'fee': fee,
+        'ownerFee1': ownerFee1,
+        'ownerFee2': ownerFee2,
+        'payerFee1': payerFee1,
+        'payerFee2': payerFee2,
+        'ownerFeeUserId1': ownerFeeUserId1,
+        'ownerFeeUserId2': ownerFeeUserId2,
+        'payerFeeUserId1': payerFeeUserId1,
+        'payerFeeUserId2': payerFeeUserId2
+      });
+
+      if (ownerFeeUserId1 != null) users.add(ownerFeeUserId1);
+      if (ownerFeeUserId2 != null) users.add(ownerFeeUserId2);
+      if (payerFeeUserId1 != null) users.add(payerFeeUserId1);
+      if (payerFeeUserId2 != null) users.add(payerFeeUserId2);
+    }
+
+    json.addAll({
+      'users': users.toList(),
+    });
+
+    return json;
+  }
+
+  bool isInPurchase(User user) {
+    return type == OperationType.InputInApp && user.id == userId;
+  }
+
+  bool isInStellar(User user) {
+    return type == OperationType.InputStellar && user.id == userId;
+  }
+
+  bool isIn(User user) {
+    return isInStellar(user) || isInPurchase(user);
+  }
+
+  bool isOutStellar(User user) {
+    return type == OperationType.OutputStellar && user.id == userId;
+  }
+
+  bool isOut(User user) {
+    return isOutStellar(user);
+  }
+
+  bool isReward(User user) {
+    return type == OperationType.Reward && user.id == userId;
+  }
+
+  bool isLeasing(User user) {
+    return type == OperationType.Leasing && user.id == userId;
+  }
+
+  bool isReferral(User user) {
+    return type == OperationType.Leasing
+        && (user.id == ownerFeeUserId1 || user.id == ownerFeeUserId2
+            || user.id == payerFeeUserId1 || user.id == payerFeeUserId2);
+  }
+
+  double referralAmount(User user) {
+    if(type == OperationType.Leasing && user.id == ownerFeeUserId1)
+      return ownerFee1;
+    else if(type == OperationType.Leasing && user.id == ownerFeeUserId2)
+      return ownerFee2;
+    else if(type == OperationType.Leasing && user.id == payerFeeUserId1)
+      return payerFee1;
+    else if(type == OperationType.Leasing && user.id == payerFeeUserId2)
+      return payerFee2;
+    else
+      return 0.0;
+  }
+
+  DocumentReference ref() {
+    return db.collection('operations').document(id);
+  }
+
+  static DocumentReference Ref(String id) {
+    return db.collection('operations').document(id);
+  }
+}
+
+class Provider {
+  String name;
+  String country;
+  String area;
+  String query;
+
+  Provider({@required this.name, @required this.query, this.country, this.area}) {
+    if(country == null)
+      country = 'ALL';
   }
 }
 
@@ -691,910 +999,6 @@ class Wish {
   }
 }
 
-class Transit {
-  static const Request = 'request';
-  static const Return = 'return';
-  static const Offer = 'offer';
-  static const Requested = 'requested';
-  static const Accepted = 'accepted';
-  static const Confirmed = 'confirmed';
-  static const Rejected = 'rejected';
-  static const Canceled = 'canceled';
-  static const Accept = 'accept';
-  static const Confirm = 'confirm';
-  static const Reject = 'reject';
-  static const Cancel = 'cancel';
-  static const Ok = 'ok';
-
-  String id;
-  Bookcopy bookcopy;
-  User from;
-  User to;
-  String action;
-  String status;
-  DateTime date;
-
-  Transit(
-      {@required this.bookcopy,
-      @required this.from,
-      @required this.to,
-      this.action = 'request',
-      this.status = 'requested',
-      this.id,
-      this.date = null});
-
-  Transit.fromJson(Map json)
-      : id = json['id'],
-        bookcopy = Bookcopy.fromJson(json['bookcopy']),
-        from = User.fromJson(json['from']),
-        to = User.fromJson(json['to']),
-        action = json['action'],
-        status = json['status'],
-        date = json['date'];
-
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'bookcopy': bookcopy.toJson(),
-      'from': from.toJson(),
-      'to': to.toJson(),
-      'action': action,
-      'status': status,
-      'date': date
-    };
-  }
-
-  static String stepText(String step, BuildContext context) {
-    switch (step) {
-      case Accept:
-        return S.of(context).transitAccept;
-      case Confirm:
-        return S.of(context).transitConfirm;
-      case Reject:
-        return S.of(context).transitReject;
-      case Cancel:
-        return S.of(context).transitCancel;
-      case Ok:
-        return S.of(context).transitOk;
-      default:
-        return '';
-    }
-  }
-
-  bool showInCart() {
-    if (action == Request && status == Requested ||
-        action == Request && status == Accepted ||
-        action == Request && status == Rejected ||
-        action == Return && status == Accepted ||
-        action == Offer && status == Accepted)
-      return true;
-    else
-      return false;
-  }
-
-  bool showInOutbox() {
-    if (action == Request && status == Requested ||
-        action == Request && status == Accepted ||
-        action == Request && status == Confirmed ||
-        action == Request && status == Canceled ||
-        action == Return && status == Accepted ||
-        action == Return && status == Confirmed ||
-        action == Offer && status == Accepted ||
-        action == Offer && status == Confirmed ||
-        action == Offer && status == Rejected)
-      return true;
-    else
-      return false;
-  }
-
-  String getCartText(BuildContext context) {
-    if (action == Request && status == Requested) {
-      // Cancel
-      return S.of(context).cartRequestCancel(from.name, bookcopy.book.title);
-    } else if (action == Request && status == Accepted) {
-      // Confirm, Cancel
-      return S.of(context).cartRequestAccepted(from.name, bookcopy.book.title);
-    } else if (action == Request && status == Rejected) {
-      // Ok
-      return S.of(context).cartRequestRejected(from.name, bookcopy.book.title);
-    } else if (action == Return && status == Accepted) {
-      // Confirm
-      return S.of(context).cartReturnConfirm(from.name, bookcopy.book.title);
-    } else if (action == Offer && status == Accepted) {
-      // Confirm, Reject
-      return S
-          .of(context)
-          .cartOfferConfirmReject(from.name, bookcopy.book.title);
-    } else {
-      return '';
-    }
-  }
-
-  List<String> getCartSteps() {
-    if (action == Request && status == Requested) {
-      // Cancel
-      return <String>[Cancel];
-    } else if (action == Request && status == Accepted) {
-      // Confirm, Cancel
-      return <String>[Confirm, Cancel];
-    } else if (action == Request && status == Rejected) {
-      // Ok
-      return <String>[Ok];
-    } else if (action == Return && status == Accepted) {
-      // Confirm
-      return <String>[Confirm];
-    } else if (action == Offer && status == Accepted) {
-      // Confirm, Reject
-      return <String>[Confirm, Reject];
-    } else {
-      return <String>[];
-    }
-  }
-
-  String getOutboxText(BuildContext context) {
-    if (action == Request && status == Requested) {
-      // Accept, Reject
-      return S
-          .of(context)
-          .outboxRequestAcceptReject(to.name, bookcopy.book.title);
-    } else if (action == Request && status == Accepted) {
-      // Reject
-      return S.of(context).outboxRequestAccepted(to.name, bookcopy.book.title);
-    } else if (action == Request && status == Confirmed) {
-      // Ok
-      return S.of(context).outboxRequestConfirmed(to.name, bookcopy.book.title);
-    } else if (action == Request && status == Canceled) {
-      // Ok
-      return S.of(context).outboxRequestCanceled(to.name, bookcopy.book.title);
-    } else if (action == Return && status == Accepted) {
-      // Cancel
-      return S.of(context).outboxReturnAccepted(to.name, bookcopy.book.title);
-    } else if (action == Return && status == Confirmed) {
-      // Ok
-      return S.of(context).outboxReturnConfirmed(to.name, bookcopy.book.title);
-    } else if (action == Offer && status == Accepted) {
-      // Cancel
-      return S.of(context).outboxOfferAccepted(to.name, bookcopy.book.title);
-    } else if (action == Offer && status == Confirmed) {
-      // Ok
-      return S.of(context).outboxOfferConfirmed(to.name, bookcopy.book.title);
-    } else if (action == Offer && status == Rejected) {
-      // Ok
-      return S.of(context).outboxOfferRejected(to.name, bookcopy.book.title);
-    } else {
-      return '';
-    }
-  }
-
-  List<String> getOutboxSteps() {
-    if (action == Request && status == Requested) {
-      // Accept, Reject
-      return <String>[Accept, Reject];
-    } else if (action == Request && status == Accepted) {
-      // Reject
-      return <String>[Reject];
-    } else if (action == Request && status == Confirmed) {
-      // Ok
-      return <String>[Ok];
-    } else if (action == Request && status == Canceled) {
-      // Ok
-      return <String>[Ok];
-    } else if (action == Return && status == Accepted) {
-      // Cancel
-      return <String>[Cancel];
-    } else if (action == Return && status == Confirmed) {
-      // Ok
-      return <String>[Ok];
-    } else if (action == Offer && status == Accepted) {
-      // Cancel
-      return <String>[Cancel];
-    } else if (action == Offer && status == Confirmed) {
-      // Ok
-      return <String>[Ok];
-    } else if (action == Offer && status == Rejected) {
-      // Ok
-      return <String>[Ok];
-    } else {
-      return <String>[];
-    }
-  }
-}
-
-//Callback function type definition
-typedef BookCallback(Book book);
-
-Future addBookrecord(
-    BuildContext context, Book b, User u, bool wish, GeoFirePoint location,
-    {String source = 'goodreads', bool snackbar = true}) async {
-  bool existingBook = false;
-
-  if (b.isbn == null || b.isbn == 'NA')
-    throw 'Book ${b?.title}, ${b?.authors?.join()} has no ISBN';
-
-  //Try to get image if missing
-  if (b.image == null ||
-      b.image.isEmpty ||
-      b.language == null ||
-      b.language.isEmpty) {
-    b = await enrichBookRecord(b);
-  }
-
-  QuerySnapshot q = await Firestore.instance
-      .collection('books')
-      .where('book.isbn', isEqualTo: b.isbn)
-      .getDocuments();
-
-  if (q.documents.isEmpty) {
-    DocumentReference d = await Firestore.instance
-        .collection('books')
-        .add({'book': b.toJson(), 'source': source});
-
-    b.id = d.documentID;
-  } else {
-    existingBook = true;
-    b.id = q.documents.first.documentID;
-  }
-
-  Bookrecord bookrecord = new Bookrecord(
-      ownerId: u.id, bookId: b.id, wish: wish, location: location);
-
-  //Check if bookrecord already exist. Make sense only if isbn is registered
-  if (existingBook) {
-    QuerySnapshot q = await Firestore.instance
-        .collection('bookrecords')
-        .where('bookId', isEqualTo: b.id)
-        .where('ownerId', isEqualTo: u.id)
-        .where('wish', isEqualTo: wish)
-        .getDocuments();
-
-    //If bookcopy already exist refresh it
-    if (q.documents.isNotEmpty) {
-      bookrecord.id = q.documents.first.documentID;
-      await Firestore.instance
-          .collection('bookrecords')
-          .document(bookrecord.id)
-          .updateData(bookrecord.toJson());
-      if (snackbar) showSnackBar(context, 'KuKu');
-      return;
-    }
-  }
-
-  DocumentReference rec =
-      await Firestore.instance.collection('bookrecords').document();
-  bookrecord.id = rec.documentID;
-  await rec.setData(bookrecord.toJson());
-  if (snackbar) {
-    if (wish)
-      showSnackBar(context, S.of(context).wishAdded);
-    else
-      showSnackBar(context, S.of(context).bookAdded);
-  }
-
-  await FirebaseAnalytics().logEvent(
-      name: 'add_book',
-      parameters: <String, dynamic>{'language': b.language ?? ''});
-}
-
-//TODO: Not sure it's good idea to have it as global valiables. Need to find
-// better way. Hwever to have it in widget is not good idea either as it used
-// from Goodreads import as well.
-//TODO: Where to close such clients
-class LibConnect {
-  static Client _googleClient;
-  static BooksApi _booksApi;
-  static String goodreadsApiKey = 'SXMWtbHvcnbTgRTLT7isA';
-  static Client _goodreadsClient;
-  static Client _commonClient;
-
-  static Client getClient() {
-    if (_commonClient == null) _commonClient = new Client();
-    return _commonClient;
-  }
-
-  static Client getGoodreadClient() {
-    if (_goodreadsClient == null) _goodreadsClient = new Client();
-    return _goodreadsClient;
-  }
-
-  static BooksApi getGoogleBookApi() {
-    if (_googleClient == null)
-      _googleClient =
-          clientViaApiKey('AIzaSyDJR_BnU_JVJyGTfaWcj086UuQxXP3LoTU');
-
-    if (_booksApi == null) _booksApi = new BooksApi(_googleClient);
-
-    return _booksApi;
-  }
-}
-
-Future<List<Book>> searchByTitleAuthorBiblosphere(String text) async {
-  //TODO: Redesign search as now it only use ONE keyword
-  // and doing rest of filtering on client side
-  Set<String> keys = getKeys(text);
-  QuerySnapshot snapshot;
-
-  if (keys.length == 0)
-    return [];
-  else
-    snapshot = await Firestore.instance
-        .collection('books')
-        .where('book.keys', arrayContains: keys.elementAt(0))
-        .getDocuments();
-
-  List<Book> books = snapshot.documents.where((doc) {
-    return doc.data['book']['keys'].toSet().containsAll(keys);
-  }).map((doc) {
-    Book book = new Book.fromJson(doc.data['book']);
-    return book;
-  }).toList();
-
-  return books;
-}
-
-Future<List<Book>> searchByTitleAuthorGoogle(String text) async {
-  Volumes books = await LibConnect.getGoogleBookApi()
-      .volumes
-      .list(text, printType: 'books', maxResults: 20);
-
-  if (books.items != null && books.items.isNotEmpty) {
-    return books.items
-        .where((v) =>
-            v.volumeInfo.title != null &&
-            v.volumeInfo.authors != null &&
-            v.volumeInfo.authors.isNotEmpty &&
-            v.volumeInfo.imageLinks != null &&
-            v.volumeInfo.imageLinks.thumbnail != null &&
-            v.volumeInfo.industryIdentifiers != null &&
-            v.saleInfo != null &&
-            !v.saleInfo.isEbook)
-        .map((v) {
-      return new Book.volume(v);
-    }).toList();
-  } else {
-    return null;
-  }
-}
-
-Future<List<Book>> searchByTitleAuthorGoodreads(String text) async {
-  //TODO: avoid calls using ApiKey as it is not protected from others calling
-  var res = await LibConnect.getGoodreadClient().get(
-      'https://www.goodreads.com/search/index.xml?key=${LibConnect.goodreadsApiKey}&q=$text');
-
-  var document = xml.parse(res.body);
-
-  List<Book> books =
-      document.findAllElements('best_book')?.take(5)?.map((xml.XmlElement e) {
-    return new Book.goodreads(e);
-    //As Goodreads doesn't have ISBN in search responce keep Goodreads ID instead.
-    // It'll be replaced by ISBN by enrichBookRecord function on confirm stage.
-  })?.toList();
-
-  return books;
-}
-
-Future<Book> enrichBookRecord(Book book) async {
-  //As Goodreads search by title/author does not return ISBN it's empty for
-  // these records
-  try {
-    if (book.isbn == null || book.isbn.isEmpty || book.isbn == 'NA') {
-      if (book.sourceId != null && book.sourceId.isNotEmpty) {
-        var res = await LibConnect.getGoodreadClient().get(
-            'https://www.goodreads.com/book/show/${book.sourceId}.xml?key=${LibConnect.goodreadsApiKey}');
-
-        var document = xml.parse(res.body);
-        String isbn =
-            document.findAllElements('isbn13')?.first?.text?.toString();
-
-        if (isbn != null) book.isbn = isbn;
-      }
-      if (book.isbn == null || book.isbn.isEmpty) book.isbn = 'NA';
-    }
-
-    //As many Goodreads books doesn't have images enrich it from Google
-    if (book.image == null || book.image.isEmpty) {
-      if (book.isbn != 'NA' && book.source != BookSource.google) {
-        Book b = await searchByIsbnGoogle(book.isbn);
-        if (b?.image != null) book.image = b.image;
-        if (b?.language != null) book.language = b.language;
-      }
-    }
-
-    return book;
-  } catch (e) {
-    print('Unknown error in enrichBookRecord: $e');
-    return book;
-  }
-}
-
-Future<Book> searchByIsbnGoogle(String isbn) async {
-  try {
-    Volumes books =
-        await LibConnect.getGoogleBookApi().volumes.list('isbn:$isbn');
-    if (books?.items != null && books.items.isNotEmpty) {
-      var v = books?.items[0];
-      if (v?.volumeInfo?.title != null &&
-          v?.volumeInfo?.authors != null &&
-          v.volumeInfo.authors.isNotEmpty &&
-          v?.volumeInfo?.imageLinks != null &&
-          v?.volumeInfo?.imageLinks?.thumbnail != null &&
-          v?.volumeInfo?.industryIdentifiers != null &&
-          v?.saleInfo != null &&
-          !v.saleInfo.isEbook) {
-        return new Book.volume(v)..isbn = isbn;
-      }
-    }
-    return null;
-  } catch (e) {
-    print('Unknown error in searchByIsbnGoogle: $e');
-    return null;
-  }
-}
-
-Future<Book> searchByIsbnGoodreads(String isbn) async {
-  try {
-    var res = await LibConnect.getGoodreadClient().get(
-        'https://www.goodreads.com/search/index.xml?key=${LibConnect.goodreadsApiKey}&q=$isbn');
-
-    var document = xml.parse(res.body);
-
-    var bookXml = document?.findAllElements('best_book')?.first;
-    if (bookXml != null) {
-      return new Book.goodreads(bookXml)..isbn = isbn;
-    }
-    return null;
-  } catch (e) {
-    print('Unknown error in searchByIsbnGoodreads: $e');
-    return null;
-  }
-}
-
-Future<Book> searchByIsbnRsl(String isbn) async {
-  // Two requests neede. One to get CSRF cookie and second one to make a query.
-  // Undocumented API reverse-engineered from search.rsl.ru/ru/search
-  try {
-    var headers = {
-      'Upgrade-Insecure-Requests': '1',
-    };
-
-    String uri = 'https://search.rsl.ru/ru/search';
-    var res = await LibConnect.getClient().get(uri, headers: headers);
-
-    String cookie = res.headers['set-cookie'];
-    RegExp exp1 = new RegExp(r"(.*?)=(.*?)(?:$|,(?!\s))");
-    RegExp exp2 = new RegExp(r"(.*?)=(.*?)(?:$|;|,)");
-    Iterable<Match> matches = exp1.allMatches(cookie);
-
-    List<String> cleanCookie = [];
-    for (var i = 0; i < matches.length; i++) {
-      String c = cookie.substring(
-          matches.elementAt(i).start, matches.elementAt(i).end);
-      Match match2 = exp2.firstMatch(c);
-      cleanCookie.add(c.substring(match2.start, match2.end - 1));
-    }
-
-    int tag, start, end;
-    String token;
-
-    tag = res.body.indexOf('csrf-token');
-    if (tag != -1) {
-      start = res.body.indexOf('"', tag + 11) + 1;
-      end = res.body.indexOf('"', start);
-      token = res.body.substring(start, end);
-    }
-
-    uri = 'https://search.rsl.ru/site/ajax-search';
-    headers = {
-      'Content-Type': 'application/x-www-form-urlencoded',
-      'Accept': 'application/json, text/javascript, */*; q=0.01',
-//                     'X-CSRF-Token': token,
-      'Origin': 'https://search.rsl.ru',
-      'User-Agent':
-          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.108 Safari/537.36',
-      'Accept-Language':
-          'en-GB,en;q=0.9,ru-RU;q=0.8,ru;q=0.7,ka-GE;q=0.6,ka;q=0.5,en-US;q=0.4',
-      'Accept-Encoding': 'gzip, deflate, br',
-      'Cookie': cleanCookie.join(';') + ';'
-    };
-
-    String body =
-        'SearchFilterForm[search]=isbn:$isbn&_csrf=${Uri.encodeQueryComponent(token)}';
-
-    //Use Request to control Content-Type header. Client.post add charset to it
-    // which does not work with RSL
-    Request request = new Request('POST', Uri.parse(uri));
-    request.body = body;
-    request.headers.clear();
-    request.headers.addAll(headers);
-
-    StreamedResponse strRes = await LibConnect.getClient().send(request);
-    String resBody = await strRes.stream.bytesToString();
-
-    var jsonRes = json.decode(resBody);
-
-    String resStr = jsonRes['content'];
-
-    String author, title;
-
-    tag = resStr.indexOf('js-item-authorinfo');
-    if (tag != -1) {
-      start = resStr.indexOf('>', tag) + 1;
-      end = resStr.indexOf('<', start);
-      author = resStr.substring(start, end);
-    }
-
-    tag = resStr.indexOf('js-item-maininfo');
-    if (tag != -1) {
-      start = resStr.indexOf('>', tag) + 1;
-      end = resStr.indexOf('[', start);
-      title = resStr.substring(start, end);
-    }
-
-    if (title != null || author != null) {
-      return new Book(title: title, authors: [author], isbn: isbn);
-    }
-    return null;
-  } catch (e) {
-    print('Unknown error in searchByIsbnRsi: $e');
-    return null;
-  }
-}
-
-/*
-
-Response response = await post(
-uri,
-headers: headers,
-body: jsonBody,
-encoding: encoding,
-);
-
-int statusCode = response.statusCode;
-String responseBody = response.body;
-*/
-
-Future<Book> searchByIsbn(String isbn) async {
-  try {
-    QuerySnapshot q = await Firestore.instance
-        .collection('books')
-        .where('book.isbn', isEqualTo: isbn)
-        .getDocuments();
-
-    if (q.documents.isEmpty) {
-      //No books found
-      return null;
-    } else {
-      Book b = new Book.fromJson(q.documents.first.data['book']);
-      b.id = q.documents.first.documentID;
-      return b;
-    }
-  } catch (e) {
-    print('Unknown error in searchByIsbn: $e');
-    return null;
-  }
-}
-
-final themeColor = new Color(0xfff5a623);
-final primaryColor = new Color(0xff203152);
-final greyColor = new Color(0xffaeaeae);
-final greyColor2 = new Color(0xffE8E8E8);
-
-void showBbsDialog(BuildContext context, String text) {
-  showDialog<Null>(
-    context: context,
-    barrierDismissible: true,
-    builder: (BuildContext context) {
-      return AlertDialog(
-        content: Container(
-          child: Row(children: <Widget>[
-            Material(
-              child: Image.asset(
-                'images/Librarian50x50.jpg',
-                width: 50.0,
-              ),
-              borderRadius: BorderRadius.all(Radius.circular(5.0)),
-            ),
-            new Flexible(
-              child: Container(
-                child: new Container(
-                  child: Text(
-                    text,
-                    style: TextStyle(color: themeColor),
-                  ),
-                  alignment: Alignment.centerLeft,
-                  margin: new EdgeInsets.fromLTRB(5.0, 0.0, 0.0, 5.0),
-                ),
-                margin: EdgeInsets.only(left: 5.0),
-              ),
-            ),
-          ]),
-          height: 50.0,
-        ),
-        actions: <Widget>[
-          FlatButton(
-            child: Text(S.of(context).ok),
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
-          ),
-        ],
-      );
-    },
-  );
-}
-
-String chatId(String user1, String user2) {
-  if (user1.hashCode <= user2.hashCode) {
-    return '$user1-$user2';
-  } else {
-    return '$user2-$user1';
-  }
-}
-
-Future<bool> showBbsConfirmation(BuildContext context, String text) async {
-  return (await showDialog(
-    context: context,
-    barrierDismissible: true,
-    builder: (BuildContext context) {
-      return AlertDialog(
-        content: Container(
-          child: Row(children: <Widget>[
-            Material(
-              child: Image.asset(
-                'images/Librarian50x50.jpg',
-                width: 50.0,
-              ),
-              borderRadius: BorderRadius.all(Radius.circular(5.0)),
-            ),
-            new Flexible(
-              child: Container(
-                child: new Container(
-                  child: Text(
-                    text,
-                    style: TextStyle(color: themeColor),
-                  ),
-                  alignment: Alignment.centerLeft,
-                  margin: new EdgeInsets.fromLTRB(5.0, 0.0, 0.0, 5.0),
-                ),
-                margin: EdgeInsets.only(left: 5.0),
-              ),
-            ),
-          ]),
-          height: 50.0,
-        ),
-        actions: <Widget>[
-          FlatButton(
-            child: Text(S.of(context).yes),
-            onPressed: () {
-              Navigator.of(context).pop(true);
-            },
-          ),
-          FlatButton(
-            child: Text(S.of(context).no),
-            onPressed: () {
-              Navigator.of(context).pop(false);
-            },
-          ),
-        ],
-      );
-    },
-  ));
-}
-
-Future<GeoPoint> currentPosition() async {
-  try {
-    final position = await Geolocator().getLastKnownPosition();
-    return new GeoPoint(position.latitude, position.longitude);
-  } on PlatformException {
-    print("POSITION: GeoPisition failed");
-    return null;
-  }
-}
-
-Future<GeoFirePoint> currentLocation() async {
-  try {
-    final position = await Geolocator().getLastKnownPosition();
-    return Geoflutterfire()
-        .point(latitude: position.latitude, longitude: position.longitude);
-  } on PlatformException {
-    print("POSITION: GeoPisition failed");
-    return null;
-  }
-}
-
-typedef Widget CardCallback(DocumentSnapshot document, User user);
-
-MaterialPageRoute cardListPage(
-    {User user,
-    Stream stream,
-    CardCallback mapper,
-    String title,
-    String empty}) {
-  return new MaterialPageRoute(
-      builder: (context) => new Scaffold(
-          appBar: new AppBar(
-            title: new Text(
-              title,
-              style:
-                  Theme.of(context).textTheme.title.apply(color: Colors.white),
-            ),
-            centerTitle: true,
-          ),
-          body: new StreamBuilder<QuerySnapshot>(
-              stream: stream,
-              builder: (BuildContext context,
-                  AsyncSnapshot<QuerySnapshot> snapshot) {
-                if (snapshot.hasError) {
-                  return Text('Error: ${snapshot.error}');
-                }
-                switch (snapshot.connectionState) {
-                  case ConnectionState.waiting:
-                    return Text(S.of(context).loading);
-                  default:
-                    if (!snapshot.hasData || snapshot.data.documents.isEmpty) {
-                      return Container(
-                          padding: EdgeInsets.all(10),
-                          child: Text(
-                            empty,
-                            style: Theme.of(context).textTheme.body1,
-                          ));
-                    }
-                    return new ListView(
-                      children: snapshot.data.documents
-                          .map((DocumentSnapshot document) {
-                        return mapper(document, user);
-                      }).toList(),
-                    );
-                }
-              })));
-}
-
-showSnackBar(BuildContext context, String text) {
-  final snackBar = SnackBar(
-    content: Text(text),
-    /*
-    action: SnackBarAction(
-      label: 'Undo',
-      onPressed: () {
-        // Some code to undo the change!
-      },
-    ),
-    */
-  );
-
-// Find the Scaffold in the Widget tree and use it to show a SnackBar!
-  Scaffold.of(context).showSnackBar(snackBar);
-}
-
-Scaffold buildScaffold(BuildContext context, String title, Widget body) {
-  return new Scaffold(
-      appBar: new AppBar(
-        title: new Text(
-          title,
-          style: Theme.of(context).textTheme.title.apply(color: Colors.white),
-        ),
-        centerTitle: true,
-      ),
-      body: body);
-}
-
-double distanceBetween(double lat1, double lon1, double lat2, double lon2) {
-  double R = 6378.137; // Radius of earth in KM
-  double dLat = lat2 * math.pi / 180 - lat1 * math.pi / 180;
-  double dLon = lon2 * math.pi / 180 - lon1 * math.pi / 180;
-  double a = math.sin(dLat / 2) * math.sin(dLat / 2) +
-      math.cos(lat1 * math.pi / 180) *
-          math.cos(lat2 * math.pi / 180) *
-          math.sin(dLon / 2) *
-          math.sin(dLon / 2);
-  double c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a));
-  double d = R * c;
-  return d; // meters
-}
-
-Widget bookImage(Book book, double size, {padding = 3.0}) {
-  if (book == null)
-    return Container();
-  else
-    return new Container(
-        margin: EdgeInsets.all(padding),
-        child: Image(
-            image: new CachedNetworkImageProvider(
-                (book.image != null && book.image.isNotEmpty)
-                    ? book.image
-                    : nocoverUrl),
-            width: size,
-            fit: BoxFit.cover));
-}
-
-Widget userPhoto(User user, double size, {double padding = 0.0}) {
-  if (user == null) {
-    return Container();
-  } else {
-    return Container(
-        margin: EdgeInsets.all(padding),
-        width: size,
-        height: size,
-        decoration: new BoxDecoration(
-            shape: BoxShape.circle,
-            image: new DecorationImage(
-                fit: BoxFit.fill,
-                image: new CachedNetworkImageProvider(user.photo))));
-  }
-}
-
-typedef BookrecordWidgetBuilder = Widget Function(
-    BuildContext context, Bookrecord bookrecord);
-
-class BookrecordWidget extends StatefulWidget {
-  BookrecordWidget(
-      {Key key,
-      @required this.bookrecord,
-      @required this.currentUser,
-      @required this.builder,
-      this.filter = const {}})
-      : super(key: key);
-
-  final Bookrecord bookrecord;
-  final User currentUser;
-  final BookrecordWidgetBuilder builder;
-  final Set<String> filter;
-
-  @override
-  _BookrecordWidgetState createState() => new _BookrecordWidgetState(
-      bookrecord: bookrecord, currentUser: currentUser, builder: builder);
-}
-
-class _BookrecordWidgetState extends State<BookrecordWidget> {
-  Bookrecord bookrecord;
-  User currentUser;
-  final BookrecordWidgetBuilder builder;
-
-  @override
-  void initState() {
-    super.initState();
-    bookrecord.getBookrecord(currentUser).whenComplete(() {
-      setState(() {});
-    });
-  }
-
-  _BookrecordWidgetState({
-    Key key,
-    @required this.bookrecord,
-    @required this.currentUser,
-    @required this.builder,
-  });
-
-  @override
-  void didUpdateWidget(BookrecordWidget oldWidget) {
-    super.didUpdateWidget(oldWidget);
-
-    if (oldWidget.currentUser.id != widget.currentUser.id) {
-      currentUser = widget.currentUser;
-    }
-
-    if (oldWidget.bookrecord.id != widget.bookrecord.id) {
-      bookrecord = widget.bookrecord;
-      if (!bookrecord.hasData)
-        bookrecord.getBookrecord(currentUser).whenComplete(() {
-          setState(() {});
-        });
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (bookrecord == null ||
-        !bookrecord.hasData ||
-        bookrecord.book == null ||
-        bookrecord.book.keys == null ||
-        !bookrecord.book.keys.containsAll(widget.filter)) {
-      return Container(width: 0.0, height: 0.0);
-    } else {
-      return builder(context, bookrecord);
-    }
-  }
-}
-
 Set<String> getKeys(String s) {
   List<String> keys = s
       .toLowerCase()
@@ -1605,89 +1009,4 @@ Set<String> getKeys(String s) {
     return b.length - a.length;
   });
   return keys.toSet();
-}
-
-createStellarAccount(User user) async {
-  stellar.KeyPair pair = stellar.KeyPair.random();
-
-  /* Add balance to test account
-  var url = "https://friendbot.stellar.org/?addr=${pair.accountId}";
-  http.get(url).then((response) {
-    switch (response.statusCode) {
-      case 200:
-        {
-          print(
-              "!!!DEBUG: SUCCESS! You have a new account : \n${response.body}");
-          print("!!!DEBUG: Response body: ${response.body}");
-          break;
-        }
-      default:
-        {
-          print("ERROR! : \n${response.body}");
-        }
-    }
-  });
-  */
-
-  user.accountId = pair.accountId;
-  user.secretSeed = pair.secretSeed;
-  await Firestore.instance
-      .collection('users')
-      .document(user.id)
-      .updateData({'accountId': user.accountId, 'secretSeed': user.secretSeed});
-}
-
-void charge(User buyer, double amount, stellar.TransactionBuilder builder) {
-  amount = (amount * 100).roundToDouble() / 100;
-
-  //Check if book holder has Stellar account, create if needed
-  if (buyer.secretSeed == null) {
-    print('!!!DEBUG: source account does not exist ${buyer.id}');
-    throw ('Stellar account does not exist for user ${buyer.name}');
-  }
-
-  // Biblospher account
-  stellar.KeyPair destination = stellar.KeyPair.fromAccountId(
-      'GA2VIBWLNPLRY3SPUAFPIDLNFJJR4HJV5RONNQZJO4OA4LSXJ6UZV3MS');
-
-  print('!!!DEBUG adding operation');
-  builder.addOperation(new stellar.PaymentOperationBuilder(destination,
-                  new stellar.AssetTypeNative(), amount.toString()).build());
-}
-
-void refund(User buyer, User owner, Deal deal, stellar.TransactionBuilder builder) async {
-  if (deal == null) throw ('Transaction tried on empty deal');
-
-  double refund =
-      (deal.date.difference(DateTime.now()).inDays * deal.price / 183 * 100)
-          .roundToDouble() / 100;
-
-  // Could not be negative (in case of calculation after last day)
-  if (refund < 0.0) refund = 0.0;
-
-  // Reward owner
-  double reward = deal.price - refund;
-
-  // Refund fee as well
-  refund = (refund * 1.2 * 100).roundToDouble() / 100;
-
-  print('!!!DEBUG: price/refund/reward: ${deal.price}, ${refund}, ${reward}');
-
-  if (refund > 0.0) {
-    stellar.KeyPair destination =
-        stellar.KeyPair.fromAccountId(buyer.accountId);
-
-    builder.addOperation(new stellar.PaymentOperationBuilder(
-            destination, new stellar.AssetTypeNative(), refund.toString())
-        .build());
-  }
-
-  if (reward > 0.0) {
-    stellar.KeyPair destination =
-        stellar.KeyPair.fromAccountId(owner.accountId);
-
-    builder.addOperation(new stellar.PaymentOperationBuilder(
-            destination, new stellar.AssetTypeNative(), reward.toString())
-        .build());
-  }
 }

@@ -3,13 +3,15 @@ import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:biblosphere/const.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl/intl.dart';
-import 'package:biblosphere/l10n.dart';
 import 'package:flutter_crashlytics/flutter_crashlytics.dart';
-import 'package:stellar/stellar.dart' as stellar;
 import 'package:in_app_purchase/in_app_purchase.dart';
+
+import 'package:biblosphere/l10n.dart';
+import 'package:biblosphere/const.dart';
+import 'package:biblosphere/helpers.dart';
+import 'package:biblosphere/lifecycle.dart';
 
 // Class to show list of chats
 class ChatListWidget extends StatefulWidget {
@@ -65,8 +67,7 @@ class _ChatListWidgetState extends State<ChatListWidget> {
                             snapshot.data.documents.isEmpty) {
                           return Container(
                               padding: EdgeInsets.all(10),
-                              child: Text(
-                                'No activities',
+                              child: Text(S.of(context).noMessages,
                                 style: Theme.of(context).textTheme.body1,
                               ));
                         }
@@ -222,7 +223,7 @@ class _ChatCardState extends State<ChatCard> {
     super.initState();
     chat.getDetails(widget.currentUser).whenComplete(() {
       partner = chat.partner(widget.currentUser.id);
-      setState(() {});
+      if (mounted) setState(() {});
     });
   }
 
@@ -400,12 +401,12 @@ class _ChatState extends State<Chat> {
                                           //TODO: translation
                                           builder: (context) => buildScaffold(
                                               context,
-                                              "ВЗЯТЬ КНИГИ",
+                                              S.of(context).titleReceiveBooks,
                                               new RequestBooksWidget(
                                                   currentUser: currentUser,
                                                   partner: partner))));
                                 },
-                                child: Text('Взять книги (${booksToReceive})',
+                                child: Text(S.of(context).receiveBooks(booksToReceive),
                                     style: Theme.of(context)
                                         .textTheme
                                         .body1
@@ -419,12 +420,12 @@ class _ChatState extends State<Chat> {
                                             //TODO: translation
                                             builder: (context) => buildScaffold(
                                                 context,
-                                                "ОТДАЮ КНИГИ",
+                                                S.of(context).titleSendBooks,
                                                 new GiveBooksWidget(
                                                     currentUser: currentUser,
                                                     partner: partner))));
                                 },
-                                child: Text('Отдаю книги (${booksToGive})',
+                                child: Text(S.of(context).sendBooks(booksToGive),
                                     style: Theme.of(context)
                                         .textTheme
                                         .body1
@@ -885,33 +886,30 @@ class _RequestBooksWidgetState extends State<RequestBooksWidget> {
         .where("wish", isEqualTo: false)
         .snapshots()
         .listen((snap) {
-      print(
-          '!!!DEBUG: documents: ${snap.documents.length} changes: ${snap.documentChanges.length}.');
       if (snap.documentChanges.length > 0) {
         snap.documentChanges.forEach((doc) {
-          print(
-              '!!!DEBUG: document change: type=${doc.type} indexes: ${doc.oldIndex} =>.${doc.newIndex}');
           if (doc.type == DocumentChangeType.added) {
             Bookrecord rec = new Bookrecord.fromJson(doc.document.data);
             rec.getBookrecord(currentUser);
             books.insert(doc.newIndex, rec);
-            amountToPay += rec.getPrice();
+            if ( rec.ownerId != currentUser.id)
+               amountToPay += rec.getPrice();
           } else if (doc.type == DocumentChangeType.modified) {
             //TODO: Check if redraw correctly especially for child records (users and book)
             Bookrecord rec = new Bookrecord.fromJson(doc.document.data);
             rec.getBookrecord(currentUser);
-            amountToPay -= books[doc.oldIndex].getPrice();
+            if ( books[doc.oldIndex].ownerId != currentUser.id)
+               amountToPay -= books[doc.oldIndex].getPrice();
             books[doc.oldIndex] = rec;
-            amountToPay += rec.getPrice();
+            if ( rec.ownerId != currentUser.id)
+               amountToPay += rec.getPrice();
           } else if (doc.type == DocumentChangeType.removed) {
-            amountToPay -= books[doc.oldIndex].getPrice();
+            if ( books[doc.oldIndex].ownerId != currentUser.id)
+               amountToPay -= books[doc.oldIndex].getPrice();
             books.removeAt(doc.oldIndex);
           }
-          print('!!!DEBUG books modified, amount ${amountToPay}');
         });
-        if (mounted) setState(() {
-          print('!!!DEBUG Set state');
-        });
+        if (mounted) setState(() {});
       }
     });
   }
@@ -940,7 +938,6 @@ class _RequestBooksWidgetState extends State<RequestBooksWidget> {
               new Container(
                 child: Wrap(
                   children: books.map((Bookrecord rec) {
-                    print('!!!DEBUG mapping for books');
                     return BookrecordWidget(
                         bookrecord: rec,
                         currentUser: currentUser,
@@ -981,19 +978,17 @@ class _RequestBooksWidgetState extends State<RequestBooksWidget> {
               ),
               amountToPay > 0.0
                   ? Container(
-                  child: amountToPay * 1.2 < currentUser.balance ?
-                      Text(
-                          'Депозит за книги: ${amountToPay * 1.2}, оплата за месяц ${amountToPay * 1.2 /6.0}') :
-                  Text(
-                      'Вам нехватает ${(amountToPay * 1.2 - currentUser.balance).ceilToDouble()}. Депозит за книги: ${amountToPay * 1.2}, оплата за месяц ${amountToPay * 1.2 /6.0}')
+                  child: total(amountToPay) < currentUser.balance ?
+                      Text(S.of(context).leaseAgreement(total(amountToPay), monthly(amountToPay))) :
+                  Text(S.of(context).notSufficientForAgreement((total(amountToPay) - currentUser.getAvailable()).ceilToDouble(), total(amountToPay), monthly(amountToPay)))
               )
                   : Container(),
               new Row(children: <Widget>[
-                amountToPay > 0.0 && amountToPay * 1.2 + 1 >= currentUser.balance ? new Container(
+                amountToPay > 0.0 && total(amountToPay) > currentUser.balance ? new Container(
                     child: RaisedButton(
                   textColor: Colors.white,
                   color: Theme.of(context).colorScheme.secondary,
-                  child: new Text('Пополнить счёт',
+                  child: new Text(S.of(context).buttonPayin,
                       style: Theme.of(context)
                           .textTheme
                           .body1
@@ -1001,15 +996,22 @@ class _RequestBooksWidgetState extends State<RequestBooksWidget> {
                   onPressed: () async {
                     final bool available =
                         await InAppPurchaseConnection.instance.isAvailable();
-                    if (available) {
-                      print('!!!DEBUG: In-App store not available');
+                    if (!available) {
+                      // TODO: Process this more nicely
+                      throw('In-App store not available');
                     }
-                    const Set<String> _kIds = {'book'};
+                    // Only show bigger amounts
+                    List<int> codes = [50, 100, 200, 500, 1000, 2000];
+                    int missing = (total(amountToPay) - currentUser.balance).ceil();
+                    int code = codes.firstWhere((code) => code > missing, orElse: () => 2000);
+
+                    Set<String> _kIds = {code.toString()};
                     final ProductDetailsResponse response =
                         await InAppPurchaseConnection.instance
                             .queryProductDetails(_kIds);
                     if (!response.notFoundIDs.isEmpty) {
-                      print('!!!DEBUG: Ids not found');
+                      // TODO: Process this more nicely
+                      throw('Ids of in-app products not available');
                     }
                     List<ProductDetails> products = response.productDetails;
                     final PurchaseParam purchaseParam = PurchaseParam(
@@ -1020,11 +1022,11 @@ class _RequestBooksWidgetState extends State<RequestBooksWidget> {
                   shape: new RoundedRectangleBorder(
                       borderRadius: new BorderRadius.circular(20.0)),
                 )) : Container(),
-                amountToPay > 0 && amountToPay * 1.2 + 1 < currentUser.balance ? new Container(
+                amountToPay == 0 && books.length > 0 || amountToPay > 0 && total(amountToPay) <= currentUser.balance ? new Container(
                     child: RaisedButton(
                   textColor: Colors.white,
                   color: Theme.of(context).colorScheme.secondary,
-                  child: new Text('Книги получил \u{02713}',
+                  child: new Text(S.of(context).buttonConfirmBooks,
                       style: Theme.of(context)
                           .textTheme
                           .body1
@@ -1051,7 +1053,7 @@ class _RequestBooksWidgetState extends State<RequestBooksWidget> {
                             style: Theme.of(context).textTheme.title,
                             decoration: InputDecoration(
                                 //border: InputBorder.none,
-                                hintText: 'Автор или название'),
+                                hintText: S.of(context).hintAuthorTitle),
                           )),
                     ),
                     Container(
@@ -1159,6 +1161,7 @@ class _RequestBooksWidgetState extends State<RequestBooksWidget> {
   }
 
   Future<void> transferBooks(User partner) async {
+
     QuerySnapshot snap = await Firestore.instance
         .collection('bookrecords')
         .where("holderId", isEqualTo: partner.id)
@@ -1172,120 +1175,28 @@ class _RequestBooksWidgetState extends State<RequestBooksWidget> {
       return rec;
     }).toList();
 
+    // Books taken from owner
     List<Bookrecord> booksTaken =
-        books.where((rec) => rec.ownerId != currentUser.id).toList();
+        books.where((rec) => rec.ownerId == partner.id).toList();
+
+    // Books taken from person other than owner
+    List<Bookrecord> booksPassed =
+    books.where((rec) => rec.ownerId != currentUser.id && rec.ownerId != partner.id).toList();
+
+    // Books returned to owner
     List<Bookrecord> booksReturned =
         books.where((rec) => rec.ownerId == currentUser.id).toList();
-    print('!!!DEBUG: lists ${booksTaken} ${booksReturned}');
-
-    if (partner.accountId == null) {
-      await createStellarAccount(partner);
-      print('!!!DEBUG: account Id created ${partner.accountId}');
-    }
-
-    // Initiate Stellar transaction
-    stellar.Network.useTestNetwork();
-    stellar.Server server =
-        new stellar.Server("https://horizon-testnet.stellar.org");
 
     if (booksTaken.length > 0) {
-      //TODO: protect secret key
-      stellar.KeyPair source =
-          stellar.KeyPair.fromSecretSeed(currentUser.secretSeed);
-      var sourceAccount = await server.accounts.account(source);
-      stellar.TransactionBuilder builder =
-          new stellar.TransactionBuilder(sourceAccount);
+      await deposit(books: booksTaken, owner: partner, payer: currentUser);
+    }
 
-      // Add Stellar operations for each book to Stellar transaction
-      await booksTaken.forEach((rec) {
-        print('!!!DEBUG charge');
-        // Book to rent
-        double price = rec.getPrice();
-        charge(currentUser, price * 1.2, builder);
-      });
-
-      // Add memo and sign Stellar transaction
-      builder.addMemo(stellar.Memo.text("Books deposit"));
-      stellar.Transaction transaction = builder.build();
-      print('!!!DEBUG: signing transaction user');
-      transaction.sign(source);
-
-      // Run Stellar transaction
-      print('!!!DEBUG: submiting transaction');
-      var response = await server.submitTransaction(transaction);
-      print("!!!DEBUG: Success ${response.success}");
-
-      // If transaction successful update books status/handover
-      //TODO: run it as transaction to have it atomic
-      if (response.success) {
-        booksTaken.forEach((rec) {
-          Deal deal = new Deal(
-              date: DateTime.now().add(Duration(days: 183)),
-              price: rec.getPrice());
-
-          Firestore.instance
-              .collection('bookrecords')
-              .document(rec.id)
-              .updateData({
-            'deal': deal.toJson(),
-            'holderId': currentUser.id,
-            'transit': false,
-            'lent': true,
-            'transitId': null,
-            'users': [currentUser.id, rec.ownerId]
-          });
-        });
-      }
+    if (booksPassed.length > 0) {
+      await pass(books: booksPassed, holder: partner, payer: currentUser);
     }
 
     if (booksReturned.length > 0) {
-      //TODO: protect secret key
-      stellar.KeyPair source = stellar.KeyPair.fromSecretSeed(
-          'SBUXJGJAI7MPORWH6DIA4NUZ4PG4E4M2RKEMZYU5LSHMGWNEXGOMGBDU');
-
-      var sourceAccount = await server.accounts.account(source);
-      stellar.TransactionBuilder builder =
-          new stellar.TransactionBuilder(sourceAccount);
-
-      // Add Stellar operations for each book to Stellar transaction
-      await booksReturned.forEach((rec) {
-        print('!!!DEBUG refund');
-        // Book to return
-        refund(partner, currentUser, rec.deal, builder);
-        //TODO: make fee payments
-        print('!!!DEBUG refund end');
-      });
-
-      // Add memo and sign Stellar transaction
-      print('!!!DEBUG add memo');
-      builder.addMemo(stellar.Memo.text("Books return"));
-      stellar.Transaction transaction = builder.build();
-      print('!!!DEBUG: signing transaction ${source} ${transaction}');
-      transaction.sign(source);
-
-      // Run Stellar transaction
-      print('!!!DEBUG: submiting transaction');
-      var response = await server.submitTransaction(transaction);
-      print("!!!DEBUG: Success ${response.success}");
-
-      // If transaction successful update books status/handover
-      //TODO: run it as transaction to have it atomic
-      if (response.success) {
-        booksReturned.forEach((rec) {
-          // Clean deal
-          Firestore.instance
-              .collection('bookrecords')
-              .document(rec.id)
-              .updateData({
-            'deal': null,
-            'holderId': currentUser.id,
-            'transit': false,
-            'lent': false,
-            'transitId': null,
-            'users': [currentUser.id, rec.ownerId]
-          });
-        });
-      }
+      await complete(books: booksReturned, holder: partner, owner: currentUser);
     }
   }
 }

@@ -716,5 +716,419 @@
     "placeholders": {
       "lang": {}
     }
+  },
+  "financeTitle": "MY BALANCE: {balance}",
+  "@financeTitle": {
+    "type": "text",
+    "placeholders": {
+      "balance": {}
+    }
+  },
+  "addbookTitle": "ADD BOOK",
+  "@addbookTitle": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "addBook": "Add book",
+  "@addBook": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "findbookTitle": "FIND BOOK",
+  "@findbookTitle": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "findBook": "Find Book",
+  "@findBook": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "mybooksTitle": "MY BOOKS",
+  "@mybooksTitle": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "myBooks": "My books",
+  "@myBooks": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "referralLink": "Your referral link:",
+  "@referralLink": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "linkCopied": "Link copied to clipboard",
+  "@linkCopied": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "menuMessages": "Messages",
+  "@menuMessages": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "titleMessages": "MESSAGES",
+  "@titleMessages": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "menuSettings": "Settings",
+  "@menuSettings": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "titleSettings": "SETTINGS",
+  "@titleSettings": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "menuBalance": "Balance",
+  "@menuBalance": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "menuReferral": "Referral program",
+  "@menuReferral": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "referralTitle": "MY REFERRALS",
+  "@referralTitle": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "menuSupport": "Support",
+  "@menuSupport": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "supportTitle": "SUPPORT",
+  "@supportTitle": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "hintAuthorTitle": "Author or title",
+  "@hintAuthorTitle": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "chipMyBooks": "My books",
+  "@chipMyBooks": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "chipLent": "Lent",
+  "@chipLent": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "chipBorrowed": "Borrowed",
+  "@chipBorrowed": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "chipWish": "Wishes",
+  "@chipWish": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "chipTransit": "Transit",
+  "@chipTransit": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "youHaveThisBook": "You keep this book",
+  "@youHaveThisBook": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "youWishThisBook": "This book in your wishlist",
+  "@youWishThisBook": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "youLentThisBook": "You lent this book to {user}",
+  "@youLentThisBook": {
+    "type": "text",
+    "placeholders": {
+      "user": {}
+    }
+  },
+  "youBorrowThisBook": "You borrowed this book from {user}",
+  "@youBorrowThisBook": {
+    "type": "text",
+    "placeholders": {
+      "user": {}
+    }
+  },
+  "youTransitThisBook": "This book is in transit",
+  "@youTransitThisBook": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "chipPayin": "Pay In",
+  "@chipPayin": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "chipPayout": "Pay Out",
+  "@chipPayout": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "chipLeasing": "Spent",
+  "@chipLeasing": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "chipReward": "Rewards",
+  "@chipReward": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "chipReferrals": "Referrals",
+  "@chipReferrals": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "noOperations": "No operations",
+  "@noOperations": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "opLeasing": "Spent/Deposit for book",
+  "@opLeasing": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "opReward": "Reward for book",
+  "@opReward": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "opInAppPurchase": "Pay In (In-App)",
+  "@opInAppPurchase": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "opInStellar": "Pay In (Stellar)",
+  "@opInStellar": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "opOutStellar": "Pay Out (Stellar)",
+  "@opOutStellar": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "opReferral": "Referrals pay",
+  "@opReferral": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "noReferrals": "No referrals",
+  "@noReferrals": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "sharedFeeLine": "Total shared: +{amount}",
+  "@sharedFeeLine": {
+    "type": "text",
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "inputStellarAcount": "Stellar account for Pay In:",
+  "@inputStellarAcount": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "accountCopied": "Account copied to clipboard",
+  "@accountCopied": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "outputStellarAccount": "Stellar account for Pay Out:",
+  "@outputStellarAccount": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "wrongAccount": "Wrong account",
+  "@wrongAccount": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "hintOutptAcount": "Enter your Stellar account for pay out",
+  "@hintOutptAcount": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "stellarOutput": "Pay out to Stellar account:",
+  "@stellarOutput": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "hintNotMore": "Enter amount not more than {amount}",
+  "@hintNotMore": {
+    "type": "text",
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "emptyAmount": "Empty amount not accepted",
+  "@emptyAmount": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "negativeAmount": "Amount should be positive",
+  "@negativeAmount": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "exceedAmount": "Amount exceed available balance",
+  "@exceedAmount": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "successfulPayment": "Successful payment",
+  "@successfulPayment": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "paymentError": "Something went wrong, contact administrator",
+  "@paymentError": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "buttonTransfer": "Transfer",
+  "@buttonTransfer": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "titleGetBook": "GET BOOK",
+  "@titleGetBook": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "inMyWishes": "This book in your wishlist",
+  "@inMyWishes": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "inMyBooks": "You have this book",
+  "@inMyBooks": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "requestBook": "Can you give me \"{book}\"?",
+  "@requestBook": {
+    "type": "text",
+    "placeholders": {
+      "book": {}
+    }
+  },
+  "bookAround": "Get book",
+  "@bookAround": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "userHave": "from user {user}",
+  "@userHave": {
+    "type": "text",
+    "placeholders": {
+      "user": {}
+    }
+  },
+  "distanceLine": "Distance: {distance} km",
+  "@distanceLine": {
+    "type": "text",
+    "placeholders": {
+      "distance": {}
+    }
+  },
+  "requestPost": "Can you send me \"{book}\"?",
+  "@requestPost": {
+    "type": "text",
+    "placeholders": {
+      "book": {}
+    }
+  },
+  "bookByPost": "Receive by post",
+  "@bookByPost": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "bookInLibrary": "Find in library via",
+  "@bookInLibrary": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "buyBook": "Buy on",
+  "@buyBook": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "ifNotFound": "If book is not found:",
+  "@ifNotFound": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "noMessages": "No messages",
+  "@noMessages": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "titleReceiveBooks": "RECEIVING BOOKS",
+  "@titleReceiveBooks": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "receiveBooks": "Receiving books ({num})",
+  "@receiveBooks": {
+    "type": "text",
+    "placeholders": {
+      "num": {}
+    }
+  },
+  "titleSendBooks": "HANDOVER BOOKS",
+  "@titleSendBooks": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "sendBooks": "Handover books ({num})",
+  "@sendBooks": {
+    "type": "text",
+    "placeholders": {
+      "num": {}
+    }
+  },
+  "leaseAgreement": "Deposit for books: {total}, monthly payment {month}",
+  "@leaseAgreement": {
+    "type": "text",
+    "placeholders": {
+      "total": {},
+      "month": {}
+    }
+  },
+  "notSufficientForAgreement": "Missing {missing}. Deposit for books: {total}, monthly payment {month}",
+  "@notSufficientForAgreement": {
+    "type": "text",
+    "placeholders": {
+      "missing": {},
+      "total": {},
+      "month": {}
+    }
+  },
+  "buttonPayin": "Get balance",
+  "@buttonPayin": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "buttonConfirmBooks": "Confirm handover ✓",
+  "@buttonConfirmBooks": {
+    "type": "text",
+    "placeholders": {}
   }
 }

@@ -1,5 +1,5 @@
 {
-  "@@last_modified": "2019-05-05T20:59:21.787919",
+  "@@last_modified": "2019-10-26T21:49:35.050929",
   "title": "Biblosphere",
   "@title": {
     "description": "The application title",
@@ -394,7 +394,7 @@
     "type": "text",
     "placeholders": {}
   },
-  "scanISBN": "Scan ISBN from the back of the book",
+  "scanISBN": "Scan ISBN code",
   "@scanISBN": {
     "type": "text",
     "placeholders": {}
@@ -721,5 +721,419 @@
     "placeholders": {
       "lang": {}
     }
+  },
+  "financeTitle": "МОЙ БАЛАНС: {balance}",
+  "@financeTitle": {
+    "type": "text",
+    "placeholders": {
+      "balance": {}
+    }
+  },
+  "addbookTitle": "ДОБАВЬ КНИГУ",
+  "@addbookTitle": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "addBook": "Добавить книгу",
+  "@addBook": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "findbookTitle": "НАЙДИ КНИГУ",
+  "@findbookTitle": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "findBook": "Найти книгу",
+  "@findBook": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "mybooksTitle": "МОИ КНИГИ",
+  "@mybooksTitle": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "myBooks": "Мои книги",
+  "@myBooks": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "referralLink": "Ваша партнёрская ссылка:",
+  "@referralLink": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "linkCopied": "Ссылка скопирована в буфер обмена",
+  "@linkCopied": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "menuMessages": "Сообщения",
+  "@menuMessages": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "titleMessages": "СООБЩЕНИЯ",
+  "@titleMessages": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "menuSettings": "Настройки",
+  "@menuSettings": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "titleSettings": "НАСТРОЙКИ",
+  "@titleSettings": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "menuBalance": "Баланс",
+  "@menuBalance": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "menuReferral": "Реферальная программа",
+  "@menuReferral": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "referralTitle": "МОИ РЕФЕРАЛЫ",
+  "@referralTitle": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "menuSupport": "Поддержка",
+  "@menuSupport": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "supportTitle": "ПОДДЕРЖКА",
+  "@supportTitle": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "hintAuthorTitle": "Автор или название",
+  "@hintAuthorTitle": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "chipMyBooks": "Мои книги",
+  "@chipMyBooks": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "chipLent": "Отданные",
+  "@chipLent": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "chipBorrowed": "Взятые",
+  "@chipBorrowed": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "chipWish": "Хочу",
+  "@chipWish": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "chipTransit": "Транзит",
+  "@chipTransit": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "youHaveThisBook": "Эта книга находится у вас",
+  "@youHaveThisBook": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "youWishThisBook": "Эту книгу вы хотите почитать",
+  "@youWishThisBook": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "youLentThisBook": "Эту книгу вы дали почитать пользователю {user}",
+  "@youLentThisBook": {
+    "type": "text",
+    "placeholders": {
+      "user": {}
+    }
+  },
+  "youBorrowThisBook": "Эту книгу вы взяли почитать у пользователя {user}",
+  "@youBorrowThisBook": {
+    "type": "text",
+    "placeholders": {
+      "user": {}
+    }
+  },
+  "youTransitThisBook": "По этой книге не завершён процесс передачи",
+  "@youTransitThisBook": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "chipPayin": "Пополнения",
+  "@chipPayin": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "chipPayout": "Выплаты",
+  "@chipPayout": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "chipLeasing": "Расходы",
+  "@chipLeasing": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "chipReward": "Доходы",
+  "@chipReward": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "chipReferrals": "Рефералы",
+  "@chipReferrals": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "noOperations": "No operations",
+  "@noOperations": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "opLeasing": "Оплата/залог за книгу",
+  "@opLeasing": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "opReward": "Вознаграждение за книгу",
+  "@opReward": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "opInAppPurchase": "Пополнение счёта в приложении",
+  "@opInAppPurchase": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "opInStellar": "Пополнение счёта через Stellar",
+  "@opInStellar": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "opOutStellar": "Вывод средств через Stellar",
+  "@opOutStellar": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "opReferral": "Партнёрский доход",
+  "@opReferral": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "noReferrals": "No referrals",
+  "@noReferrals": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "sharedFeeLine": "Общий доход: +{amount}",
+  "@sharedFeeLine": {
+    "type": "text",
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "inputStellarAcount": "Счёт Stellar для пополнения:",
+  "@inputStellarAcount": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "accountCopied": "Счёт скопирован в буфер обмена",
+  "@accountCopied": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "outputStellarAccount": "Счёт Stellar для выплат:",
+  "@outputStellarAccount": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "wrongAccount": "Неверный счёт",
+  "@wrongAccount": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "hintOutptAcount": "Ваш Stellar счёт для вывода средств",
+  "@hintOutptAcount": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "stellarOutput": "Вывод средств на Stellar счёт:",
+  "@stellarOutput": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "hintNotMore": "Введите сумму не более {amount}",
+  "@hintNotMore": {
+    "type": "text",
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "emptyAmount": "Сумма не может быть пустой",
+  "@emptyAmount": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "negativeAmount": "Сумма должна быть больше нуля",
+  "@negativeAmount": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "exceedAmount": "Сумма должна быть меньше доступного остатка",
+  "@exceedAmount": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "successfulPayment": "Платёж успешно прошёл",
+  "@successfulPayment": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "paymentError": "Что-то пошло не так, напишите администратору",
+  "@paymentError": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "buttonTransfer": "Перевести",
+  "@buttonTransfer": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "titleGetBook": "ПОЛУЧИ КНИГУ",
+  "@titleGetBook": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "inMyWishes": "Эта книга в вашем списке желаний",
+  "@inMyWishes": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "inMyBooks": "Эта книга есть у вас",
+  "@inMyBooks": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "requestBook": "Можно взять у вас \"{book}\"?",
+  "@requestBook": {
+    "type": "text",
+    "placeholders": {
+      "book": {}
+    }
+  },
+  "bookAround": "Книга поблизости",
+  "@bookAround": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "userHave": "У пользователя {user}",
+  "@userHave": {
+    "type": "text",
+    "placeholders": {
+      "user": {}
+    }
+  },
+  "distanceLine": "Расстояние: {distance} км",
+  "@distanceLine": {
+    "type": "text",
+    "placeholders": {
+      "distance": {}
+    }
+  },
+  "requestPost": "Можете прислать мне \"{book}\"?",
+  "@requestPost": {
+    "type": "text",
+    "placeholders": {
+      "book": {}
+    }
+  },
+  "bookByPost": "Получи по почте",
+  "@bookByPost": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "bookInLibrary": "Найди в библиотеке через",
+  "@bookInLibrary": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "buyBook": "Купи на",
+  "@buyBook": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "ifNotFound": "Если вы не нашли книгу вы можете:",
+  "@ifNotFound": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "noMessages": "Нет сообщений",
+  "@noMessages": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "titleReceiveBooks": "ВЗЯТЬ КНИГИ",
+  "@titleReceiveBooks": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "receiveBooks": "Взять книги ({num})",
+  "@receiveBooks": {
+    "type": "text",
+    "placeholders": {
+      "num": {}
+    }
+  },
+  "titleSendBooks": "ОТДАЮ КНИГИ",
+  "@titleSendBooks": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "sendBooks": "Отдаю книги ({num})",
+  "@sendBooks": {
+    "type": "text",
+    "placeholders": {
+      "num": {}
+    }
+  },
+  "leaseAgreement": "Депозит за книги: {total}, оплата за месяц {month}",
+  "@leaseAgreement": {
+    "type": "text",
+    "placeholders": {
+      "total": {},
+      "month": {}
+    }
+  },
+  "notSufficientForAgreement": "Вам нехватает {missing}. Депозит за книги: {total}, оплата за месяц {month}",
+  "@notSufficientForAgreement": {
+    "type": "text",
+    "placeholders": {
+      "missing": {},
+      "total": {},
+      "month": {}
+    }
+  },
+  "buttonPayin": "Пополнить счёт",
+  "@buttonPayin": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "buttonConfirmBooks": "Книги получил ✓",
+  "@buttonConfirmBooks": {
+    "type": "text",
+    "placeholders": {}
   }
 }

@@ -20,7 +20,7 @@ dependencies:
   geoflutterfire:
       git: git://github.com/DarshanGowda0/GeoFlutterFire.git
 
-  cloud_firestore: ^0.12.9+4
+  cloud_firestore: ^0.12.9+5
 
   #firebase_storage: ^3.0.6
 
@@ -28,19 +28,19 @@ dependencies:
 
   permission_handler: ^3.0.1
 
-  url_launcher: ^5.0.1
+  url_launcher: ^5.2.2
 
-  cached_network_image: ^1.1.1
+  cached_network_image: ^1.1.2+1
 
-  fluttertoast: ^3.0.4
+  fluttertoast: ^3.1.3
 
-  intl: ^0.15.7
+  intl: ^0.15.8
 
   #image_picker: ^0.6.0+2
 
   share: ^0.5.3
 
-  firebase_dynamic_links: ^0.4.0
+  firebase_dynamic_links: ^0.5.0+1
 
   #firebase_ml_vision: ^0.8.0
 
@@ -62,16 +62,17 @@ dependencies:
 
   firebase_ui: ^1.0.7
 
-  flutter_launcher_icons: ^0.6.1
+  flutter_launcher_icons: ^0.7.3
 
   shared_preferences: ^0.4.0
 
-  in_app_purchase: ^0.2.1+4
+  in_app_purchase: ^0.2.2
 
   xml: ^3.3.1
 
   #Registration with Goodreads
   oauth1: ^1.0.4
+
 # Run flutter pub pub run flutter_launcher_icons:main
 flutter_icons:
   image_path: "images/biblosphere.png"
@@ -82,7 +83,9 @@ dev_dependencies:
   intl_translation: ^0.17.1
   flutter_test:
     sdk: flutter
-  mockito: ^3.0.0
+  mockito: ^4.1.1
+  mock_cloud_firestore:
+    git: git://github.com/ozanturksever/mock_cloud_firestore.git
 
 # For information on the generic Dart part of this file, see the
 # following page: https://www.dartlang.org/tools/pub/pubspec
@@ -122,19 +125,20 @@ flutter:
   # list giving the asset and other descriptors for the font. For
   # example:
   fonts:
-    - family: AmaticSc
-      fonts:
-        - asset: fonts/AmaticSC-Regular.ttf
-        - asset: fonts/AmaticSC-Bold.ttf
-          weight: 700
-    - family: Oswald
-      fonts:
-        - asset: fonts/Oswald-Regular.ttf
-        - asset: fonts/Oswald-Bold.ttf
-          weight: 700
+  #  - family: AmaticSc
+  #    fonts:
+  #      - asset: fonts/AmaticSC-Regular.ttf
+  #      - asset: fonts/AmaticSC-Bold.ttf
+  #        weight: 700
+  #  - family: Oswald
+  #    fonts:
+  #      - asset: fonts/Oswald-Regular.ttf
+  #      - asset: fonts/Oswald-Bold.ttf
+  #        weight: 700
+  #
     - family: MyIcons
       fonts:
-        - asset: fonts/Flaticon.ttf
+       - asset: fonts/Flaticon.ttf
   #   - family: Schyler
   #     fonts:
   #       - asset: fonts/Schyler-Regular.ttf
