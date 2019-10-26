@@ -30,15 +30,11 @@ Future addBookrecord(
 
   QuerySnapshot q = await Firestore.instance
       .collection('books')
-      .where('book.isbn', isEqualTo: b.isbn)
+      .where('isbn', isEqualTo: b.isbn)
       .getDocuments();
 
   if (q.documents.isEmpty) {
-    DocumentReference d = await Firestore.instance
-        .collection('books')
-        .add({'book': b.toJson(), 'source': source});
-
-    b.id = d.documentID;
+    await b.ref().setData(b.toJson());
   } else {
     existingBook = true;
     b.id = q.documents.first.documentID;
@@ -68,10 +64,7 @@ Future addBookrecord(
     }
   }
 
-  DocumentReference rec =
-      await Firestore.instance.collection('bookrecords').document();
-  bookrecord.id = rec.documentID;
-  await rec.setData(bookrecord.toJson());
+  await bookrecord.ref().setData(bookrecord.toJson());
   if (snackbar) {
     if (wish)
       showSnackBar(context, S.of(context).wishAdded);

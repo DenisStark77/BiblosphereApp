@@ -160,14 +160,12 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                 },
                 padding: EdgeInsets.all(0.0),
               )),
-          /*
+/*
           new IconButton(
             onPressed: () async {
-              /*
               // Code to migrate BOOKS
               QuerySnapshot snap = await Firestore.instance.collection('books').getDocuments();
               snap.documents.forEach((doc) async {
-                print('!!!DEBUG book found ${doc.documentID}');
                 if(doc.data["migrated"] != null && doc.data["migrated"])
                   return;
 
@@ -176,6 +174,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                 await Firestore.instance.collection('books').document(doc.documentID).updateData(book.toJson()..addAll({'migrated': true}));
                 print('!!!DEBUG: book updated ${doc.documentID}');
               });
+              /*
                   // Code to migrate WISHES
                   QuerySnapshot snap = await Firestore.instance.collection('wishes').getDocuments();
                   snap.documents.forEach((doc) {
@@ -213,7 +212,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
             tooltip: S.of(context).settings,
             icon: new Icon(MyIcons.settings),
           ),
-*/
+          */
 /*
             new IconButton(
               onPressed: () => signOutProviders(),

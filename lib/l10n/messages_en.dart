@@ -250,7 +250,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "reportedPhoto" : MessageLookupByLibrary.simpleMessage("This photo is reported as an objectionable content."),
     "requestBook" : m24,
     "requestPost" : m25,
-    "scanISBN" : MessageLookupByLibrary.simpleMessage("Scan ISBN from the back of the book"),
+    "scanISBN" : MessageLookupByLibrary.simpleMessage("Scan ISBN"),
     "seeLocation" : MessageLookupByLibrary.simpleMessage("See location"),
     "sendBooks" : m26,
     "settings" : MessageLookupByLibrary.simpleMessage("Settings"),

@@ -175,20 +175,21 @@ class Book {
   Book.fromJson(Map json)
       : id = json['id'],
         title = json['title'],
-        authors = (json['authors'] as List).cast<String>(),
+        authors = (json['authors'] as List)?.cast<String>(),
         isbn = json['isbn'],
         image = json['image'],
         sourceId = json['sourceId'],
-        source = BookSource.values.elementAt(json['source']??0),
+        source = json['source'] is int ? BookSource.values.elementAt(json['source']??0) : BookSource.none,
         price = json['price'],
         language = json['language'],
-        keys = (json['keys'] as List).cast<String>().toSet(),
+        keys = (json['keys'] as List)?.cast<String>()?.toSet(),
         listPrice = json['listPrice'] != null
             ? new Price.fromJson(json['listPrice'])
             : null,
         genre = json['genre'] {
     if (keys == null) {
-      keys = getKeys(authors.join(' ') + ' ' + title + ' ' + isbn);
+      print('!!!DEBUG: ${id} ${title} ${json}');
+      keys = getKeys((authors != null ? authors.join(' ') : '') + ' ' + (title != null ? title : '') + ' ' + (isbn != null ? isbn : ''));
     }
   }
 
@@ -499,7 +500,8 @@ class Bookrecord {
       // Read BOOK data
       DocumentSnapshot doc =
           await Firestore.instance.collection('books').document(bookId).get();
-      book = new Book.fromJson(doc.data);
+      if (doc.exists && doc.data != null)
+        book = new Book.fromJson(doc.data);
 
       // Read owner user data
       if (ownerId == user.id) {

@@ -394,7 +394,7 @@
     "type": "text",
     "placeholders": {}
   },
-     "scanISBN": "Scan ISBN from the back of the book",
+     "scanISBN": "Scan ISBN",
      "@scanISBN": {
        "type": "text",
        "placeholders": {}
