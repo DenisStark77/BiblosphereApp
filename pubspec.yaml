@@ -125,30 +125,9 @@ flutter:
   # list giving the asset and other descriptors for the font. For
   # example:
   fonts:
-  #  - family: AmaticSc
-  #    fonts:
-  #      - asset: fonts/AmaticSC-Regular.ttf
-  #      - asset: fonts/AmaticSC-Bold.ttf
-  #        weight: 700
-  #  - family: Oswald
-  #    fonts:
-  #      - asset: fonts/Oswald-Regular.ttf
-  #      - asset: fonts/Oswald-Bold.ttf
-  #        weight: 700
-  #
     - family: MyIcons
       fonts:
        - asset: fonts/Flaticon.ttf
-  #   - family: Schyler
-  #     fonts:
-  #       - asset: fonts/Schyler-Regular.ttf
-  #       - asset: fonts/Schyler-Italic.ttf
-  #         style: italic
-  #   - family: Trajan Pro
-  #     fonts:
-  #       - asset: fonts/TrajanPro.ttf
-  #       - asset: fonts/TrajanPro_Bold.ttf
-  #         weight: 700
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.io/custom-fonts/#from-packages
