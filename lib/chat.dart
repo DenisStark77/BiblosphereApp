@@ -159,7 +159,7 @@ class _ChatListWidgetState extends State<ChatListWidget> {
                                                       style: Theme.of(context)
                                                           .textTheme
                                                           .body1),
-                                                  chat.unread > 0
+                                                  chat.unread[widget.currentUser.id] > 0
                                                       ? ClipOval(
                                                           child: Container(
                                                             color: Colors.green,
@@ -169,7 +169,7 @@ class _ChatListWidgetState extends State<ChatListWidget> {
                                                                 25.0, // width of the button
                                                             child: Center(
                                                                 child: Text(chat
-                                                                    .unread
+                                                                    .unread[widget.currentUser.id]
                                                                     .toString())),
                                                           ),
                                                         )
@@ -490,17 +490,28 @@ class ChatScreenState extends State<ChatScreen> {
     super.initState();
     textEditingController = new TextEditingController(text: message);
 
-    groupChatId = '';
+    groupChatId = chatId(myId, partner.id);
 
     isLoading = false;
     imageUrl = '';
 
-    readLocal();
+    updateUnread();
   }
 
-  readLocal() async {
-    groupChatId = chatId(myId, partner.id);
-    setState(() {});
+  updateUnread() async {
+    var chatRef = Firestore.instance.collection('messages').document(groupChatId);
+    Firestore.instance.runTransaction((transaction) async {
+      DocumentSnapshot snap = await chatRef.get();
+      if (snap.exists) {
+        Messages msgs = new Messages.fromJson(snap.data);
+        await transaction.update(
+          chatRef,
+          {
+            'unread': {partner.id: msgs.unread[partner.id], myId: 0}
+          },
+        );
+      }
+    });
   }
 
   void onSendMessage(String content, int type) {
@@ -549,23 +560,29 @@ class ChatScreenState extends State<ChatScreen> {
               'message': content.length < 20
                   ? content
                   : content.substring(0, 20) + '\u{2026}',
-              'blocked': 'no'
+              'blocked': 'no',
+              'unread': {partner.id: 1, myId: 0}
             },
           );
         });
         isNewChat = false;
       } else {
         Firestore.instance.runTransaction((transaction) async {
-          await transaction.update(
-            chatRef,
-            {
-              'ids': [partner.id, myId],
-              'message': content.length < 20
-                  ? content
-                  : content.substring(0, 20) + '\u{2026}',
-              'timestamp': timestamp
-            },
-          );
+          DocumentSnapshot snap = await chatRef.get();
+          if (snap.exists) {
+            Messages msgs = new Messages.fromJson(snap.data);
+            await transaction.update(
+              chatRef,
+              {
+                'ids': [partner.id, myId],
+                'message': content.length < 20
+                    ? content
+                    : content.substring(0, 20) + '\u{2026}',
+                'timestamp': timestamp,
+                'unread': {partner.id: msgs.unread[partner.id] + 1, myId: 0}
+              },
+            );
+          }
         });
       }
 

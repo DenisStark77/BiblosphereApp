@@ -1674,8 +1674,41 @@ class SupportWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return new Container(
-        /*child:
+        child:
         ListView(children: <Widget>[
+          Container(child: Text('Как брать книги', style: Theme.of(context).textTheme.subtitle)),
+          Container(child: Text('Найдите книгу, которую вы хотите почитать и напишите её хозяину, '
+              'чтобы договориться о встрече. При получении книг, вам нужно будет оплатить депозит '
+              'в библокоинах. Вы можете заработать библокоины давая свои книги почитать, через '
+              'партнёрскую программу или купить их за деньги.', style: Theme.of(context).textTheme.body1)),
+          Container(margin: EdgeInsets.only(top: 20.0),
+              child: Text('Валюта проекта', style: Theme.of(context).textTheme.subtitle)),
+          Container(child: Text('В Библосфере есть своя валюта - библокоины. Она нужна, чтобы '
+              'поддерживать баланс. Без неё завелись бы участники, которые только берут чужие '
+              'книги и никогда не дают свои. Если вы даёте свои книги, то зарабатываете библокоины '
+              'и можете брать книги у других. Если вы не зарабатываете библокоины, то можете купить '
+              'их за деньги.', style: Theme.of(context).textTheme.body1)),
+          Container(margin: EdgeInsets.only(top: 20.0),
+              child: Text('Пополнение счёта', style: Theme.of(context).textTheme.subtitle)),
+          Container(child: Text('Купить библокоины можно двумя способами. Можно пополнить счёт '
+              'через покупку в приложении по карточке в Google Play или '
+              'App Store. Или сделать перевод криптовалюты Stellar (XLM) на счёт указанный в '
+              'настройках.', style: Theme.of(context).textTheme.body1)),
+          Container(margin: EdgeInsets.only(top: 20.0),
+              child: Text('Партнёрская программа', style: Theme.of(context).textTheme.subtitle)),
+          Container(child: Text('Организуйте обмен книгами через Библосферу в своём сообщества или '
+              'офисе и получайте комиссию за каждую сделку. Для этого поделитесь с друзьями и '
+              'коллегами ссылкой на приложение (вашей партнёрской ссылкой).', style: Theme.of(context).textTheme.body1)),
+          Container(margin: EdgeInsets.only(top: 20.0),
+              child: Text('Вывод средств', style: Theme.of(context).textTheme.subtitle)),
+          Container(child: Text('Если вы заработали много библокоинов, и хотите потратить их не на книги, '
+              'то вы можете вывести их себе на кошелёк Stellar в меню "Настройки". Самый удобный способ '
+              'создать себе Stellar-счёт - через программу Keybase.', style: Theme.of(context).textTheme.body1)),
+          Container(margin: EdgeInsets.only(top: 20.0),
+              child: Text('Администратор', style: Theme.of(context).textTheme.subtitle)),
+          Container(child: Text('Если у вас остались вопросы свяжитесь с администратором по whatsapp или telegram +995599002198.', style: Theme.of(context).textTheme.body1)),
+
+          /*
           Text('Display 4', style: Theme.of(context).textTheme.display4),
           Text('Display 3', style: Theme.of(context).textTheme.display3),
           Text('Display 2', style: Theme.of(context).textTheme.display2),
@@ -1689,7 +1722,8 @@ class SupportWidget extends StatelessWidget {
           Text('Сноски', style: Theme.of(context).textTheme.overline),
           Text('Текст абзаца 1', style: Theme.of(context).textTheme.body1),
           Text('Текст абзаца 2', style: Theme.of(context).textTheme.body2)
-        ]) */
+          */
+        ])
     );
   }
 }

@@ -8,7 +8,7 @@ if (localPropertiesFile.exists()) {
 
 def flutterRoot = localProperties.getProperty('flutter.sdk')
 if (flutterRoot == null) {
-    throw new GradleException("Flutter SDK not found. Define location with flutter.sdk in the local.properties file.")
+    throw new FileNotFoundException("Flutter SDK not found. Define location with flutter.sdk in the local.properties file.")
 }
 
 apply plugin: 'com.android.application'
@@ -33,7 +33,7 @@ android {
         minSdkVersion 20
         targetSdkVersion 28
         versionName "1.0"
-        versionCode 12264
+        versionCode 13664
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         multiDexEnabled true
     }
@@ -47,6 +47,8 @@ android {
         }
     }
 
+
+    /*
     flavorDimensions 'cpuArch'
     productFlavors {
         //Use with flutter build apk --target-platform=android-arm --flavor=arm7
@@ -65,15 +67,15 @@ android {
             }
         }
     }
-
+    */
 
     buildTypes {
         release {
             signingConfig signingConfigs.release
 
-//        minifyEnabled true
-//        useProguard true
-//        proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        minifyEnabled false
+        useProguard false
+        proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
 }

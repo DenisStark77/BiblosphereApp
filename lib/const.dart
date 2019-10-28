@@ -815,7 +815,7 @@ class Messages {
   List<String> ids;
   DateTime timestamp;
   String message;
-  int unread;
+  Map<String, int> unread;
 
   // Flag if extra data is loaded
   bool hasData = false;
@@ -833,7 +833,12 @@ class Messages {
         message = json['message'],
         timestamp = new DateTime.fromMillisecondsSinceEpoch(
             int.parse(json['timestamp'])),
-        unread = int.parse(json['unread'] ?? '0');
+        unread = json['unread'] != null ? Map<String, int>.from(json['unread']) : null {
+   if (unread == null) {
+     unread = { for (var i in ids) i: 0 };
+   }
+   unread = unread.map((key, num) => new MapEntry(key, num??0));
+  }
 
   Map<String, dynamic> toJson() {
     return {

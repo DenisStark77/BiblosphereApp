@@ -168,10 +168,11 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) {
+    if (state == AppLifecycleState.resumed && currentUser != null) {
       new Future.delayed(Duration.zero, () async {
         final position = await currentPosition();
         setState(() {
+
           currentUser.position = position;
         });
       });
