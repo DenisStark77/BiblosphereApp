@@ -1,0 +1,12 @@
+{
+  "type": "service_account",
+  "project_id": "biblosphere-210106",
+  "private_key_id": "c9c1e8acefb7428fc9f2a4758f036bcc90811a96",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCcwcL7NslXg57k\nfWemKnJcaJRHKsWGXmfZZQhMalFiBQBoYS7I2rKHue+8y7Y76WFD8FVVTfXaEV7t\nX4UEQPuT100EXrflHCOmg3zH6l5EWi85EWpdpYD83fTIPYoXreIMjD3hoxvmZFzx\nDiaZiwRSXqAzOVleHLVRmu7MaynnrdJIxHicSnX71EjYBx0VZ7BvDWgW5EzUpp3H\nOcDknPcdv30q/Jb5j15QhCgbhsrEEp5XK2qAFyNtFYSYIyGOSTT1kjQHPV44D3tv\niyUdLUJ+AA7SW9oZp+t1HIlqn7epQyzFfGNbrsjVqSqaW6o/e3yw9Hi2Xjs479Xq\nAhrJC5UXAgMBAAECggEATRBo5g3CIDcB93y7ZxJ5FHsJYo9hejSRQ2wLD145UkH5\nOFeGo5H4sQc1GBDiL0QF4FuX6A8iralajMIn57Z2t/Dh2SMjrwwNbsA3qSTMYTgg\n/SJVs2I5LpeDzqmKaSe/+ME9bt88SSDQHGYDjfqtDj2c7nHkQINGlK7hdTe96zph\nCWztMIKVbyzWHqj605IjowfUiBeCgMU4w20oUUkKjNKW/jPkBeYqJwVsNgkywoAL\nnhhdBDxnpj9DSDtXtRsDGTdtijIqPGlKPpMPIiI2gie8xjrfcP1ZebAi/qNmr3S4\naNl1tXqSXO9p1tvTReUWTHa2rKAnfRNWI2IQ//d9YQKBgQDQIShueQVJPrjuKz/v\nvV2o//KphG1fP37rqsf8acSxGLp5vr95f3o+L5gNo2+9Xm3YibhEWqrNCte0Qn/+\nnOYhV7hM0mC6rr4eUZcPFTaGHmbKTuLMl51rf3qdYZ1TzQ6dHsqrXlNlKKwyRwA5\ng7kfhzSwSwuuPV387Kd0AGXBsQKBgQDAz707RSDZCps2eol9zAF8YFZ5ovOO8Kq/\nIPtjQPM+BPqO8xe+vi7WTensqLCuvDyQnQmK+KuLt7B7Fwda6IemEYkGzykGS8A/\nZL0UsdiuLfv6BgvLjW3CxBg6FjpK+8s8K3+V2QsThjMMulG4yVv5n7e7nbsZKlzl\nc1xhbyLtRwKBgA0c2bBEHaoksoAG54tSMfFw1rgJaN6kYHm2k8z6WPMTbMQ42VVt\nS6VZWEobrvGOXntTCfH8iGBMu5RW0DuZZQJaxXjJlGCOm9nLKCpCGuJOTgmW+MEN\nGFTqfi4mNURPWglaJEixs61e56JvSLtW6jXrTc2BnOXIZgCGZHJxh/exAoGBALb7\nb+bz7/yK6EqHeDx+g1p6Qxck4mhhVmoU7v5/AVl2eCN56KsI6oJPZxVF8oeh9Qh5\nQDk3TfZG2aG3dS99Rl8AfT6NE6357fU7sYYWUkDbOytI2aDQE76nQya9OY038OSl\nk2uuk6hvz7rgh/YKgtMgFMplIs77OTY4iQ+e3VK5AoGAYP4omNwt+zLb+sx6bM+h\n8oQBuf0cxd8y1C2TOibWsWDvtuo+DF+wD1NTqqvsU4ZoUtLcIkyhtd5FXt039dd1\nFXIWiu+9bvGbLfWN2AbKrZnT9L35xYIlr1HGh1Ig+PN5W+ZF6gueOjSePc5rk1Xm\ntOx1gHwgwuL00CE8sDwaBqo=\n-----END PRIVATE KEY-----\n",
+  "client_email": "python@biblosphere-210106.iam.gserviceaccount.com",
+  "client_id": "108714476435839442976",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/python%40biblosphere-210106.iam.gserviceaccount.com"
+}

@@ -21,6 +21,10 @@ class MockDocumentReference extends Fake implements DocumentReference {
   MockDocumentReference({this.col, this.documentID});
 
   @override
+  // TODO: implement path
+  String get path => col+ '/' + documentID;
+
+  @override
   Future<DocumentSnapshot> get ({
     Source source: Source.serverAndCache
   }) async {
@@ -103,10 +107,14 @@ class MockCollectionReference extends Fake implements CollectionReference {
 }
 
 class MockTransaction extends Fake implements Transaction {
+  Set<String> read = {};
+  Set<String> updated = {};
+
   @override
   Future<DocumentSnapshot> get (
       DocumentReference documentReference
       ) {
+    read.add(documentReference.path);
     return documentReference.get();
   }
 
@@ -115,6 +123,8 @@ class MockTransaction extends Fake implements Transaction {
       DocumentReference documentReference,
       Map<String, dynamic> data
       ) {
+    updated.add(documentReference.path);
+
     documentReference.setData(data);
     return Future.delayed(Duration(seconds: 0));
   }
@@ -124,6 +134,8 @@ class MockTransaction extends Fake implements Transaction {
       DocumentReference documentReference,
       Map<String, dynamic> data
       ) {
+    updated.add(documentReference.path);
+
     documentReference.updateData(data);
     return Future.delayed(Duration(seconds: 0));
   }
@@ -140,7 +152,13 @@ class MockFirestore extends Fake implements Firestore {
       TransactionHandler transactionHandler, {
         Duration timeout: const Duration(seconds: 5)
       }) async {
-     await transactionHandler(new MockTransaction());
+     MockTransaction tx = new MockTransaction();
+     await transactionHandler(tx);
+
+     Set notUpdated = tx.read.difference(tx.updated);
+     if(notUpdated.length > 0)
+       throw "Records read but not updated: ${notUpdated.join(', ')}";
+
      return <String, dynamic>{};
   }
 }

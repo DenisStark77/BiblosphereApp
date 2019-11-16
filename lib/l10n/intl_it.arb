@@ -703,7 +703,7 @@
     "type": "text",
     "placeholders": {}
   },
-  "userBalance": "Balance {balance} λ",
+  "userBalance": "Balance: {balance}",
   "@userBalance": {
     "type": "text",
     "placeholders": {
@@ -849,19 +849,17 @@
     "type": "text",
     "placeholders": {}
   },
-  "youLentThisBook": "You lent this book to {user}",
+  "youLentThisBook": "Book with {user}",
   "@youLentThisBook": {
     "type": "text",
-    "placeholders": {
-      "user": {}
-    }
+      "placeholders": {
+        "user": {}
+      }
   },
-  "youBorrowThisBook": "You borrowed this book from {user}",
+  "youBorrowThisBook": "You borrowed this book",
   "@youBorrowThisBook": {
     "type": "text",
-    "placeholders": {
-      "user": {}
-    }
+    "placeholders": {}
   },
   "youTransitThisBook": "This book is in transit",
   "@youTransitThisBook": {
@@ -1070,7 +1068,7 @@
     "type": "text",
     "placeholders": {}
   },
-  "ifNotFound": "If book is not found:",
+  "ifNotFound": "Add book to wishlist if not found",
   "@ifNotFound": {
     "type": "text",
     "placeholders": {}
@@ -1130,5 +1128,135 @@
   "@buttonConfirmBooks": {
     "type": "text",
     "placeholders": {}
+  },
+  "buttonGivenBooks": "Книги отдал ✓",
+  "@buttonGivenBooks": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "displayCurrency": "Валюта отображения:",
+  "@displayCurrency": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "selectDisplayCurrency": "Выберите валюту отображения:",
+  "@selectDisplayCurrency": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "bookImageLabel": "Ссылка на фото обложки:",
+  "@bookImageLabel": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "wrongImageUrl": "Неверная ссылка",
+  "@wrongImageUrl": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "imageLinkHint": "Скопируйте ссылку на обложку книги",
+  "@imageLinkHint": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "bookPriceLabel": "Цена книги",
+  "@bookPriceLabel": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "bookPriceHint": "Введите цену книги",
+  "@bookPriceHint": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "titleBookSettings": "О КНИГЕ",
+  "@titleBookSettings": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "titleUserBooks": "ОБМЕН КНИГАМИ",
+  "@titleUserBooks": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "requestReturn": "Хочу вернуть вам \"{book}\"?",
+  "@requestReturn": {
+    "type": "text",
+    "placeholders": {
+      "book": {}
+    }
+  },
+  "requestReturnByOwner": "Пожалуйста, верните книгу \"{book}\"?",
+  "@requestReturnByOwner": {
+    "type": "text",
+    "placeholders": {
+      "book": {}
+    }
+  },
+  "chatStatusInitialFrom": "Отдайте книги",
+  "@chatStatusInitialFrom": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "chatStatusHandoverFrom": "Завершите передачу книг",
+  "@chatStatusHandoverFrom": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "chatStatusCompleteFrom": "Книги переданы",
+  "@chatStatusCompleteFrom": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "chatStatusInitialTo": "Получите книги",
+  "@chatStatusInitialTo": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "chatStatusHandoverTo": "Подтвердите получение книг",
+  "@chatStatusHandoverTo": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "chatStatusCompleteTo": "Книги получены",
+  "@chatStatusCompleteTo": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "chipMyBooksWithHim": "Мои книги у него",
+  "@chipMyBooksWithHim": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "chipHisBooks": "Его книги",
+  "@chipHisBooks": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "chipHisBooksWithMe": "Его книги у меня",
+  "@chipHisBooksWithMe": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "bookPrice": "Цена: {total}",
+  "@bookPrice": {
+    "type": "text",
+    "placeholders": {
+      "total": {}
+    }
+  },
+  "bookRent": "Аренда: {month} в месяц",
+  "@bookRent": {
+    "type": "text",
+    "placeholders": {
+      "month": {}
+    }
+  },
+  "bookOwner": "Владелец: {user}",
+  "@bookOwner": {
+    "type": "text",
+    "placeholders": {
+      "user": {}
+    }
   }
 }

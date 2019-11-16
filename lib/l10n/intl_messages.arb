@@ -1,5 +1,5 @@
 {
-  "@@last_modified": "2019-10-26T21:49:35.050929",
+  "@@last_modified": "2019-11-11T23:03:23.880471",
   "title": "Biblosphere",
   "@title": {
     "description": "The application title",
@@ -854,19 +854,17 @@
     "type": "text",
     "placeholders": {}
   },
-  "youLentThisBook": "Эту книгу вы дали почитать пользователю {user}",
+  "youLentThisBook": "Книга у {user}",
   "@youLentThisBook": {
     "type": "text",
     "placeholders": {
       "user": {}
     }
   },
-  "youBorrowThisBook": "Эту книгу вы взяли почитать у пользователя {user}",
+  "youBorrowThisBook": "Вы взяли эту книгу",
   "@youBorrowThisBook": {
     "type": "text",
-    "placeholders": {
-      "user": {}
-    }
+    "placeholders": {}
   },
   "youTransitThisBook": "По этой книге не завершён процесс передачи",
   "@youTransitThisBook": {
@@ -1135,5 +1133,142 @@
   "@buttonConfirmBooks": {
     "type": "text",
     "placeholders": {}
+  },
+  "buttonGivenBooks": "Книги отдал ✓",
+  "@buttonGivenBooks": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "displayCurrency": "Валюта отображения:",
+  "@displayCurrency": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "selectDisplayCurrency": "Выберите валюту отображения:",
+  "@selectDisplayCurrency": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "bookImageLabel": "Ссылка на фото обложки:",
+  "@bookImageLabel": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "wrongImageUrl": "Неверная ссылка",
+  "@wrongImageUrl": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "imageLinkHint": "Скопируйте ссылку на обложку книги",
+  "@imageLinkHint": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "bookPriceLabel": "Цена книги",
+  "@bookPriceLabel": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "bookPriceHint": "Введите цену книги",
+  "@bookPriceHint": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "titleBookSettings": "О КНИГЕ",
+  "@titleBookSettings": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "titleUserBooks": "ОБМЕН КНИГАМИ",
+  "@titleUserBooks": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "requestReturn": "Хочу вернуть вам \"{book}\"?",
+  "@requestReturn": {
+    "type": "text",
+    "placeholders": {
+      "book": {}
+    }
+  },
+  "requestReturnByOwner": "Пожалуйста, верните книгу \"{book}\"?",
+  "@requestReturnByOwner": {
+    "type": "text",
+    "placeholders": {
+      "book": {}
+    }
+  },
+  "chatStatusInitialFrom": "Отдайте книги",
+  "@chatStatusInitialFrom": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "chatStatusHandoverFrom": "Завершите передачу книг",
+  "@chatStatusHandoverFrom": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "chatStatusCompleteFrom": "Книги переданы",
+  "@chatStatusCompleteFrom": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "chatStatusInitialTo": "Получите книги",
+  "@chatStatusInitialTo": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "chatStatusHandoverTo": "Подтвердите получение книг",
+  "@chatStatusHandoverTo": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "chatStatusCompleteTo": "Книги получены",
+  "@chatStatusCompleteTo": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "chipMyBooksWithHim": "Мои книги у него",
+  "@chipMyBooksWithHim": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "chipHisBooks": "Его книги",
+  "@chipHisBooks": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "chipHisBooksWithMe": "Его книги у меня",
+  "@chipHisBooksWithMe": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "bookPrice": "Цена: {total}",
+  "@bookPrice": {
+    "type": "text",
+    "placeholders": {
+      "total": {}
+    }
+  },
+  "bookRent": "Аренда: {month} в месяц",
+  "@bookRent": {
+    "type": "text",
+    "placeholders": {
+      "month": {}
+    }
+  },
+  "bookOwner": "Владелец: {user}",
+  "@bookOwner": {
+    "type": "text",
+    "placeholders": {
+      "user": {}
+    }
+  },
+  "bookWith": "Книга у: {user}",
+  "@bookWith": {
+    "type": "text",
+    "placeholders": {
+      "user": {}
+    }
   }
 }

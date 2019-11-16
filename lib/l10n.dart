@@ -622,7 +622,7 @@ class S {
   }
 
   String userBalance(balance) {
-    return Intl.message("Balance ${balance} \u{03BB}",
+    return Intl.message("Balance: ${balance}",
         name: 'userBalance', args: [balance]);
   }
 
@@ -736,14 +736,14 @@ class S {
     return Intl.message('Эту книгу вы хотите почитать', name: 'youWishThisBook');
   }
 
-  String youLentThisBook(user) {
-    return Intl.message("Эту книгу вы дали почитать пользователю $user",
+  String youLentThisBook (user){
+    return Intl.message("Книга у $user",
         name: 'youLentThisBook', args: [user]);
   }
 
-  String youBorrowThisBook(user) {
-    return Intl.message('Эту книгу вы взяли почитать у пользователя $user',
-        name: 'youBorrowThisBook', args: [user]);
+  String get youBorrowThisBook {
+    return Intl.message('Вы взяли эту книгу',
+        name: 'youBorrowThisBook');
   }
 
   String get youTransitThisBook{
@@ -849,7 +849,7 @@ class S {
   }
 
   String get successfulPayment{
-    return Intl.message('Платёж успешно прошёл', name: 'successfulPayment');
+    return Intl.message('Платёж добавлен в очередь на исполнение', name: 'successfulPayment');
   }
 
   String get paymentError{
@@ -861,7 +861,7 @@ class S {
   }
 
   String get titleGetBook{
-    return Intl.message('ПОЛУЧИ КНИГУ', name: 'titleGetBook');
+    return Intl.message('КНИГИ НЕТ', name: 'titleGetBook');
   }
 
   String get inMyWishes{
@@ -887,7 +887,7 @@ class S {
   }
 
   String distanceLine(distance) {
-    return Intl.message('Расстояние: $distance км',
+    return Intl.message('Расстояние: ${distance} км',
         name: 'distanceLine', args: [distance]);
   }
 
@@ -952,8 +952,182 @@ class S {
     return Intl.message('Книги получил \u{02713}', name: 'buttonConfirmBooks');
   }
 
+  // Not translated beyond this line
 
+  String get buttonGivenBooks{
+    return Intl.message('Книги отдал \u{02713}', name: 'buttonGivenBooks');
+  }
 
+  String get displayCurrency{
+    return Intl.message('Валюта отображения:', name: 'displayCurrency');
+  }
+
+  String get selectDisplayCurrency{
+    return Intl.message('Выберите валюту отображения:', name: 'selectDisplayCurrency');
+  }
+
+  String get bookImageLabel{
+    return Intl.message('Ссылка на фото обложки:', name: 'bookImageLabel');
+  }
+
+  String get wrongImageUrl{
+    return Intl.message('Неверная ссылка', name: 'wrongImageUrl');
+  }
+
+  String get imageLinkHint{
+    return Intl.message('Скопируйте ссылку на обложку книги', name: 'imageLinkHint');
+  }
+
+  String get bookPriceLabel{
+    return Intl.message('Цена книги', name: 'bookPriceLabel');
+  }
+
+  String get bookPriceHint{
+    return Intl.message('Введите цену книги', name: 'bookPriceHint');
+  }
+
+  String get titleBookSettings{
+    return Intl.message('О КНИГЕ', name: 'titleBookSettings');
+  }
+
+  String get titleUserBooks{
+    return Intl.message('ОБМЕН КНИГАМИ', name: 'titleUserBooks');
+  }
+
+  String requestReturn(book) {
+    return Intl.message('Хочу вернуть вам \"$book\"?',
+        name: 'requestReturn', args: [book]);
+  }
+
+  String requestReturnByOwner(book) {
+    return Intl.message('Пожалуйста, верните книгу \"$book\"?',
+        name: 'requestReturnByOwner', args: [book]);
+  }
+
+  String get chatStatusInitialFrom{
+    return Intl.message('Отдайте книги', name: 'chatStatusInitialFrom');
+  }
+
+  String get chatStatusHandoverFrom{
+    return Intl.message('Завершите передачу книг', name: 'chatStatusHandoverFrom');
+  }
+
+  String get chatStatusCompleteFrom{
+    return Intl.message('Книги переданы', name: 'chatStatusCompleteFrom');
+  }
+
+  String get chatStatusInitialTo{
+    return Intl.message('Получите книги', name: 'chatStatusInitialTo');
+  }
+
+  String get chatStatusHandoverTo{
+    return Intl.message('Подтвердите получение книг', name: 'chatStatusHandoverTo');
+  }
+
+  String get chatStatusCompleteTo{
+    return Intl.message('Книги получены', name: 'chatStatusCompleteTo');
+  }
+
+  String get chipMyBooksWithHim{
+    return Intl.message('Мои книги у него', name: 'chipMyBooksWithHim');
+  }
+
+  String get chipHisBooks{
+    return Intl.message('Его книги', name: 'chipHisBooks');
+  }
+
+  String get chipHisBooksWithMe{
+    return Intl.message('Его книги у меня', name: 'chipHisBooksWithMe');
+  }
+
+  String bookPrice(total) {
+    return Intl.message('Цена: $total',
+        name: 'bookPrice', args: [total]);
+  }
+
+  String bookRent(month) {
+    return Intl.message('Аренда: $month в месяц',
+        name: 'bookRent', args: [month]);
+  }
+
+  String bookOwner(user) {
+    return Intl.message("Владелец: $user",
+        name: 'bookOwner', args: [user]);
+  }
+
+  String bookWith(user) {
+    return Intl.message("Книга у $user",
+        name: 'bookWith', args: [user]);
+  }
+
+  String get wishAlreadyThere{
+    return Intl.message('Эта книга уже есть в вашем списке желаний', name: 'wishAlreadyThere');
+  }
+
+  String get bookAlreadyThere{
+    return Intl.message('Эта книга уже есть у вас в каталоге', name: 'bookAlreadyThere');
+  }
+
+  String get hintChatOpen{
+    return Intl.message('Перейти в чат', name: 'hintChatOpen');
+  }
+
+  String get hintRequestReturn{
+    return Intl.message('Попросить вернуть книгу', name: 'hintRequestReturn');
+  }
+
+  String get hintReturn{
+    return Intl.message('Вернуть книгу', name: 'hintReturn');
+  }
+
+  String get hintDeleteBook{
+    return Intl.message('Удалить книгу', name: 'hintDeleteBook');
+  }
+
+  String get hintBookDetails{
+    return Intl.message('Изменить информацию о книге', name: 'hintBookDetails');
+  }
+
+  String get hintShareBook{
+    return Intl.message('Поделиться ссылкой', name: 'hintShareBook');
+  }
+
+  String get snackBookNotConfirmed{
+    return Intl.message('Вы не подтвердили получение книг и не можете взять другую книгу', name: 'snackBookNotConfirmed');
+  }
+
+  String get snackBookPending{
+    return Intl.message('Прошлая передача книг не завершена и вы не можете добавлять книги', name: 'snackBookPending');
+  }
+
+  String get snackBookAddedToCart{
+    return Intl.message('Книга добавлена в корзину', name: 'snackBookAddedToCart');
+  }
+
+  String get sharingMotto{
+    return Intl.message('Бери книги у людей вместо покупки в магазинах', name: 'sharingMotto');
+  }
+
+  String get inputStellarMemo{
+    return Intl.message('Memo для пополнения через Stellar:', name: 'inputStellarMemo');
+  }
+
+  String get memoCopied{
+    return Intl.message('Memo скопировано в буфер обмена', name: 'memoCopied');
+  }
+
+  String get outputStellarMemo{
+    return Intl.message('Memo для вывода Stellar:', name: 'outputStellarMemo');
+  }
+
+  String get bookNotFound{
+    return Intl.message('Эта книга не найдена в Библосфере. Добавьте её в желаемые книги и мы сообщим вам, когда она появится рядом с вами.', name: 'bookNotFound');
+  }
+
+  String get chatbotWelcome{
+    return Intl.message('Привет! Я чатбот Библосферы, задавай мне любые вопросы про приложение. Если я не смогу ответить, перешлю администратору.', name: 'chatbotWelcome');
+  }
+  
 }
 
 class AppLocalizationsDelegate extends LocalizationsDelegate<S> {
