@@ -21,7 +21,9 @@ Future addBookrecord(
 
   // create book record from book and user
   Bookrecord bookrecord = new Bookrecord(
-      ownerId: u.id, isbn: b.isbn, wish: wish, location: location);
+      ownerId: u.id, isbn: b.isbn, authors: b.authors, title: b.title, image: b.image, price: b.price,
+      ownerName: u.name, ownerImage: u.photo,
+      wish: wish, location: location);
 
   // Get bookrecord with predefined id
   DocumentSnapshot recSnap = await bookrecord.ref.get();
@@ -51,8 +53,11 @@ Future addBookrecord(
           b.language == null ||
           b.language.isEmpty ||
           b.price == null ||
-          b.price == 0.0) b = await enrichBookRecord(b);
+          b.price == 0.0)
+      b = await enrichBookRecord(b);
       await b.ref.setData(b.toJson());
+      // Update bookrecord with enriched fields
+      await bookrecord.ref.updateData(b.toJson(bookOnly: true));
     }
 
     await FirebaseAnalytics().logEvent(
@@ -152,8 +157,7 @@ void deposit({List<Bookrecord> books, User owner, User payer}) async {
         }
       } catch (ex, stack) {
         // TODO: Handle exception
-        print(
-            '!!!DEBUG: >>>>>>>>>>>>>> Exception within transaction <<<<<<<<<<<<<<<<');
+        print('!!!DEBUG: >>>>>>>>>>>>>> Exception within transaction <<<<<<<<<<<<<<<<');
         print(ex);
         print(stack);
       }
@@ -248,8 +252,7 @@ void pass({List<Bookrecord> books, User holder, User payer}) async {
 
           if (feeAmount + reward > holderWallet.getAvailable()) {
             // TODO: log event for the investigation
-            print(
-                '!!!DEBUG - NOT SIFFICIENT BALANCE ${holderWallet.id} !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
+            print('!!!DEBUG - NOT SIFFICIENT BALANCE ${holderWallet.id} !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
           }
 
           double payerFeeDeduction = 0.0, ownerFeeDeduction = 0.0;
@@ -427,8 +430,7 @@ void pass({List<Bookrecord> books, User holder, User payer}) async {
         }
       } catch (ex, stack) {
         // TODO: Handle exception
-        print(
-            '!!!DEBUG: >>>>>>>>>>>>>> Exception within transaction <<<<<<<<<<<<<<<<');
+        print('!!!DEBUG: >>>>>>>>>>>>>> Exception within transaction <<<<<<<<<<<<<<<<');
         print(ex);
         print(stack);
       }
@@ -679,8 +681,7 @@ void complete({List<Bookrecord> books, User holder, User owner}) async {
         }
       } catch (ex, stack) {
         // TODO: Handle exception
-        print(
-            '!!!DEBUG: >>>>>>>>>>>>>> Exception within transaction <<<<<<<<<<<<<<<<');
+        print('!!!DEBUG: >>>>>>>>>> Exception within transaction <<<<<<<<<<<');
         print(ex);
         print(stack);
       }

@@ -138,7 +138,6 @@ class _AddBookWidgetState extends State<AddBookWidget> {
                     setState(() {
                       suggestions.clear();
                     });
-                    print('!!!DEBUG: book ${book.isbn} ${book.title}');
                     addBookrecord(context, book, widget.currentUser, false,
                         await currentLocation(),
                         source: 'googlebooks');
@@ -181,7 +180,6 @@ class _AddBookWidgetState extends State<AddBookWidget> {
         });
       }),
       searchByTitleAuthorGoogle(text).then((list) {
-        print('!!!DEBUG: ${list.length} books found in GOOGLE');
         list.where((book) => book.keys.containsAll(keys)).forEach((b) {
           if (books[b.isbn] == null) {
             books.addAll({b.isbn: b});
@@ -193,7 +191,6 @@ class _AddBookWidgetState extends State<AddBookWidget> {
         });
       }),
       searchByTitleAuthorGoodreads(text).then((list) {
-        print('!!!DEBUG: ${list.length} books found in GOODREADS');
         list.where((book) => book.keys.containsAll(keys)).forEach((b) {
           if (books[b.isbn] == null) {
             books.addAll({b.isbn: b});
@@ -428,9 +425,8 @@ class _FindBookWidgetState extends State<FindBookWidget> {
                       // Create chat (messages)
                       Messages chat = await getChatAndTransit(
                           context: context,
-                          currentUserId: widget.currentUser.id,
-                          from: rec.holderId,
-                          to: widget.currentUser.id,
+                          from: rec.holder,
+                          to: B.user,
                           bookrecordId: rec.id);
 
                       if (chat == null)
@@ -438,7 +434,7 @@ class _FindBookWidgetState extends State<FindBookWidget> {
                             context, S.of(context).snackBookNotConfirmed);
                       else
                         // Open chat widget
-                        Chat.runChat(context, widget.currentUser, null,
+                        Chat.runChat(context, null,
                             message: S.of(context).requestBook(rec.title),
                             chat: chat);
                     },
@@ -521,28 +517,24 @@ class _FindBookWidgetState extends State<FindBookWidget> {
 
     // Search in Bookrecords
     searchByTitleAuthorBiblosphere(text, actual: true).then((list) {
-      print('!!!DEBUG: ${list.length} bookrecords found in BIBLOSPHERE');
       books = mergeBooks(books, list);
       setState(() {});
     });
 
     // Search in Books
     searchByTitleAuthorBiblosphere(text).then((list) {
-      print('!!!DEBUG: ${list.length} books found in BIBLOSPHERE');
       books = mergeBooks(books, list);
       setState(() {});
     });
 
     searchByTitleAuthorGoogle(text).then((list) {
       list = list.where((book) => book.keys.containsAll(keys)).toList();
-      print('!!!DEBUG: ${list.length} books found in GOOGLE');
       books = mergeBooks(books, list);
       setState(() {});
     });
 
     searchByTitleAuthorGoodreads(text).then((list) {
       list = list.where((book) => book.keys.containsAll(keys)).toList();
-      print('!!!DEBUG: ${list.length} books found in GOODREADS');
       books = mergeBooks(books, list);
       setState(() {});
     });
@@ -791,8 +783,6 @@ class _GetBookWidgetState extends State<GetBookWidget> {
     String country, area;
 
     placemarks.forEach((p) {
-      print(
-          '!!!DEBUG location ${p.isoCountryCode}, ${p.administrativeArea} ${p.subAdministrativeArea}, ${p.locality}');
       if (p.isoCountryCode != null) country = p.isoCountryCode;
       if (p.administrativeArea != null) area = p.subAdministrativeArea;
       if (area == null || area.isEmpty) area = p.administrativeArea;
@@ -814,7 +804,6 @@ class _GetBookWidgetState extends State<GetBookWidget> {
       query = query.replaceAll(r'%TITLE%', book.title);
       query = query.replaceAll(r'%AUTHOR%', book.authors.join(' '));
       String encoded = Uri.encodeFull(query);
-      print('!!!DEBUG URL  ${encoded}');
       return {provider.name: encoded};
     }
     return null;

@@ -20,10 +20,7 @@ import 'package:biblosphere/lifecycle.dart';
 class ChatListWidget extends StatefulWidget {
   ChatListWidget({
     Key key,
-    @required this.currentUser,
   }) : super(key: key);
-
-  final User currentUser;
 
   @override
   _ChatListWidgetState createState() => new _ChatListWidgetState();
@@ -36,7 +33,7 @@ class _ChatListWidgetState extends State<ChatListWidget> {
   void initState() {
     super.initState();
 
-    chatWithBiblosphere = Messages(fromId: widget.currentUser.id, system: true);
+    chatWithBiblosphere = Messages(from: B.user, system: true);
   }
 
   @override
@@ -54,15 +51,13 @@ class _ChatListWidgetState extends State<ChatListWidget> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
           chatWithBiblosphere != null
-              ? ChatCard(
-                  chat: chatWithBiblosphere,
-                  currentUser: widget.currentUser)
+              ? ChatCard(chat: chatWithBiblosphere)
               : Container(),
           new Expanded(
               child: new StreamBuilder<QuerySnapshot>(
                   stream: Firestore.instance
                       .collection('messages')
-                      .where("ids", arrayContains: widget.currentUser.id)
+                      .where("ids", arrayContains: B.user.id)
                       .orderBy('timestamp', descending: true)
                       .snapshots(),
                   builder: (BuildContext context,
@@ -90,9 +85,7 @@ class _ChatListWidgetState extends State<ChatListWidget> {
                             Messages msgs =
                                 new Messages.fromJson(document.data, document);
 
-                            return ChatCard(
-                                chat: msgs,
-                                currentUser: widget.currentUser);
+                            return ChatCard(chat: msgs);
                           }).toList(),
                         );
                     }
@@ -107,12 +100,10 @@ class ChatCard extends StatefulWidget {
   ChatCard({
     Key key,
     @required this.chat,
-    @required this.currentUser,
   }) : super(key: key);
 
   //TODO: data in Widget not State
   final Messages chat;
-  final User currentUser;
 
   @override
   _ChatCardState createState() => new _ChatCardState(chat: chat);
@@ -144,7 +135,7 @@ class _ChatCardState extends State<ChatCard> {
           });
         } else {
           // Create chat
-          getChatAndTransit(context: context, currentUserId: widget.currentUser.id, from: chat.fromId, to: chat.toId, system: chat.system).then ((c) {
+          getChatAndTransit(context: context, from: chat.from, to: chat.to, system: chat.system).then ((c) {
             setState(() {
               chat = c;
             });
@@ -165,8 +156,7 @@ class _ChatCardState extends State<ChatCard> {
   void didUpdateWidget(ChatCard oldWidget) {
     super.didUpdateWidget(oldWidget);
 
-    if (oldWidget.chat != widget.chat ||
-        oldWidget.currentUser.id != widget.currentUser.id) {
+    if (oldWidget.chat != widget.chat) {
       chat = widget.chat;
     }
   }
@@ -178,7 +168,7 @@ class _ChatCardState extends State<ChatCard> {
     return GestureDetector(
         onTap: () async {
           Chat.runChat(
-              context, widget.currentUser, null,
+              context, null,
               chat: chat);
         },
         child: Card(
@@ -190,7 +180,7 @@ class _ChatCardState extends State<ChatCard> {
                     Stack(children: <Widget>[
                       chat.system ?
                         Container(margin: EdgeInsets.all(7.0), child: assetIcon(technical_support_100, size: 50.0)) :
-                        userPhoto(chat.partnerImage(widget.currentUser.id), 60.0, padding: 5.0),
+                        userPhoto(chat.partnerImage, 60.0, padding: 5.0),
                       chat.system ? Container() :
                         Positioned.fill(
                           child: Container(
@@ -208,10 +198,8 @@ class _ChatCardState extends State<ChatCard> {
                                             (confirmed) {
                                           if (confirmed) {
                                             blockUser(
-                                                widget
-                                                    .currentUser
-                                                    ?.id,
-                                                chat.partnerId(widget.currentUser.id));
+                                                B.user.id,
+                                                chat.partnerId);
                                           }
                                         });
                                   },
@@ -242,7 +230,7 @@ class _ChatCardState extends State<ChatCard> {
                                       child: Text(
                                           chat.system ?
                                             'Чат с поддержкой' :
-                                            chat.partnerName(widget.currentUser.id),
+                                            chat.partnerName,
                                           overflow:
                                           TextOverflow
                                               .ellipsis,
@@ -274,9 +262,7 @@ class _ChatCardState extends State<ChatCard> {
                                       context)
                                       .textTheme
                                       .body1),
-                              chat.unread[widget
-                                  .currentUser
-                                  .id] >
+                              chat.unread[B.user.id] >
                                   0
                                   ? ClipOval(
                                 child:
@@ -289,9 +275,7 @@ class _ChatCardState extends State<ChatCard> {
                                   25.0, // width of the button
                                   child: Center(
                                       child: Text(chat
-                                          .unread[widget
-                                          .currentUser
-                                          .id]
+                                          .unread[B.user.id]
                                           .toString())),
                                 ),
                               )
@@ -310,21 +294,19 @@ class _ChatCardState extends State<ChatCard> {
   }
 
   String statusText(Messages chat) {
-    final String userId = widget.currentUser.id;
-
     if (chat.system)
       return 'Любые вопросы по приложению';
-    else if (userId == chat.fromId && chat.status == Messages.Initial) {
+    else if (B.user.id == chat.fromId && chat.status == Messages.Initial) {
       return S.of(context).chatStatusInitialFrom;
-    } else if (userId == chat.fromId && chat.status == Messages.Handover) {
+    } else if (B.user.id == chat.fromId && chat.status == Messages.Handover) {
       return S.of(context).chatStatusHandoverFrom;
-    } else if (userId == chat.fromId && chat.status == Messages.Complete) {
+    } else if (B.user.id == chat.fromId && chat.status == Messages.Complete) {
       return S.of(context).chatStatusCompleteFrom;
-    } else if (userId == chat.toId && chat.status == Messages.Initial) {
+    } else if (B.user.id == chat.toId && chat.status == Messages.Initial) {
       return S.of(context).chatStatusInitialTo;
-    } else if (userId == chat.toId && chat.status == Messages.Handover) {
+    } else if (B.user.id == chat.toId && chat.status == Messages.Handover) {
       return S.of(context).chatStatusHandoverTo;
-    } else if (userId == chat.toId && chat.status == Messages.Complete) {
+    } else if (B.user.id == chat.toId && chat.status == Messages.Complete) {
       return S.of(context).chatStatusCompleteTo;
     } else {
       return '';
@@ -339,7 +321,7 @@ class _ChatCardState extends State<ChatCard> {
 }
 
 class Chat extends StatefulWidget {
-  static runChatById(BuildContext context, User currentUser, User partner,
+  static runChatById(BuildContext context, User partner,
       {String chatId, String message, bool send = false}) async {
 
       DocumentSnapshot chatSnap = await Messages.Ref(chatId).get();
@@ -348,7 +330,7 @@ class Chat extends StatefulWidget {
       Messages chat = new Messages.fromJson(chatSnap.data, chatSnap);
 
       if (!chat.system && partner == null) {
-        String partnerId = chat.partnerId(currentUser.id);
+        String partnerId = chat.partnerId;
         DocumentSnapshot snap = await User.Ref(partnerId).get();
         if (!snap.exists)
           throw "Partner user [${partnerId}] does not exist for chat [${chat
@@ -360,26 +342,24 @@ class Chat extends StatefulWidget {
         context,
         new MaterialPageRoute(
             builder: (context) => new Chat(
-                currentUser: currentUser,
                 partner: partner,
                 chat: chat,
                 message: message,
                 send: send))).then((doc) {});
   }
 
-  static runChat(BuildContext context, User currentUser, User partner,
+  static runChat(BuildContext context, User partner,
       {Messages chat, String message, bool send = false}) async {
 
     if(!chat.system && partner == null)
-      partner = User(id: chat.partnerId(currentUser.id),
-        name: chat.partnerName(currentUser.id),
-        photo: chat.partnerImage(currentUser.id));
+      partner = User(id: chat.partnerId,
+        name: chat.partnerName,
+        photo: chat.partnerImage);
 
     Navigator.push(
         context,
         new MaterialPageRoute(
             builder: (context) => new Chat(
-                currentUser: currentUser,
                 partner: partner,
                 chat: chat,
                 message: message,
@@ -388,14 +368,12 @@ class Chat extends StatefulWidget {
 
   Chat(
       {Key key,
-      @required this.currentUser,
       @required this.partner,
       this.message,
       this.chat,
       this.send})
       : super(key: key);
 
-  final User currentUser;
   final User partner;
   final String message;
   final bool send;
@@ -403,7 +381,6 @@ class Chat extends StatefulWidget {
 
   @override
   _ChatState createState() => new _ChatState(
-      currentUser: currentUser,
       partner: partner,
       message: message,
       chat: chat,
@@ -412,7 +389,6 @@ class Chat extends StatefulWidget {
 
 class _ChatState extends State<Chat> {
   final User partner;
-  final User currentUser;
   String message;
   bool send;
   Messages chat;
@@ -500,7 +476,7 @@ class _ChatState extends State<Chat> {
 
     if (streamBooks != null) streamBooks.cancel();
 
-    if (chat.toMe(currentUser.id) && chat.status == Messages.Initial) {
+    if (chat.toMe && chat.status == Messages.Initial) {
       phase = 'initialToMe';
 
       streamBooks = Firestore.instance
@@ -508,7 +484,7 @@ class _ChatState extends State<Chat> {
           .where("holderId", isEqualTo: partner.id)
           .where("transit", isEqualTo: true)
           .where("confirmed", isEqualTo: false)
-          .where("transitId", isEqualTo: currentUser.id)
+          .where("transitId", isEqualTo: B.user.id)
           .where("wish", isEqualTo: false)
           .snapshots()
           .listen((snap) {
@@ -518,18 +494,18 @@ class _ChatState extends State<Chat> {
         // Calculate total amount to pay for transferred books
         amountToPay = 0.0;
         for (Bookrecord b in books) {
-          if (b.transitId == currentUser.id && b.ownerId != currentUser.id)
+          if (b.transitId == B.user.id && b.ownerId != B.user.id)
             amountToPay += b.getPrice();
         }
 
         if (mounted) setState(() {});
       });
-    } else if (chat.fromMe(currentUser.id) && chat.status == Messages.Initial) {
+    } else if (chat.fromMe && chat.status == Messages.Initial) {
       phase = 'initialFromMe';
 
       streamBooks = Firestore.instance
           .collection('bookrecords')
-          .where("holderId", isEqualTo: currentUser.id)
+          .where("holderId", isEqualTo: B.user.id)
           .where("transit", isEqualTo: true)
           .where("confirmed", isEqualTo: false)
           .where("transitId", isEqualTo: partner.id)
@@ -548,7 +524,7 @@ class _ChatState extends State<Chat> {
 
         if (mounted) setState(() {});
       });
-    } else if (chat.toMe(currentUser.id) && chat.status == Messages.Handover) {
+    } else if (chat.toMe && chat.status == Messages.Handover) {
       phase = 'handoverToMe';
 
       streamBooks = Firestore.instance
@@ -556,7 +532,7 @@ class _ChatState extends State<Chat> {
           .where("holderId", isEqualTo: partner.id)
           .where("transit", isEqualTo: true)
           .where("confirmed", isEqualTo: true)
-          .where("transitId", isEqualTo: currentUser.id)
+          .where("transitId", isEqualTo: B.user.id)
           .where("wish", isEqualTo: false)
           .snapshots()
           .listen((snap) {
@@ -566,19 +542,18 @@ class _ChatState extends State<Chat> {
         // Calculate total amount to pay for transferred books
         amountToPay = 0.0;
         for (Bookrecord b in books) {
-          if (b.transitId == currentUser.id && b.ownerId != currentUser.id)
+          if (b.transitId == B.user.id && b.ownerId != B.user.id)
             amountToPay += b.getPrice();
         }
 
         if (mounted) setState(() {});
       });
-    } else if (chat.fromMe(currentUser.id) &&
-        chat.status == Messages.Handover) {
+    } else if (chat.fromMe && chat.status == Messages.Handover) {
       phase = 'handoverFromMe';
 
       streamBooks = Firestore.instance
           .collection('bookrecords')
-          .where("holderId", isEqualTo: currentUser.id)
+          .where("holderId", isEqualTo: B.user.id)
           .where("transit", isEqualTo: true)
           .where("confirmed", isEqualTo: true)
           .where("transitId", isEqualTo: partner.id)
@@ -597,7 +572,7 @@ class _ChatState extends State<Chat> {
 
         if (mounted) setState(() {});
       });
-    } else if (chat.toMe(currentUser.id) && chat.status == Messages.Complete) {
+    } else if (chat.toMe && chat.status == Messages.Complete) {
       phase = 'completeToMe';
 
       streamBooks = null;
@@ -606,12 +581,11 @@ class _ChatState extends State<Chat> {
         DocumentSnapshot snap = await Bookrecord.Ref(id).get();
         if (snap.exists)
           books.add(Bookrecord.fromJson(snap.data));
-        else
-          print('!!!DEBUG: book record missing: ${id}');
+        // TODO: Deal with books which are not found
       });
 
       if (mounted) setState(() {});
-    } else if (chat.fromMe(currentUser.id) &&
+    } else if (chat.fromMe &&
         chat.status == Messages.Complete) {
       phase = 'completeFromMe';
 
@@ -621,8 +595,7 @@ class _ChatState extends State<Chat> {
         DocumentSnapshot snap = await Bookrecord.Ref(id).get();
         if (snap.exists)
           books.add(Bookrecord.fromJson(snap.data));
-        else
-          print('!!!DEBUG: book record missing: ${id}');
+        // TODO: Deal with books which are not found
       });
 
       if (mounted) setState(() {});
@@ -642,7 +615,6 @@ class _ChatState extends State<Chat> {
 
   _ChatState(
       {Key key,
-      @required this.currentUser,
       @required this.partner,
       this.message = '',
       this.chat,
@@ -658,7 +630,6 @@ class _ChatState extends State<Chat> {
                     context,
                     new MaterialPageRoute(
                         builder: (context) => new UserProfileWidget(
-                              currentUser: currentUser,
                               user: partner,
                             )));
               },
@@ -731,7 +702,7 @@ class _ChatState extends State<Chat> {
                 : Container(width: 0.0, height: 0.0)
           ]),
       body: ChatScreen(
-          myId: currentUser.id,
+          myId: B.user.id,
           partner: partner,
           message: message,
           send: send,
@@ -764,7 +735,7 @@ class _ChatState extends State<Chat> {
   }
 
   Widget getBookBar() {
-    if (chat.toMe(currentUser.id)) {
+    if (chat.toMe) {
       return Container(
           height: 110.0,
           child: ListView(
@@ -772,7 +743,6 @@ class _ChatState extends State<Chat> {
               children: books.map<Widget>((rec) {
                 return BookrecordWidget(
                     bookrecord: rec,
-                    currentUser: currentUser,
                     builder: (context, rec) {
                       return Stack(children: <Widget>[
                         Container(margin: EdgeInsets.all(5.0), child: bookImage(rec, 100.0, sameHeight: true)),
@@ -819,9 +789,7 @@ class _ChatState extends State<Chat> {
                                   builder: (context) => buildScaffold(
                                       context,
                                       '',
-                                      new UserBooksWidget(
-                                          currentUser: currentUser,
-                                          user: partner),
+                                      new UserBooksWidget(user: partner),
                                       appbar: false)));
                         },
                         child: Container(
@@ -845,7 +813,6 @@ class _ChatState extends State<Chat> {
               children: books.map<Widget>((rec) {
                 return BookrecordWidget(
                     bookrecord: rec,
-                    currentUser: currentUser,
                     builder: (context, rec) {
                       return Stack(children: <Widget>[
                         Container(margin: EdgeInsets.all(5.0), child: bookImage(rec, 100.0, sameHeight: true)),
@@ -892,9 +859,7 @@ class _ChatState extends State<Chat> {
                                   builder: (context) => buildScaffold(
                                       context,
                                       '',
-                                      new MyBooksWidget(
-                                          currentUser: currentUser,
-                                          user: partner),
+                                      new MyBooksWidget(user: partner),
                                       appbar: false)));
                         },
                         child: Container(
@@ -915,7 +880,7 @@ class _ChatState extends State<Chat> {
   }
 
   Widget getFinance() {
-    if (chat.toMe(currentUser.id))
+    if (chat.toMe)
       return Container(
           margin: EdgeInsets.only(left: 3.0, right: 3.0),
           child: Row(children: <Widget>[
@@ -959,9 +924,9 @@ class _ChatState extends State<Chat> {
   }
 
   Widget getButton() {
-    if (chat.toMe(currentUser.id) &&
+    if (chat.toMe &&
         chat.status != Messages.Complete &&
-        total(amountToPay) >= currentUser.getAvailable())
+        total(amountToPay) >= B.wallet.getAvailable())
       return RaisedButton(
         textColor: C.buttonText,
         color: C.button,
@@ -976,7 +941,7 @@ class _ChatState extends State<Chat> {
           // Only show bigger amounts
           List<int> codes = [50, 100, 200, 500, 1000, 2000];
           int missing =
-          (total(amountToPay) - currentUser.getAvailable()).ceil();
+          (total(amountToPay) - B.wallet.getAvailable()).ceil();
           int code =
           codes.firstWhere((code) => code > missing, orElse: () => 2000);
 
@@ -996,7 +961,7 @@ class _ChatState extends State<Chat> {
         shape: new RoundedRectangleBorder(
             borderRadius: new BorderRadius.circular(20.0)),
       );
-    else if (chat.toMe(currentUser.id) && chat.status == Messages.Handover && books != null && books.length > 0)
+    else if (chat.toMe && chat.status == Messages.Handover && books != null && books.length > 0)
       return RaisedButton(
         textColor: C.buttonText,
         color: C.button,
@@ -1009,7 +974,7 @@ class _ChatState extends State<Chat> {
         shape: new RoundedRectangleBorder(
             borderRadius: new BorderRadius.circular(20.0)),
       );
-    else if (chat.fromMe(currentUser.id) &&
+    else if (chat.fromMe &&
         chat.status == Messages.Initial &&
         total(amountToPay) < partnerBalance && books != null && books.length > 0)
       return RaisedButton(
@@ -1029,14 +994,14 @@ class _ChatState extends State<Chat> {
   }
 
   String getLongText() {
-    if (chat.status == Messages.Initial && chat.toMe(currentUser.id)) {
+    if (chat.status == Messages.Initial && chat.toMe) {
       if (books == null || books.length == 0)
         return 'Добавьте книги';
-      else if (currentUser.getAvailable() < total(amountToPay))
-        return 'Пополните баланс на ${money(total(amountToPay) - currentUser.getAvailable())}';
+      else if (B.wallet.getAvailable() < total(amountToPay))
+        return 'Пополните баланс на ${money(total(amountToPay) - B.wallet.getAvailable())}';
       else
         return 'Договоритесь о встрече';
-    } else if (chat.status == Messages.Initial && chat.fromMe(currentUser.id)) {
+    } else if (chat.status == Messages.Initial && chat.fromMe) {
       if (amountToPay > 0.0 && amountToPay > partnerBalance)
         return 'Получатель книг должен пополнить баланс';
       else if (amountToPay > 0.0 && amountToPay <= partnerBalance)
@@ -1045,15 +1010,13 @@ class _ChatState extends State<Chat> {
       else
         // All books are returning (not rented)
         return 'Подтвердите, что отдали книги';
-    } else if (chat.status == Messages.Handover && chat.toMe(currentUser.id)) {
+    } else if (chat.status == Messages.Handover && chat.toMe) {
       return 'Подтвердите получение книг';
-    } else if (chat.status == Messages.Handover &&
-        chat.fromMe(currentUser.id)) {
+    } else if (chat.status == Messages.Handover && chat.fromMe) {
       return 'Получатель должен подтвердить получение книг';
-    } else if (chat.status == Messages.Complete && chat.toMe(currentUser.id)) {
+    } else if (chat.status == Messages.Complete && chat.toMe) {
       return 'Книги успешно получены';
-    } else if (chat.status == Messages.Complete &&
-        chat.fromMe(currentUser.id)) {
+    } else if (chat.status == Messages.Complete && chat.fromMe) {
       return 'Книги успешно переданы';
     }
     // TODO: Add other phases and directions
@@ -1063,7 +1026,7 @@ class _ChatState extends State<Chat> {
   Future<void> confirmBooks(User partner) async {
     QuerySnapshot snap = await Firestore.instance
         .collection('bookrecords')
-        .where("holderId", isEqualTo: currentUser.id)
+        .where("holderId", isEqualTo: B.user.id)
         .where("transit", isEqualTo: true)
         //.where("confirmed", isEqualTo: false)
         .where("transitId", isEqualTo: partner.id)
@@ -1091,7 +1054,7 @@ class _ChatState extends State<Chat> {
         .where("holderId", isEqualTo: partner.id)
         .where("transit", isEqualTo: true)
         .where("confirmed", isEqualTo: true)
-        .where("transitId", isEqualTo: currentUser.id)
+        .where("transitId", isEqualTo: B.user.id)
         .where("wish", isEqualTo: false)
         .getDocuments();
 
@@ -1107,23 +1070,23 @@ class _ChatState extends State<Chat> {
     // Books taken from person other than owner
     List<Bookrecord> booksPassed = books
         .where(
-            (rec) => rec.ownerId != currentUser.id && rec.ownerId != partner.id)
+            (rec) => rec.ownerId != B.user.id && rec.ownerId != partner.id)
         .toList();
 
     // Books returned to owner
     List<Bookrecord> booksReturned =
-        books.where((rec) => rec.ownerId == currentUser.id).toList();
+        books.where((rec) => rec.ownerId == B.user.id).toList();
 
     if (booksTaken.length > 0) {
-      await deposit(books: booksTaken, owner: partner, payer: currentUser);
+      await deposit(books: booksTaken, owner: partner, payer: B.user);
     }
 
     if (booksPassed.length > 0) {
-      await pass(books: booksPassed, holder: partner, payer: currentUser);
+      await pass(books: booksPassed, holder: partner, payer: B.user);
     }
 
     if (booksReturned.length > 0) {
-      await complete(books: booksReturned, holder: partner, owner: currentUser);
+      await complete(books: booksReturned, holder: partner, owner: B.user);
     }
 
     chat.ref.updateData({'status': Messages.Complete, 'books': books.map((b) => b.id).toList()});
@@ -1586,20 +1549,17 @@ class ChatScreenState extends State<ChatScreen> {
 class UserBooksWidget extends StatefulWidget {
   UserBooksWidget({
     Key key,
-    @required this.currentUser,
     @required this.user,
   }) : super(key: key);
 
-  final User currentUser;
   final User user;
 
   @override
   _UserBooksWidgetState createState() =>
-      new _UserBooksWidgetState(currentUser: currentUser, user: user);
+      new _UserBooksWidgetState(user: user);
 }
 
 class _UserBooksWidgetState extends State<UserBooksWidget> {
-  User currentUser;
   User user;
   Set<String> keys = {};
   List<Book> suggestions = [];
@@ -1635,7 +1595,7 @@ class _UserBooksWidgetState extends State<UserBooksWidget> {
     super.dispose();
   }
 
-  _UserBooksWidgetState({this.currentUser, this.user});
+  _UserBooksWidgetState({this.user});
 
   @override
   Widget build(BuildContext context) {
@@ -1753,11 +1713,10 @@ class _UserBooksWidgetState extends State<UserBooksWidget> {
         delegate: SliverChildBuilderDelegate((context, index) {
           Bookrecord rec = new Bookrecord.fromJson(books[index].data);
 
-          if (my && rec.ownerId == widget.currentUser.id ||
-              his && rec.ownerId != widget.currentUser.id) {
+          if (my && rec.ownerId == B.user.id ||
+              his && rec.ownerId != B.user.id) {
             return new BookrecordWidget(
                 bookrecord: rec,
-                currentUser: widget.currentUser,
                 builder: (context, rec) {
                   // TODO: Add authors titles aand onTap
                   return GestureDetector(
@@ -1765,9 +1724,8 @@ class _UserBooksWidgetState extends State<UserBooksWidget> {
                         // Add book to a chat
                         Messages chat = await getChatAndTransit(
                             context: context,
-                            currentUserId: currentUser.id,
-                            from: rec.holderId,
-                            to: currentUser.id,
+                            from: rec.holder,
+                            to: B.user,
                             bookrecordId: rec.id);
                         if (chat != null)
                           showSnackBar(
@@ -1808,20 +1766,17 @@ class _UserBooksWidgetState extends State<UserBooksWidget> {
 class MyBooksWidget extends StatefulWidget {
   MyBooksWidget({
     Key key,
-    @required this.currentUser,
     @required this.user,
   }) : super(key: key);
 
-  final User currentUser;
   final User user;
 
   @override
   _MyBooksWidgetState createState() =>
-      new _MyBooksWidgetState(currentUser: currentUser, user: user);
+      new _MyBooksWidgetState(user: user);
 }
 
 class _MyBooksWidgetState extends State<MyBooksWidget> {
-  User currentUser;
   User user;
   Set<String> keys = {};
   List<Book> suggestions = [];
@@ -1840,7 +1795,7 @@ class _MyBooksWidgetState extends State<MyBooksWidget> {
     books = [];
     bookSubscription = Firestore.instance
         .collection('bookrecords')
-        .where("holderId", isEqualTo: currentUser.id)
+        .where("holderId", isEqualTo: B.user.id)
         .where("transit", isEqualTo: false)
         .snapshots()
         .listen((snap) async {
@@ -1857,7 +1812,7 @@ class _MyBooksWidgetState extends State<MyBooksWidget> {
     super.dispose();
   }
 
-  _MyBooksWidgetState({this.currentUser, this.user});
+  _MyBooksWidgetState({this.user});
 
   @override
   Widget build(BuildContext context) {
@@ -1978,7 +1933,6 @@ class _MyBooksWidgetState extends State<MyBooksWidget> {
           if (my && rec.ownerId != user.id || his && rec.ownerId == user.id) {
             return new BookrecordWidget(
                 bookrecord: rec,
-                currentUser: widget.currentUser,
                 builder: (context, rec) {
                   // TODO: Add authors titles aand onTap
                   return GestureDetector(
@@ -1986,9 +1940,8 @@ class _MyBooksWidgetState extends State<MyBooksWidget> {
                         // Add book to a chat
                         Messages chat = await getChatAndTransit(
                             context: context,
-                            currentUserId: currentUser.id,
-                            from: currentUser.id,
-                            to: user.id,
+                            from: B.user,
+                            to: user,
                             bookrecordId: rec.id);
                         if (chat != null)
                           showSnackBar(
@@ -2053,20 +2006,18 @@ class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
 }
 
 class UserProfileWidget extends StatefulWidget {
-  UserProfileWidget({Key key, @required this.currentUser, @required this.user})
+  UserProfileWidget({Key key, @required this.user})
       : super(key: key);
 
-  final User currentUser;
   final User user;
 
   @override
   _UserProfileWidgetState createState() =>
-      new _UserProfileWidgetState(currentUser: currentUser, user: user);
+      new _UserProfileWidgetState(user: user);
 }
 
 class _UserProfileWidgetState extends State<UserProfileWidget> {
   TextEditingController textController;
-  User currentUser;
   User user;
   List<DocumentSnapshot> booksBorrowed = [];
   List<DocumentSnapshot> booksLent = [];
@@ -2076,6 +2027,7 @@ class _UserProfileWidgetState extends State<UserProfileWidget> {
   StreamSubscription<QuerySnapshot> booksAvailableStream;
 
   Set<String> keys = {};
+  Wallet wallet;
 
   @override
   void initState() {
@@ -2083,12 +2035,21 @@ class _UserProfileWidgetState extends State<UserProfileWidget> {
 
     textController = new TextEditingController();
 
+    // Read user balance
+    wallet = Wallet(id: user.id);
+    wallet.ref.get().then( (snap) {
+      if(snap.exists)
+         setState(() {
+           wallet = Wallet.fromJson(snap.data);
+         });
+    });
+
     booksBorrowed = [];
     booksBorrowedStream = Firestore.instance
         .collection('bookrecords')
         .where("holderId", isEqualTo: user.id)
         .where("transit", isEqualTo: false)
-        .where("ownerId", isEqualTo: currentUser.id)
+        .where("ownerId", isEqualTo: B.user.id)
         .where("wish", isEqualTo: false)
         .snapshots()
         .listen((snap) {
@@ -2101,7 +2062,7 @@ class _UserProfileWidgetState extends State<UserProfileWidget> {
         .collection('bookrecords')
         .where("ownerId", isEqualTo: user.id)
         .where("transit", isEqualTo: false)
-        .where("holderId", isEqualTo: currentUser.id)
+        .where("holderId", isEqualTo: B.user.id)
         .where("wish", isEqualTo: false)
         .snapshots()
         .listen((snap) {
@@ -2133,7 +2094,7 @@ class _UserProfileWidgetState extends State<UserProfileWidget> {
   }
 
   _UserProfileWidgetState(
-      {Key key, @required this.currentUser, @required this.user});
+      {Key key, @required this.user});
 
   @override
   Widget build(BuildContext context) {
@@ -2203,7 +2164,6 @@ class _UserProfileWidgetState extends State<UserProfileWidget> {
                                     new Bookrecord.fromJson(doc.data);
                                 return BookrecordWidget(
                                     bookrecord: rec,
-                                    currentUser: currentUser,
                                     builder: (context, rec) {
                                       return Stack(children: <Widget>[
                                         Container(margin: EdgeInsets.all(5.0), child: bookImage(rec, 80.0,
@@ -2269,7 +2229,6 @@ class _UserProfileWidgetState extends State<UserProfileWidget> {
                                     new Bookrecord.fromJson(doc.data);
                                 return BookrecordWidget(
                                     bookrecord: rec,
-                                    currentUser: currentUser,
                                     builder: (context, rec) {
                                       return Stack(children: <Widget>[
                                         Container(margin: EdgeInsets.all(5.0), child: bookImage(rec, 80.0,
@@ -2370,7 +2329,6 @@ class _UserProfileWidgetState extends State<UserProfileWidget> {
       Bookrecord rec = new Bookrecord.fromJson(booksAvailable[index].data);
       return BookrecordWidget(
           bookrecord: rec,
-          currentUser: currentUser,
           filter: keys,
           builder: (context, rec) {
             return new Container(
@@ -2426,7 +2384,7 @@ class _UserProfileWidgetState extends State<UserProfileWidget> {
                       mainAxisAlignment: MainAxisAlignment.start,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: <Widget>[
-                        new Text('Баланс: ${money(user?.getAvailable())}',
+                        new Text('Баланс: ${money(wallet.getAvailable())}',
                             style: Theme.of(context)
                                 .textTheme
                                 .body1

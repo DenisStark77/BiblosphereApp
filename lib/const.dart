@@ -8,6 +8,31 @@ import 'package:googleapis/books/v1.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:xml/xml.dart' as xml;
 
+class B {
+  static final B _singleton = B._internal();
+
+  factory B() {
+    return _singleton;
+  }
+
+  B._internal();
+
+  static User _currentUser;
+  static Wallet _currentWallet;
+  static String _currency = 'USD';
+
+  static User get user => _currentUser;
+  static set user (User user) => _currentUser = user;
+
+  static Wallet get wallet => _currentWallet;
+  static set wallet (Wallet wallet) => _currentWallet = wallet;
+
+  static String get currency => _currency; 
+
+  static set currency (String currency) => _currency = currency;
+}
+
+
 class BiblosphereColorScheme {
   Color titleBackground = new Color(0xff344d64);
   Color titleText = Colors.black;
@@ -320,22 +345,33 @@ class Book {
     }
   }
 
-  Map<String, dynamic> toJson() {
+  Map<String, dynamic> toJson({bool bookOnly = false}) {
     // Do not store copies & wishes. It's updated separatley.
-    return {
-      'title': title,
-      'authors': authors,
-      'isbn': isbn,
-      'image': image,
-      'userImage': userImage,
-      'sourceId': sourceId,
-      'source': source?.index,
-      'price': price,
-      'listPrice': listPrice?.toJson(),
-      'genre': genre,
-      'keys': keys.toList(),
-      'language': language
-    };
+    // Return only fields suitable for Bookrecord
+    if (bookOnly)
+      return {
+        'title': title,
+        'authors': authors,
+        'isbn': isbn,
+        'image': image,
+        'price': price,
+        'keys': keys.toList(),
+      };
+    else
+      return {
+        'title': title,
+        'authors': authors,
+        'isbn': isbn,
+        'image': image,
+        'userImage': userImage,
+        'sourceId': sourceId,
+        'source': source?.index,
+        'price': price,
+        'listPrice': listPrice?.toJson(),
+        'genre': genre,
+        'keys': keys.toList(),
+        'language': language
+      };
   }
 
   double getPrice() {
@@ -383,8 +419,6 @@ class User {
   int wishCount = 0;
   int bookCount = 0;
   int shelfCount = 0;
-  double balance = 0;
-  double blocked = 0;
   String payoutId;
   String cursor;
   double d;
@@ -395,8 +429,6 @@ class User {
       this.id,
       this.currency,
       this.position,
-      this.balance = 0,
-      this.blocked = 0,
       this.bookCount,
       this.shelfCount,
       this.wishCount,
@@ -422,10 +454,6 @@ class User {
         wishCount = json['wishCount'] ?? 0,
         bookCount = json['bookCount'] ?? 0,
         shelfCount = json['shelfCount'] ?? 0,
-        balance =
-            json['balance'] != null ? (json['balance'] as num).toDouble() : 0,
-        blocked =
-            json['blocked'] != null ? (json['blocked'] as num).toDouble() : 0,
         cursor = json['cursor'],
         payoutId = json['payoutId'];
 
@@ -447,30 +475,6 @@ class User {
     };
   }
 
-  double getAvailable() {
-    return balance - blocked;
-  }
-
-  /*
-  // Retrieve balance from Stellar account
-  Future<double> getStellarBalance() async {
-    if (accountId == null) return 0.0;
-
-    stellar.KeyPair pair = stellar.KeyPair.fromAccountId(accountId);
-
-    stellar.Network.useTestNetwork();
-    stellar.Server server =
-        stellar.Server("https://horizon-testnet.stellar.org");
-    stellar.AccountResponse account = await server.accounts.account(pair);
-    String strBalance = account.balances
-        .where((bal) => bal.assetType == "native")
-        .first
-        .balance;
-
-    balance = double.parse(strBalance);
-    return balance;
-  }
-  */
   DocumentReference get ref {
     return db.collection('users').document(id);
   }
@@ -498,8 +502,10 @@ class Bookrecord {
 
   String ownerId;
   String ownerName;
+  String ownerImage;
   String holderId;
   String holderName;
+  String holderImage;
   String transitId;
   String rewardId;
   String leasingId;
@@ -519,10 +525,12 @@ class Bookrecord {
   // Position of the book and distance to the closest match
   GeoFirePoint location;
   double distance;
+  bool fromDb = false;
 
   Bookrecord(
       {@required this.ownerId,
       this.ownerName,
+      this.ownerImage,
       @required this.isbn,
       this.title,
       this.authors,
@@ -530,6 +538,7 @@ class Bookrecord {
       this.location,
       this.holderId,
       this.holderName,
+      this.holderImage,
       this.transitId,
       this.rewardId,
       this.leasingId,
@@ -542,9 +551,11 @@ class Bookrecord {
       this.confirmed = false,
       this.chatId,
       this.distance}) {
+    fromDb = false;
     if (holderId == null) {
       holderId = ownerId;
       holderName = ownerName;
+      holderImage = ownerImage;
     }
     if (id == null) id = this.ref.documentID;
     if (!transit) confirmed = false;
@@ -565,8 +576,10 @@ class Bookrecord {
         keys = (json['keys'] as List)?.cast<String>()?.toSet(),
         ownerId = json['ownerId'],
         ownerName = json['ownerName'],
+        ownerImage = json['ownerImage'],
         holderId = json['holderId'],
         holderName = json['holderName'],
+        holderImage = json['holderImage'],
         transitId = json['transitId'],
         //users = (json['users']?.map((s) => s as String))?.toSet(),
         //users = (json['users']?.map((dynamic s) => s.toString()))?.toSet(),
@@ -587,6 +600,7 @@ class Bookrecord {
         confirmed = (json['transit'] ?? false) && (json['confirmed'] ?? false),
         price = json['price'] != null ? (json['price'] as num).toDouble() : 0.0,
         chatId = json['chatId'] {
+    fromDb = true;
     if (location != null && lastKnownPosition != null)
       distance = distanceBetween(location.latitude, location.longitude,
           lastKnownPosition.latitude, lastKnownPosition.longitude);
@@ -606,15 +620,16 @@ class Bookrecord {
       'id': id,
       'ownerId': ownerId,
       'ownerName': ownerName,
+      'ownerImage': ownerImage,
       'holderId': holderId,
       'holderName': holderName,
+      'holderImage': holderImage,
       'transitId': transitId,
       'rewardId': rewardId,
       'leasingId': leasingId,
       'users': <String>{ownerId, holderId, transitId}
           .where((s) => s != null)
           .toList(),
-      'isbn': isbn,
       'location': location?.data,
       'matched': matched,
       'matchedId': matchedId,
@@ -633,51 +648,51 @@ class Bookrecord {
     };
   }
 
-  bool isOwn(String userId) {
-    return ownerId == userId && !transit && !lent && !wish;
+  bool get isOwn {
+    return ownerId == B.user.id && !transit && !lent && !wish;
   }
 
-  bool isWish(String userId) {
-    return ownerId == userId && wish && !transit && !lent;
+  bool get isWish {
+    return ownerId == B.user.id && wish && !transit && !lent;
   }
 
-  bool isLent(String userId) {
-    return ownerId == userId &&
+  bool get isLent {
+    return ownerId == B.user.id &&
         ownerId != holderId &&
         lent &&
         !wish &&
         (!transit || transitId != ownerId);
   }
 
-  bool isBorrowed(String userId) {
-    return holderId == userId &&
+  bool get isBorrowed {
+    return holderId == B.user.id &&
         ownerId != holderId &&
         lent &&
         !wish &&
         !transit;
   }
 
-  bool isTransit(String userId) {
-    return (transitId == userId || holderId == userId) && transit && !wish;
+  bool get isTransit {
+    return (transitId == B.user.id || holderId == B.user.id) && transit && !wish;
   }
 
-  bool isConfirmed(String userId) {
-    return (transitId == userId || holderId == userId) &&
+  bool get isConfirmed {
+    return (transitId == B.user.id || holderId == B.user.id) &&
         transit &&
         confirmed &&
         !wish;
   }
 
-  BookrecordType type(String userId) {
-    if (isOwn(userId))
+  BookrecordType get type {
+    if (isOwn)
       return BookrecordType.own;
-    else if (isLent(userId))
+    else if (isLent)
       return BookrecordType.lent;
-    else if (isBorrowed(userId))
+    else if (isBorrowed)
       return BookrecordType.borrowed;
-    else if (isTransit(userId))
+    else if (isTransit)
       return BookrecordType.transit;
-    else if (isWish(userId))
+    else if (isWish)
       return BookrecordType.wish;
     else
       return BookrecordType.none;
@@ -686,6 +701,153 @@ class Bookrecord {
   double getPrice() {
     // If price is null or 0 return default price
     return price != null && price != 0.0 ? price : 100;
+  }
+
+  User get holder {
+    return User(id: holderId, name: holderName, photo: holderImage);
+  }
+
+  User get owner {
+    return User(id: ownerId, name: ownerName, photo: ownerImage);
+  }
+
+  bool get complete {
+    return isbn == null && title == null || image == null || price == null
+    || ownerId == null || ownerName == null || ownerImage == null
+    || holderId == null || holderName == null || holderImage == null;
+  }
+
+  // Copy all values from other bookrecord
+  void copyFrom(Bookrecord rec) {
+      id = rec.id;
+      ownerId = rec.ownerId;
+      ownerName = rec.ownerName;
+      ownerImage = rec.ownerImage;
+      holderId = rec.holderId;
+      holderName = rec.holderName;
+      holderImage = rec.holderImage;
+      transitId = rec.transitId;
+      rewardId = rec.rewardId;
+      leasingId = rec.leasingId;
+      users = rec.users;
+      isbn = rec.isbn;
+      location = rec.location;
+      matched = rec.matched;
+      matchedId = rec.matchedId;
+      chatId = rec.chatId;
+      lent = rec.lent;
+      wish = rec.wish;
+      transit = rec.transit;
+      confirmed = rec.confirmed;
+      price = rec.price;
+      distance = rec.distance;
+      title = rec.title;
+      authors = rec.authors;
+      image = rec.image;
+      keys = rec.keys;
+      fromDb = rec.fromDb;
+  }
+
+  // Copy all values from other bookrecord
+  bool equalsTo(Bookrecord rec) {
+      return id == rec.id
+      && ownerId == rec.ownerId
+      && ownerName == rec.ownerName
+      && ownerImage == rec.ownerImage
+      && holderId == rec.holderId
+      && holderName == rec.holderName
+      && holderImage == rec.holderImage
+      && transitId == rec.transitId
+      && rewardId == rec.rewardId
+      && leasingId == rec.leasingId
+      && users == rec.users
+      && isbn == rec.isbn
+      && location == rec.location
+      && matched == rec.matched
+      && matchedId == rec.matchedId
+      && chatId == rec.chatId
+      && lent == rec.lent
+      && wish == rec.wish
+      && transit == rec.transit
+      && confirmed == rec.confirmed
+      && price == rec.price
+      && distance == rec.distance
+      && title == rec.title
+      && authors == rec.authors
+      && image == rec.image
+      && keys == rec.keys;
+  }
+
+  Stream<Bookrecord> snapshots() async* {
+    // Data are not from DB
+    if (!fromDb) {
+      final DocumentSnapshot snap = await ref.get();
+      if (snap.exists) {
+          Bookrecord rec = Bookrecord.fromJson(snap.data);
+          if ( !this.equalsTo(rec) ) {
+            copyFrom(rec);
+            yield this;
+          }
+          fromDb = true;
+        }
+    }
+
+    assert (isbn != null && ownerId != null && holderId != null);
+
+    bool changed = false;
+
+    // Book data is not complete need to read original record
+    if  (title == null || image == null || price == null) {
+      final DocumentSnapshot snap = await Book.Ref(isbn).get();
+      if (snap.exists) {
+          Book rec = Book.fromJson(snap.data);
+          if ( title != rec.title || image != rec.image || price == null && rec.price != null ) {
+            title = rec.title;
+            image = rec.image;
+            if (price == null) price = rec.price;
+
+            changed = true;
+          }
+      }
+    }
+
+    // Owner data is not complete need to read original record
+    if  (ownerName == null || ownerImage == null) {
+      final DocumentSnapshot snap = await User.Ref(ownerId).get();
+      if (snap.exists) {
+          User rec = User.fromJson(snap.data);
+          if ( ownerName != rec.name || ownerImage != rec.photo ) {
+            ownerName = rec.name;
+            ownerImage = rec.photo;
+            if (holderId == ownerId) {
+              holderName = rec.name;
+              holderImage = rec.photo;
+            }
+
+            changed = true;
+          }
+      }
+    }
+
+    // Owner data is not complete need to read original record
+    if  (holderId != ownerId && (holderName == null || holderImage == null)) {
+      final DocumentSnapshot snap = await User.Ref(holderId).get();
+      if (snap.exists) {
+          User rec = User.fromJson(snap.data);
+          if ( holderName != rec.name || holderName != rec.photo ) {
+            holderName = rec.name;
+            holderImage = rec.photo;
+
+            changed = true;
+          }
+      }
+    }
+
+    if ( changed ) {
+      // If data updated send it to stream and update record in DB
+      yield this;
+      ref.updateData(toJson());
+    }
   }
 
   DocumentReference get ref {
@@ -891,50 +1053,50 @@ class Operation {
     return json;
   }
 
-  bool isInPurchase(User user) {
-    return type == OperationType.InputInApp && user.id == userId;
+  bool get isInPurchase {
+    return type == OperationType.InputInApp && B.user.id == userId;
   }
 
-  bool isInStellar(User user) {
-    return type == OperationType.InputStellar && user.id == userId;
+  bool get isInStellar {
+    return type == OperationType.InputStellar && B.user.id == userId;
   }
 
-  bool isIn(User user) {
-    return isInStellar(user) || isInPurchase(user);
+  bool get isIn {
+    return isInStellar || isInPurchase;
   }
 
-  bool isOutStellar(User user) {
-    return type == OperationType.OutputStellar && user.id == userId;
+  bool get isOutStellar {
+    return type == OperationType.OutputStellar && B.user.id == userId;
   }
 
-  bool isOut(User user) {
-    return isOutStellar(user);
+  bool get isOut {
+    return isOutStellar;
   }
 
-  bool isReward(User user) {
-    return type == OperationType.Reward && user.id == userId;
+  bool get isReward {
+    return type == OperationType.Reward && B.user.id == userId;
   }
 
-  bool isLeasing(User user) {
-    return type == OperationType.Leasing && user.id == userId;
+  bool get isLeasing {
+    return type == OperationType.Leasing && B.user.id == userId;
   }
 
-  bool isReferral(User user) {
+  bool get isReferral {
     return type == OperationType.Leasing &&
-        (user.id == ownerFeeUserId1 ||
-            user.id == ownerFeeUserId2 ||
-            user.id == payerFeeUserId1 ||
-            user.id == payerFeeUserId2);
+        (B.user.id == ownerFeeUserId1 ||
+            B.user.id == ownerFeeUserId2 ||
+            B.user.id == payerFeeUserId1 ||
+            B.user.id == payerFeeUserId2);
   }
 
-  double referralAmount(User user) {
-    if (type == OperationType.Leasing && user.id == ownerFeeUserId1)
+  double get referralAmount {
+    if (type == OperationType.Leasing && B.user.id == ownerFeeUserId1)
       return ownerFee1;
-    else if (type == OperationType.Leasing && user.id == ownerFeeUserId2)
+    else if (type == OperationType.Leasing && B.user.id == ownerFeeUserId2)
       return ownerFee2;
-    else if (type == OperationType.Leasing && user.id == payerFeeUserId1)
+    else if (type == OperationType.Leasing && B.user.id == payerFeeUserId1)
       return payerFee1;
-    else if (type == OperationType.Leasing && user.id == payerFeeUserId2)
+    else if (type == OperationType.Leasing && B.user.id == payerFeeUserId2)
       return payerFee2;
     else
       return 0.0;
@@ -1163,11 +1325,27 @@ class Messages {
   bool fromDb;
 
   Messages(
-      {@required this.fromId,
-      this.toId,
+      {@required User from,
+      User to,
       this.system = false,
       this.status = Initial,
       this.books}) {
+
+    assert (from != null && (system || !system && to != null));
+
+    fromId = from.id;    
+    fromName = from.name;    
+    fromImage = from.photo;    
+
+    if (to != null) {
+      toId = to.id;    
+      toName = to.name;    
+      toImage = to.photo;
+    }    
+
+    if (!system)
+      ids = <String>[fromId, toId];
+
     id = this.ref.documentID;
 
     timestamp = DateTime.now();
@@ -1187,8 +1365,9 @@ class Messages {
         unread = json['unread'] != null
             ? Map<String, int>.from(json['unread'])
             : null,
-        books =
-            json['books'] != null ? List<String>.from(json['books'] as List<dynamic>) : List<String>.from([]),
+        books = json['books'] != null
+            ? List<String>.from(json['books'] as List<dynamic>)
+            : List<String>.from([]),
         status = json['status'],
         fromId = json['fromId'],
         fromName = json['fromName'],
@@ -1229,27 +1408,45 @@ class Messages {
   }
 
   // Return userId of the counterparty
-  bool toMe(String userId) {
-    return toId == userId;
+  bool get toMe {
+    return toId == B.user.id;
   }
 
-  bool fromMe(String userId) {
-    return fromId == userId;
+  bool get fromMe {
+    return fromId == B.user.id;
   }
 
   // Return userId of the counterparty
-  String partnerId(String userId) {
-    return ids[0] == userId ? ids[1] : ids[0];
+  String get partnerId {
+    assert (B.user.id == fromId || B.user.id == toId);
+    if (!system)
+      return B.user.id == ids[0] ? ids[1] : ids[0];
+    else if (partnerId == B.user.id)
+      return 'system';
+    else if (partnerId == 'system')
+      return fromId;
+
+    return null;
+  }
+
+  User get to {
+    return User(id: toId, name: toName, photo: toImage);
+  }
+
+  User get from {
+    return User(id: fromId, name: fromName, photo: fromImage);
   }
 
   // Return name of the peer
-  String partnerName(String userId) {
-    return (fromId == userId ) ? toName : fromName;
+  String get partnerName {
+    assert (B.user.id == fromId || B.user.id == toId);
+    return (fromId == B.user.id) ? toName : fromName;
   }
 
   // Return image of the peer
-  String partnerImage(String userId) {
-    return (fromId == userId ) ? toImage : fromImage;
+  String get partnerImage {
+    assert (B.user.id == fromId || B.user.id == toId);
+    return (fromId == B.user.id) ? toImage : fromImage;
   }
 
   void reset() {
@@ -1260,7 +1457,9 @@ class Messages {
   }
 
   DocumentReference get ref {
-    return db.collection('messages').document(system ? fromId : fromId + ':' + toId);
+    return db
+        .collection('messages')
+        .document(system ? fromId : fromId + ':' + toId);
   }
 
   static DocumentReference Ref(String id) {
@@ -1433,4 +1632,3 @@ double distanceBetween(double lat1, double lon1, double lat2, double lon2) {
   double d = R * c;
   return d; // meters
 }
-

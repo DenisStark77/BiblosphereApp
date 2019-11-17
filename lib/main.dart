@@ -82,7 +82,6 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
-  User currentUser;
   final FirebaseMessaging _firebaseMessaging = FirebaseMessaging();
   // Subscription for in-app purchases
   StreamSubscription<List<PurchaseDetails>> _subscription;
@@ -113,13 +112,13 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       onResume: (Map<String, dynamic> message) {
         return new Future.delayed(Duration.zero, () {
           // TODO: Change sender to chat id
-          Chat.runChatById(context, currentUser, null, chatId: message['chat']);
+          Chat.runChatById(context, null, chatId: message['chat']);
         });
       },
       onLaunch: (Map<String, dynamic> message) {
         return new Future.delayed(Duration.zero, () {
           // TODO: Change sender to chat id
-          Chat.runChatById(context, currentUser, null, chatId: message['chat']);
+          Chat.runChatById(context, null, chatId: message['chat']);
         });
       },
     );
@@ -149,7 +148,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
 
             // Create an operation and update user balance
             await payment(
-                user: currentUser,
+                user: B.user,
                 amount: amount,
                 type: OperationType.InputInApp);
           }
@@ -172,11 +171,12 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed && currentUser != null) {
+    if (state == AppLifecycleState.resumed && B.user != null) {
       new Future.delayed(Duration.zero, () async {
         final position = await currentPosition();
         setState(() {
-          currentUser.position = position;
+          // Update position after the resume
+          B.user = B.user..position = position;
         });
       });
     }
@@ -198,10 +198,11 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     }
 
     firebaseUser = await _auth.currentUser();
+
     firebaseUser?.getIdToken(refresh: true);
 
     _listener = _auth.onAuthStateChanged.listen((FirebaseUser user) {
-      setState(() {
+
         firebaseUser = user;
 
         if (firebaseUser != null) {
@@ -209,8 +210,11 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
           _initUserRecord().then((_) {
             setState(() {});
           });
+        } else {
+            setState(() {
+              B.user = null;
+            });
         }
-      });
     });
   }
 
@@ -219,55 +223,49 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       if (firebaseUser == null)
         throw "CurrentUserId is null, login failed or not completed";
 
-      currentUser = new User(
+      User user = new User(
           id: firebaseUser.uid,
           name: firebaseUser.displayName,
           photo: firebaseUser.photoUrl,
           position: await currentPosition());
 
-      DocumentReference walletRef = Wallet.Ref(currentUser.id);
+      Wallet wallet = new Wallet(id: firebaseUser.uid);
 
       // Check if user record exist
-      final DocumentSnapshot userSnap = await currentUser.ref.get();
+      final DocumentSnapshot userSnap = await user.ref.get();
 
       if (!userSnap.exists) {
         // Create user and wallet if user is not there
-        await currentUser.ref.setData(currentUser.toJson());
+        await B.user.ref.setData(user.toJson());
 
         // TODO: ensure if it works with data persistently
-        await walletRef.setData(new Wallet(id: currentUser.id).toJson());
+        await wallet.ref.setData(wallet.toJson());
       } else {
         // Update user fields from Firestore
-        currentUser = User.fromJson(userSnap.data);
+        user = User.fromJson(userSnap.data);
 
-        if (currentUser.currency != null &&
-            xlmRates[currentUser.currency] != null) {
-          preferredCurrency = currentUser.currency;
+        if (user.currency != null &&
+            xlmRates[B.currency] != null) {
+          B.currency = user.currency;
         }
 
         // Update balance and blocked
-        final DocumentSnapshot walletSnap = await walletRef.get();
+        final DocumentSnapshot walletSnap = await wallet.ref.get();
 
         if (!walletSnap.exists) {
           // Create wallet if not exist (case for old users)
-          await walletRef.setData(new Wallet(id: currentUser.id).toJson());
+          await wallet.ref.setData(wallet.toJson());
         } else {
-          currentUser.balance = (walletSnap.data['balance'] as num).toDouble();
-          currentUser.blocked = (walletSnap.data['blocked'] as num).toDouble();
+          // Read wallet if exist
+          wallet = Wallet.fromJson(walletSnap.data);
         }
       }
 
       // TODO: Cancel subscription befor log out (Exception PERMISSION_DENIED)
       _walletSubscription =
-          walletRef.snapshots().listen((DocumentSnapshot doc) {
+          wallet.ref.snapshots().listen((DocumentSnapshot doc) {
         setState(() {
-          currentUser.balance = doc.data['balance'] != null
-              ? (doc.data['balance'] as num).toDouble()
-              : 0;
-
-          currentUser.blocked = doc.data['blocked'] != null
-              ? (doc.data['blocked'] as num).toDouble()
-              : 0;
+          B.wallet = Wallet.fromJson(doc.data);
         });
       });
 
@@ -282,16 +280,16 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       });
 
       // If refferal program link is empty generate one
-      if (currentUser.link == null) {
-        currentUser.link = await buildLink('chat?user=${currentUser.id}');
-
-        Firestore.instance
-            .collection('users')
-            .document(currentUser.id)
-            .updateData({
-          'link': currentUser.link,
-        });
+      if (user.link == null) {
+        // TODO: Make this call async to minimize waiting time for login
+        user.link = await buildLink('chat?user=${user.id}');
       }
+
+      // Set global value to user
+      B.wallet = wallet;
+      B.user = user;
+
+      user.ref.updateData(user.toJson());
     } catch (ex, stack) {
       print(ex);
       FlutterCrashlytics().logException(ex, stack);
@@ -369,7 +367,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
 //        primarySwatch: Colors.green,
       ),
       home: new Builder(builder: (context) {
-        if (!skipIntro && firebaseUser == null) {
+        if (!skipIntro && B.user == null) {
           return new IntroPage(onTapDoneButton: () {
             setState(() {
               skipIntro = true;
@@ -381,7 +379,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
             SharedPreferences prefs = await SharedPreferences.getInstance();
             prefs.setBool('skipIntro', true);
           });
-        } else if (firebaseUser == null) {
+        } else if (B.user == null) {
           return new SignInScreen(
             avoidBottomInset: true,
             bottomPadding: 10.0,
@@ -456,7 +454,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
             ],
           );
         } else {
-          return MyHomePage(currentUser: currentUser);
+          return MyHomePage();
         }
       }),
       onGenerateRoute: _getRoute,
@@ -469,7 +467,6 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         return _buildRoute(
             settings,
             new Chat(
-              currentUser: currentUser,
               partner: settings.arguments as User,
             ));
       default:

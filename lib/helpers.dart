@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
@@ -253,45 +254,50 @@ class BookrecordWidget extends StatefulWidget {
   BookrecordWidget(
       {Key key,
       @required this.bookrecord,
-      @required this.currentUser,
       @required this.builder,
       this.filter = const {}})
       : super(key: key);
 
   final Bookrecord bookrecord;
-  final User currentUser;
   final BookrecordWidgetBuilder builder;
   final Set<String> filter;
 
   @override
   _BookrecordWidgetState createState() => new _BookrecordWidgetState(
-      bookrecord: bookrecord, currentUser: currentUser, builder: builder);
+      bookrecord: bookrecord, builder: builder);
 }
 
 class _BookrecordWidgetState extends State<BookrecordWidget> {
   Bookrecord bookrecord;
-  User currentUser;
   final BookrecordWidgetBuilder builder;
+  StreamSubscription<Bookrecord> _listener;
 
   @override
   void initState() {
     super.initState();
+
+    // Listen updated on bookrecord and refresh Widget
+    _listener = bookrecord.snapshots().listen( (rec) {
+      setState(() {});
+    });
   }
 
   _BookrecordWidgetState({
     Key key,
     @required this.bookrecord,
-    @required this.currentUser,
     @required this.builder,
   });
 
   @override
+  void dispose() {
+    if (_listener != null) _listener.cancel();
+    super.dispose();
+  }
+
+
+  @override
   void didUpdateWidget(BookrecordWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
-
-    if (oldWidget.currentUser.id != widget.currentUser.id) {
-      currentUser = widget.currentUser;
-    }
 
     if (oldWidget.bookrecord.id != widget.bookrecord.id) {
       bookrecord = widget.bookrecord;
@@ -309,7 +315,7 @@ class _BookrecordWidgetState extends State<BookrecordWidget> {
   }
 }
 
-typedef UserWidgetBuilder = Widget Function(BuildContext context, User user);
+typedef UserWidgetBuilder = Widget Function(BuildContext context, User user, Wallet wallet);
 
 class UserWidget extends StatefulWidget {
   UserWidget({Key key, @required this.user, @required this.builder})
@@ -325,6 +331,7 @@ class UserWidget extends StatefulWidget {
 
 class _UserWidgetState extends State<UserWidget> {
   User user;
+  Wallet wallet;
   final UserWidgetBuilder builder;
 
   @override
@@ -358,18 +365,16 @@ class _UserWidgetState extends State<UserWidget> {
     if (user == null) {
       return Container(width: 0.0, height: 0.0);
     } else {
-      return builder(context, user);
+      return builder(context, user, wallet);
     }
   }
 
   Future<void> getUserDetails() async {
-    final DocumentReference walletRef = Wallet.Ref(user.id);
-    final DocumentSnapshot walletSnap = await walletRef.get();
+    wallet = Wallet(id: user.id);
+    final DocumentSnapshot snap = await wallet.ref.get();
 
-    if (walletSnap.exists) {
-      user.balance = (walletSnap.data['balance'] as num).toDouble();
-      user.blocked = (walletSnap.data['blocked'] as num).toDouble();
-    }
+    if (snap.exists)
+      wallet = Wallet.fromJson(snap.data);
 
     return;
   }
@@ -423,13 +428,12 @@ dynamic distance(double d) {
 // Function return chat record (create if needed) and transit book record
 Future<Messages> getChatAndTransit(
     {@required BuildContext context,
-    @required String currentUserId,
-    @required String from,
-    String to,
+    @required User from,
+    User to,
     String bookrecordId,
     bool system = false}) async {
   assert(from != null && to != null || from != null && system);
-  Messages chat = new Messages(fromId: from, toId: to, system: system);
+  Messages chat = new Messages(from: from, to: to, system: system);
   Bookrecord rec;
 
   DocumentSnapshot chatSnap = await chat.ref.get();
@@ -444,14 +448,13 @@ Future<Messages> getChatAndTransit(
       rec = Bookrecord.fromJson(bookSnap.data);
 
       // Do not transit if book is with me or already in Transit
-      if (rec.holderId == currentUserId || rec.transit == true) {
+      if (rec.holderId == B.user.id || rec.transit == true) {
         bookrecordId = null;
       }
     }
   }
 
   if (chatSnap.exists) {
-    print('!!!DEBUG: chat id ${chat.ref.documentID}');
     // Chat already exist, check status and update cart
     chat = new Messages.fromJson(chatSnap.data, chatSnap);
     if (!system && bookrecordId != null) {
@@ -463,8 +466,6 @@ Future<Messages> getChatAndTransit(
       // Only add book in Initial status (in Handover fails - null)
       // Update status as it might be Completed in DB
       if (chat.status == Messages.Initial) {
-        print('!!!DEBUG books type ${chat.books.runtimeType}');
-        print('!!!DEBUG books ${chat.books.join(', ')}');
         chat.books.add(bookrecordId);
         await chat.ref.updateData({
           'books': FieldValue.arrayUnion([bookrecordId]),
@@ -483,7 +484,7 @@ Future<Messages> getChatAndTransit(
 
     // Set a welcome message if a system chat
     if (chat.system)
-      injectChatbotMessage(context, currentUserId, chat, S.of(context).chatbotWelcome);
+      injectChatbotMessage(context, B.user.id, chat, S.of(context).chatbotWelcome);
   }
 
   // TODO: do it in transaction to avoid simultaneous update to transit
@@ -496,8 +497,8 @@ Future<Messages> getChatAndTransit(
         .document(bookrecordId)
         .updateData({
       'transit': true,
-      'transitId': to,
-      'users': FieldValue.arrayUnion([to]),
+      'transitId': to.id,
+      'users': FieldValue.arrayUnion([to.id]),
       'chatId': chat.id
     });
 

@@ -7,7 +7,6 @@ import 'package:intl/intl.dart';
 import 'package:biblosphere/const.dart';
 
 String biblosphereAccountId;
-String preferredCurrency = 'RUB';
 
 Map<String,String> currencySymbol = {
   'RUB': r'₽',
@@ -29,17 +28,17 @@ Map<String, double> xlmRates = {
 
 
 double toXlm(double amount) {
-  return amount / xlmRates[preferredCurrency];
+  return amount / xlmRates[B.currency];
 }
 
 
 double toCurrency(double amount) {
-  return amount * xlmRates[preferredCurrency];
+  return amount * xlmRates[B.currency];
 }
 
 
 String money(double amount) {
-  return '${new NumberFormat.currency(symbol: currencySymbol[preferredCurrency]).format((amount ?? 0) * xlmRates[preferredCurrency])}';
+  return '${new NumberFormat.currency(symbol: currencySymbol[B.currency]).format((amount ?? 0) * xlmRates[B.currency])}';
 }
 
 
@@ -107,7 +106,6 @@ Future<void> getPaymentContext() async {
 
 Future<bool> checkStellarAccount(String accountId) async {
   try {
-    print('!!!DEBUG check account: ${accountId}');
     stellar.KeyPair pair = stellar.KeyPair.fromAccountId(accountId);
 
     stellar.Network.useTestNetwork();
@@ -117,10 +115,8 @@ Future<bool> checkStellarAccount(String accountId) async {
 
     return true;
   } catch (error) {
-    print('!!!DEBUG type ${error.runtimeType} ${error}');
-    print('!!!DEBUG type CODE: ${(error as stellar.ErrorResponse).code}');
     print((error as stellar.ErrorResponse).body);
-
+    // TODO: Log exception to Firebase
     return false;
   }
 }
@@ -149,8 +145,6 @@ Future<void> payoutStellar(User user, double amount, {String memo=''}) async {
   });
 
   // Request Stellar payments
-  print('!!!DEBUG: start Stellar payment');
-  // Initiate Stellar transaction
   DocumentReference payoutRef = Firestore.instance.collection('payouts').document();
   await db.runTransaction((Transaction tx) async {
     payoutRef.setData({

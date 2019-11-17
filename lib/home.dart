@@ -22,42 +22,26 @@ import 'package:biblosphere/chat.dart';
 import 'package:biblosphere/l10n.dart';
 
 class MyHomePage extends StatefulWidget {
-  final User currentUser;
-
   MyHomePage({
     Key key,
-    @required this.currentUser,
   }) : super(key: key);
 
   @override
   _MyHomePageState createState() =>
-      new _MyHomePageState(currentUser: currentUser);
+      new _MyHomePageState();
 }
 
 class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
-  User currentUser;
-
   _MyHomePageState({
     Key key,
-    @required this.currentUser,
   });
 
   @override
   void initState() {
     super.initState();
 
-    if (currentUser != null) initDynamicLinks();
-  }
-
-  @override
-  void didUpdateWidget(MyHomePage oldWidget) {
-    super.didUpdateWidget(oldWidget);
-
-    if (oldWidget.currentUser != widget.currentUser) {
-      currentUser = widget.currentUser;
-    }
-
-    if (currentUser != null) initDynamicLinks();
+    assert (B.user != null);
+    initDynamicLinks();
   }
 
   @override
@@ -78,7 +62,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
       if (userId == null && refId != null) userId = refId;
 
       // If link for the book of the same user open MyBooks
-      if (userId == currentUser.id) {
+      if (userId == B.user.id) {
         String filter = '';
         if (bookrecordId != null) {
           DocumentSnapshot snap = await Bookrecord.Ref(bookrecordId).get();
@@ -92,8 +76,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                 builder: (context) => buildScaffold(
                     context,
                     S.of(context).mybooksTitle,
-                    new ShowBooksWidget(
-                        currentUser: currentUser, filter: filter),
+                    new ShowBooksWidget(filter: filter),
                     appbar: false)));
       } else {
         User user, ref;
@@ -126,33 +109,26 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
 
         if (ref != null) {
           // If no beneficiary for the current user add one from reference
-          if (currentUser.beneficiary1 == null) {
-            currentUser.beneficiary1 = ref.id;
-            currentUser.feeShared = 0;
-            currentUser.beneficiary2 = ref.beneficiary1;
+          if (B.user.beneficiary1 == null) {
+            B.user.beneficiary1 = ref.id;
+            B.user.feeShared = 0;
+            B.user.beneficiary2 = ref.beneficiary1;
           }
 
-          Firestore.instance
-              .collection('users')
-              .document(currentUser.id)
-              .updateData({
-            'beneficiary1': currentUser.beneficiary1,
-            'beneficiary2': currentUser.beneficiary2,
-            'feeShared': 0.0
-          });
+          // Update  beneficiary1, beneficiary2, feeShared
+          B.user.ref.updateData(B.user.toJson());
         }
 
         // If user or ref defined go to user chat
         if (user != null) {
           Messages chat = await getChatAndTransit(
               context: context,
-              currentUserId: currentUser.id,
-              from: user.id,
-              to: widget.currentUser.id,
+              from: user,
+              to: B.user,
               bookrecordId: bookrecordId);
 
           // Open chat widget
-          Chat.runChat(context, widget.currentUser, user, chat: chat);
+          Chat.runChat(context, user, chat: chat);
         }
       }
       // It was Navigator.pushNamed in original example. Don't know why...
@@ -173,8 +149,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                   builder: (context) => buildScaffold(
                       context,
                       null,
-                      new FindBookWidget(
-                          currentUser: widget.currentUser, filter: book.title),
+                      new FindBookWidget(filter: book.title),
                       appbar: false)));
         } else {
           // TODO: report missing book in the link
@@ -192,7 +167,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
         if (snap.exists) {
           Book book = new Book.fromJson(snap.data);
           await addBookrecord(
-              context, book, widget.currentUser, wish, await currentLocation(),
+              context, book, B.user, wish, await currentLocation(),
               snackbar: false);
 
           // Open My Book Screen with filter
@@ -202,8 +177,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                   builder: (context) => buildScaffold(
                       context,
                       S.of(context).mybooksTitle,
-                      new ShowBooksWidget(
-                          currentUser: currentUser, filter: book.title),
+                      new ShowBooksWidget(filter: book.title),
                       appbar: false)));
         } else {
           // TODO: report missing book in the link
@@ -215,11 +189,10 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
       String message = deepLink.queryParameters['msg'];
       Messages chat = await getChatAndTransit(
           context: context,
-          currentUserId: currentUser.id,
-          from: widget.currentUser.id,
+          from: B.user,
           system: true);
 
-      Chat.runChat(context, widget.currentUser, null,
+      Chat.runChat(context, null,
           chat: chat, message: message, send: true);
     }
   }
@@ -258,7 +231,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                   new MaterialPageRoute(
                       //TODO: translation
                       builder: (context) => buildScaffold(context, "СООБЩЕНИЯ",
-                          new ChatListWidget(currentUser: currentUser))));
+                          new ChatListWidget())));
             },
             //TODO: Change tooltip
             tooltip: S.of(context).cart,
@@ -271,7 +244,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                   new Container(
                       margin: EdgeInsets.only(right: 5.0),
                       child: assetIcon(coins_100, size: 25)),
-                  new Text(money(currentUser?.getAvailable()),
+                  new Text(money(B.wallet.getAvailable()),
                       style: Theme.of(context)
                           .textTheme
                           .body1
@@ -285,13 +258,9 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                           builder: (context) => buildScaffold(
                               context,
                               S.of(context).financeTitle(
-                                  money(currentUser?.getAvailable())),
-                              new FinancialWidget(currentUser: currentUser),
+                                  money(B.wallet.getAvailable())),
+                              new FinancialWidget(),
                               appbar: false)));
-
-                  checkStellarPayments(currentUser).then((amount) {
-                    if (amount > 0.0) setState(() {});
-                  });
                 },
                 padding: EdgeInsets.all(0.0),
               )),
@@ -670,7 +639,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                                 builder: (context) => buildScaffold(
                                     context,
                                     S.of(context).addbookTitle,
-                                    new AddBookWidget(currentUser: currentUser),
+                                    new AddBookWidget(),
                                     appbar: false)));
                       },
                       child: new Card(
@@ -696,7 +665,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                             builder: (context) => buildScaffold(
                                 context,
                                 S.of(context).findbookTitle,
-                                new FindBookWidget(currentUser: currentUser),
+                                new FindBookWidget(),
                                 appbar: false)));
                   },
                   child: new Card(
@@ -723,7 +692,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                             builder: (context) => buildScaffold(
                                 context,
                                 S.of(context).mybooksTitle,
-                                new ShowBooksWidget(currentUser: currentUser),
+                                new ShowBooksWidget(),
                                 appbar: false)));
                   },
                   child: new Card(
@@ -762,12 +731,10 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                   child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: <Widget>[
-                        //TODO: Explore why currentUser is null at start
-                        currentUser != null
-                            ? Row(
+                            Row(
                                 mainAxisAlignment: MainAxisAlignment.start,
                                 children: <Widget>[
-                                    userPhoto(currentUser, 90),
+                                    userPhoto(B.user, 90),
                                     Expanded(
                                         child: Container(
                                             padding:
@@ -780,7 +747,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                                                       margin: EdgeInsets.only(
                                                           bottom: 5.0),
                                                       child: Text(
-                                                          currentUser.name,
+                                                          B.user.name,
                                                           overflow: TextOverflow
                                                               .ellipsis,
                                                           style: Theme.of(
@@ -798,8 +765,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                                                             coins_100,
                                                             size: 20)),
                                                     new Text(
-                                                        money(currentUser
-                                                            ?.getAvailable()),
+                                                        money(B.wallet.getAvailable()),
                                                         style: Theme.of(context)
                                                             .textTheme
                                                             .body1
@@ -808,8 +774,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                                                                     .titleText))
                                                   ]),
                                                 ]))),
-                                  ])
-                            : Container(),
+                                  ]),
                         Container(
                             padding: EdgeInsets.only(top: 5.0),
                             child: Text(S.of(context).referralLink,
@@ -826,12 +791,12 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                               return InkWell(
                                   onTap: () {
                                     Clipboard.setData(new ClipboardData(
-                                        text: currentUser.link));
+                                        text: B.user.link));
                                     //Navigator.pop(context);
                                     showSnackBar(
                                         context, S.of(context).linkCopied);
                                   },
-                                  child: Text(currentUser.link,
+                                  child: Text(B.user.link,
                                       style: Theme.of(context)
                                           .textTheme
                                           .body1
@@ -858,7 +823,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                             builder: (context) => buildScaffold(
                                 context,
                                 S.of(context).titleMessages,
-                                new ChatListWidget(currentUser: currentUser))));
+                                new ChatListWidget())));
                   },
                 ),
                 ListTile(
@@ -877,7 +842,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                             builder: (context) => buildScaffold(
                                 context,
                                 S.of(context).titleSettings,
-                                new SettingsWidget(currentUser: currentUser))));
+                                new SettingsWidget())));
                   },
                 ),
                 ListTile(
@@ -893,8 +858,8 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                             builder: (context) => buildScaffold(
                                 context,
                                 S.of(context).financeTitle(
-                                    money(currentUser?.getAvailable())),
-                                new FinancialWidget(currentUser: currentUser),
+                                    money(B.wallet.getAvailable())),
+                                new FinancialWidget(),
                                 appbar: false)));
                   },
                 ),
@@ -911,7 +876,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                             builder: (context) => buildScaffold(
                                 context,
                                 S.of(context).referralTitle,
-                                new ReferralWidget(currentUser: currentUser))));
+                                new ReferralWidget())));
                   },
                 ),
                 ListTile(
@@ -949,19 +914,17 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
 
 // Class to show my books (own, wishlist and borrowed/lent)
 class ShowBooksWidget extends StatefulWidget {
-  ShowBooksWidget({Key key, @required this.currentUser, this.filter})
+  ShowBooksWidget({Key key, this.filter})
       : super(key: key);
 
-  final User currentUser;
   final String filter;
 
   @override
   _ShowBooksWidgetState createState() =>
-      new _ShowBooksWidgetState(currentUser: currentUser, filter: filter);
+      new _ShowBooksWidgetState(filter: filter);
 }
 
 class _ShowBooksWidgetState extends State<ShowBooksWidget> {
-  User currentUser;
   String filter;
   Set<String> keys = {};
   List<Book> suggestions = [];
@@ -987,7 +950,7 @@ class _ShowBooksWidgetState extends State<ShowBooksWidget> {
     books = [];
     bookSubscription = Firestore.instance
         .collection('bookrecords')
-        .where("users", arrayContains: widget.currentUser.id)
+        .where("users", arrayContains: B.user.id)
         .snapshots()
         .listen((snap) async {
       // Update list of document snapshots
@@ -1003,7 +966,7 @@ class _ShowBooksWidgetState extends State<ShowBooksWidget> {
     super.dispose();
   }
 
-  _ShowBooksWidgetState({this.currentUser, this.filter});
+  _ShowBooksWidgetState({this.filter});
 
   @override
   Widget build(BuildContext context) {
@@ -1157,13 +1120,13 @@ class _ShowBooksWidgetState extends State<ShowBooksWidget> {
         delegate: SliverChildBuilderDelegate((context, index) {
           Bookrecord rec = new Bookrecord.fromJson(books[index].data);
 
-          if (own && rec.isOwn(widget.currentUser.id) ||
-              wish && rec.isWish(widget.currentUser.id) ||
-              lent && rec.isLent(widget.currentUser.id) ||
-              borrowed && rec.isBorrowed(widget.currentUser.id) ||
-              transit && rec.isTransit(widget.currentUser.id)) {
+          if (own && rec.isOwn ||
+              wish && rec.isWish ||
+              lent && rec.isLent ||
+              borrowed && rec.isBorrowed ||
+              transit && rec.isTransit) {
             return new MyBook(
-                bookrecord: rec, currentUser: widget.currentUser, filter: keys);
+                bookrecord: rec, filter: keys);
           } else {
             return Container(height: 0.0, width: 0.0);
           }
@@ -1177,12 +1140,10 @@ class MyBook extends StatefulWidget {
   MyBook(
       {Key key,
       @required this.bookrecord,
-      @required this.currentUser,
       this.filter = const {}})
       : super(key: key);
 
   final Bookrecord bookrecord;
-  final User currentUser;
   final Set<String> filter;
 
   @override
@@ -1192,6 +1153,7 @@ class MyBook extends StatefulWidget {
 
 class _MyBookWidgetState extends State<MyBook> {
   Bookrecord bookrecord;
+  StreamSubscription<Bookrecord> _listener;
   Set<String> filter = {};
 
   // Flag to show book settings controls
@@ -1206,6 +1168,11 @@ class _MyBookWidgetState extends State<MyBook> {
 
   @override
   void initState() {
+    _listener = bookrecord.snapshots().listen( (rec) {
+      print('!!!DEBUG event received ${rec.toJson()}');
+      setState(() {});
+    });
+
     super.initState();
   }
 
@@ -1231,6 +1198,7 @@ class _MyBookWidgetState extends State<MyBook> {
   void dispose() {
     if (_linkTextCtr != null) _linkTextCtr.dispose();
     if (_priceTextCtr != null) _priceTextCtr.dispose();
+    if (_listener != null) _listener.cancel();
 
     super.dispose();
   }
@@ -1249,7 +1217,7 @@ class _MyBookWidgetState extends State<MyBook> {
           {(bookrecord.wish ? 'wishes' : 'copies'): FieldValue.increment(-1)});
     } catch (ex, stack) {
       print(
-          'Bookrecord delete failed for [${bookrecord.id}, ${widget.currentUser.id}]: ' +
+          'Bookrecord delete failed for [${bookrecord.id}, ${B.user.id}]: ' +
               ex.toString());
       FlutterCrashlytics().logException(ex, stack);
     }
@@ -1292,8 +1260,7 @@ class _MyBookWidgetState extends State<MyBook> {
                                     // Show price without fee for the book owners
                                     Container(
                                         child: Text(
-                                            S.of(context).bookPrice(widget
-                                                            .currentUser.id ==
+                                            S.of(context).bookPrice(B.user.id ==
                                                         bookrecord.ownerId &&
                                                     !bookrecord.wish
                                                 ? money(bookrecord.getPrice())
@@ -1306,8 +1273,7 @@ class _MyBookWidgetState extends State<MyBook> {
                                     // Show income without system fee for book owners
                                     Container(
                                         child: Text(
-                                            S.of(context).bookRent(widget
-                                                            .currentUser.id ==
+                                            S.of(context).bookRent(B.user.id ==
                                                         bookrecord.ownerId &&
                                                     !bookrecord.wish
                                                 ? money(income(
@@ -1318,7 +1284,7 @@ class _MyBookWidgetState extends State<MyBook> {
                                             style: Theme.of(context)
                                                 .textTheme
                                                 .body1)),
-                                    widget.currentUser.id != bookrecord.ownerId
+                                    B.user.id != bookrecord.ownerId
                                         ? Container(
                                             child: Text(
                                                 S.of(context).bookOwner(
@@ -1345,12 +1311,12 @@ class _MyBookWidgetState extends State<MyBook> {
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: <Widget>[
                         // Chat button for transit
-                        bookrecord.isTransit(widget.currentUser.id)
+                        bookrecord.isTransit
                             ? new IconButton(
                                 onPressed: () async {
                                   // Open chat widget
                                   Chat.runChatById(
-                                      context, widget.currentUser, null,
+                                      context, null,
                                       chatId: bookrecord.chatId);
                                 },
                                 tooltip: S.of(context).deleteShelf,
@@ -1358,7 +1324,7 @@ class _MyBookWidgetState extends State<MyBook> {
                               )
                             : Container(),
                         // Search button for the wishes
-                        bookrecord.isWish(widget.currentUser.id)
+                        bookrecord.isWish
                             ? new IconButton(
                                 //TODO: Search wished book
                                 onPressed: () {},
@@ -1367,19 +1333,18 @@ class _MyBookWidgetState extends State<MyBook> {
                               )
                             : Container(),
                         // Button to return book only it it's borrowed
-                        bookrecord.isBorrowed(widget.currentUser.id)
+                        bookrecord.isBorrowed
                             ? new IconButton(
                                 onPressed: () async {
                                   Messages chat = await getChatAndTransit(
                                       context: context,
-                                      currentUserId: widget.currentUser.id,
-                                      from: widget.currentUser.id,
-                                      to: bookrecord.ownerId,
+                                      from: B.user,
+                                      to: bookrecord.owner,
                                       bookrecordId: bookrecord.id);
 
                                   // Open chat widget
                                   Chat.runChat(
-                                      context, widget.currentUser, null,
+                                      context, null,
                                       message: S
                                           .of(context)
                                           .requestReturn(bookrecord.title),
@@ -1390,21 +1355,18 @@ class _MyBookWidgetState extends State<MyBook> {
                               )
                             : Container(),
                         // Button to return book only it it's lent
-                        bookrecord.isLent(widget.currentUser.id)
+                        bookrecord.isLent
                             ? new IconButton(
                                 onPressed: () async {
                                   Messages chat = await getChatAndTransit(
                                       context: context,
-                                      currentUserId: widget.currentUser.id,
-                                      from: bookrecord.holderId,
-                                      to: widget.currentUser.id,
+                                      from: bookrecord.holder,
+                                      to: B.user,
                                       bookrecordId: bookrecord.id);
 
-                                  print(
-                                      '!!!DEBUG: Chat status ${chat.status} ${bookrecord.id}');
                                   // Open chat widget
                                   Chat.runChat(
-                                      context, widget.currentUser, null,
+                                      context, null,
                                       message: S
                                           .of(context)
                                           .requestReturnByOwner(
@@ -1416,8 +1378,7 @@ class _MyBookWidgetState extends State<MyBook> {
                               )
                             : Container(),
                         // Delete button only for OWN book and WISH
-                        bookrecord.isWish(widget.currentUser.id) ||
-                                bookrecord.isOwn(widget.currentUser.id)
+                        bookrecord.isWish || bookrecord.isOwn
                             ? new IconButton(
                                 //TODO: Delete book/wish
                                 onPressed: () => deleteBook(context),
@@ -1426,7 +1387,7 @@ class _MyBookWidgetState extends State<MyBook> {
                               )
                             : Container(),
                         // Setting only for OWN books
-                        bookrecord.isOwn(widget.currentUser.id)
+                        bookrecord.isOwn
                             ? new IconButton(
                                 //TODO: Add setting screen for a book
                                 onPressed: () {
@@ -1467,14 +1428,14 @@ class _MyBookWidgetState extends State<MyBook> {
                             String link;
                             // For own books share link to particular book
                             // For other books link to search this book in Biblosphere
-                            if (bookrecord.isOwn(widget.currentUser.id))
+                            if (bookrecord.isOwn)
                               link = await buildLink(
-                                  'chat?ref=${widget.currentUser.id}&book=${bookrecord.id}',
+                                  'chat?ref=${B.user.id}&book=${bookrecord.id}',
                                   image: bookrecord.image,
                                   title: S.of(context).sharingMotto);
                             else
                               link = await buildLink(
-                                  'search?ref=${widget.currentUser.id}&isbn=${bookrecord.isbn}',
+                                  'search?ref=${B.user.id}&isbn=${bookrecord.isbn}',
                                   image: bookrecord.image,
                                   title: S.of(context).sharingMotto);
 
@@ -1600,7 +1561,7 @@ class _MyBookWidgetState extends State<MyBook> {
                                       style: Theme.of(context).textTheme.body1,
                                       decoration: InputDecoration(
                                           prefix: Text(
-                                              currencySymbol[preferredCurrency],
+                                              currencySymbol[B.currency],
                                               style: Theme.of(context)
                                                   .textTheme
                                                   .body1),
@@ -1623,7 +1584,7 @@ class _MyBookWidgetState extends State<MyBook> {
   }
 
   Widget bookCardText() {
-    switch (bookrecord.type(widget.currentUser.id)) {
+    switch (bookrecord.type)  {
       case BookrecordType.own:
         return Text(S.of(context).youHaveThisBook,
             overflow: TextOverflow.ellipsis,
@@ -1654,14 +1615,11 @@ class _MyBookWidgetState extends State<MyBook> {
 class FinancialWidget extends StatefulWidget {
   FinancialWidget({
     Key key,
-    @required this.currentUser,
   }) : super(key: key);
-
-  final User currentUser;
 
   @override
   _FinancialWidgetState createState() =>
-      new _FinancialWidgetState(currentUser: currentUser);
+      new _FinancialWidgetState();
 }
 
 class _FinancialWidgetState extends State<FinancialWidget> {
@@ -1671,7 +1629,6 @@ class _FinancialWidgetState extends State<FinancialWidget> {
   bool showRewards = true;
   bool showLeasing = true;
 
-  User currentUser;
   StreamSubscription<QuerySnapshot> operationsSubscription;
   List<DocumentSnapshot> operations = [];
 
@@ -1682,7 +1639,7 @@ class _FinancialWidgetState extends State<FinancialWidget> {
     operations = [];
     operationsSubscription = Firestore.instance
         .collection('operations')
-        .where("users", arrayContains: widget.currentUser.id)
+        .where("users", arrayContains: B.user.id)
         .orderBy('date', descending: true)
         .snapshots()
         .listen((snap) async {
@@ -1701,7 +1658,6 @@ class _FinancialWidgetState extends State<FinancialWidget> {
 
   _FinancialWidgetState({
     Key key,
-    @required this.currentUser,
   });
 
   @override
@@ -1710,7 +1666,7 @@ class _FinancialWidgetState extends State<FinancialWidget> {
       SliverAppBar(
         // Provide a standard title.
         title: Text(
-            S.of(context).financeTitle(money(currentUser?.getAvailable())),
+            S.of(context).financeTitle(money(B.wallet.getAvailable())),
             style: Theme.of(context).textTheme.title.apply(color: C.titleText)),
         // Allows the user to reveal the app bar if they begin scrolling
         // back up the list of items.
@@ -1797,12 +1753,12 @@ class _FinancialWidgetState extends State<FinancialWidget> {
         delegate: SliverChildBuilderDelegate((context, index) {
           Operation op = new Operation.fromJson(operations[index].data);
 
-          if (op.isIn(currentUser) && showIn ||
-              op.isLeasing(currentUser) && showLeasing ||
-              op.isReward(currentUser) && showRewards ||
-              op.isReferral(currentUser) && showRewards ||
-              op.isOut(currentUser) && showOut) {
-            return MyOperation(operation: op, currentUser: currentUser);
+          if (op.isIn && showIn ||
+              op.isLeasing && showLeasing ||
+              op.isReward && showRewards ||
+              op.isReferral && showRewards ||
+              op.isOut && showOut) {
+            return MyOperation(operation: op);
           } else {
             return Container(height: 0.0, width: 0.0);
           }
@@ -1813,20 +1769,18 @@ class _FinancialWidgetState extends State<FinancialWidget> {
 }
 
 class MyOperation extends StatefulWidget {
-  MyOperation({Key key, @required this.operation, @required this.currentUser})
+  MyOperation({Key key, @required this.operation})
       : super(key: key);
 
   final Operation operation;
-  final User currentUser;
 
   @override
   _MyOperationWidgetState createState() => new _MyOperationWidgetState(
-      operation: operation, currentUser: currentUser);
+      operation: operation);
 }
 
 class _MyOperationWidgetState extends State<MyOperation> {
   Operation operation;
-  User currentUser;
   Book book;
   User peer;
   bool hasData = false;
@@ -1843,9 +1797,7 @@ class _MyOperationWidgetState extends State<MyOperation> {
   void didUpdateWidget(MyOperation oldWidget) {
     super.didUpdateWidget(oldWidget);
 
-    if (oldWidget.currentUser != widget.currentUser ||
-        oldWidget.operation != widget.operation) {
-      currentUser = widget.currentUser;
+    if (oldWidget.operation != widget.operation) {
       operation = widget.operation;
       hasData = false;
       getDetails().then((_) {
@@ -1855,11 +1807,11 @@ class _MyOperationWidgetState extends State<MyOperation> {
   }
 
   _MyOperationWidgetState(
-      {Key key, @required this.operation, @required this.currentUser});
+      {Key key, @required this.operation});
 
   @override
   Widget build(BuildContext context) {
-    if (operation.isLeasing(currentUser)) {
+    if (operation.isLeasing) {
       return new Container(
           child: Row(children: <Widget>[
         bookImage(book, 25, padding: 3.0),
@@ -1882,7 +1834,7 @@ class _MyOperationWidgetState extends State<MyOperation> {
               Text('-${money(operation.amount)}'), // Amount
             ])))
       ]));
-    } else if (operation.isReward(currentUser)) {
+    } else if (operation.isReward) {
       return new Container(
           child: Row(children: <Widget>[
         bookImage(book, 25, padding: 3.0),
@@ -1905,7 +1857,7 @@ class _MyOperationWidgetState extends State<MyOperation> {
               Text('+${money(operation.amount)}'), // Amount
             ])))
       ]));
-    } else if (operation.isInPurchase(currentUser)) {
+    } else if (operation.isInPurchase) {
       return new Container(
           child: Row(children: <Widget>[
         Container(
@@ -1930,7 +1882,7 @@ class _MyOperationWidgetState extends State<MyOperation> {
               Text('+${money(operation.amount)}'), // Amount
             ])))
       ]));
-    } else if (operation.isInStellar(currentUser)) {
+    } else if (operation.isInStellar) {
       return new Container(
           child: Row(children: <Widget>[
         Container(
@@ -1955,7 +1907,7 @@ class _MyOperationWidgetState extends State<MyOperation> {
               Text('+${money(operation.amount)}'), // Amount
             ])))
       ]));
-    } else if (operation.isOutStellar(currentUser)) {
+    } else if (operation.isOutStellar) {
       return new Container(
           child: Row(children: <Widget>[
         Container(
@@ -1980,7 +1932,7 @@ class _MyOperationWidgetState extends State<MyOperation> {
               Text('-${money(operation.amount)}'), // Amount
             ])))
       ]));
-    } else if (operation.isReferral(currentUser)) {
+    } else if (operation.isReferral) {
       return new Container(
           child: Row(children: <Widget>[
         userPhoto(peer, 25, padding: 3.0),
@@ -2001,7 +1953,7 @@ class _MyOperationWidgetState extends State<MyOperation> {
                             DateFormat('MMMd').format(operation.date))), // Date
                   ]),
               Text(
-                  '+${money(operation.referralAmount(currentUser))}'), // Amount
+                  '+${money(operation.referralAmount)}'), // Amount
             ])))
       ]));
     } else {
@@ -2034,18 +1986,14 @@ class _MyOperationWidgetState extends State<MyOperation> {
 class ReferralWidget extends StatefulWidget {
   ReferralWidget({
     Key key,
-    @required this.currentUser,
   }) : super(key: key);
-
-  final User currentUser;
 
   @override
   _ReferralWidgetState createState() =>
-      new _ReferralWidgetState(currentUser: currentUser);
+      new _ReferralWidgetState();
 }
 
 class _ReferralWidgetState extends State<ReferralWidget> {
-  User currentUser;
 
   @override
   void initState() {
@@ -2059,7 +2007,6 @@ class _ReferralWidgetState extends State<ReferralWidget> {
 
   _ReferralWidgetState({
     Key key,
-    @required this.currentUser,
   });
 
   @override
@@ -2082,11 +2029,11 @@ class _ReferralWidgetState extends State<ReferralWidget> {
                         child: InkWell(
                             onTap: () {
                               Clipboard.setData(
-                                  new ClipboardData(text: currentUser.link));
+                                  new ClipboardData(text: B.user.link));
                               //Navigator.pop(context);
                               showSnackBar(context, S.of(context).linkCopied);
                             },
-                            child: Text(currentUser.link,
+                            child: Text(B.user.link,
                                 style: Theme.of(context).textTheme.body1.apply(
                                     decoration: TextDecoration.underline))))
                   ]),
@@ -2096,7 +2043,7 @@ class _ReferralWidgetState extends State<ReferralWidget> {
               child: new StreamBuilder<QuerySnapshot>(
                   stream: Firestore.instance
                       .collection('users')
-                      .where("beneficiary1", isEqualTo: currentUser.id)
+                      .where("beneficiary1", isEqualTo: B.user.id)
                       .orderBy('feeShared', descending: true)
                       .snapshots(),
                   builder: (BuildContext context,
@@ -2124,7 +2071,7 @@ class _ReferralWidgetState extends State<ReferralWidget> {
 
                             return new UserWidget(
                                 user: user,
-                                builder: (context, user) {
+                                builder: (context, user, wallet) {
                                   return Container(
                                       child: Row(children: <Widget>[
                                     userPhoto(user, 40, padding: 3.0),
@@ -2147,7 +2094,7 @@ class _ReferralWidgetState extends State<ReferralWidget> {
                                                         .feeShared))), // Date
                                               ]),
                                           Text(S.of(context).userBalance(money(
-                                              user.getAvailable()))), // Amount
+                                              wallet.getAvailable()))), // Amount
                                         ])))
                                   ]));
                                 });
@@ -2164,18 +2111,14 @@ class _ReferralWidgetState extends State<ReferralWidget> {
 class SettingsWidget extends StatefulWidget {
   SettingsWidget({
     Key key,
-    @required this.currentUser,
   }) : super(key: key);
-
-  final User currentUser;
 
   @override
   _SettingsWidgetState createState() =>
-      new _SettingsWidgetState(currentUser: currentUser);
+      new _SettingsWidgetState();
 }
 
 class _SettingsWidgetState extends State<SettingsWidget> {
-  User currentUser;
   TextEditingController amountTextCtr;
   TextEditingController payoutTextCtr;
   TextEditingController payoutMemoCtr;
@@ -2187,7 +2130,7 @@ class _SettingsWidgetState extends State<SettingsWidget> {
     super.initState();
 
     payoutTextCtr = new TextEditingController();
-    if (currentUser.payoutId != null) payoutTextCtr.text = currentUser.payoutId;
+    if (B.user.payoutId != null) payoutTextCtr.text = B.user.payoutId;
     payoutMemoCtr = new TextEditingController();
     amountTextCtr = new TextEditingController();
   }
@@ -2203,7 +2146,6 @@ class _SettingsWidgetState extends State<SettingsWidget> {
 
   _SettingsWidgetState({
     Key key,
-    @required this.currentUser,
   });
 
   @override
@@ -2221,14 +2163,14 @@ class _SettingsWidgetState extends State<SettingsWidget> {
                   children: <Widget>[
                     Row(mainAxisAlignment: MainAxisAlignment.start, children: <
                         Widget>[
-                      userPhoto(currentUser, 90),
+                      userPhoto(B.user, 90),
                       Expanded(
                           child: Container(
                               padding: EdgeInsets.only(left: 10.0),
                               child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: <Widget>[
-                                    Text(currentUser.name,
+                                    Text(B.user.name,
                                         style:
                                             Theme.of(context).textTheme.title),
                                     Row(children: <Widget>[
@@ -2237,7 +2179,7 @@ class _SettingsWidgetState extends State<SettingsWidget> {
                                           child:
                                               assetIcon(coins_100, size: 20)),
                                       new Text(
-                                          money(currentUser?.getAvailable()),
+                                          money(B.wallet.getAvailable()),
                                           style:
                                               Theme.of(context).textTheme.body1)
                                     ]),
@@ -2255,11 +2197,11 @@ class _SettingsWidgetState extends State<SettingsWidget> {
                           return InkWell(
                               onTap: () {
                                 Clipboard.setData(
-                                    new ClipboardData(text: currentUser.link));
+                                    new ClipboardData(text: B.user.link));
                                 //Navigator.pop(context);
                                 showSnackBar(context, S.of(context).linkCopied);
                               },
-                              child: Text(currentUser.link,
+                              child: Text(B.user.link,
                                   style: Theme.of(context)
                                       .textTheme
                                       .body1
@@ -2278,13 +2220,14 @@ class _SettingsWidgetState extends State<SettingsWidget> {
                         hint: Text(S
                             .of(context)
                             .selectDisplayCurrency), // Not necessary for Option 1
-                        value: preferredCurrency,
+                        value: B.currency,
                         onChanged: (newValue) {
                           setState(() {
-                            preferredCurrency = newValue;
+                            B.currency = newValue;
                           });
                           // Update preferred currency for user
-                          currentUser.ref.updateData({'currency': newValue});
+                          B.user = B.user..currency = newValue;
+                          B.user.ref.updateData(B.user.toJson());
                         },
                         items: currencySymbol.entries.map((entry) {
                           return DropdownMenuItem(
@@ -2331,11 +2274,11 @@ class _SettingsWidgetState extends State<SettingsWidget> {
                           return InkWell(
                               onTap: () {
                                 Clipboard.setData(
-                                    new ClipboardData(text: currentUser.id));
+                                    new ClipboardData(text: B.user.id));
                                 //Navigator.pop(context);
                                 showSnackBar(context, S.of(context).memoCopied);
                               },
-                              child: Text(currentUser.id,
+                              child: Text(B.user.id,
                                   overflow: TextOverflow.ellipsis,
                                   style: Theme.of(context)
                                       .textTheme
@@ -2361,9 +2304,9 @@ class _SettingsWidgetState extends State<SettingsWidget> {
                                   _accountErrorText = null;
                                 });
 
-                              currentUser.payoutId = value;
-                              await currentUser.ref
-                                  .updateData({'payoutId': value});
+                              // Update Payout Stellar Account for user
+                              B.user = B.user..payoutId = value;
+                              await B.user.ref.updateData(B.user.toJson());
                             },
                             maxLines: 1,
                             controller: payoutTextCtr,
@@ -2415,15 +2358,14 @@ class _SettingsWidgetState extends State<SettingsWidget> {
                                             isDense: true,
                                             contentPadding: EdgeInsets.all(2.0),
                                             hintText: S.of(context).hintNotMore(
-                                                money(currentUser
-                                                    .getAvailable())),
+                                                money(B.wallet.getAvailable())),
                                             errorText: _amountErrorText),
                                       )))),
                           RaisedButton(
                               onPressed: () async {
                                 try {
                                   if (!await checkStellarAccount(
-                                      currentUser.payoutId)) {
+                                      B.user.payoutId)) {
                                     setState(() {
                                       _accountErrorText =
                                           S.of(context).wrongAccount;
@@ -2451,7 +2393,7 @@ class _SettingsWidgetState extends State<SettingsWidget> {
                                   }
 
                                   if (toXlm(amount) >
-                                      currentUser.getAvailable()) {
+                                      B.wallet.getAvailable()) {
                                     setState(() {
                                       _amountErrorText =
                                           S.of(context).exceedAmount;
@@ -2469,7 +2411,7 @@ class _SettingsWidgetState extends State<SettingsWidget> {
                                   FocusScope.of(context).unfocus();
                                   amount = dp(toXlm(amount), 5);
 
-                                  await payoutStellar(currentUser, amount,
+                                  await payoutStellar(B.user, amount,
                                       memo: payoutMemoCtr.text);
 
                                   showSnackBar(
