@@ -6,6 +6,8 @@ import 'package:flutter/widgets.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_dynamic_links/firebase_dynamic_links.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:flushbar/flushbar.dart';
 
 import 'package:biblosphere/l10n.dart';
 import 'package:biblosphere/const.dart';
@@ -164,7 +166,7 @@ MaterialPageRoute cardListPage(
               })));
 }
 
-showSnackBar(BuildContext context, String text) {
+showSnackBar1(BuildContext context, String text) {
   final snackBar = SnackBar(
     behavior: SnackBarBehavior.fixed,
     content: Text(text),
@@ -180,6 +182,12 @@ showSnackBar(BuildContext context, String text) {
 
 // Find the Scaffold in the Widget tree and use it to show a SnackBar!
   Scaffold.of(context).showSnackBar(snackBar);
+}
+
+showSnackBar(BuildContext context, String text) {
+  Flushbar(message:  text,
+    duration:  Duration(seconds: 3),              
+  )..show(context);
 }
 
 Scaffold buildScaffold(BuildContext context, String title, Widget body,
@@ -199,44 +207,49 @@ Scaffold buildScaffold(BuildContext context, String title, Widget body,
 }
 
 Widget bookImage(dynamic book, double size,
-    {padding = 3.0, sameHeight = false}) {
+    {padding = 3.0, sameHeight = false, String tooltip = ''}) {
   String image;
-  if (book is Book)
+  if (book is Book) {
     image = book.image;
-  else if (book is Bookrecord)
+    tooltip = book.authors.join(',') + '\n' + book.title;
+  } else if (book is Bookrecord) {
     image = book.image;
-  else if (book is String) image = book;
+    tooltip = book.authors.join(',') + '\n' + book.title;
+  } else if (book is String) image = book;
 
   if (sameHeight)
     return new Container(
         margin: EdgeInsets.all(padding),
-        child: Image(
+        child: new Tooltip(message: tooltip, child: Image(
             image: new CachedNetworkImageProvider(
                 (image != null && image.isNotEmpty && image != '')
                     ? image
                     : nocoverUrl),
             height: size,
-            fit: BoxFit.cover));
+            fit: BoxFit.cover)));
   else
     return new Container(
         margin: EdgeInsets.all(padding),
-        child: Image(
+        child: new Tooltip(message: tooltip, child: Image(
             image: new CachedNetworkImageProvider(
                 (image != null && image.isNotEmpty && image != '')
                     ? image
                     : nocoverUrl),
             width: size,
-            fit: BoxFit.cover));
+            fit: BoxFit.cover)));
 }
 
 Widget userPhoto(dynamic user, double size, {double padding = 0.0}) {
-  ImageProvider image;
+  ImageProvider provider;
 
   if (user is AssetImage)
-    image = user;
-  else if (user is User)
-    image = CachedNetworkImageProvider(user.photo);
-  else if (user is String) image = CachedNetworkImageProvider(user);
+    provider = user;
+  else if (user is User && user.photo != null)
+    provider = CachedNetworkImageProvider(user.photo);
+  else if (user is String && user != null) 
+    provider = CachedNetworkImageProvider(user);
+  else
+    provider = AssetImage(account_100);
 
   return Container(
       margin: EdgeInsets.all(padding),
@@ -244,7 +257,7 @@ Widget userPhoto(dynamic user, double size, {double padding = 0.0}) {
       height: size,
       decoration: new BoxDecoration(
           shape: BoxShape.circle,
-          image: new DecorationImage(fit: BoxFit.fill, image: image)));
+          image: new DecorationImage(fit: BoxFit.fill, image: provider)));
 }
 
 typedef BookrecordWidgetBuilder = Widget Function(
@@ -426,81 +439,85 @@ dynamic distance(double d) {
 */
 
 // Function return chat record (create if needed) and transit book record
-Future<Messages> getChatAndTransit(
+Future<Messages> doTransit(
     {@required BuildContext context,
-    @required User from,
-    User to,
-    String bookrecordId,
-    bool system = false}) async {
-  assert(from != null && to != null || from != null && system);
-  Messages chat = new Messages(from: from, to: to, system: system);
+    @required Messages chat,
+    String bookrecordId}) async {
+  assert(chat.complete && !chat.system && bookrecordId != null);
+
   Bookrecord rec;
 
-  DocumentSnapshot chatSnap = await chat.ref.get();
-  DocumentSnapshot bookSnap;
+  DocumentSnapshot snap = await Bookrecord.Ref(bookrecordId).get();
 
-  if (!chat.system) {
-    bookSnap = await Bookrecord.Ref(bookrecordId).get();
+  if (!snap.exists) {
+    showSnackBar(context, S.of(context).snackBookNotFound);
+  } else {
+    rec = Bookrecord.fromJson(snap.data);
 
-    if (!bookSnap.exists) {
-      bookrecordId = null;
-    } else {
-      rec = Bookrecord.fromJson(bookSnap.data);
-
-      // Do not transit if book is with me or already in Transit
-      if (rec.holderId == B.user.id || rec.transit == true) {
-        bookrecordId = null;
-      }
+    // If book belong to current user do nothing 
+    if (rec.holderId == chat.to)
+       rec = null;
+    else if (rec.transit == true) {
+      // Book already in transit with another user
+      showSnackBar(context, S.of(context).snackBookAlreadyInTransit);
+      rec = null;
     }
   }
 
-  if (chatSnap.exists) {
-    // Chat already exist, check status and update cart
-    chat = new Messages.fromJson(chatSnap.data, chatSnap);
-    if (!system && bookrecordId != null) {
-      // If previous deal is completed reset it
-      if (chat.status == Messages.Complete) {
-        chat.reset();
-      }
-
-      // Only add book in Initial status (in Handover fails - null)
-      // Update status as it might be Completed in DB
-      if (chat.status == Messages.Initial) {
-        chat.books.add(bookrecordId);
-        await chat.ref.updateData({
-          'books': FieldValue.arrayUnion([bookrecordId]),
-          'status': chat.status
-        });
-      } else {
-        // Previous exchange not confirmed. Could not open a new one
-        return null;
-      }
+  if (rec != null) {
+    // If previous deal is completed reset it
+    if (chat.status == Messages.Complete) {
+      chat.reset();
     }
-  } else {
-    // Chat does not exist create one and add transit
-    if (!system && bookrecordId != null) chat.books.add(bookrecordId);
 
-    await chat.ref.setData(chat.toJson());
-
-    // Set a welcome message if a system chat
-    if (chat.system)
-      injectChatbotMessage(context, B.user.id, chat, S.of(context).chatbotWelcome);
+    if (chat.status == Messages.Initial) {
+      chat.books.add(bookrecordId);
+      await chat.ref.updateData({
+        'books': FieldValue.arrayUnion([bookrecordId]),
+        'status': chat.status
+      });
+    } else {
+      // Only add book in Initial status (in Handover fails - null)
+      if (chat.toId == B.user.id)
+        showSnackBar(context, S.of(context).snackBookNotConfirmed);
+      else  
+        showSnackBar(context, S.of(context).snackBookPending);
+      
+        // Previous exchange not confirmed. Could not open a new one
+      rec = null;
+    }
   }
 
   // TODO: do it in transaction to avoid simultaneous update to transit
   // by different users
 
   // Update bookrecord (link to chat)
-  if (!system && bookrecordId != null)
-    await Firestore.instance
-        .collection('bookrecords')
-        .document(bookrecordId)
-        .updateData({
+  if (rec != null) {
+    showSnackBar(context, S.of(context).snackBookAddedToCart);
+
+    await rec.ref.updateData({
       'transit': true,
-      'transitId': to.id,
-      'users': FieldValue.arrayUnion([to.id]),
+      'transitId': chat.toId,
+      'users': FieldValue.arrayUnion([chat.toId]),
       'chatId': chat.id
     });
+
+    // Log book request ad return events
+            FirebaseAnalytics().logEvent(
+                                name: 'add_to_cart',
+                                parameters: <String, dynamic>{
+                                  'isbn': rec.isbn,
+                                  'type': (chat.toId == rec.owner) ? 'return' : 'request',
+                                  'by': (B.user.id == rec.holderId) ? 'holder' : 'peer', 
+                                  'from': chat.fromId,
+                                  'to': chat.toId,
+                                  'distance': rec.distance,
+                                  'locality': B.locality,
+                                  'country': B.country,
+                                  'latitude': B.position.latitude,
+                                  'longitude': B.position.longitude
+                                });
+  }
 
   return chat;
 }

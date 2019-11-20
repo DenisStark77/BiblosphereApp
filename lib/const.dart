@@ -1,3 +1,4 @@
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter/services.dart';
@@ -20,6 +21,9 @@ class B {
   static User _currentUser;
   static Wallet _currentWallet;
   static String _currency = 'USD';
+  static Position _position;
+  static String _locality;
+  static String _country;
 
   static User get user => _currentUser;
   static set user (User user) => _currentUser = user;
@@ -28,8 +32,16 @@ class B {
   static set wallet (Wallet wallet) => _currentWallet = wallet;
 
   static String get currency => _currency; 
-
   static set currency (String currency) => _currency = currency;
+
+  static Position get position => _position; 
+  static set position (Position pos) => _position = pos;
+
+  static String get locality => _locality; 
+  static set locality (String locality) => _locality = locality;
+
+  static String get country => _country; 
+  static set country (String country) => _country = country;
 }
 
 
@@ -99,6 +111,7 @@ BiblosphereColorScheme C = new BiblosphereColorScheme(
 );
 
 Firestore db = Firestore.instance;
+FirebaseAnalytics analytics = FirebaseAnalytics();
 
 const String sharingUrl =
     'https://biblosphere.org/images/phone-app-screens-2000.png';
@@ -135,6 +148,7 @@ const String unavailable_100 = 'images/icons/icons8-unavailable-100.png';
 const String sent_100 = 'images/icons/icons8-sent-100.png';
 const String filter_100 = 'images/icons/icons8-filter-100.png';
 const String clear_filters_100 = 'images/icons/icons8-clear-filters-100.png';
+const String account_100 = 'images/icons/icons8-account-100.png';
 
 Widget assetIcon(String asset, {double size}) {
   if (size != null)
@@ -601,9 +615,9 @@ class Bookrecord {
         price = json['price'] != null ? (json['price'] as num).toDouble() : 0.0,
         chatId = json['chatId'] {
     fromDb = true;
-    if (location != null && lastKnownPosition != null)
+    if (location != null && B.position != null)
       distance = distanceBetween(location.latitude, location.longitude,
-          lastKnownPosition.latitude, lastKnownPosition.longitude);
+          B.position.latitude, B.position.longitude);
     else
       distance = double.infinity;
     if (keys == null) {
@@ -750,6 +764,7 @@ class Bookrecord {
 
   // Copy all values from other bookrecord
   bool equalsTo(Bookrecord rec) {
+      // keys and authors are excluded as no simple way to compare lists
       return id == rec.id
       && ownerId == rec.ownerId
       && ownerName == rec.ownerName
@@ -773,14 +788,12 @@ class Bookrecord {
       && price == rec.price
       && distance == rec.distance
       && title == rec.title
-      && authors == rec.authors
-      && image == rec.image
-      && keys == rec.keys;
+      && image == rec.image;
   }
 
   Stream<Bookrecord> snapshots() async* {
     // Data are not from DB
-    if (!fromDb) {
+    if ( !fromDb && !complete ) {
       final DocumentSnapshot snap = await ref.get();
       if (snap.exists) {
           Bookrecord rec = Bookrecord.fromJson(snap.data);
@@ -894,6 +907,8 @@ class Operation {
   OperationType type;
   Set<String> users;
   String userId;
+  String userName;
+  String userImage;
   double amount;
   DateTime date;
   // InputInApp & InputStellar & OutputStellar
@@ -902,8 +917,13 @@ class Operation {
   String proxyTransactionId;
   // Leasing/Buy & Reward/Sell
   String peerId;
+  String peerName;
+  String peerImage;
   String bookrecordId;
   String isbn;
+  String bookTitle;
+  String bookImage;
+  String bookAuthors;
   double price;
   DateTime start;
   DateTime end;
@@ -954,6 +974,8 @@ class Operation {
         //users = (json['users']?.map((dynamic s) => s.toString()))?.toSet(),
         users = (json['users'] as List).cast<String>().toSet(),
         userId = json['userId'],
+        userName = json['userName'],
+        userImage = json['userImage'],
         amount =
             json['amount'] != null ? (json['amount'] as num).toDouble() : 0.0,
         date =
@@ -961,8 +983,13 @@ class Operation {
         transactionId = json['transactionId'],
         proxyTransactionId = json['proxyTransactionId'],
         peerId = json['peerId'],
+        peerName = json['peerName'],
+        peerImage = json['peerImage'],
         isbn = json['isbn'],
         bookrecordId = json['bookrecordId'],
+        bookTitle = json['bookTitle'],
+        bookAuthors = json['bookAuthors'],
+        bookImage = json['bookImage'],
         price = json['price'] != null ? (json['price'] as num).toDouble() : 0.0,
         start = json['start'] != null
             ? (json['start'] as Timestamp).toDate()
@@ -995,6 +1022,8 @@ class Operation {
       'id': id,
       'type': type?.index,
       'userId': userId,
+      'userName': userName,
+      'userImage': userImage,
       'amount': amount,
       'date': date != null ? Timestamp.fromDate(date) : null
     };
@@ -1015,8 +1044,14 @@ class Operation {
         type == OperationType.Sell) {
       json.addAll({
         'peerId': peerId,
+        'peerName': peerName,
+        'peerImage': peerImage,
         'bookrecordId': bookrecordId,
         'isbn': isbn,
+        'bookTitle': bookTitle,
+        'bookTitle': bookTitle,
+        'bookAuthors': bookAuthors,
+        'bookImage': bookImage,
         'price': price,
         'start': start != null ? Timestamp.fromDate(start) : null,
         'end': end != null ? Timestamp.fromDate(end) : null,
@@ -1089,6 +1124,15 @@ class Operation {
             B.user.id == payerFeeUserId2);
   }
 
+  User get referralUser {
+    if ( B.user.id == ownerFeeUserId1 || B.user.id == ownerFeeUserId2 )
+       return User(id: peerId, name: peerName, photo: peerImage);
+    else if (B.user.id == payerFeeUserId1 || B.user.id == payerFeeUserId2)
+       return User(id: userId, name: userName, photo: userImage);
+
+    return null;
+  }
+
   double get referralAmount {
     if (type == OperationType.Leasing && B.user.id == ownerFeeUserId1)
       return ownerFee1;
@@ -1100,6 +1144,62 @@ class Operation {
       return payerFee2;
     else
       return 0.0;
+  }
+
+  String get bookTooltip {
+    return (bookAuthors != null ? bookAuthors : '') + (bookTitle != null ? '\n' + bookTitle : '');
+  }
+
+  Stream<Operation> snapshots() async* {
+    bool changed = false;
+
+    if (isbn != null && (bookImage == null || bookTitle == null || bookAuthors == null)) {
+      DocumentSnapshot snap = await Book.Ref(isbn).get();
+        if (snap.exists) {
+          Book book = Book.fromJson(snap.data);
+          bookImage = book.image;
+          bookTitle = book.title;
+          bookAuthors = book.authors.join(', ');
+          changed = true;
+      }
+    }
+
+    if (userName == null) {
+      if (userId == B.user.id) {
+        userName = B.user.name;
+        userImage = B.user.photo;
+        changed = true;
+      } else {
+        DocumentSnapshot snap = await User.Ref(userId).get();
+        if (snap.exists) {
+          User user = User.fromJson(snap.data);
+          userName = user.name;
+          userImage = user.photo;
+          changed = true;
+        }
+      }
+    }  
+
+    if (peerId != null && peerName == null) {
+      if (peerId == B.user.id) {
+        userName = B.user.name;
+        changed = true;
+      } else {
+        DocumentSnapshot snap = await User.Ref(peerId).get();
+        if (snap.exists) {
+          User user = User.fromJson(snap.data);
+          peerName = user.name;
+          peerImage = user.photo;
+          changed = true;
+        }
+      }
+    }  
+
+    // return updated record and keep changes in DB
+    if (changed) {
+      yield this;
+      ref.updateData(toJson());
+    }
   }
 
   DocumentReference get ref {
@@ -1313,6 +1413,8 @@ class Messages {
   String message;
   Map<String, int> unread;
   List<String> books;
+  // Amount to pay for books (keep for completed phase)
+  double amount;
   String status;
   String fromId;
   String fromName;
@@ -1352,6 +1454,8 @@ class Messages {
     unread = {fromId: 0, 'system': 0};
 
     if (books == null) books = <String>[];
+ 
+    amount = 0.0;
 
     fromDb = false;
   }
@@ -1368,6 +1472,7 @@ class Messages {
         books = json['books'] != null
             ? List<String>.from(json['books'] as List<dynamic>)
             : List<String>.from([]),
+        amount = json['amount'] != null ? (json['amount'] as num).toDouble() : 0.0,
         status = json['status'],
         fromId = json['fromId'],
         fromName = json['fromName'],
@@ -1396,6 +1501,7 @@ class Messages {
       'timestamp': Timestamp.now().millisecondsSinceEpoch.toString(),
       'unread': unread,
       'books': books,
+      'amount': amount,
       'status': status,
       'fromId': fromId,
       'fromName': fromName,
@@ -1456,8 +1562,106 @@ class Messages {
     timestamp = DateTime.now();
   }
 
+  bool get complete {
+    return toId != null && toName != null || toImage != null 
+    || fromId != null || fromName != null || fromImage != null;
+  }
+
+
+  bool equalsTo(Messages rec) {
+    // books, unread and ids excluded from comparison (no simple way to compare lists)
+    // handover excluded as it's not used
+      return system == rec.system
+      && message == rec.message
+      && timestamp == rec.timestamp
+      && status == rec.status
+      && fromId == rec.fromId
+      && fromName == rec.fromName
+      && fromImage == rec.fromImage
+      && toId == rec.toId
+      && toName == rec.toName
+      && toImage == rec.toImage;
+  }
+
+  void copyFrom(Messages rec) {
+      system = rec.system;
+      message = rec.message;
+      timestamp = rec.timestamp;
+      status = rec.status;
+      fromId = rec.fromId;
+      fromName = rec.fromName;
+      fromImage = rec.fromImage;
+      toId = rec.toId;
+      toName = rec.toName;
+      toImage = rec.toImage;
+      books = rec.books;
+      ids = rec.ids;
+      unread = rec.unread;
+      handover = rec.handover;
+  }
+
+  Stream<Messages> snapshots() async* {
+    // Check if data from DB
+    if (!fromDb) {
+      final DocumentSnapshot snap = await ref.get();
+      if (snap.exists) {
+          Messages rec = Messages.fromJson(snap.data, snap);
+          if ( !this.equalsTo(rec) ) {
+            copyFrom(rec);
+            yield this;
+          }
+          fromDb = true;
+        } else {
+          // Chat does not exist in DB create it
+          ref.setData(toJson());
+        }
+    }
+
+    assert (fromId != null && (system || toId != null));
+    bool changed = false;
+
+    // FROM user data is not complete need to read original record
+    if  (fromName == null || fromImage == null) {
+      final DocumentSnapshot snap = await User.Ref(fromId).get();
+      if (snap.exists) {
+          User rec = User.fromJson(snap.data);
+          if ( fromName != rec.name || fromImage != rec.photo ) {
+            fromName = rec.name;
+            fromImage = rec.photo;
+
+            changed = true;
+          }
+      }
+    }
+
+    // TO user data is not complete need to read original record
+    if  (!system && (toName == null || toImage == null)) {
+      final DocumentSnapshot snap = await User.Ref(toId).get();
+      if (snap.exists) {
+          User rec = User.fromJson(snap.data);
+          if ( toName != rec.name || toName != rec.photo ) {
+            toName = rec.name;
+            toImage = rec.photo;
+
+            changed = true;
+          }
+      }
+    }
+
+    if ( changed ) {
+      // If data updated send it to stream and update record in DB
+      yield this;
+      ref.updateData(toJson());
+    }
+  }
+
   DocumentReference get ref {
-    return db
+    if (id != null)
+      return db
+        .collection('messages')
+        .document(id);
+    else
+      return db
         .collection('messages')
         .document(system ? fromId : fromId + ':' + toId);
   }
@@ -1587,19 +1791,15 @@ Set<String> getKeys(String s) {
       .split(new RegExp(r"[\s,!?:;.]+"))
       .where((s) => s.length > 2)
       .toList();
-  keys.sort((a, b) {
-    return b.length - a.length;
-  });
+  keys.sort((a, b) => b.length - a.length);
   if (keys == null) keys = <String>[];
   return keys.toSet();
 }
 
-Position lastKnownPosition;
-
 Future<GeoPoint> currentPosition() async {
   try {
     final position = await Geolocator().getLastKnownPosition();
-    lastKnownPosition = position;
+    B.position = position;
     return new GeoPoint(position.latitude, position.longitude);
   } on PlatformException {
     print("POSITION: GeoPisition failed");
@@ -1610,7 +1810,7 @@ Future<GeoPoint> currentPosition() async {
 Future<GeoFirePoint> currentLocation() async {
   try {
     final position = await Geolocator().getLastKnownPosition();
-    lastKnownPosition = position;
+    B.position = position;
     return Geoflutterfire()
         .point(latitude: position.latitude, longitude: position.longitude);
   } on PlatformException {

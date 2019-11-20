@@ -1,5 +1,5 @@
 {
-  "@@last_modified": "2019-11-11T23:03:23.880471",
+  "@@last_modified": "2019-11-19T15:15:17.451487",
   "title": "Biblosphere",
   "@title": {
     "description": "The application title",
@@ -708,7 +708,7 @@
     "type": "text",
     "placeholders": {}
   },
-  "userBalance": "Balance {balance} λ",
+  "userBalance": "Balance: {balance}",
   "@userBalance": {
     "type": "text",
     "placeholders": {
@@ -844,7 +844,7 @@
     "type": "text",
     "placeholders": {}
   },
-  "youHaveThisBook": "Эта книга находится у вас",
+  "youHaveThisBook": "Книга у вас",
   "@youHaveThisBook": {
     "type": "text",
     "placeholders": {}
@@ -995,7 +995,7 @@
     "type": "text",
     "placeholders": {}
   },
-  "successfulPayment": "Платёж успешно прошёл",
+  "successfulPayment": "Платёж добавлен в очередь на исполнение",
   "@successfulPayment": {
     "type": "text",
     "placeholders": {}
@@ -1010,7 +1010,7 @@
     "type": "text",
     "placeholders": {}
   },
-  "titleGetBook": "ПОЛУЧИ КНИГУ",
+  "titleGetBook": "КНИГИ НЕТ",
   "@titleGetBook": {
     "type": "text",
     "placeholders": {}
@@ -1264,11 +1264,263 @@
       "user": {}
     }
   },
-  "bookWith": "Книга у: {user}",
+  "bookWith": "Книга у {user}",
   "@bookWith": {
     "type": "text",
     "placeholders": {
       "user": {}
     }
+  },
+  "wishAlreadyThere": "Эта книга уже есть в вашем списке желаний",
+  "@wishAlreadyThere": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "bookAlreadyThere": "Эта книга уже есть у вас в каталоге",
+  "@bookAlreadyThere": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "hintChatOpen": "Перейти в чат",
+  "@hintChatOpen": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "hintRequestReturn": "Попросить вернуть книгу",
+  "@hintRequestReturn": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "hintReturn": "Вернуть книгу",
+  "@hintReturn": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "hintDeleteBook": "Удалить книгу",
+  "@hintDeleteBook": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "hintBookDetails": "Изменить информацию о книге",
+  "@hintBookDetails": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "hintShareBook": "Поделиться ссылкой",
+  "@hintShareBook": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "snackBookNotConfirmed": "Вы не подтвердили получение книг и не можете взять другую книгу",
+  "@snackBookNotConfirmed": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "snackBookPending": "Прошлая передача книг не завершена и вы не можете добавлять книги",
+  "@snackBookPending": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "snackBookAddedToCart": "Книга добавлена в корзину",
+  "@snackBookAddedToCart": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "sharingMotto": "Бери книги у людей вместо покупки в магазинах",
+  "@sharingMotto": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "inputStellarMemo": "Memo для пополнения через Stellar:",
+  "@inputStellarMemo": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "memoCopied": "Memo скопировано в буфер обмена",
+  "@memoCopied": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "outputStellarMemo": "Memo для вывода Stellar:",
+  "@outputStellarMemo": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "bookNotFound": "Эта книга не найдена в Библосфере. Добавьте её в желаемые книги и мы сообщим вам, когда она появится рядом с вами.",
+  "@bookNotFound": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "chatbotWelcome": "Привет! Я чатбот Библосферы, задавай мне любые вопросы про приложение. Если я не смогу ответить, перешлю администратору.",
+  "@chatbotWelcome": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "snackBookNotFound": "Книга не найдена. Добавьте книги в корзину вручную.",
+  "@snackBookNotFound": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "snackBookAlreadyInTransit": "Книга передаётся другому пользователю. Выберите другую книгу.",
+  "@snackBookAlreadyInTransit": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "snackBookImageChanged": "Новая обложка книги установлена.",
+  "@snackBookImageChanged": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "snackBookPriceChanged": "Цена книги установлена.",
+  "@snackBookPriceChanged": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "supportChat": "Чат с поддержкой",
+  "@supportChat": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "titleSupport": "ПОДДЕРЖКА",
+  "@titleSupport": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "showDeposit": "Залог: {amount}",
+  "@showDeposit": {
+    "type": "text",
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "showRent": "Оплата в месяц: {amount}",
+  "@showRent": {
+    "type": "text",
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "cartAddBooks": "Добавьте книги",
+  "@cartAddBooks": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "cartTopup": "Пополните баланс на {amount}",
+  "@cartTopup": {
+    "type": "text",
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "cartMakeApointment": "Договоритесь о встрече",
+  "@cartMakeApointment": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "cartRequesterHasToTopup": "Получатель книг должен пополнить баланс",
+  "@cartRequesterHasToTopup": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "cartConfirmHandover": "Подтвердите, что отдали книги",
+  "@cartConfirmHandover": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "cartConfirmReceived": "Подтвердите получение книг",
+  "@cartConfirmReceived": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "cartRequesterHasToConfirm": "Получатель должен подтвердить получение книг",
+  "@cartRequesterHasToConfirm": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "cartBooksAccepted": "Книги успешно получены",
+  "@cartBooksAccepted": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "cartBooksGiven": "Книги успешно переданы",
+  "@cartBooksGiven": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "myBooksWithUser": "Мои книги у этого пользователя ({count})",
+  "@myBooksWithUser": {
+    "type": "text",
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "booksOfUserWithMe": "Книги этого пользователя у меня ({count})",
+  "@booksOfUserWithMe": {
+    "type": "text",
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "profileUserBooks": "Книги пользователя ({count})",
+  "@profileUserBooks": {
+    "type": "text",
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "supportTitleGetBooks": "Как брать книги",
+  "@supportTitleGetBooks": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "supportGetBooks": "Найдите книгу, которую Вы хотите почитать, и напишите её хозяину, чтобы договориться о встрече. При получении книг вам нужно будет оплатить депозит. Вы можете пополнить свой баланс по карточке или криптовалютой Stellar, а можете заработать в Библосфере, давая свои книги почитать. Вы также можете зарабатывать через партнёрскую программу, приглашая других участников.",
+  "@supportGetBooks": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "supportTitleGetBalance": "Пополнение счёта",
+  "@supportTitleGetBalance": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "supportGetBalance": "Пополнить счёт можно двумя способами: через покупку в приложении по карточке, зарегистрированной в Google Play или App Store. Или сделать перевод криптовалюты Stellar (XLM) на счёт, указанный в настройках.",
+  "@supportGetBalance": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "supportTitleReferrals": "Партнёрская программа",
+  "@supportTitleReferrals": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "supportReferrals": "Организуйте обмен книгами через Библосферу в своём сообществе или офисе и получайте комиссию за каждую сделку. Для этого поделитесь с друзьями и коллегами ссылкой на приложение (Вашей партнёрской ссылкой).",
+  "@supportReferrals": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "supportTitlePayout": "Вывод средств",
+  "@supportTitlePayout": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "supportPayout": "Если у Вас большой баланс в Библосфере, Вы можете вывести эти средства. Вывести средства можно на свой кошелёк Stellar или через Stellar на любой кошелёк, карту или счёт. Для вывода на карту или кошелёк воспользуйстесь услугами online-обменников.",
+  "@supportPayout": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "supportTitleChatbot": "Чат-бот Библосферы",
+  "@supportTitleChatbot": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "supportChatbot": "Во вкладке Сообщения есть чат с ботом Библосферы, он может ответить на любые вопросы о приложении. Если понадобится связаться напрямую со мной, пишите в telegram ",
+  "@supportChatbot": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "supportSignature": "Денис Старк",
+  "@supportSignature": {
+    "type": "text",
+    "placeholders": {}
   }
 }

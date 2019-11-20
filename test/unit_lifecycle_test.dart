@@ -3,9 +3,12 @@ import 'package:biblosphere/mock_firestore.dart';
 import 'package:biblosphere/const.dart';
 import 'package:biblosphere/helpers.dart';
 import 'package:biblosphere/lifecycle.dart';
+import 'package:geolocator/geolocator.dart';
 
 main() {
   db = MockFirestore.instance;
+  analytics = MockFirebaseAnalytics();
+  //when(analytics.logEvent(name: anyNamed('name'), parameters: anyNamed('parameters'))).thenAnswer((_) async {return;});
 
   test("Deposit function: give book A to B", () async {
     // Create User A
@@ -27,6 +30,11 @@ main() {
     Wallet walletB = new Wallet(id: userB.id, balance: 50.0);
     walletB.ref.setData(walletB.toJson());
 
+    B.user = userB;
+    B.locality = 'Bakuriani';
+    B.country = 'GE';
+    B.position = Position(latitude: 41.7510, longitude: 43.5292); 
+
     // Create Book
     Book book = new Book(
       title: 'Title',
@@ -43,8 +51,9 @@ main() {
       ownerId: userA.id,
       holderId: userA.id,
       transitId: userB.id,
-      price: 30.00,
+      price: 25.00,
       transit: true,
+      confirmed: true,
       wish: false,
       lent: false,
     );
@@ -69,6 +78,8 @@ main() {
 
     expect(resultRec.transit, false);
     expect(resultRec.lent, true);
+    expect(resultA.id, userA.id);
+    expect(resultB.id, userB.id);
     expect(resultRec.ownerId, userA.id);
     expect(resultRec.holderId, userB.id);
     expect(resultRec.transitId, null);
@@ -83,10 +94,6 @@ main() {
     expect(leasing.end.difference(leasing.start).inDays, 183);
     expect(leasing.userId, userB.id);
     expect(leasing.peerId, userA.id);
-    expect(resultA.balance, 0.0);
-    expect(resultA.blocked, 0.0);
-    expect(resultB.balance, 0.0);
-    expect(resultB.blocked, 0.0);
     expect(resultWA.id, userA.id);
     expect(resultWB.id, userB.id);
     expect(resultWA.balance, 10.0 + 25.0 / 6);
@@ -104,6 +111,11 @@ main() {
     userA.ref.setData(userA.toJson());
     Wallet walletA = new Wallet(id: userA.id, balance: 10 + 25.0 / 6);
     walletA.ref.setData(walletA.toJson());
+
+    B.user = userA;
+    B.locality = 'Bakuriani';
+    B.country = 'GE';
+    B.position = Position(latitude: 41.7510, longitude: 43.5292); 
 
     // Create User B
     User userB = new User(
@@ -131,8 +143,9 @@ main() {
       ownerId: userA.id,
       holderId: userB.id,
       transitId: userA.id,
-      price: 30.00,
+      price: 30.00, // Price different from original price 25 (ignored)
       transit: true,
+      confirmed: true,
       wish: false,
       lent: true,
     );
@@ -187,6 +200,8 @@ main() {
 
     expect(resultRec.transit, false);
     expect(resultRec.lent, false);
+    expect(resultA.id, userA.id);
+    expect(resultB.id, userB.id);
     expect(resultRec.ownerId, userA.id);
     expect(resultRec.holderId, userA.id);
     expect(resultRec.transitId, null);
@@ -203,10 +218,6 @@ main() {
     expect(leasing.userId, userB.id);
     expect(leasing.peerId, userA.id);
     expect(dp(leasing.fee, 5), dp(25.0 * 0.2 * 83 / 183, 5));
-    expect(resultA.balance, 0.0);
-    expect(resultA.blocked, 0.0);
-    expect(resultB.balance, 0.0);
-    expect(resultB.blocked, 0.0);
     expect(resultWA.balance, 10.0 + 25.0 * 83 / 183);
     expect(resultWA.blocked, 0);
     expect(resultWB.balance, 50.0 - 25.0 * 1.2 * 83 / 183);
@@ -243,6 +254,11 @@ main() {
     Wallet walletC = new Wallet(id: userC.id, balance: 100);
     walletC.ref.setData(walletC.toJson());
 
+    B.user = userC;
+    B.locality = 'Bakuriani';
+    B.country = 'GE';
+    B.position = Position(latitude: 41.7510, longitude: 43.5292); 
+
     // Create Book
     Book book = new Book(
       title: 'Title',
@@ -261,6 +277,7 @@ main() {
       transitId: userC.id,
       price: 30.00,
       transit: true,
+      confirmed: true,
       wish: false,
       lent: true,
     );
@@ -386,6 +403,11 @@ main() {
     Wallet walletC = new Wallet(id: userC.id, balance: 100);
     walletC.ref.setData(walletC.toJson());
 
+    B.user = userC;
+    B.locality = 'Bakuriani';
+    B.country = 'GE';
+    B.position = Position(latitude: 41.7510, longitude: 43.5292); 
+
     // Create User D
     User userD = new User(
       name: 'User D',
@@ -413,6 +435,7 @@ main() {
       transitId: userC.id,
       price: 30.00,
       transit: true,
+      confirmed: true,
       wish: false,
       lent: true,
     );
@@ -508,7 +531,8 @@ main() {
     expect(resultC.id, userC.id);
 
     // Transit to User D
-    record.ref.updateData({'transit': true, 'transitId': userD.id});
+    record.ref.updateData({'transit': true, 'confirmed': true, 'transitId': userD.id});
+    B.user = userD;
 
     // Run complete function to pass B to C
     await pass(books: [record], holder: userC, payer: userD);
@@ -592,6 +616,11 @@ main() {
     Wallet walletC = new Wallet(id: userC.id, balance: 100);
     walletC.ref.setData(walletC.toJson());
 
+    B.user = userC;
+    B.locality = 'Bakuriani';
+    B.country = 'GE';
+    B.position = Position(latitude: 41.7510, longitude: 43.5292); 
+
     // Create Book
     Book book = new Book(
       title: 'Title',
@@ -610,6 +639,7 @@ main() {
       transitId: userC.id,
       price: 30.00,
       transit: true,
+      confirmed: true,
       wish: false,
       lent: true,
     );
@@ -705,7 +735,8 @@ main() {
     expect(resultC.id, userC.id);
 
     // Transit to User A
-    record.ref.updateData({'transit': true, 'transitId': userA.id});
+    record.ref.updateData({'transit': true, 'confirmed': true, 'transitId': userA.id});
+    B.user = userA;
 
     // Run complete function to pass B to C
     await complete(books: [record], holder: userC, owner: userA);
@@ -788,6 +819,11 @@ main() {
     Wallet walletA = new Wallet(id: userA.id, balance: 10 + 25.0 / 6);
     walletA.ref.setData(walletA.toJson());
 
+    B.user = userA;
+    B.locality = 'Bakuriani';
+    B.country = 'GE';
+    B.position = Position(latitude: 41.7510, longitude: 43.5292); 
+
     // Create User B
     User userB = new User(
         name: 'User B',
@@ -817,6 +853,7 @@ main() {
       transitId: userA.id,
       price: 30.00,
       transit: true,
+      confirmed: true,
       wish: false,
       lent: true,
     );
@@ -953,6 +990,11 @@ main() {
     Wallet walletA = new Wallet(id: userA.id, balance: 10 + 25.0 / 6);
     walletA.ref.setData(walletA.toJson());
 
+    B.user = userA;
+    B.locality = 'Bakuriani';
+    B.country = 'GE';
+    B.position = Position(latitude: 41.7510, longitude: 43.5292); 
+
     // Create User B
     User userB = new User(
         name: 'User B',
@@ -982,6 +1024,7 @@ main() {
       transitId: userA.id,
       price: 30.00,
       transit: true,
+      confirmed: true,
       wish: false,
       lent: true,
     );
@@ -1122,6 +1165,11 @@ main() {
     Wallet walletA = new Wallet(id: userA.id, balance: 10 + 25.0 / 6);
     walletA.ref.setData(walletA.toJson());
 
+    B.user = userA;
+    B.locality = 'Bakuriani';
+    B.country = 'GE';
+    B.position = Position(latitude: 41.7510, longitude: 43.5292); 
+
     // Create Book
     Book book = new Book(
       title: 'Title',
@@ -1140,6 +1188,7 @@ main() {
       transitId: userA.id,
       price: 30.00,
       transit: true,
+      confirmed: true,
       wish: false,
       lent: true,
     );
@@ -1271,6 +1320,11 @@ main() {
     Wallet walletA = new Wallet(id: userA.id, balance: 10 + 25.0 / 6);
     walletA.ref.setData(walletA.toJson());
 
+    B.user = userA;
+    B.locality = 'Bakuriani';
+    B.country = 'GE';
+    B.position = Position(latitude: 41.7510, longitude: 43.5292); 
+
     User userB1 = new User(
         name: 'User B1',
         photo: 'http://image.com/userB1.jpg',
@@ -1309,6 +1363,7 @@ main() {
       transitId: userA.id,
       price: 30.00,
       transit: true,
+      confirmed: true,
       wish: false,
       lent: true,
     );
@@ -1462,6 +1517,11 @@ main() {
     Wallet walletA = new Wallet(id: userA.id, balance: 10 + 25.0 / 6);
     walletA.ref.setData(walletA.toJson());
 
+    B.user = userA;
+    B.locality = 'Bakuriani';
+    B.country = 'GE';
+    B.position = Position(latitude: 41.7510, longitude: 43.5292); 
+
     // Create Book
     Book book = new Book(
       title: 'Title',
@@ -1480,6 +1540,7 @@ main() {
       transitId: userA.id,
       price: 30.00,
       transit: true,
+      confirmed: true,
       wish: false,
       lent: true,
     );
@@ -1594,6 +1655,11 @@ main() {
     Wallet walletA = new Wallet(id: userA.id, balance: 25);
     walletA.ref.setData(walletA.toJson());
 
+    B.user = userA;
+    B.locality = 'Bakuriani';
+    B.country = 'GE';
+    B.position = Position(latitude: 41.7510, longitude: 43.5292); 
+
     // Run payment function
     Operation op = await payment(
         user: userA, amount: 50.0, type: OperationType.InputInApp);
@@ -1605,7 +1671,7 @@ main() {
     expect(opResult.type, OperationType.InputInApp);
     expect(opResult.amount, 50.0);
     expect(opResult.userId, userA.id);
-    expect(resultA.balance, 0.0);
+    expect(resultA.id, userA.id);
     expect(resultWA.balance, 25.0 + 50.0);
   });
 
@@ -1676,6 +1742,11 @@ main() {
     Wallet walletC = new Wallet(id: userC.id, balance: 100);
     walletC.ref.setData(walletC.toJson());
 
+    B.user = userC;
+    B.locality = 'Bakuriani';
+    B.country = 'GE';
+    B.position = Position(latitude: 41.7510, longitude: 43.5292); 
+
     // Create Book
     Book book = new Book(
       title: 'Title',
@@ -1694,6 +1765,7 @@ main() {
       transitId: userC.id,
       price: 30.00,
       transit: true,
+      confirmed: true,
       wish: false,
       lent: true,
     );
@@ -1867,6 +1939,11 @@ main() {
     Wallet walletC = new Wallet(id: userC.id, balance: 100);
     walletC.ref.setData(walletC.toJson());
 
+    B.user = userC;
+    B.locality = 'Bakuriani';
+    B.country = 'GE';
+    B.position = Position(latitude: 41.7510, longitude: 43.5292); 
+
     // Create Book
     Book book = new Book(
       title: 'Title',
@@ -1885,6 +1962,7 @@ main() {
       transitId: userC.id,
       price: 30.00,
       transit: true,
+      confirmed: true,
       wish: false,
       lent: true,
     );
@@ -2048,6 +2126,11 @@ main() {
     Wallet walletC = new Wallet(id: userC.id, balance: 100);
     walletC.ref.setData(walletC.toJson());
 
+    B.user = userC;
+    B.locality = 'Bakuriani';
+    B.country = 'GE';
+    B.position = Position(latitude: 41.7510, longitude: 43.5292); 
+
     // Create Book
     Book book = new Book(
       title: 'Title',
@@ -2066,6 +2149,7 @@ main() {
       transitId: userC.id,
       price: 30.00,
       transit: true,
+      confirmed: true,
       wish: false,
       lent: true,
     );
@@ -2238,6 +2322,11 @@ main() {
     Wallet walletC = new Wallet(id: userC.id, balance: 100);
     walletC.ref.setData(walletC.toJson());
 
+    B.user = userC;
+    B.locality = 'Bakuriani';
+    B.country = 'GE';
+    B.position = Position(latitude: 41.7510, longitude: 43.5292); 
+
     // Create Book
     Book book = new Book(
       title: 'Title',
@@ -2256,6 +2345,7 @@ main() {
       transitId: userC.id,
       price: 30.00,
       transit: true,
+      confirmed: true,
       wish: false,
       lent: true,
     );
@@ -2433,6 +2523,11 @@ main() {
     Wallet walletC = new Wallet(id: userC.id, balance: 100);
     walletC.ref.setData(walletC.toJson());
 
+    B.user = userC;
+    B.locality = 'Bakuriani';
+    B.country = 'GE';
+    B.position = Position(latitude: 41.7510, longitude: 43.5292); 
+
     // Create Book
     Book book = new Book(
       title: 'Title',
@@ -2451,6 +2546,7 @@ main() {
       transitId: userC.id,
       price: 30.00,
       transit: true,
+      confirmed: true,
       wish: false,
       lent: true,
     );

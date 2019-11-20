@@ -7,6 +7,13 @@ import 'package:geoflutterfire/geoflutterfire.dart';
 main() {
   db = MockFirestore.instance;
 
+  test("B singleton: Set and get", () async {
+    B.currency = 'RUB';
+    expect(B.currency, 'RUB');
+    B.currency = 'USD';
+    expect(B.currency, 'USD');
+  });
+
   test("getKeys function: build keys from string", () async {
     expect(getKeys(' ').toList(), []);
     expect(getKeys('').toList(), []);
@@ -27,8 +34,6 @@ main() {
       wishCount: 1,
       bookCount: 2,
       shelfCount: 3,
-      balance: 10.50,
-      blocked: 2.0,
       payoutId: 'Payout',
     );
 
@@ -46,8 +51,6 @@ main() {
     expect(result.wishCount, 1);
     expect(result.bookCount, 2);
     expect(result.shelfCount, 3);
-    expect(result.balance, 0.0); // Do not store balance. Only direct updates!!!
-    expect(result.blocked, 0.0); // Do not store blocked. Only direct updates!!!
     expect(result.payoutId, 'Payout');
   });
 
@@ -180,16 +183,21 @@ main() {
       lent: false,
     );
 
-    expect(record.isWish('User A'), true);
-    expect(record.isWish('User B'), false);
-    expect(record.isBorrowed('User A'), false);
-    expect(record.isBorrowed('User B'), false);
-    expect(record.isTransit('User A'), false);
-    expect(record.isTransit('User B'), false);
-    expect(record.isLent('User A'), false);
-    expect(record.isLent('User B'), false);
-    expect(record.type('User A'), BookrecordType.wish);
-    expect(record.type('User B'), BookrecordType.none);
+    // Test for current User A
+    B.user = User(id: 'User A', name: 'User A', photo: 'PhotoA');
+    expect(record.isWish, true);
+    expect(record.isBorrowed, false);
+    expect(record.isTransit, false);
+    expect(record.isLent, false);
+    expect(record.type, BookrecordType.wish);
+
+    // Test for current User B
+    B.user = User(id: 'User B', name: 'User B', photo: 'PhotoB');
+    expect(record.isWish, false);
+    expect(record.isBorrowed, false);
+    expect(record.isTransit, false);
+    expect(record.isLent, false);
+    expect(record.type, BookrecordType.none);
   });
 
   test("Bookrecord class: lent/borrowed", () async {
@@ -202,21 +210,29 @@ main() {
       lent: true,
     );
 
-    expect(record.isWish('User A'), false);
-    expect(record.isWish('User B'), false);
-    expect(record.isWish('User C'), false);
-    expect(record.isBorrowed('User A'), false);
-    expect(record.isBorrowed('User B'), true);
-    expect(record.isBorrowed('User C'), false);
-    expect(record.isTransit('User A'), false);
-    expect(record.isTransit('User B'), false);
-    expect(record.isTransit('User C'), false);
-    expect(record.isLent('User A'), true);
-    expect(record.isLent('User B'), false);
-    expect(record.isLent('User C'), false);
-    expect(record.type('User A'), BookrecordType.lent);
-    expect(record.type('User B'), BookrecordType.borrowed);
-    expect(record.type('User C'), BookrecordType.none);
+    // Test for current User A
+    B.user = User(id: 'User A', name: 'User A', photo: 'PhotoA');
+    expect(record.isWish, false);
+    expect(record.isBorrowed, false);
+    expect(record.isTransit, false);
+    expect(record.isLent, true);
+    expect(record.type, BookrecordType.lent);
+
+    // Test for current User B
+    B.user = User(id: 'User B', name: 'User B', photo: 'PhotoB');
+    expect(record.isWish, false);
+    expect(record.isBorrowed, true);
+    expect(record.isTransit, false);
+    expect(record.isLent, false);
+    expect(record.type, BookrecordType.borrowed);
+
+    // Test for current User B
+    B.user = User(id: 'User C', name: 'User C', photo: 'PhotoC');
+    expect(record.isWish, false);
+    expect(record.isBorrowed, false);
+    expect(record.isTransit, false);
+    expect(record.isLent, false);
+    expect(record.type, BookrecordType.none);
   });
 
   test("Bookrecord class: transit to third person", () async {
@@ -230,26 +246,37 @@ main() {
       lent: true,
     );
 
-    expect(record.isWish('User A'), false);
-    expect(record.isWish('User B'), false);
-    expect(record.isWish('User C'), false);
-    expect(record.isWish('User D'), false);
-    expect(record.isBorrowed('User A'), false);
-    expect(record.isBorrowed('User B'), false);
-    expect(record.isBorrowed('User C'), false);
-    expect(record.isBorrowed('User D'), false);
-    expect(record.isTransit('User A'), false);
-    expect(record.isTransit('User B'), true);
-    expect(record.isTransit('User C'), true);
-    expect(record.isTransit('User D'), false);
-    expect(record.isLent('User A'), true);
-    expect(record.isLent('User B'), false);
-    expect(record.isLent('User C'), false);
-    expect(record.isLent('User D'), false);
-    expect(record.type('User A'), BookrecordType.lent);
-    expect(record.type('User B'), BookrecordType.transit);
-    expect(record.type('User C'), BookrecordType.transit);
-    expect(record.type('User D'), BookrecordType.none);
+    // Test for current User A
+    B.user = User(id: 'User A', name: 'User A', photo: 'PhotoA');
+    expect(record.isWish, false);
+    expect(record.isBorrowed, false);
+    expect(record.isTransit, false);
+    expect(record.isLent, true);
+    expect(record.type, BookrecordType.lent);
+
+    // Test for current User B
+    B.user = User(id: 'User B', name: 'User B', photo: 'PhotoB');
+    expect(record.isWish, false);
+    expect(record.isBorrowed, false);
+    expect(record.isTransit, true);
+    expect(record.isLent, false);
+    expect(record.type, BookrecordType.transit);
+
+    // Test for current User C
+    B.user = User(id: 'User C', name: 'User C', photo: 'PhotoC');
+    expect(record.isWish, false);
+    expect(record.isBorrowed, false);
+    expect(record.isTransit, true);
+    expect(record.isLent, false);
+    expect(record.type, BookrecordType.transit);
+
+    // Test for current User D
+    B.user = User(id: 'User D', name: 'User D', photo: 'PhotoD');
+    expect(record.isWish, false);
+    expect(record.isBorrowed, false);
+    expect(record.isTransit, false);
+    expect(record.isLent, false);
+    expect(record.type, BookrecordType.none);
   });
 
   test("Bookrecord class: transit to borrower", () async {
@@ -263,21 +290,29 @@ main() {
       lent: false,
     );
 
-    expect(record.isWish('User A'), false);
-    expect(record.isWish('User B'), false);
-    expect(record.isWish('User C'), false);
-    expect(record.isBorrowed('User A'), false);
-    expect(record.isBorrowed('User B'), false);
-    expect(record.isBorrowed('User C'), false);
-    expect(record.isTransit('User A'), true);
-    expect(record.isTransit('User B'), true);
-    expect(record.isTransit('User C'), false);
-    expect(record.isLent('User A'), false);
-    expect(record.isLent('User B'), false);
-    expect(record.isLent('User C'), false);
-    expect(record.type('User A'), BookrecordType.transit);
-    expect(record.type('User B'), BookrecordType.transit);
-    expect(record.type('User C'), BookrecordType.none);
+    // Test for current User A
+    B.user = User(id: 'User A', name: 'User A', photo: 'PhotoA');
+    expect(record.isWish, false);
+    expect(record.isBorrowed, false);
+    expect(record.isTransit, true);
+    expect(record.isLent, false);
+    expect(record.type, BookrecordType.transit);
+
+    // Test for current User B
+    B.user = User(id: 'User B', name: 'User B', photo: 'PhotoB');
+    expect(record.isWish, false);
+    expect(record.isBorrowed, false);
+    expect(record.isTransit, true);
+    expect(record.isLent, false);
+    expect(record.type, BookrecordType.transit);
+
+    // Test for current User C
+    B.user = User(id: 'User C', name: 'User C', photo: 'PhotoC');
+    expect(record.isWish, false);
+    expect(record.isBorrowed, false);
+    expect(record.isTransit, false);
+    expect(record.isLent, false);
+    expect(record.type, BookrecordType.none);
   });
 
   test("Bookrecord class: transit to borrower/invalid lent flag", () async {
@@ -291,21 +326,29 @@ main() {
       lent: true,
     );
 
-    expect(record.isWish('User A'), false);
-    expect(record.isWish('User B'), false);
-    expect(record.isWish('User C'), false);
-    expect(record.isBorrowed('User A'), false);
-    expect(record.isBorrowed('User B'), false);
-    expect(record.isBorrowed('User C'), false);
-    expect(record.isTransit('User A'), true);
-    expect(record.isTransit('User B'), true);
-    expect(record.isTransit('User C'), false);
-    expect(record.isLent('User A'), false);
-    expect(record.isLent('User B'), false);
-    expect(record.isLent('User C'), false);
-    expect(record.type('User A'), BookrecordType.transit);
-    expect(record.type('User B'), BookrecordType.transit);
-    expect(record.type('User C'), BookrecordType.none);
+    // Test for current User A
+    B.user = User(id: 'User A', name: 'User A', photo: 'PhotoA');
+    expect(record.isWish, false);
+    expect(record.isBorrowed, false);
+    expect(record.isTransit, true);
+    expect(record.isLent, false);
+    expect(record.type, BookrecordType.transit);
+ 
+    // Test for current User B
+    B.user = User(id: 'User B', name: 'User B', photo: 'PhotoB');
+    expect(record.isWish, false);
+    expect(record.isBorrowed, false);
+    expect(record.isTransit, true);
+    expect(record.isLent, false);
+    expect(record.type, BookrecordType.transit);
+
+    // Test for current User C
+    B.user = User(id: 'User C', name: 'User C', photo: 'PhotoC');
+    expect(record.isWish, false);
+    expect(record.isBorrowed, false);
+    expect(record.isTransit, false);
+    expect(record.isLent, false);
+    expect(record.type, BookrecordType.none);
   });
 
   test("Bookrecord class: transit to owner", () async {
@@ -319,21 +362,29 @@ main() {
       lent: true,
     );
 
-    expect(record.isWish('User A'), false);
-    expect(record.isWish('User B'), false);
-    expect(record.isWish('User C'), false);
-    expect(record.isBorrowed('User A'), false);
-    expect(record.isBorrowed('User B'), false);
-    expect(record.isBorrowed('User C'), false);
-    expect(record.isTransit('User A'), true);
-    expect(record.isTransit('User B'), true);
-    expect(record.isTransit('User C'), false);
-    expect(record.isLent('User A'), false);
-    expect(record.isLent('User B'), false);
-    expect(record.isLent('User C'), false);
-    expect(record.type('User A'), BookrecordType.transit);
-    expect(record.type('User B'), BookrecordType.transit);
-    expect(record.type('User C'), BookrecordType.none);
+    // Test for current User A
+    B.user = User(id: 'User A', name: 'User A', photo: 'PhotoA');
+    expect(record.isWish, false);
+    expect(record.isBorrowed, false);
+    expect(record.isTransit, true);
+    expect(record.isLent, false);
+    expect(record.type, BookrecordType.transit);
+
+    // Test for current User B
+    B.user = User(id: 'User B', name: 'User B', photo: 'PhotoB');
+    expect(record.isWish, false);
+    expect(record.isBorrowed, false);
+    expect(record.isTransit, true);
+    expect(record.isLent, false);
+    expect(record.type, BookrecordType.transit);
+
+    // Test for current User C
+    B.user = User(id: 'User C', name: 'User C', photo: 'PhotoC');
+    expect(record.isWish, false);
+    expect(record.isBorrowed, false);
+    expect(record.isTransit, false);
+    expect(record.isLent, false);
+    expect(record.type, BookrecordType.none);
   });
 
   test("Bookrecord class: transit to owner/invalid lent flag", () async {
@@ -347,21 +398,29 @@ main() {
       lent: false,
     );
 
-    expect(record.isWish('User A'), false);
-    expect(record.isWish('User B'), false);
-    expect(record.isWish('User C'), false);
-    expect(record.isBorrowed('User A'), false);
-    expect(record.isBorrowed('User B'), false);
-    expect(record.isBorrowed('User C'), false);
-    expect(record.isTransit('User A'), true);
-    expect(record.isTransit('User B'), true);
-    expect(record.isTransit('User C'), false);
-    expect(record.isLent('User A'), false);
-    expect(record.isLent('User B'), false);
-    expect(record.isLent('User C'), false);
-    expect(record.type('User A'), BookrecordType.transit);
-    expect(record.type('User B'), BookrecordType.transit);
-    expect(record.type('User C'), BookrecordType.none);
+    // Test for current User A
+    B.user = User(id: 'User A', name: 'User A', photo: 'PhotoA');
+    expect(record.isWish, false);
+    expect(record.isBorrowed, false);
+    expect(record.isTransit, true);
+    expect(record.isLent, false);
+    expect(record.type, BookrecordType.transit);
+
+    // Test for current User B
+    B.user = User(id: 'User B', name: 'User B', photo: 'PhotoB');
+    expect(record.isWish, false);
+    expect(record.isBorrowed, false);
+    expect(record.isTransit, true);
+    expect(record.isLent, false);
+    expect(record.type, BookrecordType.transit);
+
+    // Test for current User C
+    B.user = User(id: 'User C', name: 'User C', photo: 'PhotoC');
+    expect(record.isWish, false);
+    expect(record.isBorrowed, false);
+    expect(record.isTransit, false);
+    expect(record.isLent, false);
+    expect(record.type, BookrecordType.none);
   });
 
   test("Operation class: Reward, toJson and fromJson", () async {
@@ -421,10 +480,16 @@ main() {
     expect(result.payerFeeUserId2, null); // Not applicable for Reward
     expect(result.paid, 30.0);
     expect(result.users, {'userId', 'peerId'});
-    expect(result.isReward(userA), true);
-    expect(result.isReward(userB), false);
-    expect(result.isLeasing(userA), false);
-    expect(result.isLeasing(userB), false);
+
+    // Test for current User A
+    B.user = userA;
+    expect(result.isReward, true);
+    expect(result.isLeasing, false);
+
+    // Test for current User B
+    B.user = userB;
+    expect(result.isReward, false);
+    expect(result.isLeasing, false);
   });
 
   test("Operation class: Leasing, toJson and fromJson", () async {
@@ -495,32 +560,43 @@ main() {
       'payerFeeUserId1',
       'payerFeeUserId2'
     });
-    expect(result.isLeasing(userA), true);
-    expect(result.isLeasing(userB), false);
-    expect(result.isLeasing(user1), false);
-    expect(result.isLeasing(user2), false);
-    expect(result.isLeasing(user3), false);
-    expect(result.isLeasing(user4), false);
-    expect(result.isReferral(user1), true);
-    expect(result.isReferral(user2), true);
-    expect(result.isReferral(user3), true);
-    expect(result.isReferral(user4), true);
-    expect(result.isReferral(userA), false);
-    expect(result.isReferral(userB), false);
-    expect(result.isReward(userA), false);
-    expect(result.isReward(userB), false);
-    expect(result.isIn(userA), false);
-    expect(result.isIn(userB), false);
-    expect(result.isIn(user1), false);
-    expect(result.isIn(user2), false);
-    expect(result.isIn(user3), false);
-    expect(result.isIn(user4), false);
-    expect(result.isOut(userA), false);
-    expect(result.isOut(userB), false);
-    expect(result.isOut(user1), false);
-    expect(result.isOut(user2), false);
-    expect(result.isOut(user3), false);
-    expect(result.isOut(user4), false);
+    B.user = userA;
+    expect(result.isLeasing, true);
+    expect(result.isReferral, false);
+    expect(result.isReward, false);
+    expect(result.isIn, false);
+    expect(result.isOut, false);
+
+    B.user = userB;
+    expect(result.isLeasing, false);
+    expect(result.isReferral, false);
+    expect(result.isReward, false);
+    expect(result.isIn, false);
+    expect(result.isOut, false);
+
+    B.user = user1;
+    expect(result.isLeasing, false);
+    expect(result.isReferral, true);
+    expect(result.isIn, false);
+    expect(result.isOut, false);
+
+    B.user = user2;
+    expect(result.isLeasing, false);
+    expect(result.isReferral, true);
+    expect(result.isIn, false);
+    expect(result.isOut, false);
+
+    B.user = user3;
+    expect(result.isLeasing, false);
+    expect(result.isReferral, true);
+    expect(result.isIn, false);
+    expect(result.isOut, false);
+
+    B.user = user4;
+    expect(result.isLeasing, false);
+    expect(result.isReferral, true);
+    expect(result.isIn, false);
+    expect(result.isOut, false);
   });
 
   test("Operation class: Leasing empty referrals, toJson and fromJson",
@@ -569,32 +645,44 @@ main() {
     expect(result.fee, 10.0);
     expect(result.paid, 30.0);
     expect(result.users, {'userId', 'peerId'});
-    expect(result.isLeasing(userA), true);
-    expect(result.isLeasing(userB), false);
-    expect(result.isLeasing(user1), false);
-    expect(result.isLeasing(user2), false);
-    expect(result.isLeasing(user3), false);
-    expect(result.isLeasing(user4), false);
-    expect(result.isReferral(user1), false);
-    expect(result.isReferral(user2), false);
-    expect(result.isReferral(user3), false);
-    expect(result.isReferral(user4), false);
-    expect(result.isReferral(userA), false);
-    expect(result.isReferral(userB), false);
-    expect(result.isReward(userA), false);
-    expect(result.isReward(userB), false);
-    expect(result.isIn(userA), false);
-    expect(result.isIn(userB), false);
-    expect(result.isIn(user1), false);
-    expect(result.isIn(user2), false);
-    expect(result.isIn(user3), false);
-    expect(result.isIn(user4), false);
-    expect(result.isOut(userA), false);
-    expect(result.isOut(userB), false);
-    expect(result.isOut(user1), false);
-    expect(result.isOut(user2), false);
-    expect(result.isOut(user3), false);
-    expect(result.isOut(user4), false);
+
+    B.user = userA;
+    expect(result.isLeasing, true);
+    expect(result.isReferral, false);
+    expect(result.isReward, false);
+    expect(result.isIn, false);
+    expect(result.isOut, false);
+
+    B.user = userB;
+    expect(result.isLeasing, false);
+    expect(result.isReferral, false);
+    expect(result.isReward, false);
+    expect(result.isIn, false);
+    expect(result.isOut, false);
+
+    B.user = user1;
+    expect(result.isLeasing, false);
+    expect(result.isReferral, false);
+    expect(result.isIn, false);
+    expect(result.isOut, false);
+
+    B.user = user2;
+    expect(result.isLeasing, false);
+    expect(result.isReferral, false);
+    expect(result.isIn, false);
+    expect(result.isOut, false);
+
+    B.user = user3;
+    expect(result.isLeasing, false);
+    expect(result.isReferral, false);
+    expect(result.isIn, false);
+    expect(result.isOut, false);
+
+    B.user = user4;
+    expect(result.isLeasing, false);
+    expect(result.isReferral, false);
+    expect(result.isIn, false);
+    expect(result.isOut, false);
   });
 
   test("Secret class: toJson and fromJson", () async {

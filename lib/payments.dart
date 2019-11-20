@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:stellar/stellar.dart' as stellar;
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
@@ -156,4 +157,16 @@ Future<void> payoutStellar(User user, double amount, {String memo=''}) async {
       'type': 'stellar'
       });
   });
+
+  FirebaseAnalytics().logEvent(
+                                name: 'ecommerce_refund',
+                                parameters: <String, dynamic>{
+                                  'amount': amount,
+                                  'channel': 'stellar',
+                                  'user': user.id,
+                                  'locality': B.locality,
+                                  'country': B.country,
+                                  'latitude': B.position.latitude,
+                                  'longitude': B.position.longitude,
+                                });
 }

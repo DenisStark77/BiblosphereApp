@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:geoflutterfire/geoflutterfire.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_analytics/firebase_analytics.dart';
 
 import 'package:biblosphere/const.dart';
 import 'package:biblosphere/helpers.dart';
@@ -15,15 +14,21 @@ typedef BookCallback(Book book);
 Future addBookrecord(
     BuildContext context, Book b, User u, bool wish, GeoFirePoint location,
     {String source = 'goodreads', bool snackbar = true}) async {
-
   if (b.isbn == null || b.isbn == 'NA')
     throw 'Book ${b?.title}, ${b?.authors?.join()} has no ISBN';
 
   // create book record from book and user
   Bookrecord bookrecord = new Bookrecord(
-      ownerId: u.id, isbn: b.isbn, authors: b.authors, title: b.title, image: b.image, price: b.price,
-      ownerName: u.name, ownerImage: u.photo,
-      wish: wish, location: location);
+      ownerId: u.id,
+      isbn: b.isbn,
+      authors: b.authors,
+      title: b.title,
+      image: b.image,
+      price: b.price,
+      ownerName: u.name,
+      ownerImage: u.photo,
+      wish: wish,
+      location: location);
 
   // Get bookrecord with predefined id
   DocumentSnapshot recSnap = await bookrecord.ref.get();
@@ -53,16 +58,22 @@ Future addBookrecord(
           b.language == null ||
           b.language.isEmpty ||
           b.price == null ||
-          b.price == 0.0)
-      b = await enrichBookRecord(b);
+          b.price == 0.0) b = await enrichBookRecord(b);
       await b.ref.setData(b.toJson());
       // Update bookrecord with enriched fields
       await bookrecord.ref.updateData(b.toJson(bookOnly: true));
     }
 
-    await FirebaseAnalytics().logEvent(
-        name: 'add_book',
-        parameters: <String, dynamic>{'language': b.language ?? ''});
+    analytics.logEvent(
+        name: wish ? 'add_to_wishlist' : 'book_add',
+        parameters: <String, dynamic>{
+          'language': b.language ?? '',
+          'isbn': b.isbn,
+          'locality': B.locality,
+          'country': B.country,
+          'latitude': B.position.latitude,
+          'longitude': B.position.longitude
+        });
   }
 }
 
@@ -140,6 +151,8 @@ void deposit({List<Bookrecord> books, User owner, User payer}) async {
             'rewardId': rewardOp.id,
             'leasingId': leasingOp.id,
             'holderId': payer.id,
+            'holderName': payer.name,
+            'holderImage': payer.photo,
             'transit': false,
             'confirmed': false,
             'lent': true,
@@ -157,16 +170,32 @@ void deposit({List<Bookrecord> books, User owner, User payer}) async {
         }
       } catch (ex, stack) {
         // TODO: Handle exception
-        print('!!!DEBUG: >>>>>>>>>>>>>> Exception within transaction <<<<<<<<<<<<<<<<');
+        print(
+            '!!!DEBUG: >>>>>>>>>>>>>> Exception within transaction <<<<<<<<<<<<<<<<');
         print(ex);
         print(stack);
       }
+    });
+
+    analytics
+        .logEvent(name: 'book_paid', parameters: <String, dynamic>{
+      'from': owner.id,
+      'to': payer.id,
+      'isbn': book.isbn,
+      'price': book.getPrice(),
+      'distance': book.distance,
+      'locality': B.locality,
+      'country': B.country,
+      'latitude': B.position.latitude,
+      'longitude': B.position.longitude
     });
   }
 }
 
 void pass({List<Bookrecord> books, User holder, User payer}) async {
   for (Bookrecord book in books) {
+    int days = 0;
+    double feeStat = 0.0;
     final DocumentReference holderRef = holder.ref;
     final DocumentReference holderWalletRef = Wallet.Ref(holder.id);
     final DocumentReference payerWalletRef = Wallet.Ref(payer.id);
@@ -237,6 +266,9 @@ void pass({List<Bookrecord> books, User holder, User payer}) async {
           double portion = DateTime.now().difference(leasingOp.start).inDays /
               leasingOp.end.difference(leasingOp.start).inDays;
 
+          // For Analitic ONLY
+          days = DateTime.now().difference(leasingOp.start).inDays;
+
           // If rental less than first payment consider first payment as rental
           double rentAmount = price * portion;
           if (rentAmount < rewardOp.paid) rentAmount = leasingOp.paid;
@@ -252,7 +284,8 @@ void pass({List<Bookrecord> books, User holder, User payer}) async {
 
           if (feeAmount + reward > holderWallet.getAvailable()) {
             // TODO: log event for the investigation
-            print('!!!DEBUG - NOT SIFFICIENT BALANCE ${holderWallet.id} !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
+            print(
+                '!!!DEBUG - NOT SIFFICIENT BALANCE ${holderWallet.id} !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
           }
 
           double payerFeeDeduction = 0.0, ownerFeeDeduction = 0.0;
@@ -267,6 +300,9 @@ void pass({List<Bookrecord> books, User holder, User payer}) async {
               throw ('owner referral 1 wallet does not exist ${owner.beneficiary1}');
             leasingOp.ownerFeeUserId1 = owner.beneficiary1;
             leasingOp.ownerFee1 = beneficiary1(feeAmount);
+
+            // Statistics only
+            feeStat += leasingOp.ownerFee1;
           } else if (owner.beneficiary1 == holder.id) {
             ownerFeeDeduction += beneficiary1(feeAmount);
           } else {
@@ -287,6 +323,9 @@ void pass({List<Bookrecord> books, User holder, User payer}) async {
 
             leasingOp.ownerFeeUserId2 = owner.beneficiary2;
             leasingOp.ownerFee2 = beneficiary2(feeAmount);
+
+            // Statistics only
+            feeStat += leasingOp.ownerFee2;
           } else if (owner.beneficiary2 == holder.id) {
             ownerFeeDeduction += beneficiary2(feeAmount);
           } else {
@@ -300,6 +339,9 @@ void pass({List<Bookrecord> books, User holder, User payer}) async {
               throw ('holder referral 1 wallet does not exist ${holder.beneficiary1}');
             leasingOp.payerFeeUserId1 = holder.beneficiary1;
             leasingOp.payerFee1 = beneficiary1(feeAmount);
+
+            // Statistics only
+            feeStat += leasingOp.payerFee1;
           } else if (holder.beneficiary1 == owner.id) {
             reward += beneficiary1(feeAmount);
             payerFeeDeduction += beneficiary1(feeAmount);
@@ -321,6 +363,9 @@ void pass({List<Bookrecord> books, User holder, User payer}) async {
 
             leasingOp.payerFeeUserId2 = holder.beneficiary2;
             leasingOp.payerFee2 = beneficiary2(feeAmount);
+
+            // Statistics only
+            feeStat += leasingOp.payerFee2;
           } else if (holder.beneficiary2 == owner.id) {
             reward += beneficiary2(feeAmount);
             payerFeeDeduction += beneficiary2(feeAmount);
@@ -388,9 +433,9 @@ void pass({List<Bookrecord> books, User holder, User payer}) async {
           });
 
           // Update leasing & reward operation
-          await tx.set(rewardOp.ref, rewardOp.toJson());
+          await tx.update(rewardOp.ref, rewardOp.toJson());
 
-          await tx.set(leasingOp.ref, leasingOp.toJson());
+          await tx.update(leasingOp.ref, leasingOp.toJson());
 
           // Create new leasing operation
           Operation newLeasingOp = new Operation(
@@ -408,7 +453,7 @@ void pass({List<Bookrecord> books, User holder, User payer}) async {
             peerId: fresh.ownerId,
           );
 
-          await tx.update(newLeasingOp.ref, newLeasingOp.toJson());
+          await tx.set(newLeasingOp.ref, newLeasingOp.toJson());
 
           await tx.update(payerWalletRef, {
             'balance': FieldValue.increment(-newPaid),
@@ -421,6 +466,8 @@ void pass({List<Bookrecord> books, User holder, User payer}) async {
           await tx.update(bookrecordRef, {
             'leasingId': newLeasingOp.id,
             'holderId': payer.id,
+            'holderName': payer.name,
+            'holderImage': payer.photo,
             'transit': false,
             'confirmed': false,
             'lent': true,
@@ -430,16 +477,45 @@ void pass({List<Bookrecord> books, User holder, User payer}) async {
         }
       } catch (ex, stack) {
         // TODO: Handle exception
-        print('!!!DEBUG: >>>>>>>>>>>>>> Exception within transaction <<<<<<<<<<<<<<<<');
+        print(
+            '!!!DEBUG: >>>>>>>>>>>>>> Exception within transaction <<<<<<<<<<<<<<<<');
         print(ex);
         print(stack);
       }
+    });
+
+    analytics
+        .logEvent(name: 'book_pass', parameters: <String, dynamic>{
+      'from': holder.id,
+      'to': payer.id,
+      'isbn': book.isbn,
+      'price': book.getPrice(),
+      'days': days,
+      'distance': book.distance,
+      'locality': B.locality,
+      'country': B.country,
+      'latitude': B.position.latitude,
+      'longitude': B.position.longitude
+    });
+
+    analytics
+        .logEvent(name: 'referral_reward', parameters: <String, dynamic>{
+      'isbn': book.isbn,
+      'price': book.getPrice(),
+      'days': days,
+      'fee': feeStat,
+      'locality': B.locality,
+      'country': B.country,
+      'latitude': B.position.latitude,
+      'longitude': B.position.longitude
     });
   }
 }
 
 void complete({List<Bookrecord> books, User holder, User owner}) async {
   for (Bookrecord book in books) {
+    int days = 0;
+    double feeStat = 0.0;
     final DocumentReference holderRef = holder.ref;
     final DocumentReference ownerRef = owner.ref;
     final DocumentReference holderWalletRef = Wallet.Ref(holder.id);
@@ -514,6 +590,9 @@ void complete({List<Bookrecord> books, User holder, User owner}) async {
           double portion = DateTime.now().difference(leasingOp.start).inDays /
               leasingOp.end.difference(leasingOp.start).inDays;
 
+          // For Analitic ONLY
+          days = DateTime.now().difference(leasingOp.start).inDays;
+
           double rentAmount = price * portion;
           if (rentAmount < leasingOp.paid) rentAmount = leasingOp.paid;
 
@@ -543,6 +622,9 @@ void complete({List<Bookrecord> books, User holder, User owner}) async {
               throw ('owner referral 1 wallet does not exist ${owner.beneficiary1}');
             leasingOp.ownerFeeUserId1 = owner.beneficiary1;
             leasingOp.ownerFee1 = beneficiary1(feeAmount);
+
+            // Statistics only
+            feeStat += leasingOp.ownerFee1;
           } else if (owner.beneficiary1 == holder.id) {
             ownerFeeDeduction += beneficiary1(feeAmount);
           } else {
@@ -563,6 +645,9 @@ void complete({List<Bookrecord> books, User holder, User owner}) async {
 
             leasingOp.ownerFeeUserId2 = owner.beneficiary2;
             leasingOp.ownerFee2 = beneficiary2(feeAmount);
+
+            // Statistics only
+            feeStat += leasingOp.ownerFee2;
           } else if (owner.beneficiary2 == holder.id) {
             ownerFeeDeduction += beneficiary2(feeAmount);
           } else {
@@ -576,6 +661,9 @@ void complete({List<Bookrecord> books, User holder, User owner}) async {
               throw ('holder referral 1 wallet does not exist ${holder.beneficiary1}');
             leasingOp.payerFeeUserId1 = holder.beneficiary1;
             leasingOp.payerFee1 = beneficiary1(feeAmount);
+
+            // Statistics only
+            feeStat += leasingOp.payerFee1;
           } else if (holder.beneficiary1 == owner.id) {
             reward += beneficiary1(feeAmount);
             payerFeeDeduction += beneficiary1(feeAmount);
@@ -597,6 +685,9 @@ void complete({List<Bookrecord> books, User holder, User owner}) async {
 
             leasingOp.payerFeeUserId2 = holder.beneficiary2;
             leasingOp.payerFee2 = beneficiary2(feeAmount);
+
+            // Statistics only
+            feeStat += leasingOp.payerFee2;
           } else if (holder.beneficiary2 == owner.id) {
             reward += beneficiary2(feeAmount);
             payerFeeDeduction += beneficiary2(feeAmount);
@@ -661,9 +752,9 @@ void complete({List<Bookrecord> books, User holder, User owner}) async {
           });
 
           // Update leasing & reward operation
-          await tx.set(rewardOp.ref, rewardOp.toJson());
+          await tx.update(rewardOp.ref, rewardOp.toJson());
 
-          await tx.set(leasingOp.ref, leasingOp.toJson());
+          await tx.update(leasingOp.ref, leasingOp.toJson());
 
           final DocumentReference bookrecordRef = book.ref;
 
@@ -672,6 +763,8 @@ void complete({List<Bookrecord> books, User holder, User owner}) async {
             'leasingId': null,
             'rewardId': null,
             'holderId': owner.id,
+            'holderName': owner.name,
+            'holderImage': owner.photo,
             'transit': false,
             'confirmed': false,
             'lent': false,
@@ -687,6 +780,32 @@ void complete({List<Bookrecord> books, User holder, User owner}) async {
       }
 
       return;
+    });
+
+    analytics
+        .logEvent(name: 'book_returned', parameters: <String, dynamic>{
+      'from': holder.id,
+      'to': owner.id,
+      'isbn': book.isbn,
+      'price': book.getPrice(),
+      'days': days,
+      'distance': book.distance,
+      'locality': B.locality,
+      'country': B.country,
+      'latitude': B.position.latitude,
+      'longitude': B.position.longitude
+    });
+
+    analytics
+        .logEvent(name: 'referral_reward', parameters: <String, dynamic>{
+      'isbn': book.isbn,
+      'price': book.getPrice(),
+      'days': days,
+      'fee': feeStat,
+      'locality': B.locality,
+      'country': B.country,
+      'latitude': B.position.latitude,
+      'longitude': B.position.longitude
     });
   }
 }

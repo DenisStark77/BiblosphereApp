@@ -88,7 +88,7 @@ main() {
     expect(() async => await db.runTransaction( (tx) {
       // Get value before transaction
       tx.get(doc1);
-      tx.set(doc2, {'data': 2});
+      tx.update(doc2, {'data': 2});
       return;
     }), throwsA((String str) => str.startsWith('Records read but not updated:')));
   });

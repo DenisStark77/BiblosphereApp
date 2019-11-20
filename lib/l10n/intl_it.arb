@@ -1258,5 +1258,264 @@
     "placeholders": {
       "user": {}
     }
+  },
+  "bookWith": "Book with {user}",
+  "@bookWith": {
+    "type": "text",
+    "placeholders": {
+      "user": {}
+    }
+  },
+  "wishAlreadyThere": "This book is already in your wishlist",
+  "@wishAlreadyThere": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "bookAlreadyThere": "This book is already in your library",
+  "@bookAlreadyThere": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "hintChatOpen": "Start conversation",
+  "@hintChatOpen": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "hintRequestReturn": "Ask for return",
+  "@hintRequestReturn": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "hintReturn": "Return book",
+  "@hintReturn": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "hintDeleteBook": "Delete book",
+  "@hintDeleteBook": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "hintBookDetails": "Change book info",
+  "@hintBookDetails": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "hintShareBook": "Share link",
+  "@hintShareBook": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "snackBookNotConfirmed": "Confirm other books before asking new ones",
+  "@snackBookNotConfirmed": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "snackBookPending": "Previous book handover not confirmed. Please ask your peer to confirm.",
+  "@snackBookPending": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "snackBookAddedToCart": "Book was added to the cart",
+  "@snackBookAddedToCart": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "sharingMotto": "Take books from people instead of buying",
+  "@sharingMotto": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "inputStellarMemo": "Memo for top-up via Stellar:",
+  "@inputStellarMemo": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "memoCopied": "Memo copied to a clipboard",
+  "@memoCopied": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "outputStellarMemo": "Memo for payout via Stellar:",
+  "@outputStellarMemo": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "bookNotFound": "This book is not found in Biblosphere. Add it to your wishlist and we'll inform you once it's available.",
+  "@bookNotFound": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "chatbotWelcome": "Hello! I'm chat-bot of Biblosphere. Please ask me any questions about this app.",
+  "@chatbotWelcome": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "snackBookNotFound": "Book not found. Add book manually to the cart.",
+  "@snackBookNotFound": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "snackBookAlreadyInTransit": "Book is booked by another user. Choose another one.",
+  "@snackBookAlreadyInTransit": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "snackBookImageChanged": "New cover image is set",
+  "@snackBookImageChanged": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "snackBookPriceChanged": "Price is saved",
+  "@snackBookPriceChanged": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "supportChat": "Support chat",
+  "@supportChat": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "titleSupport": "SUPPORT",
+  "@titleSupport": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "showDeposit": "Deposit: {amount}",
+  "@showDeposit": {
+    "type": "text",
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "showRent": "Monthly pay: {amount}",
+  "@showRent": {
+    "type": "text",
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "cartAddBooks": "Add books",
+  "@cartAddBooks": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "cartTopup": "Top-up balance {amount}",
+  "@cartTopup": {
+    "type": "text",
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "cartMakeApointment": "Make an apointment",
+  "@cartMakeApointment": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "cartRequesterHasToTopup": "Your peer has to top-up his balance",
+  "@cartRequesterHasToTopup": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "cartConfirmHandover": "Confirm that book(s) given",
+  "@cartConfirmHandover": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "cartConfirmReceived": "Confirm that books received",
+  "@cartConfirmReceived": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "cartRequesterHasToConfirm": "Your peer has to accept books",
+  "@cartRequesterHasToConfirm": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "cartBooksAccepted": "Books accepted",
+  "@cartBooksAccepted": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "cartBooksGiven": "Books handed over",
+  "@cartBooksGiven": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "myBooksWithUser": "My books at this user ({count})",
+  "@myBooksWithUser": {
+    "type": "text",
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "booksOfUserWithMe": "His books with me ({count})",
+  "@booksOfUserWithMe": {
+    "type": "text",
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "profileUserBooks": "All his books ({count})",
+  "@profileUserBooks": {
+    "type": "text",
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "supportTitleGetBooks": "How to get books",
+  "@supportTitleGetBooks": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "supportGetBooks": "Find books whch you like. Message owner of the book to make an apointment. To get book(s) you have to pay a deposit. It will be released once book(s) returned. You can top-up your balance by card via In-App Purchase or by Stellar cryptocurrency. To earn balance share your books and participate in partner program by initing other people in Biblosphere.",
+  "@supportGetBooks": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "supportTitleGetBalance": "Top-up balance",
+  "@supportTitleGetBalance": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "supportGetBalance": "There are two ways to top-up your balance. First with In-App purchase by card registered in Google Play or App Store. Second by transfering Stellar (XLM) to account given in your Setting screen. Don't forget to give memo while transferring.",
+  "@supportGetBalance": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "supportTitleReferrals": "Referral program",
+  "@supportTitleReferrals": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "supportReferrals": "Facilitate book exchange via Biblosphere in your community or office and receive rewards from every transaction they made. To participate share your partner link to friends and colleagues.",
+  "@supportReferrals": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "supportTitlePayout": "Payouts",
+  "@supportTitlePayout": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "supportPayout": "Once you've earned significant balance in Biblosphere you can withdraw it. Payouts are working via Stellar (XLM) cryptocurrency. You can transfer to your Stellar wallet or use cryptocurrency exchanges to withdraw to your card or online-wallet.",
+  "@supportPayout": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "supportTitleChatbot": "Support Chatbot",
+  "@supportTitleChatbot": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "supportChatbot": "There are chat with support chatbot in the message screen. (S)he can answer any questions about Biblosphere application. Or contact me directly in Telegram ",
+  "@supportChatbot": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "supportSignature": "Denis Stark",
+  "@supportSignature": {
+    "type": "text",
+    "placeholders": {}
   }
 }

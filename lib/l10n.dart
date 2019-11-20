@@ -729,7 +729,7 @@ class S {
   }
 
   String get youHaveThisBook{
-    return Intl.message('Эта книга находится у вас', name: 'youHaveThisBook');
+    return Intl.message('Книга у вас', name: 'youHaveThisBook');
   }
 
   String get youWishThisBook{
@@ -1127,7 +1127,157 @@ class S {
   String get chatbotWelcome{
     return Intl.message('Привет! Я чатбот Библосферы, задавай мне любые вопросы про приложение. Если я не смогу ответить, перешлю администратору.', name: 'chatbotWelcome');
   }
+
+  String get snackBookNotFound{
+    return Intl.message('Книга не найдена. Добавьте книги в корзину вручную.', name: 'snackBookNotFound');
+  }
   
+  String get snackBookAlreadyInTransit{
+    return Intl.message('Книга передаётся другому пользователю. Выберите другую книгу.', name: 'snackBookAlreadyInTransit');
+  }
+
+  String get snackBookImageChanged {
+    return Intl.message('Новая обложка книги установлена.', name: 'snackBookImageChanged');
+  }
+
+  String get snackBookPriceChanged {
+    return Intl.message('Цена книги установлена.', name: 'snackBookPriceChanged');
+  }
+
+  String get supportChat {
+    return Intl.message('Чат с поддержкой', name: 'supportChat');
+  }
+
+  String get titleSupport {
+    return Intl.message('ПОДДЕРЖКА', name: 'titleSupport');
+  }
+
+  String showDeposit(amount) {
+    return Intl.message("Залог: $amount",
+        name: 'showDeposit', args: [amount]);
+  }
+
+  String showRent(amount) {
+    return Intl.message("Оплата в месяц: $amount",
+        name: 'showRent', args: [amount]);
+  }
+
+  String get cartAddBooks {
+    return Intl.message('Добавьте книги', name: 'cartAddBooks');
+  }
+
+  String cartTopup(amount) {
+    return Intl.message("Пополните баланс на $amount",
+        name: 'cartTopup', args: [amount]);
+  }
+
+  String get cartMakeApointment {
+    return Intl.message('Договоритесь о встрече', name: 'cartMakeApointment');
+  }
+
+  String get cartRequesterHasToTopup {
+    return Intl.message('Получатель книг должен пополнить баланс', name: 'cartRequesterHasToTopup');
+  }
+
+  String get cartConfirmHandover {
+    return Intl.message('Подтвердите, что отдали книги', name: 'cartConfirmHandover');
+  }
+
+  String get cartConfirmReceived {
+    return Intl.message('Подтвердите получение книг', name: 'cartConfirmReceived');
+  }
+
+  String get cartRequesterHasToConfirm {
+    return Intl.message('Получатель должен подтвердить получение книг', name: 'cartRequesterHasToConfirm');
+  }
+
+  String get cartBooksAccepted {
+    return Intl.message('Книги успешно получены', name: 'cartBooksAccepted');
+  }
+
+  String get cartBooksGiven {
+    return Intl.message('Книги успешно переданы', name: 'cartBooksGiven');
+  }
+
+  String myBooksWithUser(count) {
+    return Intl.message("Мои книги у этого пользователя ($count)",
+        name: 'myBooksWithUser', args: [count]);
+  }
+
+  String booksOfUserWithMe(count) {
+    return Intl.message("Книги этого пользователя у меня ($count)",
+        name: 'booksOfUserWithMe', args: [count]);
+  }
+
+  String profileUserBooks(count) {
+    return Intl.message("Книги пользователя ($count)",
+        name: 'profileUserBooks', args: [count]);
+  }
+
+  String get supportTitleGetBooks {
+    return Intl.message('Как брать книги', name: 'supportTitleGetBooks');
+  }
+
+  String get supportGetBooks {
+    return Intl.message(
+              'Найдите книгу, которую Вы хотите почитать, и напишите её хозяину, '
+              'чтобы договориться о встрече. При получении книг вам нужно будет оплатить депозит. '
+              'Вы можете пополнить свой баланс по карточке или криптовалютой Stellar, а '
+              'можете заработать в Библосфере, давая свои книги почитать. Вы также можете зарабатывать '
+              'через партнёрскую программу, приглашая других участников.'
+    , name: 'supportGetBooks');
+  }
+
+  String get supportTitleGetBalance {
+    return Intl.message('Пополнение счёта', name: 'supportTitleGetBalance');
+  }
+
+  String get supportGetBalance {
+    return Intl.message(
+              'Пополнить счёт можно двумя способами: через покупку в приложении по карточке, '
+              'зарегистрированной в Google Play или App Store. Или сделать перевод криптовалюты '
+              'Stellar (XLM) на счёт, указанный в настройках.'
+    , name: 'supportGetBalance');
+  }
+
+  String get supportTitleReferrals {
+    return Intl.message('Партнёрская программа', name: 'supportTitleReferrals');
+  }
+
+  String get supportReferrals {
+    return Intl.message(
+              'Организуйте обмен книгами через Библосферу в своём сообществе или '
+              'офисе и получайте комиссию за каждую сделку. Для этого поделитесь с друзьями и '
+              'коллегами ссылкой на приложение (Вашей партнёрской ссылкой).'
+    , name: 'supportReferrals');
+  }
+
+  String get supportTitlePayout {
+    return Intl.message('Вывод средств', name: 'supportTitlePayout');
+  }
+
+  String get supportPayout {
+    return Intl.message(
+              'Если у Вас большой баланс в Библосфере, Вы можете вывести эти средства. '
+              'Вывести средства можно на свой кошелёк Stellar или через Stellar на любой кошелёк, карту или счёт. '
+              'Для вывода на карту или кошелёк воспользуйстесь услугами online-обменников.'
+    , name: 'supportPayout');
+  }
+
+  String get supportTitleChatbot {
+    return Intl.message('Чат-бот Библосферы', name: 'supportTitleChatbot');
+  }
+
+  String get supportChatbot {
+    return Intl.message(
+              'Во вкладке Сообщения есть чат с ботом Библосферы, он может ответить на любые вопросы о '
+              'приложении. Если понадобится связаться напрямую со мной, пишите в telegram '
+    , name: 'supportChatbot');
+  }
+
+  String get supportSignature {
+    return Intl.message('Денис Старк', name: 'supportSignature');
+  }
 }
 
 class AppLocalizationsDelegate extends LocalizationsDelegate<S> {

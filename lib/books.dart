@@ -6,21 +6,20 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:barcode_scan/barcode_scan.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
 
 import 'package:biblosphere/const.dart';
 import 'package:biblosphere/helpers.dart';
 import 'package:biblosphere/search.dart';
 import 'package:biblosphere/lifecycle.dart';
 import 'package:biblosphere/chat.dart';
+import 'package:biblosphere/home.dart';
 import 'package:biblosphere/l10n.dart';
 
 class AddBookWidget extends StatefulWidget {
   AddBookWidget({
     Key key,
-    @required this.currentUser,
   }) : super(key: key);
-
-  final User currentUser;
 
   @override
   _AddBookWidgetState createState() => new _AddBookWidgetState();
@@ -78,8 +77,20 @@ class _AddBookWidgetState extends State<AddBookWidget> {
                           textColor: C.buttonText,
                           color: C.button,
                           child: assetIcon(barcode_scanner_100, size: 30),
-                          onPressed: () {
-                            scanIsbn(context);
+                          onPressed: () async {
+                            String barcode = await BarcodeScanner.scan();
+                            await scanIsbn(context, barcode);
+                            FirebaseAnalytics().logEvent(
+                                name: 'book_add_attempt',
+                                parameters: <String, dynamic>{
+                                  'type': 'isbn',
+                                  'search_term': barcode,
+                                  'results': suggestions.length,
+                                  'locality': B.locality,
+                                  'country': B.country,
+                                  'latitude': B.position.latitude,
+                                  'longitude': B.position.longitude
+                                });
                           },
                           shape: new RoundedRectangleBorder(
                               borderRadius: new BorderRadius.circular(20.0)),
@@ -113,9 +124,20 @@ class _AddBookWidgetState extends State<AddBookWidget> {
                               textColor: Colors.white,
                               color: C.button,
                               child: assetIcon(search_100, size: 30),
-                              onPressed: () {
+                              onPressed: () async {
                                 FocusScope.of(context).unfocus();
-                                searchByTitleAuthor(textController.text);
+                                await searchByTitleAuthor(textController.text);
+                                FirebaseAnalytics().logEvent(
+                                    name: 'book_add_attempt',
+                                    parameters: <String, dynamic>{
+                                      'type': 'text',
+                                      'search_term': textController.text,
+                                      'results': suggestions.length,
+                                      'locality': B.locality,
+                                      'country': B.country,
+                                      'latitude': B.position.latitude,
+                                      'longitude': B.position.longitude
+                                    });
                               },
                               shape: new RoundedRectangleBorder(
                                   borderRadius:
@@ -138,8 +160,9 @@ class _AddBookWidgetState extends State<AddBookWidget> {
                     setState(() {
                       suggestions.clear();
                     });
-                    addBookrecord(context, book, widget.currentUser, false,
-                        await currentLocation(),
+                    print('!!!DEBUG ${book.toJson()}');
+                    addBookrecord(
+                        context, book, B.user, false, await currentLocation(),
                         source: 'googlebooks');
                     //showSnackBar(context, S.of(context).bookAdded);
                   },
@@ -210,10 +233,8 @@ class _AddBookWidgetState extends State<AddBookWidget> {
     });
   }
 
-  Future scanIsbn(BuildContext context) async {
+  Future scanIsbn(BuildContext context, String barcode) async {
     try {
-      String barcode = await BarcodeScanner.scan();
-
       Book book = await searchByIsbn(barcode);
 
       if (book == null) {
@@ -234,9 +255,20 @@ class _AddBookWidgetState extends State<AddBookWidget> {
           suggestions = <Book>[book];
         });
       } else {
-        Firestore.instance.collection('noisbn').add({'isbn': barcode});
+        Firestore.instance.collection('noisbn').document(barcode).setData({
+          'count': FieldValue.increment(1),
+          'requested_by': FieldValue.arrayUnion([B.user.id])
+        }, merge: true);
         //print("No record found for isbn: $barcode");
         showSnackBar(context, S.of(context).isbnNotFound);
+        FirebaseAnalytics()
+            .logEvent(name: 'book_noisbn', parameters: <String, dynamic>{
+          'isbn': barcode,
+          'locality': B.locality,
+          'country': B.country,
+          'latitude': B.position.latitude,
+          'longitude': B.position.longitude
+        });
       }
     } on PlatformException catch (e) {
       if (e.code == BarcodeScanner.CameraAccessDenied) {
@@ -255,23 +287,19 @@ class _AddBookWidgetState extends State<AddBookWidget> {
 }
 
 class FindBookWidget extends StatefulWidget {
-  FindBookWidget({
-    Key key,
-    @required this.currentUser,
-    this.filter
-  }) : super(key: key);
+  FindBookWidget({Key key, this.filter}) : super(key: key);
 
-  final User currentUser;
   final String filter;
 
   @override
-  _FindBookWidgetState createState() => new _FindBookWidgetState(filter: filter);
+  _FindBookWidgetState createState() =>
+      new _FindBookWidgetState(filter: filter);
 }
 
 class _FindBookWidgetState extends State<FindBookWidget> {
   String filter;
   Map<String, dynamic> books = {};
- 
+
   TextEditingController textController;
 
   @override
@@ -284,7 +312,6 @@ class _FindBookWidgetState extends State<FindBookWidget> {
       textController.text = filter;
       searchByTitleAuthor(textController.text);
     }
-
   }
 
   @override
@@ -342,9 +369,42 @@ class _FindBookWidgetState extends State<FindBookWidget> {
                               textColor: Colors.white,
                               color: C.button,
                               child: assetIcon(search_100, size: 30),
-                              onPressed: () {
+                              onPressed: () async {
                                 FocusScope.of(context).unfocus();
-                                searchByTitleAuthor(textController.text);
+                                await searchByTitleAuthor(textController.text);
+                                final List<dynamic> biblos = books.values
+                                    .where((t) => t is Bookrecord)
+                                    .toList();
+                                FirebaseAnalytics().logEvent(
+                                    name: 'search',
+                                    parameters: <String, dynamic>{
+                                      'type': 'text',
+                                      'search_term': textController.text,
+                                      'results': books.length,
+                                      'in_biblosphere': biblos.length,
+                                      'locality': B.locality,
+                                      'country': B.country,
+                                      'latitude': B.position.latitude,
+                                      'longitude': B.position.longitude
+                                    });
+
+                                if (biblos.length > 0)
+                                  FirebaseAnalytics().logEvent(
+                                      name: 'book_found',
+                                      parameters: <String, dynamic>{
+                                        'type': 'text',
+                                        'search_term': textController.text,
+                                        'isbn':
+                                            (biblos.first as Bookrecord).isbn,
+                                        'results': books.length,
+                                        'in_biblosphere': biblos.length,
+                                        'distance': (biblos.first as Bookrecord)
+                                            .distance,
+                                        'locality': B.locality,
+                                        'country': B.country,
+                                        'latitude': B.position.latitude,
+                                        'longitude': B.position.longitude
+                                      });
                               },
                               shape: new RoundedRectangleBorder(
                                   borderRadius:
@@ -364,8 +424,41 @@ class _FindBookWidgetState extends State<FindBookWidget> {
                           textColor: Colors.white,
                           color: C.button,
                           child: assetIcon(barcode_scanner_100, size: 30),
-                          onPressed: () {
-                            scanIsbn(context);
+                          onPressed: () async {
+                            String barcode = await BarcodeScanner.scan();
+                            await scanIsbn(context, barcode);
+                            final List<dynamic> biblos = books.values
+                                .where((t) => t is Bookrecord)
+                                .toList();
+                            FirebaseAnalytics().logEvent(
+                                name: 'search',
+                                parameters: <String, dynamic>{
+                                  'type': 'isbn',
+                                  'search_term': barcode,
+                                  'results': books.length,
+                                  'in_biblosphere': biblos.length,
+                                  'locality': B.locality,
+                                  'country': B.country,
+                                  'latitude': B.position.latitude,
+                                  'longitude': B.position.longitude
+                                });
+
+                            if (biblos.length > 0)
+                              FirebaseAnalytics().logEvent(
+                                  name: 'book_found',
+                                  parameters: <String, dynamic>{
+                                    'type': 'isbn',
+                                    'search_term': barcode,
+                                    'isbn': (biblos.first as Bookrecord).isbn,
+                                    'results': books.length,
+                                    'in_biblosphere': biblos.length,
+                                    'distance':
+                                        (biblos.first as Bookrecord).distance,
+                                    'locality': B.locality,
+                                    'country': B.country,
+                                    'latitude': B.position.latitude,
+                                    'longitude': B.position.longitude
+                                  });
                           },
                           shape: new RoundedRectangleBorder(
                               borderRadius: new BorderRadius.circular(20.0)),
@@ -385,17 +478,24 @@ class _FindBookWidgetState extends State<FindBookWidget> {
                 margin: EdgeInsets.all(3.0),
                 child: GestureDetector(
                     onTap: () async {
+                      FirebaseAnalytics().logEvent(
+                          name: 'search_elsewhere',
+                          parameters: <String, dynamic>{
+                            'user': B.user.id,
+                            'isbn': book.isbn,
+                            'locality': B.locality,
+                            'country': B.country,
+                            'latitude': B.position.latitude,
+                            'longitude': B.position.longitude
+                          });
+
                       //book = await enrichBookRecord(book);
                       Navigator.push(
                           context,
                           new MaterialPageRoute(
                               builder: (context) => buildScaffold(
-                                  context,
-                                  null,
-                                  new GetBookWidget(
-                                      currentUser: widget.currentUser,
-                                      book: book),
-                                      appbar: false)));
+                                  context, null, new GetBookWidget(book: book),
+                                  appbar: false)));
                     },
                     child: Row(children: <Widget>[
                       bookImage(book, 60, padding: 5.0),
@@ -405,16 +505,20 @@ class _FindBookWidgetState extends State<FindBookWidget> {
                               child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: <Widget>[
-                                    Text('${book.authors[0]}',
+                                    Text(book.authors[0],
+                                        overflow: TextOverflow.ellipsis,
                                         style:
-                                            Theme.of(context).textTheme.body1),
-                                    Text('\"${book.title}\"',
+                                            Theme.of(context)
+                                                .textTheme
+                                                .caption),
+                                    Text(book.title,
+                                        overflow: TextOverflow.ellipsis,
                                         style:
-                                            Theme.of(context).textTheme.body1)
+                                            Theme.of(context)
+                                                .textTheme
+                                                .subtitle),
                                   ]))),
-                      Container(
-                          child: Text('${book.copies}/${book.wishes}',
-                              style: Theme.of(context).textTheme.body1))
+                      Container(child: assetIcon(search_100, size: 30))
                     ])));
           } else if (book is Bookrecord) {
             Bookrecord rec = book;
@@ -422,21 +526,27 @@ class _FindBookWidgetState extends State<FindBookWidget> {
                 margin: EdgeInsets.all(3.0),
                 child: GestureDetector(
                     onTap: () async {
-                      // Create chat (messages)
-                      Messages chat = await getChatAndTransit(
-                          context: context,
-                          from: rec.holder,
-                          to: B.user,
-                          bookrecordId: rec.id);
+                      if (rec.holderId == B.user.id) {
+                        // For user own books open in My Book screen
+                        Navigator.pop(context);
 
-                      if (chat == null)
-                        showSnackBar(
-                            context, S.of(context).snackBookNotConfirmed);
-                      else
+                        Navigator.push(
+                            context,
+                            new MaterialPageRoute(
+                                builder: (context) => buildScaffold(context,
+                                    null, ShowBooksWidget(filter: rec.isbn),
+                                    appbar: false)));
+                      } else {
+                        // For other users books open chat and transit
+                        Messages chat =
+                            new Messages(from: rec.holder, to: B.user);
+
                         // Open chat widget
                         Chat.runChat(context, null,
-                            message: S.of(context).requestBook(rec.title),
-                            chat: chat);
+                            chat: chat,
+                            transit: rec.id,
+                            message: S.of(context).requestBook(rec.title));
+                      }
                     },
                     child: Row(children: <Widget>[
                       bookImage(rec, 60, padding: 5.0),
@@ -446,21 +556,36 @@ class _FindBookWidgetState extends State<FindBookWidget> {
                               child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: <Widget>[
-                                    Text('${rec.authors[0]}',
+                                    Text(rec.authors[0],
+                                        overflow: TextOverflow.ellipsis,
                                         style:
-                                            Theme.of(context).textTheme.body1),
-                                    Text('\"${rec.title}\"',
+                                            Theme.of(context)
+                                                .textTheme
+                                                .caption),
+                                    Text(rec.title,
+                                        overflow: TextOverflow.ellipsis,
                                         style:
-                                            Theme.of(context).textTheme.body1),
+                                            Theme.of(context)
+                                                .textTheme
+                                                .subtitle),
                                     Text(
                                         S.of(context).distanceLine(
                                             distance(rec.distance)),
                                         style:
                                             Theme.of(context).textTheme.body1),
-                                    Text(S.of(context).bookWith(rec.holderName),
+                                    Text(
+                                        (rec.holderId == B.user.id)
+                                            ? S.of(context).youHaveThisBook
+                                            : S
+                                                .of(context)
+                                                .bookWith(rec.holderName),
                                         style:
                                             Theme.of(context).textTheme.body1)
                                   ]))),
+                      Container(
+                          child: (rec.holderId == B.user.id)
+                              ? assetIcon(books_100, size: 30)
+                              : assetIcon(shopping_cart_100, size: 30))
                     ])));
           }
           return Container();
@@ -515,56 +640,74 @@ class _FindBookWidgetState extends State<FindBookWidget> {
     Set<String> keys = getKeys(text);
     books = <String, dynamic>{};
 
-    // Search in Bookrecords
-    searchByTitleAuthorBiblosphere(text, actual: true).then((list) {
-      books = mergeBooks(books, list);
-      setState(() {});
-    });
+    List<Future> futures = <Future>[
+      // Search in Bookrecords
+      searchByTitleAuthorBiblosphere(text, actual: true).then((list) {
+        books = mergeBooks(books, list);
+        setState(() {});
+      }),
 
-    // Search in Books
-    searchByTitleAuthorBiblosphere(text).then((list) {
-      books = mergeBooks(books, list);
-      setState(() {});
-    });
+      // Search in Books
+      searchByTitleAuthorBiblosphere(text).then((list) {
+        books = mergeBooks(books, list);
+        setState(() {});
+      }),
 
-    searchByTitleAuthorGoogle(text).then((list) {
-      list = list.where((book) => book.keys.containsAll(keys)).toList();
-      books = mergeBooks(books, list);
-      setState(() {});
-    });
+      searchByTitleAuthorGoogle(text).then((list) {
+        list = list.where((book) => book.keys.containsAll(keys)).toList();
+        books = mergeBooks(books, list);
+        setState(() {});
+      }),
 
-    searchByTitleAuthorGoodreads(text).then((list) {
-      list = list.where((book) => book.keys.containsAll(keys)).toList();
-      books = mergeBooks(books, list);
-      setState(() {});
-    });
+      searchByTitleAuthorGoodreads(text).then((list) {
+        list = list.where((book) => book.keys.containsAll(keys)).toList();
+        books = mergeBooks(books, list);
+        setState(() {});
+      }),
+    ];
+
+    await Future.wait(futures);
   }
 
   //TODO: Same code reuse function with AddBookWidget
-  Future scanIsbn(BuildContext context) async {
+  Future scanIsbn(BuildContext context, String barcode) async {
     try {
-      String barcode = await BarcodeScanner.scan();
+      books = <String, dynamic>{};
 
-      Book book = await searchByIsbn(barcode);
+      // TODO: Avoid unnecessary search if book found in Biblosphere
 
-      if (book == null) {
-        book = await searchByIsbnGoodreads(barcode);
-      }
+      List<Future> futures = <Future>[
+        // Search in Bookrecords
+        searchByIsbnBookrecords(barcode).then((list) {
+          books = mergeBooks(books, list);
+          setState(() {});
+        }),
 
-      if (book == null) {
-        if (barcode.startsWith('9785'))
-          book = await searchByIsbnRsl(barcode);
-        else
-          book = await searchByIsbnGoogle(barcode);
-      }
+        // Search in Books
+        searchByIsbn(barcode).then((list) {
+          books = mergeBooks(books, [list]);
+          setState(() {});
+        }),
 
-      if (book != null) {
-        //Many books on goodreads does not have images. Enreach it from Google
-        book = await enrichBookRecord(book);
-        setState(() {
-          books = <String, dynamic>{book.isbn: book};
-        });
-      } else {
+        searchByIsbnGoodreads(barcode).then((list) {
+          books = mergeBooks(books, [list]);
+          setState(() {});
+        }),
+
+        barcode.startsWith('9785')
+            ? searchByIsbnRsl(barcode).then((list) {
+                books = mergeBooks(books, [list]);
+                setState(() {});
+              })
+            : searchByIsbnGoogle(barcode).then((list) {
+                books = mergeBooks(books, [list]);
+                setState(() {});
+              }),
+      ];
+
+      await Future.wait(futures);
+
+      if (books.values.length == 0) {
         Firestore.instance.collection('noisbn').add({'isbn': barcode});
         //print("No record found for isbn: $barcode");
         showSnackBar(context, S.of(context).isbnNotFound);
@@ -587,11 +730,9 @@ class _FindBookWidgetState extends State<FindBookWidget> {
 class GetBookWidget extends StatefulWidget {
   GetBookWidget({
     Key key,
-    @required this.currentUser,
     @required this.book,
   }) : super(key: key);
 
-  final User currentUser;
   final Book book;
 
   @override
@@ -628,8 +769,7 @@ class _GetBookWidgetState extends State<GetBookWidget> {
     return CustomScrollView(slivers: <Widget>[
       SliverAppBar(
         // Provide a standard title.
-        title: Text(
-            S.of(context).titleGetBook,
+        title: Text(S.of(context).titleGetBook,
             style: Theme.of(context).textTheme.title.apply(color: C.titleText)),
         // Allows the user to reveal the app bar if they begin scrolling
         // back up the list of items.
@@ -638,117 +778,146 @@ class _GetBookWidgetState extends State<GetBookWidget> {
         snap: true,
         // Display a placeholder widget to visualize the shrinking size.
         bottom: PreferredSize(
-                  child: Container(
-                    margin: EdgeInsets.all(5.0),
-                    alignment: Alignment.topLeft,
-                    child: Text(S.of(context).bookNotFound)),
-                  preferredSize: Size.fromHeight(30.0)),
+            child: Container(
+                margin: EdgeInsets.all(5.0),
+                alignment: Alignment.topLeft,
+                child: Text(S.of(context).bookNotFound)),
+            preferredSize: Size.fromHeight(30.0)),
         // Make the initial height of the SliverAppBar larger than normal.
         expandedHeight: 110,
       ),
-      SliverToBoxAdapter(child: Card(
-              child: GestureDetector(
-            onTap: () async {
-              addBookrecord(context, widget.book, widget.currentUser, true,
-                  await currentLocation(),
-                  source: 'googlebooks');
-            },
-            child: Row(children: <Widget>[
-              bookImage(widget.book, 50.0, padding: 10.0),
-              Expanded(
-                  child: Container(
-                padding: new EdgeInsets.all(10.0),
-                child: new Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: <Widget>[
-                    new Container(
-                        child: Text(S.of(context).addToWishlist,
-                            style: Theme.of(context).textTheme.body1)),
-                  ],
-                ),
-              )),
-            ]),
-          )),
+      SliverToBoxAdapter(
+        child: Card(
+            child: GestureDetector(
+          onTap: () async {
+            addBookrecord(
+                context, widget.book, B.user, true, await currentLocation(),
+                source: 'googlebooks');
+          },
+          child: Row(children: <Widget>[
+            bookImage(widget.book, 50.0, padding: 10.0),
+            Expanded(
+                child: Container(
+              padding: new EdgeInsets.all(10.0),
+              child: new Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: <Widget>[
+                  new Container(
+                      child: Text(S.of(context).addToWishlist,
+                          style: Theme.of(context).textTheme.body1)),
+                ],
+              ),
+            )),
+          ]),
+        )),
       ),
-      SliverToBoxAdapter(child:           inLibraries
-              ? new GestureDetector(
-                  onTap: () async {
-                    if (await canLaunch(libraryQuery)) {
-                      await launch(libraryQuery);
-                    }
-                  },
-                  child: new Card(
-                    child: Row(children: <Widget>[
-                      bookImage(widget.book, 50.0,
-                          padding:
-                              10.0), //child: new Icon(MyIcons.library, size: 50)),
-                      Expanded(
-                          child: Container(
-                        padding: new EdgeInsets.all(10.0),
-                        child: new Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: <Widget>[
-                            new Text(S.of(context).bookInLibrary,
-                                style: Theme.of(context).textTheme.body1),
-                            new Text(libraryService,
-                                style: Theme.of(context).textTheme.body1),
-                            new Text('',
-                                style: Theme.of(context).textTheme.body1),
-                          ],
-                        ),
-                      )),
-                    ]),
-                  ))
-              : Container(),
-),
-      SliverToBoxAdapter(child:           inBookstores
-              ? new GestureDetector(
-                  onTap: () async {
-                    String url;
-                    if (widget.book.isbn.startsWith('9785')) {
-                      url =
-                          'https://www.ozon.ru/category/knigi-16500/?text=${widget.book.title + ' ' + widget.book.authors.join(' ')}';
-                    } else {
-                      url =
-                          'https://www.amazon.com/s?k=${widget.book.title + ' ' + widget.book.authors.join(' ')}';
-                    }
+      SliverToBoxAdapter(
+        child: inLibraries
+            ? new GestureDetector(
+                onTap: () async {
+                  FirebaseAnalytics().logEvent(
+                      name: 'library_click',
+                      parameters: <String, dynamic>{
+                        'isbn': widget.book.isbn,
+                        'user': B.user.id,
+                        'library': libraryQuery,
+                        'locality': B.locality,
+                        'country': B.country,
+                        'latitude': B.position.latitude,
+                        'longitude': B.position.longitude
+                      });
 
-                    var encoded = Uri.encodeFull(url);
-                    if (await canLaunch(encoded)) {
-                      await launch(encoded);
-                    }
-                  },
-                  child: new Card(
-                    child: Row(children: <Widget>[
-                      bookImage(widget.book, 50.0, padding: 10.0),
-                      Expanded(
-                          child: Container(
-                        padding: new EdgeInsets.all(10.0),
-                        child: new Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: <Widget>[
-                            new Text(S.of(context).buyBook,
-                                style: Theme.of(context).textTheme.body1),
-                            new Text(
-                                widget.book.isbn.startsWith('9785')
-                                    ? 'www.ozon.ru'
-                                    : 'www.amazon.com',
-                                style: Theme.of(context).textTheme.body1),
-                            new Text('',
-                                style: Theme.of(context).textTheme.body1),
-                          ],
-                        ),
-                      )),
-                    ]),
-                  ))
-              : Container(),
-),
+                  if (await canLaunch(libraryQuery)) {
+                    await launch(libraryQuery);
+                  }
+                },
+                child: new Card(
+                  child: Row(children: <Widget>[
+                    bookImage(widget.book, 50.0,
+                        padding:
+                            10.0), //child: new Icon(MyIcons.library, size: 50)),
+                    Expanded(
+                        child: Container(
+                      padding: new EdgeInsets.all(10.0),
+                      child: new Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: <Widget>[
+                          new Text(S.of(context).bookInLibrary,
+                              style: Theme.of(context).textTheme.body1),
+                          new Text(libraryService,
+                              style: Theme.of(context).textTheme.body1),
+                          new Text('',
+                              style: Theme.of(context).textTheme.body1),
+                        ],
+                      ),
+                    )),
+                  ]),
+                ))
+            : Container(),
+      ),
+      SliverToBoxAdapter(
+        child: inBookstores
+            ? new GestureDetector(
+                onTap: () async {
+                  String url;
+                  String bookstore;
+                  if (widget.book.isbn.startsWith('9785')) {
+                    bookstore = 'www.ozon.ru';
+                    url =
+                        'https://www.ozon.ru/category/knigi-16500/?text=${widget.book.title + ' ' + widget.book.authors.join(' ')}';
+                  } else {
+                    bookstore = 'www.amazon.com';
+                    url =
+                        'https://www.amazon.com/s?k=${widget.book.title + ' ' + widget.book.authors.join(' ')}';
+                  }
+
+                  FirebaseAnalytics().logEvent(
+                      name: 'bookstore_click',
+                      parameters: <String, dynamic>{
+                        'isbn': widget.book.isbn,
+                        'user': B.user.id,
+                        'store': bookstore,
+                        'locality': B.locality,
+                        'country': B.country,
+                        'latitude': B.position.latitude,
+                        'longitude': B.position.longitude
+                      });
+
+                  var encoded = Uri.encodeFull(url);
+                  if (await canLaunch(encoded)) {
+                    await launch(encoded);
+                  }
+                },
+                child: new Card(
+                  child: Row(children: <Widget>[
+                    bookImage(widget.book, 50.0, padding: 10.0),
+                    Expanded(
+                        child: Container(
+                      padding: new EdgeInsets.all(10.0),
+                      child: new Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: <Widget>[
+                          new Text(S.of(context).buyBook,
+                              style: Theme.of(context).textTheme.body1),
+                          new Text(
+                              widget.book.isbn.startsWith('9785')
+                                  ? 'www.ozon.ru'
+                                  : 'www.amazon.com',
+                              style: Theme.of(context).textTheme.body1),
+                          new Text('',
+                              style: Theme.of(context).textTheme.body1),
+                        ],
+                      ),
+                    )),
+                  ]),
+                ))
+            : Container(),
+      ),
     ]);
   }
-
 
   List<Provider> libraryServers = [
     // Russia, Sankt-Peterburg
@@ -773,7 +942,8 @@ class _GetBookWidgetState extends State<GetBookWidget> {
   ];
 
   Future<Map<String, String>> searchLibraries(Book book) async {
-    List<Placemark> placemarks = await Geolocator().placemarkFromCoordinates(lastKnownPosition.latitude, lastKnownPosition.longitude);
+    List<Placemark> placemarks = await Geolocator()
+        .placemarkFromCoordinates(B.position.latitude, B.position.longitude);
 
     // Sankt-Peterburg  (59.9343, 30.3351, localeIdentifier: 'en')
     // Ekaterinburg  (56.8389, 60.6057, localeIdentifier: 'en')

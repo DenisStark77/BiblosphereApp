@@ -12,6 +12,7 @@ import 'package:share/share.dart';
 import 'package:flutter_crashlytics/flutter_crashlytics.dart';
 import 'package:flutter/gestures.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
 
 import 'package:biblosphere/const.dart';
 import 'package:biblosphere/helpers.dart';
@@ -27,8 +28,7 @@ class MyHomePage extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  _MyHomePageState createState() =>
-      new _MyHomePageState();
+  _MyHomePageState createState() => new _MyHomePageState();
 }
 
 class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
@@ -40,7 +40,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   void initState() {
     super.initState();
 
-    assert (B.user != null);
+    assert(B.user != null);
     initDynamicLinks();
   }
 
@@ -113,22 +113,28 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
             B.user.beneficiary1 = ref.id;
             B.user.feeShared = 0;
             B.user.beneficiary2 = ref.beneficiary1;
-          }
 
-          // Update  beneficiary1, beneficiary2, feeShared
-          B.user.ref.updateData(B.user.toJson());
+            // Update  beneficiary1, beneficiary2, feeShared
+            B.user.ref.updateData(B.user.toJson());
+
+            FirebaseAnalytics()
+                .logEvent(name: 'referral_set', parameters: <String, dynamic>{
+              'user': B.user.id,
+              'surerior': ref.id,
+              'locality': B.locality,
+              'country': B.country,
+              'latitude': B.position.latitude,
+              'longitude': B.position.longitude
+            });
+          }
         }
 
         // If user or ref defined go to user chat
         if (user != null) {
-          Messages chat = await getChatAndTransit(
-              context: context,
-              from: user,
-              to: B.user,
-              bookrecordId: bookrecordId);
+          Messages chat = Messages(from: user, to: B.user);
 
           // Open chat widget
-          Chat.runChat(context, user, chat: chat);
+          Chat.runChat(context, user, chat: chat, transit: bookrecordId);
         }
       }
       // It was Navigator.pushNamed in original example. Don't know why...
@@ -147,9 +153,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
               context,
               new MaterialPageRoute(
                   builder: (context) => buildScaffold(
-                      context,
-                      null,
-                      new FindBookWidget(filter: book.title),
+                      context, null, new FindBookWidget(filter: book.title),
                       appbar: false)));
         } else {
           // TODO: report missing book in the link
@@ -187,13 +191,9 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
       }
     } else if (deepLink.path == "/support") {
       String message = deepLink.queryParameters['msg'];
-      Messages chat = await getChatAndTransit(
-          context: context,
-          from: B.user,
-          system: true);
+      Messages chat = Messages(from: B.user, system: true);
 
-      Chat.runChat(context, null,
-          chat: chat, message: message, send: true);
+      Chat.runChat(context, null, chat: chat, message: message, send: true);
     }
   }
 
@@ -219,24 +219,24 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     return new Scaffold(
-      appBar: new AppBar(
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        actions: <Widget>[
-/*
+        appBar: new AppBar(
+          // Here we take the value from the MyHomePage object that was created by
+          // the App.build method, and use it to set our appbar title.
+          actions: <Widget>[
           new IconButton(
             onPressed: () {
-              Navigator.push(
-                  context,
-                  new MaterialPageRoute(
-                      //TODO: translation
-                      builder: (context) => buildScaffold(context, "СООБЩЕНИЯ",
-                          new ChatListWidget())));
+                  Navigator.push(
+                      context,
+                      new MaterialPageRoute(
+                          builder: (context) => buildScaffold(
+                              context,
+                              S.of(context).titleMessages,
+                              new ChatListWidget())));
             },
-            //TODO: Change tooltip
-            tooltip: S.of(context).cart,
+            tooltip: S.of(context).hintChatOpen,
             icon: assetIcon(communication_100, size: 30),
           ),
+/*
           Container(
               margin: EdgeInsets.only(right: 10.0, left: 10.0),
               child: FlatButton(
@@ -265,8 +265,49 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                 padding: EdgeInsets.all(0.0),
               )),
 */
-          new IconButton(
-            onPressed: () async {
+/*
+            new IconButton(
+              onPressed: () async {
+              // Convert CHAT ids
+              QuerySnapshot snap = await Firestore.instance.collection('messages')
+                  //.where('toName', isEqualTo: 'Женя Старк')
+                  .getDocuments();
+              await Future.forEach(snap.documents, (DocumentSnapshot doc) async {
+                Messages chat = Messages.fromJson(doc.data, doc);
+
+                if( chat.fromId != null && chat.toId != null || chat.system && chat.fromId != null )
+                  return;
+
+                if( chat.ids == null || chat.ids[0] == null || chat.ids[1] == null)
+                  return;
+
+                chat.fromId = chat.ids[0]; 
+                chat.toId = chat.ids[1];
+
+                await doc.reference.updateData({'fromId': chat.fromId, 'toId': chat.toId, 
+                'fromName': null, 'fromImage': null, 
+                'toName': null, 'toImage': null
+                });
+              });
+                QuerySnapshot snap = await Firestore.instance
+                    .collection('noisbn')
+                    //.where('fromId', isEqualTo: 'oyYUDByQGVdgP13T1nyArhyFkct1')
+                    .getDocuments();
+                await Future.forEach(snap.documents,
+                    (DocumentSnapshot doc) async {
+                  String isbn = doc.data['isbn'];
+
+                  await Firestore.instance
+                      .collection('noisbn')
+                      .document(isbn)
+                      .setData({'isbn': isbn});
+
+                  await Firestore.instance
+                      .collection('noisbn')
+                      .document(doc.documentID)
+                      .delete();
+                });
+
               QuerySnapshot snap = await Firestore.instance
                   .collection('messages')
                   //.where('fromId', isEqualTo: 'oyYUDByQGVdgP13T1nyArhyFkct1')
@@ -317,7 +358,6 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                 if (data.length > 0) await doc.reference.updateData(data);
               });
 
-/*
               // Convert CHAT ids
               QuerySnapshot snap = await Firestore.instance.collection('messages')
                   //.where('fromId', isEqualTo: 'oyYUDByQGVdgP13T1nyArhyFkct1')
@@ -612,310 +652,304 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                     Firestore.instance.collection('bookcopies').document(doc.documentID).updateData({'migrated': true});
                     print('!!!DEBUG: bookrecord added ${rec.id}');
                   });
- */
-            },
-            tooltip: S.of(context).settings,
-            icon: assetIcon(settings_100, size: 30),
-          ),
-        ],
-        title: new Text(S.of(context).title,
-            style: Theme.of(context).textTheme.title.apply(color: C.titleText)),
-        centerTitle: true,
-      ),
-      body: new Container(child: new OrientationBuilder(
-          builder: (BuildContext context, Orientation orientation) {
-        return new Flex(
-            direction: orientation == Orientation.landscape
-                ? Axis.horizontal
-                : Axis.vertical,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: <Widget>[
-              new Expanded(
-                  child: new InkWell(
-                      onTap: () {
-                        Navigator.push(
-                            context,
-                            new MaterialPageRoute(
-                                builder: (context) => buildScaffold(
-                                    context,
-                                    S.of(context).addbookTitle,
-                                    new AddBookWidget(),
-                                    appbar: false)));
-                      },
-                      child: new Card(
-                          child: new Container(
-                              padding: new EdgeInsets.all(10.0),
-                              child: new Column(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceEvenly,
-                                  children: <Widget>[
-                                    new Container(
-                                        width: 60,
-                                        child: Image.asset(add_book_100)),
-                                    new Text(S.of(context).addBook,
-                                        style:
-                                            Theme.of(context).textTheme.title)
-                                  ]))))),
-              new Expanded(
-                child: new InkWell(
-                  onTap: () {
-                    Navigator.push(
-                        context,
-                        new MaterialPageRoute(
-                            builder: (context) => buildScaffold(
-                                context,
-                                S.of(context).findbookTitle,
-                                new FindBookWidget(),
-                                appbar: false)));
-                  },
-                  child: new Card(
-                    child: new Container(
-                      padding: new EdgeInsets.all(10.0),
-                      child: new Column(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: <Widget>[
-                          Container(width: 60, child: Image.asset(search_100)),
-                          new Text(S.of(context).findBook,
-                              style: Theme.of(context).textTheme.title)
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              new Expanded(
-                child: new InkWell(
-                  onTap: () {
-                    Navigator.push(
-                        context,
-                        new MaterialPageRoute(
-                            builder: (context) => buildScaffold(
-                                context,
-                                S.of(context).mybooksTitle,
-                                new ShowBooksWidget(),
-                                appbar: false)));
-                  },
-                  child: new Card(
-                    child: new Container(
-                      padding: new EdgeInsets.all(10.0),
-                      child: new Column(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: <Widget>[
-                          Container(width: 60, child: Image.asset(books_100)),
-                          new Text(S.of(context).myBooks,
-                              style: Theme.of(context).textTheme.title)
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ]);
-      })),
-      drawer: Scaffold(
-        // The extra Scaffold needed to show Snackbar above the Drawer menu.
-        // Stack and GestureDetector are workaround to return to app if tap
-        // outside Drawer.
-        backgroundColor: Colors.transparent,
-        body: Stack(//fit: StackFit.expand,
-            children: <Widget>[
-          GestureDetector(onTap: () {
-            Navigator.pop(context);
-          }),
-          Drawer(
-            child: ListView(
-              // Important: Remove any padding from the ListView.
-              padding: EdgeInsets.zero,
-              children: <Widget>[
-                DrawerHeader(
-                  child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: <Widget>[
-                            Row(
-                                mainAxisAlignment: MainAxisAlignment.start,
-                                children: <Widget>[
-                                    userPhoto(B.user, 90),
-                                    Expanded(
-                                        child: Container(
-                                            padding:
-                                                EdgeInsets.only(left: 10.0),
-                                            child: Column(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                children: <Widget>[
-                                                  Container(
-                                                      margin: EdgeInsets.only(
-                                                          bottom: 5.0),
-                                                      child: Text(
-                                                          B.user.name,
-                                                          overflow: TextOverflow
-                                                              .ellipsis,
-                                                          style: Theme.of(
-                                                                  context)
-                                                              .textTheme
-                                                              .title
-                                                              .apply(
-                                                                  color: C
-                                                                      .titleText))),
-                                                  Row(children: <Widget>[
-                                                    new Container(
-                                                        margin: EdgeInsets.only(
-                                                            right: 5.0),
-                                                        child: assetIcon(
-                                                            coins_100,
-                                                            size: 20)),
-                                                    new Text(
-                                                        money(B.wallet.getAvailable()),
-                                                        style: Theme.of(context)
-                                                            .textTheme
-                                                            .body1
-                                                            .apply(
-                                                                color: C
-                                                                    .titleText))
-                                                  ]),
-                                                ]))),
-                                  ]),
-                        Container(
-                            padding: EdgeInsets.only(top: 5.0),
-                            child: Text(S.of(context).referralLink,
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .body1
-                                    .apply(color: C.titleText))),
-                        Container(
-                            padding: EdgeInsets.all(0.0),
-                            child: Builder(
-                                // Create an inner BuildContext so that the onPressed methods
-                                // can refer to the Scaffold with Scaffold.of().
-                                builder: (BuildContext context) {
-                              return InkWell(
-                                  onTap: () {
-                                    Clipboard.setData(new ClipboardData(
-                                        text: B.user.link));
-                                    //Navigator.pop(context);
-                                    showSnackBar(
-                                        context, S.of(context).linkCopied);
-                                  },
-                                  child: Text(B.user.link,
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .body1
-                                          .apply(
-                                              color: C.titleText,
-                                              decoration:
-                                                  TextDecoration.underline)));
-                            })),
-                      ]),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).primaryColor,
-                  ),
-                ),
-                ListTile(
-                  title: drawerMenuItem(
-                      context, S.of(context).menuMessages, communication_100,
-                      size: 30),
-                  onTap: () {
-                    Navigator.pop(context);
-                    Navigator.push(
-                        context,
-                        new MaterialPageRoute(
-                            //TODO: translation
-                            builder: (context) => buildScaffold(
-                                context,
-                                S.of(context).titleMessages,
-                                new ChatListWidget())));
-                  },
-                ),
-                ListTile(
-                  title: drawerMenuItem(
-                      context, S.of(context).menuSettings, settings_100,
-                      size: 28),
-                  onTap: () {
-                    // Update the state of the app
-                    // ...
-                    // Then close the drawer
-                    Navigator.pop(context);
-                    Navigator.push(
-                        context,
-                        new MaterialPageRoute(
-                            //TODO: translation
-                            builder: (context) => buildScaffold(
-                                context,
-                                S.of(context).titleSettings,
-                                new SettingsWidget())));
-                  },
-                ),
-                ListTile(
-                  title: drawerMenuItem(
-                      context, S.of(context).menuBalance, coins_100,
-                      size: 28),
-                  onTap: () {
-                    Navigator.pop(context);
-                    Navigator.push(
-                        context,
-                        new MaterialPageRoute(
-                            //TODO: translation
-                            builder: (context) => buildScaffold(
-                                context,
-                                S.of(context).financeTitle(
-                                    money(B.wallet.getAvailable())),
-                                new FinancialWidget(),
-                                appbar: false)));
-                  },
-                ),
-                ListTile(
-                  title: drawerMenuItem(
-                      context, S.of(context).menuReferral, handshake_100,
-                      size: 28),
-                  onTap: () {
-                    Navigator.pop(context);
-                    Navigator.push(
-                        context,
-                        new MaterialPageRoute(
-                            //TODO: translation
-                            builder: (context) => buildScaffold(
-                                context,
-                                S.of(context).referralTitle,
-                                new ReferralWidget())));
-                  },
-                ),
-                ListTile(
-                  title: drawerMenuItem(
-                      context, S.of(context).menuSupport, online_support_100,
-                      size: 28),
-                  onTap: () async {
-                    Navigator.pop(context);
-                    Navigator.push(
-                        context,
-                        new MaterialPageRoute(
-                            //TODO: translation
-                            builder: (context) => buildScaffold(
-                                context,
-                                S.of(context).supportTitle,
-                                new SupportWidget())));
-                  },
-                ),
-                ListTile(
-                  title: drawerMenuItem(context, S.of(context).logout, exit_100,
-                      size: 27),
-                  onTap: () {
-                    signOutProviders();
-                    Navigator.pop(context);
-                  },
-                ),
-              ],
+              },
+              tooltip: S.of(context).settings,
+              icon: assetIcon(settings_100, size: 30),
             ),
+ */
+          ],
+          title: new Text(S.of(context).title,
+              style:
+                  Theme.of(context).textTheme.title.apply(color: C.titleText)),
+          centerTitle: true,
+        ),
+        body: new Container(child: new OrientationBuilder(
+            builder: (BuildContext context, Orientation orientation) {
+          return new Flex(
+              direction: orientation == Orientation.landscape
+                  ? Axis.horizontal
+                  : Axis.vertical,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: <Widget>[
+                new Expanded(
+                    child: new InkWell(
+                        onTap: () {
+                          Navigator.push(
+                              context,
+                              new MaterialPageRoute(
+                                  builder: (context) => buildScaffold(
+                                      context,
+                                      S.of(context).addbookTitle,
+                                      new AddBookWidget(),
+                                      appbar: false)));
+                        },
+                        child: new Card(
+                            child: new Container(
+                                padding: new EdgeInsets.all(10.0),
+                                child: new Column(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceEvenly,
+                                    children: <Widget>[
+                                      new Container(
+                                          width: 60,
+                                          child: Image.asset(add_book_100)),
+                                      new Text(S.of(context).addBook,
+                                          style:
+                                              Theme.of(context).textTheme.title)
+                                    ]))))),
+                new Expanded(
+                  child: new InkWell(
+                    onTap: () {
+                      Navigator.push(
+                          context,
+                          new MaterialPageRoute(
+                              builder: (context) => buildScaffold(
+                                  context,
+                                  S.of(context).findbookTitle,
+                                  new FindBookWidget(),
+                                  appbar: false)));
+                    },
+                    child: new Card(
+                      child: new Container(
+                        padding: new EdgeInsets.all(10.0),
+                        child: new Column(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: <Widget>[
+                            Container(
+                                width: 60, child: Image.asset(search_100)),
+                            new Text(S.of(context).findBook,
+                                style: Theme.of(context).textTheme.title)
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                new Expanded(
+                  child: new InkWell(
+                    onTap: () {
+                      Navigator.push(
+                          context,
+                          new MaterialPageRoute(
+                              builder: (context) => buildScaffold(
+                                  context,
+                                  S.of(context).mybooksTitle,
+                                  new ShowBooksWidget(),
+                                  appbar: false)));
+                    },
+                    child: new Card(
+                      child: new Container(
+                        padding: new EdgeInsets.all(10.0),
+                        child: new Column(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: <Widget>[
+                            Container(width: 60, child: Image.asset(books_100)),
+                            new Text(S.of(context).myBooks,
+                                style: Theme.of(context).textTheme.title)
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ]);
+        })),
+        drawer: Drawer(
+          child: ListView(
+            // Important: Remove any padding from the ListView.
+            padding: EdgeInsets.zero,
+            children: <Widget>[
+              DrawerHeader(
+                child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: <Widget>[
+                            userPhoto(B.user, 90),
+                            Expanded(
+                                child: Container(
+                                    padding: EdgeInsets.only(left: 10.0),
+                                    child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: <Widget>[
+                                          Container(
+                                              margin:
+                                                  EdgeInsets.only(bottom: 5.0),
+                                              child: Text(B.user.name,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                  style: Theme.of(context)
+                                                      .textTheme
+                                                      .title
+                                                      .apply(
+                                                          color: C.titleText))),
+                                          Row(children: <Widget>[
+                                            new Container(
+                                                margin:
+                                                    EdgeInsets.only(right: 5.0),
+                                                child: assetIcon(coins_100,
+                                                    size: 20)),
+                                            new Text(
+                                                money(B.wallet.getAvailable()),
+                                                style: Theme.of(context)
+                                                    .textTheme
+                                                    .body1
+                                                    .apply(color: C.titleText))
+                                          ]),
+                                        ]))),
+                          ]),
+                      Container(
+                          padding: EdgeInsets.only(top: 5.0),
+                          child: Text(S.of(context).referralLink,
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .body1
+                                  .apply(color: C.titleText))),
+                      Container(
+                          padding: EdgeInsets.all(0.0),
+                          child: Builder(
+                              // Create an inner BuildContext so that the onPressed methods
+                              // can refer to the Scaffold with Scaffold.of().
+                              builder: (BuildContext context) {
+                            return InkWell(
+                                onTap: () {
+                                  Clipboard.setData(
+                                      new ClipboardData(text: B.user.link));
+                                  //Navigator.pop(context);
+                                  showSnackBar(
+                                      context, S.of(context).linkCopied);
+
+                                  FirebaseAnalytics().logEvent(
+                                      name: 'share',
+                                      parameters: <String, dynamic>{
+                                        'type': 'link',
+                                        'screen': 'drawer',
+                                        'user': B.user.id,
+                                        'locality': B.locality,
+                                        'country': B.country,
+                                        'latitude': B.position.latitude,
+                                        'longitude': B.position.longitude
+                                      });
+                                },
+                                child: Text(B.user.link,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .body1
+                                        .apply(
+                                            color: C.titleText,
+                                            decoration:
+                                                TextDecoration.underline)));
+                          })),
+                    ]),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).primaryColor,
+                ),
+              ),
+              ListTile(
+                title: drawerMenuItem(
+                    context, S.of(context).menuMessages, communication_100,
+                    size: 30),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                      context,
+                      new MaterialPageRoute(
+                          //TODO: translation
+                          builder: (context) => buildScaffold(
+                              context,
+                              S.of(context).titleMessages,
+                              new ChatListWidget())));
+                },
+              ),
+              ListTile(
+                title: drawerMenuItem(
+                    context, S.of(context).menuSettings, settings_100,
+                    size: 28),
+                onTap: () {
+                  // Update the state of the app
+                  // ...
+                  // Then close the drawer
+                  Navigator.pop(context);
+                  Navigator.push(
+                      context,
+                      new MaterialPageRoute(
+                          //TODO: translation
+                          builder: (context) => buildScaffold(
+                              context,
+                              S.of(context).titleSettings,
+                              new SettingsWidget())));
+                },
+              ),
+              ListTile(
+                title: drawerMenuItem(
+                    context, S.of(context).menuBalance, coins_100,
+                    size: 28),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                      context,
+                      new MaterialPageRoute(
+                          //TODO: translation
+                          builder: (context) => buildScaffold(
+                              context,
+                              S
+                                  .of(context)
+                                  .financeTitle(money(B.wallet.getAvailable())),
+                              new FinancialWidget(),
+                              appbar: false)));
+                },
+              ),
+              ListTile(
+                title: drawerMenuItem(
+                    context, S.of(context).menuReferral, handshake_100,
+                    size: 28),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                      context,
+                      new MaterialPageRoute(
+                          //TODO: translation
+                          builder: (context) => buildScaffold(
+                              context,
+                              S.of(context).referralTitle,
+                              new ReferralWidget())));
+                },
+              ),
+              ListTile(
+                title: drawerMenuItem(
+                    context, S.of(context).menuSupport, online_support_100,
+                    size: 28),
+                onTap: () async {
+                  Navigator.pop(context);
+                  Navigator.push(
+                      context,
+                      new MaterialPageRoute(
+                          //TODO: translation
+                          builder: (context) => buildScaffold(
+                              context,
+                              S.of(context).supportTitle,
+                              new SupportWidget())));
+                },
+              ),
+              ListTile(
+                title: drawerMenuItem(context, S.of(context).logout, exit_100,
+                    size: 27),
+                onTap: () {
+                  signOutProviders();
+                  Navigator.pop(context);
+                },
+              ),
+            ],
           ),
-        ]),
-      ),
-    );
+        ));
   }
 }
 
 // Class to show my books (own, wishlist and borrowed/lent)
 class ShowBooksWidget extends StatefulWidget {
-  ShowBooksWidget({Key key, this.filter})
-      : super(key: key);
+  ShowBooksWidget({Key key, this.filter}) : super(key: key);
 
   final String filter;
 
@@ -1125,8 +1159,7 @@ class _ShowBooksWidgetState extends State<ShowBooksWidget> {
               lent && rec.isLent ||
               borrowed && rec.isBorrowed ||
               transit && rec.isTransit) {
-            return new MyBook(
-                bookrecord: rec, filter: keys);
+            return new MyBook(bookrecord: rec, filter: keys);
           } else {
             return Container(height: 0.0, width: 0.0);
           }
@@ -1137,10 +1170,7 @@ class _ShowBooksWidgetState extends State<ShowBooksWidget> {
 }
 
 class MyBook extends StatefulWidget {
-  MyBook(
-      {Key key,
-      @required this.bookrecord,
-      this.filter = const {}})
+  MyBook({Key key, @required this.bookrecord, this.filter = const {}})
       : super(key: key);
 
   final Bookrecord bookrecord;
@@ -1168,7 +1198,7 @@ class _MyBookWidgetState extends State<MyBook> {
 
   @override
   void initState() {
-    _listener = bookrecord.snapshots().listen( (rec) {
+    _listener = bookrecord.snapshots().listen((rec) {
       print('!!!DEBUG event received ${rec.toJson()}');
       setState(() {});
     });
@@ -1216,9 +1246,8 @@ class _MyBookWidgetState extends State<MyBook> {
       await Book.Ref(bookrecord.isbn).updateData(
           {(bookrecord.wish ? 'wishes' : 'copies'): FieldValue.increment(-1)});
     } catch (ex, stack) {
-      print(
-          'Bookrecord delete failed for [${bookrecord.id}, ${B.user.id}]: ' +
-              ex.toString());
+      print('Bookrecord delete failed for [${bookrecord.id}, ${B.user.id}]: ' +
+          ex.toString());
       FlutterCrashlytics().logException(ex, stack);
     }
   }
@@ -1315,8 +1344,7 @@ class _MyBookWidgetState extends State<MyBook> {
                             ? new IconButton(
                                 onPressed: () async {
                                   // Open chat widget
-                                  Chat.runChatById(
-                                      context, null,
+                                  Chat.runChatById(context, null,
                                       chatId: bookrecord.chatId);
                                 },
                                 tooltip: S.of(context).deleteShelf,
@@ -1336,19 +1364,16 @@ class _MyBookWidgetState extends State<MyBook> {
                         bookrecord.isBorrowed
                             ? new IconButton(
                                 onPressed: () async {
-                                  Messages chat = await getChatAndTransit(
-                                      context: context,
-                                      from: B.user,
-                                      to: bookrecord.owner,
-                                      bookrecordId: bookrecord.id);
+                                  Messages chat = new Messages(
+                                      from: B.user, to: bookrecord.owner);
 
                                   // Open chat widget
-                                  Chat.runChat(
-                                      context, null,
+                                  Chat.runChat(context, null,
+                                      chat: chat,
                                       message: S
                                           .of(context)
                                           .requestReturn(bookrecord.title),
-                                      chat: chat);
+                                      transit: bookrecord.id);
                                 },
                                 tooltip: S.of(context).hintReturn,
                                 icon: assetIcon(return_100, size: 25),
@@ -1358,20 +1383,17 @@ class _MyBookWidgetState extends State<MyBook> {
                         bookrecord.isLent
                             ? new IconButton(
                                 onPressed: () async {
-                                  Messages chat = await getChatAndTransit(
-                                      context: context,
-                                      from: bookrecord.holder,
-                                      to: B.user,
-                                      bookrecordId: bookrecord.id);
+                                  Messages chat = new Messages(
+                                      from: bookrecord.holder, to: B.user);
 
                                   // Open chat widget
-                                  Chat.runChat(
-                                      context, null,
+                                  Chat.runChat(context, null,
+                                      chat: chat,
                                       message: S
                                           .of(context)
                                           .requestReturnByOwner(
                                               bookrecord.title),
-                                      chat: chat);
+                                      transit: bookrecord.id);
                                 },
                                 tooltip: S.of(context).hintRequestReturn,
                                 icon: assetIcon(return_100, size: 25),
@@ -1441,6 +1463,18 @@ class _MyBookWidgetState extends State<MyBook> {
 
                             // Share link to the book
                             Share.share(link);
+
+                            FirebaseAnalytics().logEvent(
+                                name: 'share',
+                                parameters: <String, dynamic>{
+                                  'type': 'share',
+                                  'isbn': bookrecord.isbn,
+                                  'user': B.user.id,
+                                  'locality': B.locality,
+                                  'country': B.country,
+                                  'latitude': B.position.latitude,
+                                  'longitude': B.position.longitude
+                                });
                           },
                           tooltip: S.of(context).hintShareBook,
                           icon: assetIcon(share_100, size: 27),
@@ -1494,6 +1528,26 @@ class _MyBookWidgetState extends State<MyBook> {
                                                     .updateData({
                                                   'image': value,
                                                 });
+
+                                                showSnackBar(
+                                                    context,
+                                                    S
+                                                        .of(context)
+                                                        .snackBookImageChanged);
+
+                                                FirebaseAnalytics().logEvent(
+                                                    name: 'book_image_set',
+                                                    parameters: <String,
+                                                        dynamic>{
+                                                      'isbn': bookrecord.isbn,
+                                                      'user': B.user.id,
+                                                      'locality': B.locality,
+                                                      'country': B.country,
+                                                      'latitude':
+                                                          B.position.latitude,
+                                                      'longitude':
+                                                          B.position.longitude
+                                                    });
                                               }
                                             },
                                             maxLines: 1,
@@ -1555,6 +1609,24 @@ class _MyBookWidgetState extends State<MyBook> {
 
                                         bookrecord.ref.updateData(
                                             {'price': bookrecord.price});
+
+                                        showSnackBar(
+                                            context,
+                                            S
+                                                .of(context)
+                                                .snackBookPriceChanged);
+
+                                        FirebaseAnalytics().logEvent(
+                                            name: 'book_price_set',
+                                            parameters: <String, dynamic>{
+                                              'isbn': bookrecord.isbn,
+                                              'user': B.user.id,
+                                              'price': bookrecord.price,
+                                              'locality': B.locality,
+                                              'country': B.country,
+                                              'latitude': B.position.latitude,
+                                              'longitude': B.position.longitude
+                                            });
                                       },
                                       maxLines: 1,
                                       controller: _priceTextCtr,
@@ -1584,7 +1656,7 @@ class _MyBookWidgetState extends State<MyBook> {
   }
 
   Widget bookCardText() {
-    switch (bookrecord.type)  {
+    switch (bookrecord.type) {
       case BookrecordType.own:
         return Text(S.of(context).youHaveThisBook,
             overflow: TextOverflow.ellipsis,
@@ -1618,8 +1690,7 @@ class FinancialWidget extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  _FinancialWidgetState createState() =>
-      new _FinancialWidgetState();
+  _FinancialWidgetState createState() => new _FinancialWidgetState();
 }
 
 class _FinancialWidgetState extends State<FinancialWidget> {
@@ -1665,8 +1736,7 @@ class _FinancialWidgetState extends State<FinancialWidget> {
     return CustomScrollView(slivers: <Widget>[
       SliverAppBar(
         // Provide a standard title.
-        title: Text(
-            S.of(context).financeTitle(money(B.wallet.getAvailable())),
+        title: Text(S.of(context).financeTitle(money(B.wallet.getAvailable())),
             style: Theme.of(context).textTheme.title.apply(color: C.titleText)),
         // Allows the user to reveal the app bar if they begin scrolling
         // back up the list of items.
@@ -1769,28 +1839,33 @@ class _FinancialWidgetState extends State<FinancialWidget> {
 }
 
 class MyOperation extends StatefulWidget {
-  MyOperation({Key key, @required this.operation})
-      : super(key: key);
+  MyOperation({Key key, @required this.operation}) : super(key: key);
 
   final Operation operation;
 
   @override
-  _MyOperationWidgetState createState() => new _MyOperationWidgetState(
-      operation: operation);
+  _MyOperationWidgetState createState() =>
+      new _MyOperationWidgetState(operation: operation);
 }
 
 class _MyOperationWidgetState extends State<MyOperation> {
   Operation operation;
-  Book book;
-  User peer;
-  bool hasData = false;
+  StreamSubscription<Operation> _listener;
 
   @override
   void initState() {
     super.initState();
-    getDetails().then((_) {
+
+    _listener = operation.snapshots().listen((op) {
       if (mounted) setState(() {});
     });
+  }
+
+  @override
+  void dispose() {
+    if (_listener != null) _listener.cancel();
+
+    super.dispose();
   }
 
   @override
@@ -1799,22 +1874,20 @@ class _MyOperationWidgetState extends State<MyOperation> {
 
     if (oldWidget.operation != widget.operation) {
       operation = widget.operation;
-      hasData = false;
-      getDetails().then((_) {
+      _listener = operation.snapshots().listen((op) {
         if (mounted) setState(() {});
       });
     }
   }
 
-  _MyOperationWidgetState(
-      {Key key, @required this.operation});
+  _MyOperationWidgetState({Key key, @required this.operation});
 
   @override
   Widget build(BuildContext context) {
     if (operation.isLeasing) {
       return new Container(
           child: Row(children: <Widget>[
-        bookImage(book, 25, padding: 3.0),
+        bookImage(operation.bookImage, 25, padding: 3.0, tooltip: operation.bookTooltip),
         Expanded(
             child: Container(
                 child: Column(
@@ -1837,7 +1910,7 @@ class _MyOperationWidgetState extends State<MyOperation> {
     } else if (operation.isReward) {
       return new Container(
           child: Row(children: <Widget>[
-        bookImage(book, 25, padding: 3.0),
+        bookImage(operation.bookImage, 25, padding: 3.0, tooltip: operation.bookTooltip),
         Expanded(
             child: Container(
                 child: Column(
@@ -1935,7 +2008,7 @@ class _MyOperationWidgetState extends State<MyOperation> {
     } else if (operation.isReferral) {
       return new Container(
           child: Row(children: <Widget>[
-        userPhoto(peer, 25, padding: 3.0),
+        userPhoto(operation.referralUser, 25, padding: 3.0),
         Expanded(
             child: Container(
                 child: Column(
@@ -1952,33 +2025,11 @@ class _MyOperationWidgetState extends State<MyOperation> {
                         child: Text(
                             DateFormat('MMMd').format(operation.date))), // Date
                   ]),
-              Text(
-                  '+${money(operation.referralAmount)}'), // Amount
+              Text('+${money(operation.referralAmount)}'), // Amount
             ])))
       ]));
     } else {
       return Container();
-    }
-  }
-
-  Future<void> getDetails() async {
-    if (hasData) {
-      return this;
-    } else {
-      // Read book and peer details for reward and leasing
-      if (operation.type == OperationType.Reward ||
-          operation.type == OperationType.Leasing) {
-        DocumentSnapshot bookSnap = await Book.Ref(operation.isbn).get();
-        if (!bookSnap.exists)
-          throw "Book missing in db: isbn ${operation.isbn}, operation ${operation.id}";
-
-        book = new Book.fromJson(bookSnap.data);
-
-        DocumentSnapshot userSnap = await User.Ref(operation.peerId).get();
-        peer = new User.fromJson(userSnap.data);
-      }
-
-      hasData = true;
     }
   }
 }
@@ -1989,12 +2040,10 @@ class ReferralWidget extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  _ReferralWidgetState createState() =>
-      new _ReferralWidgetState();
+  _ReferralWidgetState createState() => new _ReferralWidgetState();
 }
 
 class _ReferralWidgetState extends State<ReferralWidget> {
-
   @override
   void initState() {
     super.initState();
@@ -2032,6 +2081,18 @@ class _ReferralWidgetState extends State<ReferralWidget> {
                                   new ClipboardData(text: B.user.link));
                               //Navigator.pop(context);
                               showSnackBar(context, S.of(context).linkCopied);
+
+                              FirebaseAnalytics().logEvent(
+                                  name: 'share',
+                                  parameters: <String, dynamic>{
+                                    'type': 'link',
+                                    'screen': 'referral',
+                                    'user': B.user.id,
+                                    'locality': B.locality,
+                                    'country': B.country,
+                                    'latitude': B.position.latitude,
+                                    'longitude': B.position.longitude
+                                  });
                             },
                             child: Text(B.user.link,
                                 style: Theme.of(context).textTheme.body1.apply(
@@ -2094,7 +2155,8 @@ class _ReferralWidgetState extends State<ReferralWidget> {
                                                         .feeShared))), // Date
                                               ]),
                                           Text(S.of(context).userBalance(money(
-                                              wallet.getAvailable()))), // Amount
+                                              wallet
+                                                  .getAvailable()))), // Amount
                                         ])))
                                   ]));
                                 });
@@ -2114,8 +2176,7 @@ class SettingsWidget extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  _SettingsWidgetState createState() =>
-      new _SettingsWidgetState();
+  _SettingsWidgetState createState() => new _SettingsWidgetState();
 }
 
 class _SettingsWidgetState extends State<SettingsWidget> {
@@ -2178,8 +2239,7 @@ class _SettingsWidgetState extends State<SettingsWidget> {
                                           margin: EdgeInsets.only(right: 5.0),
                                           child:
                                               assetIcon(coins_100, size: 20)),
-                                      new Text(
-                                          money(B.wallet.getAvailable()),
+                                      new Text(money(B.wallet.getAvailable()),
                                           style:
                                               Theme.of(context).textTheme.body1)
                                     ]),
@@ -2200,6 +2260,18 @@ class _SettingsWidgetState extends State<SettingsWidget> {
                                     new ClipboardData(text: B.user.link));
                                 //Navigator.pop(context);
                                 showSnackBar(context, S.of(context).linkCopied);
+
+                                FirebaseAnalytics().logEvent(
+                                    name: 'share',
+                                    parameters: <String, dynamic>{
+                                      'type': 'link',
+                                      'screen': 'settings',
+                                      'user': B.user.id,
+                                      'locality': B.locality,
+                                      'country': B.country,
+                                      'latitude': B.position.latitude,
+                                      'longitude': B.position.longitude
+                                    });
                               },
                               child: Text(B.user.link,
                                   style: Theme.of(context)
@@ -2392,8 +2464,7 @@ class _SettingsWidgetState extends State<SettingsWidget> {
                                     return;
                                   }
 
-                                  if (toXlm(amount) >
-                                      B.wallet.getAvailable()) {
+                                  if (toXlm(amount) > B.wallet.getAvailable()) {
                                     setState(() {
                                       _amountErrorText =
                                           S.of(context).exceedAmount;
@@ -2444,61 +2515,45 @@ class SupportWidget extends StatelessWidget {
         child: ListView(children: <Widget>[
       Container(
           margin: EdgeInsets.all(8.0),
-          child: Text('Как брать книги',
+          child: Text(S.of(context).supportTitleGetBooks,
               style: Theme.of(context).textTheme.subtitle)),
       Container(
           margin: EdgeInsets.all(8.0),
-          child: Text(
-              'Найдите книгу, которую Вы хотите почитать, и напишите её хозяину, '
-              'чтобы договориться о встрече. При получении книг вам нужно будет оплатить депозит. '
-              'Вы можете пополнить свой баланс по карточке или криптовалютой Stellar, а '
-              'можете заработать в Библосфере, давая свои книги почитать. Вы также можете зарабатывать '
-              'через партнёрскую программу, приглашая других участников.',
+          child: Text(S.of(context).supportGetBooks,
               style: Theme.of(context).textTheme.body1)),
       Container(
           margin: EdgeInsets.all(8.0),
-          child: Text('Пополнение счёта',
+          child: Text(S.of(context).supportTitleGetBalance,
               style: Theme.of(context).textTheme.subtitle)),
       Container(
           margin: EdgeInsets.all(8.0),
-          child: Text(
-              'Пополнить счёт можно двумя способами: через покупку в приложении по карточке, '
-              'зарегистрированной в Google Play или App Store. Или сделать перевод криптовалюты '
-              'Stellar (XLM) на счёт, указанный в настройках.',
+          child: Text(S.of(context).supportGetBalance,
               style: Theme.of(context).textTheme.body1)),
       Container(
           margin: EdgeInsets.all(8.0),
-          child: Text('Партнёрская программа',
+          child: Text(S.of(context).supportTitleReferrals,
               style: Theme.of(context).textTheme.subtitle)),
       Container(
           margin: EdgeInsets.all(8.0),
-          child: Text(
-              'Организуйте обмен книгами через Библосферу в своём сообществе или '
-              'офисе и получайте комиссию за каждую сделку. Для этого поделитесь с друзьями и '
-              'коллегами ссылкой на приложение (Вашей партнёрской ссылкой).',
+          child: Text(S.of(context).supportReferrals,
               style: Theme.of(context).textTheme.body1)),
       Container(
           margin: EdgeInsets.all(8.0),
-          child: Text('Вывод средств',
+          child: Text(S.of(context).supportTitlePayout,
               style: Theme.of(context).textTheme.subtitle)),
       Container(
           margin: EdgeInsets.all(8.0),
-          child: Text(
-              'Если у Вас большой баланс в Библосфере, Вы можете вывести эти средства. '
-              'Вывести средства можно на свой кошелёк Stellar или через Stellar на любой кошелёк, карту или счёт. '
-              'Для вывода на карту или кошелёк воспользуйстесь услугами online-обменников.',
+          child: Text(S.of(context).supportPayout,
               style: Theme.of(context).textTheme.body1)),
       Container(
           margin: EdgeInsets.all(8.0),
-          child: Text('Чат-бот Библосферы',
+          child: Text(S.of(context).supportTitleChatbot,
               style: Theme.of(context).textTheme.subtitle)),
       Container(
           margin: EdgeInsets.all(8.0),
           child: RichText(
             text: TextSpan(
-                text:
-                    'Во вкладке Сообщения есть чат с ботом Библосферы, он может ответить на любые вопросы о '
-                    'приложении. Если понадобится связаться напрямую со мной, пишите в telegram ',
+                text: S.of(context).supportChatbot,
                 style: Theme.of(context).textTheme.body1,
                 children: [
                   TextSpan(
@@ -2520,7 +2575,7 @@ class SupportWidget extends StatelessWidget {
       Container(
           margin: EdgeInsets.fromLTRB(8.0, 8.0, 30.0, 8.0),
           alignment: Alignment.topRight,
-          child: Text('Денис Старк', style: Theme.of(context).textTheme.body1)),
+          child: Text(S.of(context).supportSignature, style: Theme.of(context).textTheme.body1)),
     ]));
   }
 }

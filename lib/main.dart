@@ -7,6 +7,7 @@ import 'package:firebase_ui/flutter_firebase_ui.dart';
 import 'package:firebase_ui/utils.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_crashlytics/flutter_crashlytics.dart';
 import 'package:intro_views_flutter/Models/page_view_model.dart';
@@ -15,6 +16,11 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/gestures.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
+// Debug analytics: 
+// adb shell setprop debug.firebase.analytics.app <package_name>
+// adb shell setprop debug.firebase.analytics.app .none.
+
 //Temporary for visual debugging
 import 'package:flutter/rendering.dart';
 
@@ -151,6 +157,18 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
                 user: B.user,
                 amount: amount,
                 type: OperationType.InputInApp);
+
+            FirebaseAnalytics().logEvent(
+                                name: 'ecommerce_purchase',
+                                parameters: <String, dynamic>{
+                                  'amount': amount,
+                                  'channel': 'in-app',
+                                  'user': B.user.id,
+                                  'locality': B.locality,
+                                  'country': B.country,
+                                  'latitude': B.position.latitude,
+                                  'longitude': B.position.longitude
+});
           }
         });
       });
@@ -177,6 +195,10 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         setState(() {
           // Update position after the resume
           B.user = B.user..position = position;
+        });
+        Geolocator().placemarkFromCoordinates(position.latitude, position.longitude, localeIdentifier: 'en').then((placemarks) {
+          B.locality = placemarks.first.locality;
+          B.country = placemarks.first.country;
         });
       });
     }
@@ -206,6 +228,8 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         firebaseUser = user;
 
         if (firebaseUser != null) {
+          FirebaseAnalytics().setUserId(firebaseUser.uid);
+
           // That's async function so need to refresh widget as soon as it completes
           _initUserRecord().then((_) {
             setState(() {});
@@ -223,11 +247,19 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       if (firebaseUser == null)
         throw "CurrentUserId is null, login failed or not completed";
 
+      final position = await currentPosition();
+
+      Geolocator().placemarkFromCoordinates(position.latitude, position.longitude, localeIdentifier: 'en').then((placemarks) {
+        B.locality = placemarks.first.locality;
+        B.country = placemarks.first.country;
+      });
+
       User user = new User(
           id: firebaseUser.uid,
           name: firebaseUser.displayName,
           photo: firebaseUser.photoUrl,
-          position: await currentPosition());
+          position: position);
+
 
       Wallet wallet = new Wallet(id: firebaseUser.uid);
 

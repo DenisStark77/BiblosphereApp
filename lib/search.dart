@@ -297,9 +297,27 @@ Future<Book> searchByIsbn(String isbn) async {
       //No books found
       return null;
     } else {
-      Book b = new Book.fromJson(doc.data);
+      var b = new Book.fromJson(doc.data);
       return b;
     }
+  } catch (e) {
+    print('Unknown error in searchByIsbn: $e');
+    return null;
+  }
+}
+
+Future<List<Bookrecord>> searchByIsbnBookrecords(String isbn) async {
+  try {
+    QuerySnapshot snap =
+        await Firestore.instance.collection('bookrecords').where('isbn', isEqualTo: isbn)
+        .where('wish', isEqualTo: false)
+        .where('transit', isEqualTo: false)
+        .getDocuments();
+
+    List<Bookrecord> list = snap.documents.map( (doc) => Bookrecord.fromJson(doc.data)).toList();
+    list.sort((b1, b2) => ((b1.distance - b2.distance) * 1000).round());
+
+    return list.take(1).toList();
   } catch (e) {
     print('Unknown error in searchByIsbn: $e');
     return null;

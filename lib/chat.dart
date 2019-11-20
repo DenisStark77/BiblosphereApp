@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -111,43 +112,20 @@ class ChatCard extends StatefulWidget {
 
 class _ChatCardState extends State<ChatCard> {
   Messages chat;
-  StreamSubscription<DocumentSnapshot> chatSubscription;
+  StreamSubscription<Messages> _listener;
 
   @override
   void initState() {
     super.initState();
 
-    if (chat.system) {
-      chatSubscription = chat.ref.snapshots()
-        .listen((snap) async {
-          if (snap.exists) {
-             chat = Messages.fromJson(snap.data, snap);
-             if (mounted) setState(() {});
-          }
-      });
-    }
-
-    if ( !chat.fromDb ) {
-      chat.ref.get().then( (snap) {
-        if (snap.exists) {
-          setState(() {
-            chat = Messages.fromJson(snap.data, snap);
-          });
-        } else {
-          // Create chat
-          getChatAndTransit(context: context, from: chat.from, to: chat.to, system: chat.system).then ((c) {
-            setState(() {
-              chat = c;
-            });
-          });
-        }
-      });
-    }
+    _listener = chat.snapshots().listen((chat) async {
+      if (mounted) setState(() {});
+    });
   }
 
   @override
   void dispose() {
-    if (chatSubscription != null) chatSubscription.cancel();
+    if (_listener != null) _listener.cancel();
 
     super.dispose();
   }
@@ -158,6 +136,9 @@ class _ChatCardState extends State<ChatCard> {
 
     if (oldWidget.chat != widget.chat) {
       chat = widget.chat;
+      _listener = chat.snapshots().listen((chat) async {
+        if (mounted) setState(() {});
+      });
     }
   }
 
@@ -167,130 +148,92 @@ class _ChatCardState extends State<ChatCard> {
   Widget build(BuildContext context) {
     return GestureDetector(
         onTap: () async {
-          Chat.runChat(
-              context, null,
-              chat: chat);
+          Chat.runChat(context, null, chat: chat);
         },
         child: Card(
             child: Column(
-                crossAxisAlignment:
-                CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
-                  Row(children: <Widget>[
-                    Stack(children: <Widget>[
-                      chat.system ?
-                        Container(margin: EdgeInsets.all(7.0), child: assetIcon(technical_support_100, size: 50.0)) :
-                        userPhoto(chat.partnerImage, 60.0, padding: 5.0),
-                      chat.system ? Container() :
-                        Positioned.fill(
+              Row(children: <Widget>[
+                Stack(children: <Widget>[
+                  chat.system
+                      ? Container(
+                          margin: EdgeInsets.all(7.0),
+                          child: assetIcon(technical_support_100, size: 50.0))
+                      : userPhoto(chat.partnerImage, 60.0, padding: 5.0),
+                  chat.system
+                      ? Container()
+                      : Positioned.fill(
                           child: Container(
-                              alignment:
-                              Alignment.topRight,
+                              alignment: Alignment.topRight,
                               child: GestureDetector(
                                   onTap: () {
-                                    showBbsConfirmation(
-                                        context,
-                                        S
-                                            .of(
-                                            context)
-                                            .confirmBlockUser)
-                                        .then(
-                                            (confirmed) {
-                                          if (confirmed) {
-                                            blockUser(
-                                                B.user.id,
-                                                chat.partnerId);
-                                          }
-                                        });
+                                    showBbsConfirmation(context,
+                                            S.of(context).confirmBlockUser)
+                                        .then((confirmed) {
+                                      if (confirmed) {
+                                        blockUser(B.user.id, chat.partnerId);
+                                      }
+                                    });
                                   },
                                   child: ClipOval(
                                     child: Container(
-                                      color:
-                                      C.button,
-                                      height:
-                                      20.0, // height of the button
-                                      width:
-                                      20.0, // width of the button
+                                      color: C.button,
+                                      height: 20.0, // height of the button
+                                      width: 20.0, // width of the button
                                       child: Center(
-                                          child: assetIcon(cancel_100,
-                                              size: 20)),
+                                          child:
+                                              assetIcon(cancel_100, size: 20)),
                                     ),
                                   ))))
-                    ]),
-                    Expanded(
-                        child: Container(
-                            margin:
-                            EdgeInsets.all(5.0),
-                            child: Column(
-                                crossAxisAlignment:
-                                CrossAxisAlignment
-                                    .start,
-                                children: <Widget>[
-                                  Container(
-                                      child: Text(
-                                          chat.system ?
-                                            'Чат с поддержкой' :
-                                            chat.partnerName,
-                                          overflow:
-                                          TextOverflow
-                                              .ellipsis,
-                                          style: Theme.of(
-                                              context)
-                                              .textTheme
-                                              .body1)), // Description
-                                  Text(
-                                      chat.message ??
-                                          '',
-                                      style: Theme.of(
-                                          context)
-                                          .textTheme
-                                          .body1)
-                                ]))),
-                    Container(
+                ]),
+                Expanded(
+                    child: Container(
                         margin: EdgeInsets.all(5.0),
                         child: Column(
-                            crossAxisAlignment:
-                            CrossAxisAlignment
-                                .end,
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: <Widget>[
-                              Text(
-                                  DateFormat(
-                                      'H:m MMMd')
-                                      .format(chat
-                                      .timestamp),
-                                  style: Theme.of(
-                                      context)
-                                      .textTheme
-                                      .body1),
-                              chat.unread[B.user.id] >
-                                  0
-                                  ? ClipOval(
-                                child:
-                                Container(
-                                  color: Colors
-                                      .green,
-                                  height:
-                                  25.0, // height of the button
-                                  width:
-                                  25.0, // width of the button
-                                  child: Center(
-                                      child: Text(chat
-                                          .unread[B.user.id]
-                                          .toString())),
-                                ),
-                              )
-                                  : Container()
-                            ])),
-                  ]),
-                  Container(
-                      margin: EdgeInsets.all(5.0),
-                      child: Text(statusText(chat),
-                          overflow:
-                          TextOverflow.ellipsis,
-                          style: Theme.of(context)
-                              .textTheme
-                              .subtitle)),
-                ])));
+                              Container(
+                                  child: Text(
+                                      chat.system
+                                          ? S.of(context).supportChat
+                                          : chat.partnerName ?? '',
+                                      overflow: TextOverflow.ellipsis,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .body1)), // Description
+                              Text(chat.message ?? '',
+                                  style: Theme.of(context).textTheme.body1)
+                            ]))),
+                Container(
+                    margin: EdgeInsets.all(5.0),
+                    child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: <Widget>[
+                          Text(DateFormat('H:m MMMd').format(chat.timestamp),
+                              style: Theme.of(context).textTheme.body1),
+                          chat.unread != null &&
+                                  chat.unread[B.user.id] != null &&
+                                  chat.unread[B.user.id] > 0
+                              ? ClipOval(
+                                  child: Container(
+                                    color: Colors.green,
+                                    height: 25.0, // height of the button
+                                    width: 25.0, // width of the button
+                                    child: Center(
+                                        child: Text(
+                                            chat.unread[B.user.id].toString())),
+                                  ),
+                                )
+                              : Container()
+                        ])),
+              ]),
+              Container(
+                  margin: EdgeInsets.all(5.0),
+                  child: Text(statusText(chat),
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.subtitle)),
+            ])));
   }
 
   String statusText(Messages chat) {
@@ -322,21 +265,22 @@ class _ChatCardState extends State<ChatCard> {
 
 class Chat extends StatefulWidget {
   static runChatById(BuildContext context, User partner,
-      {String chatId, String message, bool send = false}) async {
+      {String chatId,
+      String message,
+      bool send = false,
+      String transit}) async {
+    DocumentSnapshot chatSnap = await Messages.Ref(chatId).get();
+    if (!chatSnap.exists) throw 'Chat does not exist: ${chatId}';
 
-      DocumentSnapshot chatSnap = await Messages.Ref(chatId).get();
-      if (!chatSnap.exists) throw 'Chat does not exist: ${chatId}';
+    Messages chat = new Messages.fromJson(chatSnap.data, chatSnap);
 
-      Messages chat = new Messages.fromJson(chatSnap.data, chatSnap);
-
-      if (!chat.system && partner == null) {
-        String partnerId = chat.partnerId;
-        DocumentSnapshot snap = await User.Ref(partnerId).get();
-        if (!snap.exists)
-          throw "Partner user [${partnerId}] does not exist for chat [${chat
-              .id}]";
-        partner = User.fromJson(snap.data);
-      }
+    if (!chat.system && partner == null) {
+      String partnerId = chat.partnerId;
+      DocumentSnapshot snap = await User.Ref(partnerId).get();
+      if (!snap.exists)
+        throw "Partner user [${partnerId}] does not exist for chat [${chat.id}]";
+      partner = User.fromJson(snap.data);
+    }
 
     Navigator.push(
         context,
@@ -345,16 +289,18 @@ class Chat extends StatefulWidget {
                 partner: partner,
                 chat: chat,
                 message: message,
-                send: send))).then((doc) {});
+                send: send,
+                transit: transit)));
   }
 
   static runChat(BuildContext context, User partner,
-      {Messages chat, String message, bool send = false}) async {
-
-    if(!chat.system && partner == null)
-      partner = User(id: chat.partnerId,
-        name: chat.partnerName,
-        photo: chat.partnerImage);
+      {Messages chat,
+      String message,
+      bool send = false,
+      String transit}) async {
+    if (!chat.system && partner == null)
+      partner = User(
+          id: chat.partnerId, name: chat.partnerName, photo: chat.partnerImage);
 
     Navigator.push(
         context,
@@ -363,7 +309,8 @@ class Chat extends StatefulWidget {
                 partner: partner,
                 chat: chat,
                 message: message,
-                send: send))).then((doc) {});
+                send: send,
+                transit: transit)));
   }
 
   Chat(
@@ -371,29 +318,34 @@ class Chat extends StatefulWidget {
       @required this.partner,
       this.message,
       this.chat,
-      this.send})
+      this.send,
+      this.transit})
       : super(key: key);
 
+  final Messages chat;
   final User partner;
   final String message;
   final bool send;
-  final Messages chat;
+  final String transit;
 
   @override
   _ChatState createState() => new _ChatState(
       partner: partner,
       message: message,
       chat: chat,
-      send: send);
+      send: send,
+      transit: transit);
 }
 
 class _ChatState extends State<Chat> {
   final User partner;
+  String transit;
   String message;
   bool send;
   Messages chat;
   String phase;
   bool showCart = false;
+  String status;
 
   // Conditions for the agreement
   double amountToPay = 0.0;
@@ -402,7 +354,7 @@ class _ChatState extends State<Chat> {
   StreamSubscription<QuerySnapshot> streamBooks;
   List<Bookrecord> books = [];
 
-  StreamSubscription<DocumentSnapshot> streamChat;
+  StreamSubscription<Messages> _listener;
   StreamSubscription<DocumentSnapshot> streamPartnerWallet;
   double partnerBalance = 0.0;
 
@@ -421,20 +373,23 @@ class _ChatState extends State<Chat> {
 
     textController = new TextEditingController();
 
-    streamChat = Firestore.instance
-        .collection('messages')
-        .document(chat.id)
-        .snapshots()
-        .listen((snap) {
-      Messages upd = new Messages.fromJson(snap.data, snap);
+    // Initialize chat queries
+    status = null;
+    refreshChat();
 
-      if (upd.status != chat.status) {
-        refreshChat();
-        setState(() {
-          chat = upd;
-        });
+    // Listem chat updates
+    _listener = chat.snapshots().listen((chat) {
+      if (mounted) setState(() {});
+    }, onDone: () async {
+      if (transit != null) {
+        Messages chatT = await doTransit(
+            context: context, chat: chat, bookrecordId: transit);
+        chat.status = chatT.status;
+        chat.books = chatT.books;
+        transit = null;
       }
-    });
+      refreshChat();
+    } );
 
     if (!chat.system) {
       // Get current balance of the peer
@@ -466,12 +421,15 @@ class _ChatState extends State<Chat> {
           }
         }
       });
-
-      refreshChat();
     }
   }
 
   void refreshChat() async {
+    // Skip if status not changed
+    if (chat.status == status)
+      return;
+
+    status = chat.status;
     books = [];
 
     if (streamBooks != null) streamBooks.cancel();
@@ -579,24 +537,25 @@ class _ChatState extends State<Chat> {
       books = [];
       await Future.forEach(chat.books, (id) async {
         DocumentSnapshot snap = await Bookrecord.Ref(id).get();
-        if (snap.exists)
-          books.add(Bookrecord.fromJson(snap.data));
+        if (snap.exists) books.add(Bookrecord.fromJson(snap.data));
         // TODO: Deal with books which are not found
       });
 
+      amountToPay = chat.amount;
+
       if (mounted) setState(() {});
-    } else if (chat.fromMe &&
-        chat.status == Messages.Complete) {
+    } else if (chat.fromMe && chat.status == Messages.Complete) {
       phase = 'completeFromMe';
 
       streamBooks = null;
       books = [];
       await Future.forEach(chat.books, (id) async {
         DocumentSnapshot snap = await Bookrecord.Ref(id).get();
-        if (snap.exists)
-          books.add(Bookrecord.fromJson(snap.data));
+        if (snap.exists) books.add(Bookrecord.fromJson(snap.data));
         // TODO: Deal with books which are not found
       });
+
+      amountToPay = chat.amount;
 
       if (mounted) setState(() {});
     }
@@ -606,7 +565,7 @@ class _ChatState extends State<Chat> {
   void dispose() {
     if (streamBooks != null) streamBooks.cancel();
 
-    if (streamChat != null) streamChat.cancel();
+    if (_listener != null) _listener.cancel();
 
     if (streamPartnerWallet != null) streamPartnerWallet.cancel();
 
@@ -618,7 +577,8 @@ class _ChatState extends State<Chat> {
       @required this.partner,
       this.message = '',
       this.chat,
-      this.send});
+      this.send,
+      this.transit});
 
   @override
   Widget build(BuildContext context) {
@@ -626,24 +586,29 @@ class _ChatState extends State<Chat> {
       appBar: new AppBar(
           title: GestureDetector(
               onTap: () {
+                // TODO: Design user profile screen and uncomment
+                /*
                 Navigator.push(
                     context,
                     new MaterialPageRoute(
                         builder: (context) => new UserProfileWidget(
                               user: partner,
                             )));
+                */
               },
               child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: <Widget>[
                     chat.system
-                        ? Container(margin: EdgeInsets.all(2.0), child: assetIcon(technical_support_100, size: 30.0))
-          : userPhoto(partner, 40),
+                        ? Container(
+                            margin: EdgeInsets.all(2.0),
+                            child: assetIcon(technical_support_100, size: 30.0))
+                        : userPhoto(partner, 40),
                     Expanded(
                         child: Container(
                             margin: EdgeInsets.only(left: 5.0),
                             child: Text(
-                              chat.system ? 'ПОДДЕРЖКА' : partner.name,
+                              chat.system ? S.of(context).titleSupport : partner.name,
                               style: Theme.of(context)
                                   .textTheme
                                   .title
@@ -725,12 +690,12 @@ class _ChatState extends State<Chat> {
           getFinance(),
           // Long text hint
           Container(
-                  margin: EdgeInsets.fromLTRB(3.0, 8.0, 3.0, 10.0),
-                  child: Text(
-                    getLongText(),
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.body1,
-                  ))
+              margin: EdgeInsets.fromLTRB(3.0, 8.0, 3.0, 10.0),
+              child: Text(
+                getLongText(),
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.body1,
+              ))
         ]);
   }
 
@@ -745,7 +710,116 @@ class _ChatState extends State<Chat> {
                     bookrecord: rec,
                     builder: (context, rec) {
                       return Stack(children: <Widget>[
-                        Container(margin: EdgeInsets.all(5.0), child: bookImage(rec, 100.0, sameHeight: true)),
+                        Container(
+                            margin: EdgeInsets.all(5.0),
+                            child: bookImage(rec, 100.0, sameHeight: true)),
+                        chat.status == Messages.Initial
+                            ? Positioned.fill(
+                                child: Container(
+                                    alignment: Alignment.topRight,
+                                    child: GestureDetector(
+                                        onTap: () {
+                                          // Exclude book from list
+                                          rec.ref.updateData({
+                                            'transit': false,
+                                            'confirmed': false,
+                                            'transitId': null,
+                                            'users': [rec.holderId, rec.ownerId]
+                                          });
+                                          chat.ref.updateData({
+                                            'books':
+                                                FieldValue.arrayRemove([rec.id])
+                                          });
+
+                                          FirebaseAnalytics().logEvent(
+                                              name: 'remove_from_cart',
+                                              parameters: <String, dynamic>{
+                                                'isbn': rec.isbn,
+                                                'user': B.user.id,
+                                                'type': (chat.toId == rec.owner)
+                                                    ? 'return'
+                                                    : 'request',
+                                                'by':
+                                                    (B.user.id == rec.holderId)
+                                                        ? 'holder'
+                                                        : 'peer',
+                                                'from': chat.fromId,
+                                                'to': chat.toId,
+                                                'distance': rec.distance,
+                                                'locality': B.locality,
+                                                'country': B.country,
+                                                'latitude': B.position.latitude,
+                                                'longitude':
+                                                    B.position.longitude
+                                              });
+                                        },
+                                        child: ClipOval(
+                                          child: Container(
+                                            color: C.button,
+                                            height:
+                                                20.0, // height of the button
+                                            width: 20.0, // width of the button
+                                            child: Center(
+                                                child: assetIcon(cancel_100,
+                                                    size: 20)),
+                                          ),
+                                        ))))
+                            : Container(width: 0.0, height: 0.0)
+                      ]);
+                    });
+              }).toList()
+                ..add(chat.status == Messages.Initial
+                    ? GestureDetector(
+                        onTap: () {
+                          // Run screen to chose more books from user
+                          Navigator.push(
+                              context,
+                              new MaterialPageRoute(
+                                  builder: (context) => buildScaffold(
+                                      context,
+                                      '',
+                                      new UserBooksWidget(
+                                        user: partner,
+                                        onSelected: (context, rec) async {
+                                          // Add book to a chat
+                                          // TODO: Use record instead of id
+                                          Messages chatT = await doTransit(
+                                              context: context,
+                                              chat: chat,
+                                              bookrecordId: rec.id);
+                                          setState(() {
+                                            chat = chatT;
+                                          });
+                                        },
+                                      ),
+                                      appbar: false)));
+                        },
+                        child: Container(
+                            height: 100.0,
+                            width: 60.0,
+                            child: Center(
+                              child: ClipOval(
+                                child: Container(
+                                    height: 35.0, // height of the button
+                                    width: 35.0, // width of the button
+                                    color: C.button,
+                                    child: assetIcon(add_100, size: 35)),
+                              ),
+                            )))
+                    : Container(width: 0.0, height: 0.0))));
+    } else {
+      return Container(
+          height: 110.0,
+          child: ListView(
+              scrollDirection: Axis.horizontal,
+              children: books.map<Widget>((rec) {
+                return BookrecordWidget(
+                    bookrecord: rec,
+                    builder: (context, rec) {
+                      return Stack(children: <Widget>[
+                        Container(
+                            margin: EdgeInsets.all(5.0),
+                            child: bookImage(rec, 100.0, sameHeight: true)),
                         chat.status == Messages.Initial
                             ? Positioned.fill(
                                 child: Container(
@@ -789,77 +863,20 @@ class _ChatState extends State<Chat> {
                                   builder: (context) => buildScaffold(
                                       context,
                                       '',
-                                      new UserBooksWidget(user: partner),
-                                      appbar: false)));
-                        },
-                        child: Container(
-                            height: 100.0,
-                            width: 60.0,
-                            child: Center(
-                              child: ClipOval(
-                                child: Container(
-                                    height: 35.0, // height of the button
-                                    width: 35.0, // width of the button
-                                    color: C.button,
-                                    child: assetIcon(add_100, size: 35)),
-                              ),
-                            )))
-                    : Container(width: 0.0, height: 0.0))));
-    } else {
-      return Container(
-          height: 110.0,
-          child: ListView(
-              scrollDirection: Axis.horizontal,
-              children: books.map<Widget>((rec) {
-                return BookrecordWidget(
-                    bookrecord: rec,
-                    builder: (context, rec) {
-                      return Stack(children: <Widget>[
-                        Container(margin: EdgeInsets.all(5.0), child: bookImage(rec, 100.0, sameHeight: true)),
-                        chat.status == Messages.Initial
-                            ? Positioned.fill(
-                                child: Container(
-                                    alignment: Alignment.topRight,
-                                    child: GestureDetector(
-                                        onTap: () {
-                                          // Exclude book from list
-                                          rec.ref.updateData({
-                                            'transit': false,
-                                            'confirmed': false,
-                                            'transitId': null,
-                                            'users': [rec.holderId, rec.ownerId]
-                                          });
-                                          chat.ref.updateData({
-                                            'books':
-                                                FieldValue.arrayRemove([rec.id])
+                                      new MyBooksWidget(
+                                        user: partner,
+                                        onSelected: (context, rec) async {
+                                          // Add book to a chat
+                                          // TODO: Use record instead of id
+                                          Messages chatT = await doTransit(
+                                              context: context,
+                                              chat: chat,
+                                              bookrecordId: rec.id);
+                                          setState(() {
+                                            chat = chatT;
                                           });
                                         },
-                                        child: ClipOval(
-                                          child: Container(
-                                            color: C.button,
-                                            height:
-                                            20.0, // height of the button
-                                            width: 20.0, // width of the button
-                                            child: Center(
-                                                child: assetIcon(cancel_100,
-                                                    size: 20)),
-                                          ),
-                                        ))))
-                            : Container(width: 0.0, height: 0.0)
-                      ]);
-                    });
-              }).toList()
-                ..add(chat.status == Messages.Initial
-                    ? GestureDetector(
-                        onTap: () {
-                          // Run screen to chose more books from user
-                          Navigator.push(
-                              context,
-                              new MaterialPageRoute(
-                                  builder: (context) => buildScaffold(
-                                      context,
-                                      '',
-                                      new MyBooksWidget(user: partner),
+                                      ),
                                       appbar: false)));
                         },
                         child: Container(
@@ -868,11 +885,11 @@ class _ChatState extends State<Chat> {
                             child: Center(
                               child: ClipOval(
                                 child: Container(
-                                    height: 35.0, // height of the button
-                                    width: 35.0, // width of the button
-                                    color: C.button,
-                                    child: assetIcon(add_100, size: 35),
-                              ),
+                                  height: 35.0, // height of the button
+                                  width: 35.0, // width of the button
+                                  color: C.button,
+                                  child: assetIcon(add_100, size: 35),
+                                ),
                               ),
                             )))
                     : Container(width: 0.0, height: 0.0))));
@@ -888,12 +905,11 @@ class _ChatState extends State<Chat> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
                   Container(
-                      child: Text('Залог: ${money(total(amountToPay))}',
+                      child: Text(S.of(context).showDeposit( money(total(amountToPay)) ),
                           overflow: TextOverflow.ellipsis,
                           style: Theme.of(context).textTheme.body1)),
                   Container(
-                      child: Text(
-                          'Оплата в месяц: ${money(monthly(amountToPay))}',
+                      child: Text(S.of(context).showRent( money(monthly(amountToPay)) ),
                           overflow: TextOverflow.ellipsis,
                           style: Theme.of(context).textTheme.body1)),
                 ]),
@@ -905,21 +921,22 @@ class _ChatState extends State<Chat> {
       return Container(
           margin: EdgeInsets.only(left: 3.0, right: 3.0),
           child: Row(children: <Widget>[
-          Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Container(
-                    child: Text('Цена: ${money(amountToPay)}',
-                        overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.body1)),
-                Container(
-                    child: Text('Доход в месяц: ${money(income(amountToPay))}',
-                        overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.body1)),
-              ]),
-          Expanded(
-              child: Container(
-                  padding: EdgeInsets.only(left: 10.0), child: getButton()))
+            Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Container(
+                      child: Text('Цена: ${money(amountToPay)}',
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.body1)),
+                  Container(
+                      child: Text(
+                          'Доход в месяц: ${money(income(amountToPay))}',
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.body1)),
+                ]),
+            Expanded(
+                child: Container(
+                    padding: EdgeInsets.only(left: 10.0), child: getButton()))
           ]));
   }
 
@@ -933,21 +950,20 @@ class _ChatState extends State<Chat> {
         child: new Text(S.of(context).buttonPayin),
         onPressed: () async {
           final bool available =
-          await InAppPurchaseConnection.instance.isAvailable();
+              await InAppPurchaseConnection.instance.isAvailable();
           if (!available) {
             // TODO: Process this more nicely
             throw ('In-App store not available');
           }
           // Only show bigger amounts
           List<int> codes = [50, 100, 200, 500, 1000, 2000];
-          int missing =
-          (total(amountToPay) - B.wallet.getAvailable()).ceil();
+          int missing = (total(amountToPay) - B.wallet.getAvailable()).ceil();
           int code =
-          codes.firstWhere((code) => code > missing, orElse: () => 2000);
+              codes.firstWhere((code) => code > missing, orElse: () => 2000);
 
           Set<String> _kIds = {code.toString()};
           final ProductDetailsResponse response =
-          await InAppPurchaseConnection.instance.queryProductDetails(_kIds);
+              await InAppPurchaseConnection.instance.queryProductDetails(_kIds);
           if (!response.notFoundIDs.isEmpty) {
             // TODO: Process this more nicely
             throw ('Ids of in-app products not available');
@@ -961,30 +977,37 @@ class _ChatState extends State<Chat> {
         shape: new RoundedRectangleBorder(
             borderRadius: new BorderRadius.circular(20.0)),
       );
-    else if (chat.toMe && chat.status == Messages.Handover && books != null && books.length > 0)
+    else if (chat.toMe &&
+        chat.status == Messages.Handover &&
+        books != null &&
+        books.length > 0)
       return RaisedButton(
         textColor: C.buttonText,
         color: C.button,
         child: new Text(S.of(context).buttonConfirmBooks,
             style:
-            Theme.of(context).textTheme.body1.apply(color: Colors.white)),
+                Theme.of(context).textTheme.body1.apply(color: Colors.white)),
         onPressed: () async {
-          transferBooks(partner);
+          chat.amount = amountToPay;
+          await transferBooks(partner);
         },
         shape: new RoundedRectangleBorder(
             borderRadius: new BorderRadius.circular(20.0)),
       );
     else if (chat.fromMe &&
         chat.status == Messages.Initial &&
-        total(amountToPay) < partnerBalance && books != null && books.length > 0)
+        total(amountToPay) < partnerBalance &&
+        books != null &&
+        books.length > 0)
       return RaisedButton(
         textColor: C.buttonText,
         color: C.button,
         child: new Text(S.of(context).buttonGivenBooks,
             style:
-            Theme.of(context).textTheme.body1.apply(color: Colors.white)),
+                Theme.of(context).textTheme.body1.apply(color: Colors.white)),
         onPressed: () async {
-          confirmBooks(partner);
+          await confirmBooks(partner);
+          refreshChat();
         },
         shape: new RoundedRectangleBorder(
             borderRadius: new BorderRadius.circular(20.0)),
@@ -996,28 +1019,28 @@ class _ChatState extends State<Chat> {
   String getLongText() {
     if (chat.status == Messages.Initial && chat.toMe) {
       if (books == null || books.length == 0)
-        return 'Добавьте книги';
+        return S.of(context).cartAddBooks;
       else if (B.wallet.getAvailable() < total(amountToPay))
-        return 'Пополните баланс на ${money(total(amountToPay) - B.wallet.getAvailable())}';
+        return S.of(context).cartTopup( money(total(amountToPay) - B.wallet.getAvailable()) );
       else
-        return 'Договоритесь о встрече';
+        return S.of(context).cartMakeApointment;
     } else if (chat.status == Messages.Initial && chat.fromMe) {
       if (amountToPay > 0.0 && amountToPay > partnerBalance)
-        return 'Получатель книг должен пополнить баланс';
+        return S.of(context).cartRequesterHasToTopup;
       else if (amountToPay > 0.0 && amountToPay <= partnerBalance)
         // Some books to be rented (not returned)
-        return 'Подтвердите, что отдали книги';
+        return S.of(context).cartConfirmHandover;
       else
         // All books are returning (not rented)
-        return 'Подтвердите, что отдали книги';
+        return S.of(context).cartConfirmHandover;
     } else if (chat.status == Messages.Handover && chat.toMe) {
-      return 'Подтвердите получение книг';
+      return S.of(context).cartConfirmReceived;
     } else if (chat.status == Messages.Handover && chat.fromMe) {
-      return 'Получатель должен подтвердить получение книг';
+      return S.of(context).cartRequesterHasToConfirm;
     } else if (chat.status == Messages.Complete && chat.toMe) {
-      return 'Книги успешно получены';
+      return S.of(context).cartBooksAccepted;
     } else if (chat.status == Messages.Complete && chat.fromMe) {
-      return 'Книги успешно переданы';
+      return S.of(context).cartBooksGiven;
     }
     // TODO: Add other phases and directions
     return '';
@@ -1042,10 +1065,12 @@ class _ChatState extends State<Chat> {
       b.ref.updateData({'confirmed': true});
     }
 
-    chat.ref.updateData({'status': Messages.Handover, 'books': books.map((b) => b.id).toList()});
+    chat.ref.updateData({
+      'status': Messages.Handover,
+      'books': books.map((b) => b.id).toList()
+    });
     chat.status = Messages.Handover;
-
-    setState(() {});
+    refreshChat();
   }
 
   Future<void> transferBooks(User partner) async {
@@ -1069,8 +1094,7 @@ class _ChatState extends State<Chat> {
 
     // Books taken from person other than owner
     List<Bookrecord> booksPassed = books
-        .where(
-            (rec) => rec.ownerId != B.user.id && rec.ownerId != partner.id)
+        .where((rec) => rec.ownerId != B.user.id && rec.ownerId != partner.id)
         .toList();
 
     // Books returned to owner
@@ -1089,8 +1113,13 @@ class _ChatState extends State<Chat> {
       await complete(books: booksReturned, holder: partner, owner: B.user);
     }
 
-    chat.ref.updateData({'status': Messages.Complete, 'books': books.map((b) => b.id).toList()});
+    chat.ref.updateData({
+      'status': Messages.Complete,
+      'books': books.map((b) => b.id).toList(),
+      'amount': chat.amount
+    });
     chat.status = Messages.Complete;
+    refreshChat();
   }
 }
 
@@ -1166,14 +1195,29 @@ class ChatScreenState extends State<ChatScreen> {
     else
       peerId = partner.id;
 
-    AuthGoogle(fileJson: "assets/dialogflow.json").build().then((auth) {
-      dialogflow =
-          Dialogflow(authGoogle: auth, language: Intl.getCurrentLocale());
+    if (chat.system) {
+      // Check if system chat is empty add welcome message
+      Firestore.instance
+          .collection('messages')
+          .document(chat.id)
+          .collection(chat.id)
+          .orderBy('timestamp', descending: true)
+          .limit(1)
+          .getDocuments()
+          .then((snap) {
+        injectChatbotMessage(
+            context, B.user.id, chat, S.of(context).chatbotWelcome);
+      });
 
-      if (message != null && send) {
-        onSendMessage(message, 0);
-      }
-    });
+      AuthGoogle(fileJson: "assets/dialogflow.json").build().then((auth) {
+        dialogflow =
+            Dialogflow(authGoogle: auth, language: Intl.getCurrentLocale());
+
+        if (message != null && send) {
+          onSendMessage(message, 0);
+        }
+      });
+    }
 
     updateUnread();
 
@@ -1246,7 +1290,8 @@ class ChatScreenState extends State<ChatScreen> {
           await transaction.update(
             chat.ref,
             {
-              'id': chat.id, // Update ID to recover for old chats (old version of app)
+              'id': chat
+                  .id, // Update ID to recover for old chats (old version of app)
               'message': content.length < 20
                   ? content
                   : content.substring(0, 20) + '\u{2026}',
@@ -1545,22 +1590,25 @@ class ChatScreenState extends State<ChatScreen> {
   }
 }
 
+typedef void BookSelectedCallback(BuildContext context, Bookrecord book);
+
 // Class to show users books (to add into transit/chat)
 class UserBooksWidget extends StatefulWidget {
-  UserBooksWidget({
-    Key key,
-    @required this.user,
-  }) : super(key: key);
+  UserBooksWidget({Key key, @required this.user, @required this.onSelected})
+      : super(key: key);
 
   final User user;
+  final BookSelectedCallback onSelected;
 
   @override
   _UserBooksWidgetState createState() =>
-      new _UserBooksWidgetState(user: user);
+      new _UserBooksWidgetState(user: user, onSelected: onSelected);
 }
 
 class _UserBooksWidgetState extends State<UserBooksWidget> {
   User user;
+  BookSelectedCallback onSelected;
+
   Set<String> keys = {};
   List<Book> suggestions = [];
   TextEditingController textController;
@@ -1595,7 +1643,7 @@ class _UserBooksWidgetState extends State<UserBooksWidget> {
     super.dispose();
   }
 
-  _UserBooksWidgetState({this.user});
+  _UserBooksWidgetState({this.user, this.onSelected});
 
   @override
   Widget build(BuildContext context) {
@@ -1648,10 +1696,10 @@ class _UserBooksWidgetState extends State<UserBooksWidget> {
                                     .title
                                     .apply(color: Colors.white),
                                 decoration: InputDecoration(
-                                    //border: InputBorder.none,
-                                    hintText: S.of(context).hintAuthorTitle,
-                                    hintStyle: C.hints.apply(color: C.inputHints),
-                                    ),
+                                  //border: InputBorder.none,
+                                  hintText: S.of(context).hintAuthorTitle,
+                                  hintStyle: C.hints.apply(color: C.inputHints),
+                                ),
                               )),
                         ),
                         Container(
@@ -1721,18 +1769,8 @@ class _UserBooksWidgetState extends State<UserBooksWidget> {
                   // TODO: Add authors titles aand onTap
                   return GestureDetector(
                       onTap: () async {
-                        // Add book to a chat
-                        Messages chat = await getChatAndTransit(
-                            context: context,
-                            from: rec.holder,
-                            to: B.user,
-                            bookrecordId: rec.id);
-                        if (chat != null)
-                          showSnackBar(
-                            context, S.of(context).snackBookAddedToCart);
-                        else
-                          showSnackBar(
-                              context, S.of(context).snackBookNotConfirmed);
+                        // Call book selection callback
+                        if (onSelected != null) onSelected(context, rec);
                       },
                       child: Row(children: <Widget>[
                         bookImage(rec, 50, padding: 5.0),
@@ -1767,17 +1805,21 @@ class MyBooksWidget extends StatefulWidget {
   MyBooksWidget({
     Key key,
     @required this.user,
+    @required this.onSelected,
   }) : super(key: key);
 
   final User user;
+  final BookSelectedCallback onSelected;
 
   @override
   _MyBooksWidgetState createState() =>
-      new _MyBooksWidgetState(user: user);
+      new _MyBooksWidgetState(user: user, onSelected: onSelected);
 }
 
 class _MyBooksWidgetState extends State<MyBooksWidget> {
   User user;
+  BookSelectedCallback onSelected;
+
   Set<String> keys = {};
   List<Book> suggestions = [];
   TextEditingController textController;
@@ -1812,7 +1854,7 @@ class _MyBooksWidgetState extends State<MyBooksWidget> {
     super.dispose();
   }
 
-  _MyBooksWidgetState({this.user});
+  _MyBooksWidgetState({this.user, this.onSelected});
 
   @override
   Widget build(BuildContext context) {
@@ -1865,8 +1907,8 @@ class _MyBooksWidgetState extends State<MyBooksWidget> {
                                     .title
                                     .apply(color: Colors.white),
                                 decoration: InputDecoration(
-                                    //border: InputBorder.none,
-                                    hintText: S.of(context).hintAuthorTitle,
+                                  //border: InputBorder.none,
+                                  hintText: S.of(context).hintAuthorTitle,
                                   hintStyle: C.hints.apply(color: C.inputHints),
                                 ),
                               )),
@@ -1937,18 +1979,7 @@ class _MyBooksWidgetState extends State<MyBooksWidget> {
                   // TODO: Add authors titles aand onTap
                   return GestureDetector(
                       onTap: () async {
-                        // Add book to a chat
-                        Messages chat = await getChatAndTransit(
-                            context: context,
-                            from: B.user,
-                            to: user,
-                            bookrecordId: rec.id);
-                        if (chat != null)
-                          showSnackBar(
-                              context, S.of(context).snackBookAddedToCart);
-                        else
-                          showSnackBar(
-                              context, S.of(context).snackBookPending);
+                        if (onSelected != null) onSelected(context, rec);
                       },
                       child: Row(children: <Widget>[
                         bookImage(rec, 50, padding: 5.0),
@@ -2006,8 +2037,7 @@ class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
 }
 
 class UserProfileWidget extends StatefulWidget {
-  UserProfileWidget({Key key, @required this.user})
-      : super(key: key);
+  UserProfileWidget({Key key, @required this.user}) : super(key: key);
 
   final User user;
 
@@ -2037,11 +2067,11 @@ class _UserProfileWidgetState extends State<UserProfileWidget> {
 
     // Read user balance
     wallet = Wallet(id: user.id);
-    wallet.ref.get().then( (snap) {
-      if(snap.exists)
-         setState(() {
-           wallet = Wallet.fromJson(snap.data);
-         });
+    wallet.ref.get().then((snap) {
+      if (snap.exists)
+        setState(() {
+          wallet = Wallet.fromJson(snap.data);
+        });
     });
 
     booksBorrowed = [];
@@ -2093,8 +2123,7 @@ class _UserProfileWidgetState extends State<UserProfileWidget> {
     super.dispose();
   }
 
-  _UserProfileWidgetState(
-      {Key key, @required this.user});
+  _UserProfileWidgetState({Key key, @required this.user});
 
   @override
   Widget build(BuildContext context) {
@@ -2152,7 +2181,7 @@ class _UserProfileWidgetState extends State<UserProfileWidget> {
                         padding: new EdgeInsets.only(left: 10.0, right: 10.0),
                         height: 45.0,
                         child: Text(
-                          'Мои книги у этого пользователя (${booksBorrowed.length})',
+                          S.of(context).myBooksWithUser(booksBorrowed.length),
                           style: Theme.of(context).textTheme.subtitle,
                         ),
                       ),
@@ -2166,8 +2195,10 @@ class _UserProfileWidgetState extends State<UserProfileWidget> {
                                     bookrecord: rec,
                                     builder: (context, rec) {
                                       return Stack(children: <Widget>[
-                                        Container(margin: EdgeInsets.all(5.0), child: bookImage(rec, 80.0,
-                                            sameHeight: true)),
+                                        Container(
+                                            margin: EdgeInsets.all(5.0),
+                                            child: bookImage(rec, 80.0,
+                                                sameHeight: true)),
                                         Positioned.fill(
                                             child: Container(
                                                 alignment: Alignment.topRight,
@@ -2218,7 +2249,7 @@ class _UserProfileWidgetState extends State<UserProfileWidget> {
                           padding: new EdgeInsets.only(left: 10.0, right: 10.0),
                           height: 45.0,
                           child: Text(
-                            'Книги этого пользователя у меня (${booksLent.length})',
+                            S.of(context).booksOfUserWithMe(booksLent.length),
                             style: Theme.of(context).textTheme.subtitle,
                           )),
                       Expanded(
@@ -2231,8 +2262,10 @@ class _UserProfileWidgetState extends State<UserProfileWidget> {
                                     bookrecord: rec,
                                     builder: (context, rec) {
                                       return Stack(children: <Widget>[
-                                        Container(margin: EdgeInsets.all(5.0), child: bookImage(rec, 80.0,
-                                            sameHeight: true)),
+                                        Container(
+                                            margin: EdgeInsets.all(5.0),
+                                            child: bookImage(rec, 80.0,
+                                                sameHeight: true)),
                                         Positioned.fill(
                                             child: Container(
                                                 alignment: Alignment.topRight,
@@ -2249,7 +2282,8 @@ class _UserProfileWidgetState extends State<UserProfileWidget> {
                                                         width:
                                                             20.0, // width of the button
                                                         child: Center(
-                                                            child: assetIcon(return_100,
+                                                            child: assetIcon(
+                                                                return_100,
                                                                 size: 14)),
                                                       ),
                                                     ))))
@@ -2280,7 +2314,7 @@ class _UserProfileWidgetState extends State<UserProfileWidget> {
                         padding: new EdgeInsets.only(left: 10.0, right: 10.0),
                         height: 45.0,
                         child: Text(
-                          'Книги пользователя (${booksAvailable.length})',
+                          S.of(context).profileUserBooks(booksAvailable.length),
                           style: Theme.of(context).textTheme.subtitle,
                         )),
                     new Container(
@@ -2300,9 +2334,10 @@ class _UserProfileWidgetState extends State<UserProfileWidget> {
                                   controller: textController,
                                   style: Theme.of(context).textTheme.title,
                                   decoration: InputDecoration(
-                                      //border: InputBorder.none,
-                                      hintText: S.of(context).hintAuthorTitle,
-                                    hintStyle: C.hints.apply(color: C.inputHints),
+                                    //border: InputBorder.none,
+                                    hintText: S.of(context).hintAuthorTitle,
+                                    hintStyle:
+                                        C.hints.apply(color: C.inputHints),
                                   ),
                                 )),
                           ),
@@ -2384,7 +2419,7 @@ class _UserProfileWidgetState extends State<UserProfileWidget> {
                       mainAxisAlignment: MainAxisAlignment.start,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: <Widget>[
-                        new Text('Баланс: ${money(wallet.getAvailable())}',
+                        new Text(S.of(context).userBalance(money(wallet.getAvailable())),
                             style: Theme.of(context)
                                 .textTheme
                                 .body1

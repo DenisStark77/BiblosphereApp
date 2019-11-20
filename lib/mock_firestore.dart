@@ -1,5 +1,6 @@
 import 'package:mockito/mockito.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'dart:math';
 
 Random rng = new Random();
@@ -107,14 +108,16 @@ class MockCollectionReference extends Fake implements CollectionReference {
 }
 
 class MockTransaction extends Fake implements Transaction {
-  Set<String> read = {};
-  Set<String> updated = {};
+  Set<String> _read = {};
+  Set<String> _updated = {};
+  Set<String> _set = {};
 
   @override
   Future<DocumentSnapshot> get (
       DocumentReference documentReference
       ) {
-    read.add(documentReference.path);
+
+    _read.add(documentReference.path);
     return documentReference.get();
   }
 
@@ -123,8 +126,7 @@ class MockTransaction extends Fake implements Transaction {
       DocumentReference documentReference,
       Map<String, dynamic> data
       ) {
-    updated.add(documentReference.path);
-
+    _set.add(documentReference.path);
     documentReference.setData(data);
     return Future.delayed(Duration(seconds: 0));
   }
@@ -134,10 +136,9 @@ class MockTransaction extends Fake implements Transaction {
       DocumentReference documentReference,
       Map<String, dynamic> data
       ) {
-    updated.add(documentReference.path);
+    _updated.add(documentReference.path);
 
-    documentReference.updateData(data);
-    return Future.delayed(Duration(seconds: 0));
+    return documentReference.updateData(data);
   }
 }
 
@@ -155,10 +156,14 @@ class MockFirestore extends Fake implements Firestore {
      MockTransaction tx = new MockTransaction();
      await transactionHandler(tx);
 
-     Set notUpdated = tx.read.difference(tx.updated);
-     if(notUpdated.length > 0)
+     Set notUpdated = tx._read.difference(tx._updated);
+     notUpdated = notUpdated.difference(tx._set);
+     // If something updated but not all throw exception
+     if((tx._updated.length > 0 || tx._set.length > 0) && notUpdated.length > 0)
        throw "Records read but not updated: ${notUpdated.join(', ')}";
 
      return <String, dynamic>{};
   }
 }
+
+class MockFirebaseAnalytics extends Mock implements FirebaseAnalytics {}
