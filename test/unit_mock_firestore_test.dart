@@ -79,4 +79,17 @@ main() {
     expect(data, 1);
     expect(snap.data['data'], 2);
   });
+
+  test("Mock Firestore: Transaction read and not updated", () async {
+    DocumentReference doc1 = db.collection('test1').document();
+    DocumentReference doc2 = db.collection('test2').document();
+    doc1.setData({'data': 1});
+
+    expect(() async => await db.runTransaction( (tx) {
+      // Get value before transaction
+      tx.get(doc1);
+      tx.update(doc2, {'data': 2});
+      return;
+    }), throwsA((String str) => str.startsWith('Records read but not updated:')));
+  });
 }

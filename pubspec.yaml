@@ -70,12 +70,16 @@ dependencies:
 
   xml: ^3.3.1
 
+  flutter_dialogflow: ^0.1.0
+
   #Registration with Goodreads
   oauth1: ^1.0.4
 
+  flushbar: ^1.9.1
+
 # Run flutter pub pub run flutter_launcher_icons:main
 flutter_icons:
-  image_path: "images/biblosphere.png"
+  image_path: "images/biblosphere.jpg"
   android: true
   ios: true
 
@@ -100,6 +104,7 @@ flutter:
 
   # To add assets to your application, add an assets section, like this:
   assets:
+    - images/biblosphere.jpg
     - images/Librarian50x50.jpg
     - images/shoot.png
     - images/surf.png
@@ -112,6 +117,34 @@ flutter:
     - images/goodreads.png
     - images/librarything.png
     - images/amazon.png
+    - images/icons/icons8-add-book-100.png
+    - images/icons/icons8-books-100.png
+    - images/icons/icons8-search-100.png
+    - images/icons/icons8-communication-100.png
+    - images/icons/icons8-wallet-100.png
+    - images/icons/icons8-coins-100.png
+    - images/icons/icons8-barcode-scanner-100.png
+    - images/icons/icons8-shopping-cart-100.png
+    - images/icons/icons8-online-support-100.png
+    - images/icons/icons8-technical-support-100.png
+    - images/icons/icons8-handshake-100.png
+    - images/icons/icons8-exit-100.png
+    - images/icons/icons8-settings-100.png
+    - images/icons/icons8-cancel-100.png
+    - images/icons/icons8-add-100.png
+    - images/icons/icons8-return-100.png
+    - images/icons/icons8-trash-100.png
+    - images/icons/icons8-share-100.png
+    - images/icons/icons8-bank-cards-100.png
+    - images/icons/icons8-receive-cash-100.png
+    - images/icons/icons8-unavailable-100.png
+    - images/icons/icons8-sent-100.png
+    - images/icons/icons8-filter-100.png
+    - images/icons/icons8-clear-filters-100.png
+    - images/icons/icons8-account-100.png
+
+    # credentials for DialogFlow
+    - assets/dialogflow.json
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.io/assets-and-images/#resolution-aware.

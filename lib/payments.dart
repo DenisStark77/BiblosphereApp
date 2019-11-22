@@ -1,40 +1,112 @@
+import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:stellar/stellar.dart' as stellar;
 import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart';
+
 import 'package:biblosphere/const.dart';
 
-createStellarAccount(User user) async {
-  stellar.KeyPair pair = stellar.KeyPair.random();
+String biblosphereAccountId;
 
-  // Add balance to test account
-  var url = "https://friendbot.stellar.org/?addr=${pair.accountId}";
-  http.get(url).then((response) {
-    switch (response.statusCode) {
-      case 200:
-        {
-          print(
-              "!!!DEBUG: SUCCESS! You have a new account : \n${response.body}");
-          print("!!!DEBUG: Response body: ${response.body}");
-          break;
-        }
-      default:
-        {
-          print("ERROR! : \n${response.body}");
-        }
-    }
-  });
+Map<String,String> currencySymbol = {
+  'RUB': r'₽',
+  'AED': r'aed',
+  'GEL': '\u{20BE}',
+  'USD': r'$',
+  'EUR': r'€',
+  'XLM': '\u{03BB}'
+};
 
-  user.accountId = pair.accountId;
-  user.secretSeed = pair.secretSeed;
-  await Firestore.instance
-      .collection('users')
-      .document(user.id)
-      .updateData({'accountId': user.accountId, 'secretSeed': user.secretSeed});
+Map<String, double> xlmRates = {
+  'RUB': 4.0773975423,
+  'AED': 0.2340837911,
+  'GEL': 0.1889691382,
+  'USD': 0.0637326218,
+  'EUR': 0.0571,
+  'XLM': 1.0
+};
+
+
+double toXlm(double amount) {
+  return amount / xlmRates[B.currency];
+}
+
+
+double toCurrency(double amount) {
+  return amount * xlmRates[B.currency];
+}
+
+
+String money(double amount) {
+  return '${new NumberFormat.currency(symbol: currencySymbol[B.currency]).format((amount ?? 0) * xlmRates[B.currency])}';
+}
+
+
+Future<void> getPaymentContext() async {
+  // Read Stellar account id
+  DocumentReference stellarRef = Firestore.instance.document('system/stellar_in');
+  DocumentSnapshot stellarSnap = await stellarRef.get();
+  if (stellarSnap.exists)
+    biblosphereAccountId = stellarSnap.data['accountId'];
+
+  // Read rates record
+  DocumentReference ratesRef = Firestore.instance.document('system/rates');
+  DocumentSnapshot snap = await ratesRef.get();
+
+  // If timestamp older than 1 day retrieve new rates
+  Timestamp threshold =
+      Timestamp.fromDate(DateTime.now().subtract(Duration(days: 1)));
+
+  if (snap.exists &&
+      snap.data['timestamp'] != null &&
+      (snap.data['timestamp'] as Timestamp).seconds > threshold.seconds &&
+      snap.data['rates'] != null) {
+    // Read rates from Firestore
+    Map<String, double> savedRates =
+    snap.data['rates'].map<String, double>((code, rate) => MapEntry<String, double>(code, 1.0 * rate));
+
+    xlmRates = savedRates;
+  } else if (!snap.exists ||
+      snap.data['timestamp'] == null ||
+      (snap.data['timestamp'] as Timestamp).seconds < threshold.seconds) {
+
+    // Get rates from APIs
+    http.Response resp = await http
+        .get('https://apiv2.bitcoinaverage.com/indices/local/ticker/XLMEUR');
+    if (resp.statusCode != 200)
+      throw "Request to apiv2.bitcoinaverage.com failed. Code: ${resp.statusCode}";
+
+    Map<String, dynamic> xlmBody = json.decode(resp.body);
+    double xlm2eur = xlmBody['averages']['day'];
+
+    resp = await http.get(
+        'http://data.fixer.io/api/latest?access_key=8dd7d7c931c45c0346af488bd1154269&symbols=RUB,AED,GEL,USD,EUR');
+    if (resp.statusCode != 200)
+      throw "Request to apiv2.bitcoinaverage.com failed. Code: ${resp.statusCode}";
+
+
+    Map<String, dynamic> ratesBody = json.decode(resp.body);
+    Map<String, double> rates = ratesBody['rates'].map<String, double>((code, rate) => MapEntry<String, double>(code, 1.0*rate));
+    Map<String, double> newRates =
+        rates.map((code, rate) => MapEntry(code, rate * xlm2eur));
+
+    newRates.addAll({'XLM': 1.0});
+
+    // Update rates and timestamp
+    ratesRef.setData({'timestamp': Timestamp.now(), 'rates': newRates});
+
+    // Keep rates to global variable
+    xlmRates = newRates;
+  }
+
+  return;
+  //https://apiv2.bitcoinaverage.com/indices/local/ticker/XLMUSD
+  //http://data.fixer.io/api/latest?access_key=8dd7d7c931c45c0346af488bd1154269&symbols=RUB,AED,GEL
 }
 
 Future<bool> checkStellarAccount(String accountId) async {
   try {
-    print('!!!DEBUG check account: ${accountId}');
     stellar.KeyPair pair = stellar.KeyPair.fromAccountId(accountId);
 
     stellar.Network.useTestNetwork();
@@ -44,226 +116,57 @@ Future<bool> checkStellarAccount(String accountId) async {
 
     return true;
   } catch (error) {
-    print('!!!DEBUG type ${error.runtimeType} ${error}');
-    print('!!!DEBUG type CODE: ${(error as stellar.ErrorResponse).code}');
     print((error as stellar.ErrorResponse).body);
-
+    // TODO: Log exception to Firebase
     return false;
   }
 }
 
-Future<void> payoutStellar(User user, double amount) async {
-  DocumentReference userRef = user.ref();
-  String payoutId;
+Future<void> payoutStellar(User user, double amount, {String memo=''}) async {
+  DocumentReference walletRef = Wallet.Ref(user.id);
+  if (user.payoutId == null) {
+    throw ('Stellar payout account not configured ${user.name}');
+  }
+
+  if (amount <= 0.0) {
+    throw ('Amount is not valid for Stellar payment ${amount}');
+  }
 
   // Block amount first
   await db.runTransaction((Transaction tx) async {
-    DocumentSnapshot userSnap = await tx.get(userRef);
-    if (!userSnap.exists) throw ('User does not exist in DB ${user.id}');
+    DocumentSnapshot walletSnap = await tx.get(walletRef);
+    if (!walletSnap.exists) throw ('Wallet does not exist in DB ${user.id}');
 
-    User userUpd = new User.fromJson(userSnap.data);
+    Wallet wallet = new Wallet.fromJson(walletSnap.data);
 
-    if (userUpd.getAvailable() < amount)
-      throw ('Stellar payout account not configured ${user.name}');
+    if (wallet.getAvailable() < amount)
+      throw ('Stellar payout account not configured ${user.name}, ${user.id}');
 
-    if (userUpd.payoutId == null) {
-      throw ('Stellar payout account not configured ${user.name}');
-    }
-
-    payoutId = userUpd.payoutId;
-    userRef.updateData({'blocked': FieldValue.increment(amount)});
+    walletRef.updateData({'blocked': FieldValue.increment(amount)});
   });
 
-  // Do StellarPayment
-  if (payoutId != null) {
-    print('!!!DEBUG: start Stellar payment');
-    // Initiate Stellar transaction
-    stellar.Network.useTestNetwork();
-    stellar.Server server =
-        new stellar.Server("https://horizon-testnet.stellar.org");
-
-    // Biblospher account
-    //TODO: protect Secret Seed
-    stellar.KeyPair source = stellar.KeyPair.fromSecretSeed(
-        'SBUXJGJAI7MPORWH6DIA4NUZ4PG4E4M2RKEMZYU5LSHMGWNEXGOMGBDU');
-
-    var sourceAccount = await server.accounts.account(source);
-
-    print('!!!DEBUG: source account validated: ${sourceAccount}');
-
-    stellar.TransactionBuilder builder =
-        new stellar.TransactionBuilder(sourceAccount);
-
-    stellar.KeyPair destination = stellar.KeyPair.fromAccountId(payoutId);
-
-    print('!!!DEBUG: destination: ${payoutId}');
-
-    builder.addOperation(new stellar.PaymentOperationBuilder(
-            destination, new stellar.AssetTypeNative(), amount.toString())
-        .build());
-
-    print('!!!DEBUG: transaction amount: ${amount.toString()}');
-
-    // Add memo and sign Stellar transaction
-    builder.addMemo(stellar.Memo.text("Biblosphere payout"));
-    stellar.Transaction transaction = builder.build();
-    transaction.sign(source);
-    print('!!!DEBUG: transaction signed: ${sourceAccount}');
-
-    // Run Stellar transaction
-    var response = await server.submitTransaction(transaction);
-    print('!!!DEBUG: transaction submitted: ${response}');
-
-    // If transaction successful update books status/handover
-    if (!response.success) {
-      throw 'Stellar transaction failed';
-    }
-
-    print('!!!DEBUG: SuCCESSFUL TRANSACTION ${response.ledger.toString()}');
-
-    await db.runTransaction((Transaction tx) async {
-      DocumentSnapshot userSnap = await tx.get(userRef);
-      if (!userSnap.exists) throw ('User does not exist in DB ${user.id}');
-
-      tx.update(userRef, {
-        'blocked': FieldValue.increment(-amount),
-        'balance': FieldValue.increment(-amount)
-      });
-
-      if(amount > 0.0) {
-        // Create payment operation
-        Operation op = new Operation(
-            type: OperationType.OutputStellar,
-            userId: user.id,
-            amount: amount,
-            date: DateTime.now(),
-            transactionId: response.ledger.toString());
-        tx.set(op.ref(), op.toJson());
-      }
-    });
-  }
-}
-
-Future<double> checkStellarPayments(User user) async {
-  // Get new payments, calculate total amount and last sequence
-  stellar.Network.useTestNetwork();
-  stellar.Server server = stellar.Server("https://horizon-testnet.stellar.org");
-
-  // Refresh user record (get payment cursor and balance)
-  DocumentReference userRef = user.ref();
-  double amount = 0.0;
-
-  // Read cursor via transaction to avoid cached values
+  // Request Stellar payments
+  DocumentReference payoutRef = Firestore.instance.collection('payouts').document();
   await db.runTransaction((Transaction tx) async {
-    DocumentSnapshot userSnap = await tx.get(userRef);
-
-    if (!userSnap.exists) throw ('User does not exist in DB ${user.id}');
-
-    User userUpd = new User.fromJson(userSnap.data);
-    String cursor = userUpd.cursor;
-    String accountId = userUpd.accountId;
-
-    stellar.KeyPair pair = stellar.KeyPair.fromAccountId(accountId);
-
-    stellar.PaymentsRequestBuilder request = server.payments
-        .forAccount(pair)
-        .order(stellar.RequestBuilderOrder.ASC)
-        .limit(20);
-
-    if (cursor != null) request = request.cursor(cursor);
-
-    amount = 0.0;
-    int count = 0;
-
-    try {
-      stellar.Page<stellar.OperationResponse> response = await request
-          .execute();
-
-      for (stellar.OperationResponse op in response.records) {
-        print('!!!DEBUG operation ${op} ${op.runtimeType}');
-        if (op is stellar.PaymentOperationResponse) {
-          switch (op.assetType) {
-            case "native":
-              print(
-                  "!!!DEBUG: Payment of ${op.amount} XLM from ${op.sourceAccount.accountId} received");
-              amount += double.parse(op.amount);
-              count++;
-              cursor = op.id.toString();
-              break;
-            default:
-              // TODO: Accept payments in other assets
-              print(
-                  "!!!DEBUG: Payment of ${op.amount} ${op.assetCode} from ${op.sourceAccount.accountId}");
-          }
-        }
-      }
-    } catch (err) {
-      // TODO: handle no data found seperatly
-      print('!!!DEBUG stellar failed ${err}');
-    }
-    print(
-        '!!!DEBUG: count ${count} amount ${amount} cursor ${cursor}');
-
-    // Update amount and cursor
-    tx.update(
-        userRef, {'balance': FieldValue.increment(amount), 'cursor': cursor});
-
-    if(amount > 0.0) {
-      // Create payment operation
-      Operation op = new Operation(
-          type: OperationType.InputStellar,
-          userId: user.id,
-          amount: amount,
-          date: DateTime.now(),
-          transactionId: cursor);
-      tx.set(op.ref(), op.toJson());
-    }
+    payoutRef.setData({
+      'userId': user.id,
+      'amount': amount,
+      'accountId': user.payoutId,
+      'memo': memo,
+      'status': 'waiting',
+      'type': 'stellar'
+      });
   });
 
-
-  return amount;
-}
-
-Future<void> paymentStellar(User recepient, double amount) async {
-  //Check if book holder has Stellar account, create if needed
-  if (recepient.accountId == null) {
-    throw ('Stellar account does not exist for user ${recepient.name}');
-  }
-
-  // Initiate Stellar transaction
-  stellar.Network.useTestNetwork();
-  stellar.Server server =
-      new stellar.Server("https://horizon-testnet.stellar.org");
-
-  // Biblospher account
-  //TODO: protect Secret Seed
-  stellar.KeyPair source = stellar.KeyPair.fromSecretSeed(
-      'SBUXJGJAI7MPORWH6DIA4NUZ4PG4E4M2RKEMZYU5LSHMGWNEXGOMGBDU');
-
-  var sourceAccount = await server.accounts.account(source);
-  stellar.TransactionBuilder builder =
-      new stellar.TransactionBuilder(sourceAccount);
-
-  stellar.KeyPair destination =
-      stellar.KeyPair.fromAccountId(recepient.accountId);
-
-  builder.addOperation(new stellar.PaymentOperationBuilder(
-          destination, new stellar.AssetTypeNative(), amount.toString())
-      .build());
-
-  // Add memo and sign Stellar transaction
-  builder.addMemo(stellar.Memo.text("Books deposit"));
-  stellar.Transaction transaction = builder.build();
-  transaction.sign(source);
-
-  // Run Stellar transaction
-  var response = await server.submitTransaction(transaction);
-
-  // If transaction successful update books status/handover
-  if (!response.success) {
-    // TODO: inform administrator about it
-    throw 'Stellar transaction failed';
-  }
-
-  return;
+  FirebaseAnalytics().logEvent(
+                                name: 'ecommerce_refund',
+                                parameters: <String, dynamic>{
+                                  'amount': amount,
+                                  'channel': 'stellar',
+                                  'user': user.id,
+                                  'locality': B.locality,
+                                  'country': B.country,
+                                  'latitude': B.position.latitude,
+                                  'longitude': B.position.longitude,
+                                });
 }

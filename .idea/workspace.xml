@@ -1,0 +1,1268 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AndroidLogFilters">
+    <option name="TOOL_WINDOW_LOG_LEVEL" value="error" />
+    <option name="TOOL_WINDOW_CONFIGURED_FILTER" value="No Filters" />
+  </component>
+  <component name="CMakeSettings">
+    <configurations>
+      <configuration PROFILE_NAME="Debug" CONFIG_NAME="Debug" />
+    </configurations>
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="5c769b2a-65a6-435b-8eb0-f4dd7634b03e" name="Default" comment="Add search by ISBN from RSL (Russian State Library) for books started from 9785&#10;Add transit process and control on taken/given books (Cart/Outbox/Lent/Borrowed)&#10;Add points (community currency)">
+      <change afterPath="$PROJECT_DIR$/python/.idea/vcs.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Dart_Packages.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Dart_Packages.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Flutter_Plugins.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Flutter_Plugins.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/books.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/books.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/chat.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/chat.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/const.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/const.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/helpers.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/helpers.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/home.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/home.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/l10n.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/l10n.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/l10n/intl_en.arb" beforeDir="false" afterPath="$PROJECT_DIR$/lib/l10n/intl_en.arb" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/l10n/intl_it.arb" beforeDir="false" afterPath="$PROJECT_DIR$/lib/l10n/intl_it.arb" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/l10n/intl_messages.arb" beforeDir="false" afterPath="$PROJECT_DIR$/lib/l10n/intl_messages.arb" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/l10n/intl_ru.arb" beforeDir="false" afterPath="$PROJECT_DIR$/lib/l10n/intl_ru.arb" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/l10n/messages_en.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/l10n/messages_en.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/l10n/messages_it.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/l10n/messages_it.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/l10n/messages_messages.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/l10n/messages_messages.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/l10n/messages_ru.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/l10n/messages_ru.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/lifecycle.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/lifecycle.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/main.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/main.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/mock_firestore.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/mock_firestore.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/payments.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/payments.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/search.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/search.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/nodejs/functions/index.js" beforeDir="false" afterPath="$PROJECT_DIR$/nodejs/functions/index.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pubspec.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/pubspec.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/python/CloudVision.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/python/CloudVision.ipynb" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/python/biblosphere.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/python/biblosphere.ipynb" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/python/recognize.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/python/recognize.ipynb" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/test/unit_const_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/test/unit_const_test.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/test/unit_lifecycle_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/test/unit_lifecycle_test.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/test/unit_mock_firestore_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/test/unit_mock_firestore_test.dart" afterDir="false" />
+    </list>
+    <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FUSProjectUsageTrigger">
+    <session id="57994669">
+      <usages-collector id="statistics.lifecycle.project">
+        <counts>
+          <entry key="project.closed" value="17" />
+          <entry key="project.open.time.16" value="2" />
+          <entry key="project.open.time.18" value="1" />
+          <entry key="project.open.time.19" value="1" />
+          <entry key="project.open.time.2" value="1" />
+          <entry key="project.open.time.20" value="4" />
+          <entry key="project.open.time.21" value="2" />
+          <entry key="project.open.time.22" value="8" />
+          <entry key="project.open.time.23" value="2" />
+          <entry key="project.open.time.24" value="3" />
+          <entry key="project.open.time.25" value="2" />
+          <entry key="project.open.time.27" value="1" />
+          <entry key="project.open.time.29" value="2" />
+          <entry key="project.open.time.33" value="1" />
+          <entry key="project.open.time.35" value="1" />
+          <entry key="project.open.time.38" value="1" />
+          <entry key="project.open.time.4" value="1" />
+          <entry key="project.open.time.44" value="1" />
+          <entry key="project.open.time.45" value="1" />
+          <entry key="project.open.time.46" value="1" />
+          <entry key="project.open.time.6" value="1" />
+          <entry key="project.opened" value="37" />
+        </counts>
+      </usages-collector>
+      <usages-collector id="statistics.file.extensions.open">
+        <counts>
+          <entry key="arb" value="48" />
+          <entry key="dart" value="216" />
+          <entry key="gradle" value="21" />
+          <entry key="java" value="1" />
+          <entry key="js" value="8" />
+          <entry key="json" value="6" />
+          <entry key="kt" value="2" />
+          <entry key="pro" value="1" />
+          <entry key="properties" value="9" />
+          <entry key="xml" value="6" />
+          <entry key="yaml" value="18" />
+        </counts>
+      </usages-collector>
+      <usages-collector id="statistics.file.types.open">
+        <counts>
+          <entry key="Dart" value="216" />
+          <entry key="Groovy" value="21" />
+          <entry key="JAVA" value="1" />
+          <entry key="JSON" value="6" />
+          <entry key="JavaScript" value="8" />
+          <entry key="Kotlin" value="2" />
+          <entry key="PLAIN_TEXT" value="48" />
+          <entry key="ProGuard File" value="1" />
+          <entry key="Properties" value="9" />
+          <entry key="XML" value="6" />
+          <entry key="YAML" value="18" />
+        </counts>
+      </usages-collector>
+      <usages-collector id="statistics.file.extensions.edit">
+        <counts>
+          <entry key="arb" value="5475" />
+          <entry key="dart" value="153560" />
+          <entry key="gradle" value="245" />
+          <entry key="js" value="2249" />
+          <entry key="json" value="23" />
+          <entry key="pro" value="15" />
+          <entry key="properties" value="24" />
+          <entry key="txt" value="1641" />
+          <entry key="xml" value="6" />
+          <entry key="yaml" value="506" />
+        </counts>
+      </usages-collector>
+      <usages-collector id="statistics.file.types.edit">
+        <counts>
+          <entry key="Dart" value="153560" />
+          <entry key="Groovy" value="245" />
+          <entry key="JSON" value="23" />
+          <entry key="JavaScript" value="2249" />
+          <entry key="PLAIN_TEXT" value="7116" />
+          <entry key="ProGuard File" value="15" />
+          <entry key="Properties" value="24" />
+          <entry key="XML" value="6" />
+          <entry key="YAML" value="506" />
+        </counts>
+      </usages-collector>
+      <usages-collector id="statistics.vcs.git.usages">
+        <counts>
+          <entry key="git.branch.create.new" value="1" />
+        </counts>
+      </usages-collector>
+    </session>
+  </component>
+  <component name="FileEditorManager">
+    <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/lib/books.dart">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="10132">
+              <caret line="611" column="19" selection-start-line="611" selection-start-column="19" selection-end-line="611" selection-end-column="19" />
+              <folding>
+                <element signature="e#0#39#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/lib/home.dart">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="385">
+              <caret line="1481" selection-start-line="1481" selection-end-line="1481" />
+              <folding>
+                <element signature="e#0#39#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/lib/main.dart">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="17">
+              <caret line="1" column="26" selection-start-line="1" selection-start-column="26" selection-end-line="1" selection-end-column="26" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/lib/const.dart">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="20162">
+              <caret line="1194" column="83" selection-start-line="1194" selection-start-column="83" selection-end-line="1194" selection-end-column="83" />
+              <folding>
+                <element signature="e#0#39#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/test/unit_const_test.dart">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="1819">
+              <caret line="111" column="18" selection-start-line="111" selection-start-column="18" selection-end-line="111" selection-end-column="18" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/lib/helpers.dart">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="102">
+              <caret line="498" column="66" selection-start-line="498" selection-start-column="66" selection-end-line="498" selection-end-column="66" />
+              <folding>
+                <element signature="e#0#17#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/lib/l10n.dart">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="323">
+              <caret line="1107" column="71" selection-start-line="1107" selection-start-column="71" selection-end-line="1107" selection-end-column="71" />
+              <folding>
+                <element signature="e#0#20#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+    </leaf>
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Dart File" />
+      </list>
+    </option>
+  </component>
+  <component name="FindInProjectRecents">
+    <findStrings>
+      <find>getOrCreateChat</find>
+      <find>messages</find>
+      <find>getChat</find>
+      <find>не подт</find>
+      <find>обме</find>
+      <find>setting</find>
+      <find>userPho</find>
+      <find>systemP</find>
+      <find>setState</find>
+      <find>getChatAndTransit</find>
+      <find>!!!</find>
+      <find>Chat does not exist</find>
+      <find>biblos</find>
+      <find>ChatCard</find>
+      <find>runChat</find>
+      <find>reset</find>
+      <find>Bookrecord</find>
+      <find>!!!DEBUG stellar</find>
+      <find>Messages</find>
+      <find>MyBook</find>
+      <find>page.link</find>
+      <find>ShortLi</find>
+      <find>shortLin</find>
+      <find>search/</find>
+      <find>/search</find>
+      <find>share_100</find>
+      <find>/addbook</find>
+      <find>GetBookWidget</find>
+      <find>short</find>
+      <find>buildLink</find>
+    </findStrings>
+    <dirStrings>
+      <dir>C:\Users\DenisStark\AndroidStudioProjects\biblosphere</dir>
+      <dir>C:\Users\DenisStark\AndroidStudioProjects\biblosphere\lib</dir>
+    </dirStrings>
+  </component>
+  <component name="Git.Settings">
+    <option name="ROOT_SYNC" value="DONT_SYNC" />
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+    <option name="RECENT_BRANCH_BY_REPOSITORY">
+      <map>
+        <entry key="$PROJECT_DIR$" value="master" />
+      </map>
+    </option>
+  </component>
+  <component name="IdeDocumentHistory">
+    <option name="CHANGED_PATHS">
+      <list>
+        <option value="$PROJECT_DIR$/android/app/src/main/res/values/string.xml" />
+        <option value="$PROJECT_DIR$/android/app/build32.gradle" />
+        <option value="$PROJECT_DIR$/android/key.properties" />
+        <option value="$PROJECT_DIR$/lib/settings.dart" />
+        <option value="$PROJECT_DIR$/test/widget_intro.01_test.dart" />
+        <option value="$PROJECT_DIR$/lib/icons.dart" />
+        <option value="$PROJECT_DIR$/lib/SignInScreen.dart" />
+        <option value="$PROJECT_DIR$/lib/oauth1.dart" />
+        <option value="$PROJECT_DIR$/nodejs/firebase.json" />
+        <option value="$PROJECT_DIR$/lib/x.json" />
+        <option value="$PROJECT_DIR$/lib/rsl.dart" />
+        <option value="$PROJECT_DIR$/android/build.gradle" />
+        <option value="$PROJECT_DIR$/android/gradle/wrapper/gradle-wrapper.properties" />
+        <option value="$PROJECT_DIR$/lib/goodreads.dart" />
+        <option value="$PROJECT_DIR$/lib/bookshelf.dart" />
+        <option value="$PROJECT_DIR$/android/app/src/main/AndroidManifest.xml" />
+        <option value="$PROJECT_DIR$/lib/camera.dart" />
+        <option value="$PROJECT_DIR$/test/unit_mock_firestore.01_test.dart" />
+        <option value="$PROJECT_DIR$/android/gradle.properties" />
+        <option value="$PROJECT_DIR$/test/widget_camera.01_test.dart" />
+        <option value="$PROJECT_DIR$/test/widget_intro.02_test.dart" />
+        <option value="$PROJECT_DIR$/test/widget_intro.03_test.dart" />
+        <option value="$PROJECT_DIR$/android/app/proguard-rules.pro" />
+        <option value="$PROJECT_DIR$/android/app/build.gradle" />
+        <option value="$PROJECT_DIR$/lib/mock_firestore.dart" />
+        <option value="$PROJECT_DIR$/lib/payments.dart" />
+        <option value="$PROJECT_DIR$/pubspec.yaml" />
+        <option value="$PROJECT_DIR$/lib/l10n/intl_ru.arb" />
+        <option value="$PROJECT_DIR$/lib/l10n/intl_en.arb" />
+        <option value="$PROJECT_DIR$/lib/l10n/intl_it.arb" />
+        <option value="$PROJECT_DIR$/nodejs/functions/index.js" />
+        <option value="$PROJECT_DIR$/test/unit_lifecycle_test.dart" />
+        <option value="$PROJECT_DIR$/test/unit_mock_firestore_test.dart" />
+        <option value="$PROJECT_DIR$/lib/lifecycle.dart" />
+        <option value="$PROJECT_DIR$/test/unit_const_test.dart" />
+        <option value="$PROJECT_DIR$/lib/search.dart" />
+        <option value="$PROJECT_DIR$/lib/books.dart" />
+        <option value="$PROJECT_DIR$/lib/chat.dart" />
+        <option value="$PROJECT_DIR$/lib/main.dart" />
+        <option value="$PROJECT_DIR$/lib/const.dart" />
+        <option value="$PROJECT_DIR$/lib/helpers.dart" />
+        <option value="$PROJECT_DIR$/lib/l10n.dart" />
+        <option value="$PROJECT_DIR$/lib/home.dart" />
+      </list>
+    </option>
+  </component>
+  <component name="ProjectFrameBounds" extendedState="6">
+    <option name="x" value="-15" />
+    <option name="width" value="3235" />
+    <option name="height" value="1735" />
+  </component>
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true">
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
+  <component name="ProjectView">
+    <navigator currentView="ProjectPane" proportions="" version="1">
+      <foldersAlwaysOnTop value="true" />
+    </navigator>
+    <panes>
+      <pane id="AndroidView" />
+      <pane id="Scope" />
+      <pane id="ProjectPane">
+        <subPane>
+          <expand>
+            <path>
+              <item name="biblosphere" type="b2602c69:ProjectViewProjectNode" />
+              <item name="biblosphere" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="biblosphere" type="b2602c69:ProjectViewProjectNode" />
+              <item name="biblosphere" type="462c0819:PsiDirectoryNode" />
+              <item name="lib" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="biblosphere" type="b2602c69:ProjectViewProjectNode" />
+              <item name="biblosphere" type="462c0819:PsiDirectoryNode" />
+              <item name="test" type="462c0819:PsiDirectoryNode" />
+            </path>
+          </expand>
+          <select />
+        </subPane>
+      </pane>
+      <pane id="PackagesPane" />
+    </panes>
+  </component>
+  <component name="PropertiesComponent">
+    <property name="SearchEverywhereHistoryKey" value="userBalance&#9;null&#9;null" />
+    <property name="android.project.structure.last.selected" value="SDK Location" />
+    <property name="android.project.structure.proportion" value="0.15" />
+    <property name="android.sdk.path" value="$USER_HOME$/AppData/Local/Android/Sdk" />
+    <property name="dart.analysis.tool.window.force.activate" value="false" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="project.structure.last.edited" value="SDKs" />
+    <property name="project.structure.proportion" value="0.15" />
+    <property name="project.structure.side.proportion" value="0.2" />
+    <property name="settings.editor.selected.configurable" value="reference.settingsdialog.project.gradle" />
+    <property name="show.migrate.to.gradle.popup" value="false" />
+  </component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\DenisStark\AndroidStudioProjects\biblosphere\test" />
+      <recent name="C:\Users\DenisStark\AndroidStudioProjects\biblosphere\android\app" />
+      <recent name="C:\Users\DenisStark\AndroidStudioProjects\biblosphere\android" />
+      <recent name="C:\Users\DenisStark\AndroidStudioProjects\biblosphere\image" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\DenisStark\AndroidStudioProjects\biblosphere\images" />
+    </key>
+  </component>
+  <component name="RunDashboard">
+    <option name="ruleStates">
+      <list>
+        <RuleState>
+          <option name="name" value="ConfigurationTypeDashboardGroupingRule" />
+        </RuleState>
+        <RuleState>
+          <option name="name" value="StatusDashboardGroupingRule" />
+        </RuleState>
+      </list>
+    </option>
+  </component>
+  <component name="RunManager">
+    <configuration name="&lt;template&gt;" type="Applet" default="true" selected="false">
+      <option name="MAIN_CLASS_NAME" />
+      <option name="HTML_FILE_NAME" />
+      <option name="HTML_USED" value="false" />
+      <option name="WIDTH" value="400" />
+      <option name="HEIGHT" value="300" />
+      <option name="POLICY_FILE" value="$APPLICATION_HOME_DIR$/bin/appletviewer.policy" />
+      <option name="VM_PARAMETERS" />
+    </configuration>
+    <configuration name="&lt;template&gt;" type="JUnit" default="true" selected="false">
+      <option name="MAIN_CLASS_NAME" />
+      <option name="VM_PARAMETERS" value="-ea" />
+      <option name="PARAMETERS" />
+      <option name="WORKING_DIRECTORY" value="%MODULE_WORKING_DIR%" />
+    </configuration>
+    <configuration name="&lt;template&gt;" type="#org.jetbrains.idea.devkit.run.PluginConfigurationType" default="true" selected="false">
+      <option name="VM_PARAMETERS" value="-Xmx512m -Xms256m -XX:MaxPermSize=250m -ea" />
+    </configuration>
+    <configuration default="true" type="Application" factoryName="Application">
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="main.dart" type="FlutterRunConfigurationType" factoryName="Flutter">
+      <option name="filePath" value="$PROJECT_DIR$/lib/main.dart" />
+      <method v="2" />
+    </configuration>
+    <configuration default="true" type="TestNG" factoryName="TestNG">
+      <option name="WORKING_DIRECTORY" value="%MODULE_WORKING_DIR%" />
+      <properties />
+      <listeners />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+  </component>
+  <component name="SvnConfiguration">
+    <configuration />
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="5c769b2a-65a6-435b-8eb0-f4dd7634b03e" name="Default" comment="" />
+      <created>1534746472527</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1534746472527</updated>
+    </task>
+    <task id="LOCAL-00034" summary="Correct some issues with localizations&#10;Correct russian translations&#10;Add names into bookshelf view">
+      <created>1548829033972</created>
+      <option name="number" value="00034" />
+      <option name="presentableId" value="LOCAL-00034" />
+      <option name="project" value="LOCAL" />
+      <updated>1548829033972</updated>
+    </task>
+    <task id="LOCAL-00035" summary="Corrected defect with empty userName for shelves">
+      <created>1548930450311</created>
+      <option name="number" value="00035" />
+      <option name="presentableId" value="LOCAL-00035" />
+      <option name="project" value="LOCAL" />
+      <updated>1548930450311</updated>
+    </task>
+    <task id="LOCAL-00036" summary="Add italian translation">
+      <created>1548960412513</created>
+      <option name="number" value="00036" />
+      <option name="presentableId" value="LOCAL-00036" />
+      <option name="project" value="LOCAL" />
+      <updated>1548960412513</updated>
+    </task>
+    <task id="LOCAL-00037" summary="Add italian translation">
+      <created>1548961006465</created>
+      <option name="number" value="00037" />
+      <option name="presentableId" value="LOCAL-00037" />
+      <option name="project" value="LOCAL" />
+      <updated>1548961006465</updated>
+    </task>
+    <task id="LOCAL-00038" summary="Corrected defect with userName">
+      <created>1548997935782</created>
+      <option name="number" value="00038" />
+      <option name="presentableId" value="LOCAL-00038" />
+      <option name="project" value="LOCAL" />
+      <updated>1548997935782</updated>
+    </task>
+    <task id="LOCAL-00039" summary="First auto test created.Checking IntroPage.">
+      <created>1549534884742</created>
+      <option name="number" value="00039" />
+      <option name="presentableId" value="LOCAL-00039" />
+      <option name="project" value="LOCAL" />
+      <updated>1549534884742</updated>
+    </task>
+    <task id="LOCAL-00040" summary="Latest version">
+      <created>1549996647856</created>
+      <option name="number" value="00040" />
+      <option name="presentableId" value="LOCAL-00040" />
+      <option name="project" value="LOCAL" />
+      <updated>1549996647856</updated>
+    </task>
+    <task id="LOCAL-00041" summary="Add Goodreads integration&#10;Change design&#10;Add isbn bar code scanner&#10;Add wishlist and books&#10;Add triggers in node.js&#10;Add integration with Google Book API">
+      <created>1551375393093</created>
+      <option name="number" value="00041" />
+      <option name="presentableId" value="LOCAL-00041" />
+      <option name="project" value="LOCAL" />
+      <updated>1551375393093</updated>
+    </task>
+    <task id="LOCAL-00042" summary="Add Goodreads integration&#10;Change design&#10;Add isbn bar code scanner&#10;Add wishlist and books&#10;Add triggers in node.js&#10;Add integration with Google Book API">
+      <created>1551501537341</created>
+      <option name="number" value="00042" />
+      <option name="presentableId" value="LOCAL-00042" />
+      <option name="project" value="LOCAL" />
+      <updated>1551501537342</updated>
+    </task>
+    <task id="LOCAL-00043" summary="Add Goodreads integration&#10;Change design&#10;Add isbn bar code scanner&#10;Add wishlist and books&#10;Add triggers in node.js&#10;Add integration with Google Book API">
+      <created>1551501581988</created>
+      <option name="number" value="00043" />
+      <option name="presentableId" value="LOCAL-00043" />
+      <option name="project" value="LOCAL" />
+      <updated>1551501581988</updated>
+    </task>
+    <task id="LOCAL-00044" summary="Add search by Isbn from Goodreads">
+      <created>1551502526131</created>
+      <option name="number" value="00044" />
+      <option name="presentableId" value="LOCAL-00044" />
+      <option name="project" value="LOCAL" />
+      <updated>1551502526131</updated>
+    </task>
+    <task id="LOCAL-00045" summary="Correct set to update for chat record. To solve 'blocked' issue.">
+      <created>1551502718072</created>
+      <option name="number" value="00045" />
+      <option name="presentableId" value="LOCAL-00045" />
+      <option name="project" value="LOCAL" />
+      <updated>1551502718072</updated>
+    </task>
+    <task id="LOCAL-00046" summary="Solved issues to compile with AndroidSdk 28 (without AndroidX).">
+      <created>1551538433273</created>
+      <option name="number" value="00046" />
+      <option name="presentableId" value="LOCAL-00046" />
+      <option name="project" value="LOCAL" />
+      <updated>1551538433273</updated>
+    </task>
+    <task id="LOCAL-00047" summary="Solved issues to compile with AndroidSdk 28 (without AndroidX).">
+      <created>1551538508489</created>
+      <option name="number" value="00047" />
+      <option name="presentableId" value="LOCAL-00047" />
+      <option name="project" value="LOCAL" />
+      <updated>1551538508489</updated>
+    </task>
+    <task id="LOCAL-00048" summary="Solved issues to compile with AndroidSdk 28 (without AndroidX).">
+      <created>1551538546098</created>
+      <option name="number" value="00048" />
+      <option name="presentableId" value="LOCAL-00048" />
+      <option name="project" value="LOCAL" />
+      <updated>1551538546098</updated>
+    </task>
+    <task id="LOCAL-00049" summary="Solved issues to compile with AndroidSdk 28 (without AndroidX).">
+      <created>1551538618539</created>
+      <option name="number" value="00049" />
+      <option name="presentableId" value="LOCAL-00049" />
+      <option name="project" value="LOCAL" />
+      <updated>1551538618539</updated>
+    </task>
+    <task id="LOCAL-00050" summary="Change title color for MY BOOK/MY SHELVES&#10;Change text for calling MY BOOK/MY SHELVES">
+      <created>1551539356141</created>
+      <option name="number" value="00050" />
+      <option name="presentableId" value="LOCAL-00050" />
+      <option name="project" value="LOCAL" />
+      <updated>1551539356141</updated>
+    </task>
+    <task id="LOCAL-00051" summary="Add localization for new screens&#10;Add translations for Russian">
+      <created>1551652063250</created>
+      <option name="number" value="00051" />
+      <option name="presentableId" value="LOCAL-00051" />
+      <option name="project" value="LOCAL" />
+      <updated>1551652063251</updated>
+    </task>
+    <task id="LOCAL-00052" summary="Increase versions for CI build">
+      <created>1551652161648</created>
+      <option name="number" value="00052" />
+      <option name="presentableId" value="LOCAL-00052" />
+      <option name="project" value="LOCAL" />
+      <updated>1551652161648</updated>
+    </task>
+    <task id="LOCAL-00053" summary="Correct all issues for flutter analyzer">
+      <created>1551654029926</created>
+      <option name="number" value="00053" />
+      <option name="presentableId" value="LOCAL-00053" />
+      <option name="project" value="LOCAL" />
+      <updated>1551654029926</updated>
+    </task>
+    <task id="LOCAL-00054" summary="Add checkReleaseBuilds false for Android gradle to avoid exception with some plugins">
+      <created>1551655714786</created>
+      <option name="number" value="00054" />
+      <option name="presentableId" value="LOCAL-00054" />
+      <option name="project" value="LOCAL" />
+      <updated>1551655714786</updated>
+    </task>
+    <task id="LOCAL-00055" summary="Remove unnecessary dependancy scan (solve timeout issue)">
+      <created>1551670764366</created>
+      <option name="number" value="00055" />
+      <option name="presentableId" value="LOCAL-00055" />
+      <option name="project" value="LOCAL" />
+      <updated>1551670764366</updated>
+    </task>
+    <task id="LOCAL-00056" summary="Increase version for autobuild">
+      <created>1551685545654</created>
+      <option name="number" value="00056" />
+      <option name="presentableId" value="LOCAL-00056" />
+      <option name="project" value="LOCAL" />
+      <updated>1551685545655</updated>
+    </task>
+    <task id="LOCAL-00057" summary="Correct translation&#10;Add wishlist addition">
+      <created>1551711552445</created>
+      <option name="number" value="00057" />
+      <option name="presentableId" value="LOCAL-00057" />
+      <option name="project" value="LOCAL" />
+      <updated>1551711552445</updated>
+    </task>
+    <task id="LOCAL-00058" summary="Add node.js updateUsers&#10;Correct loading user counters">
+      <created>1551715561075</created>
+      <option name="number" value="00058" />
+      <option name="presentableId" value="LOCAL-00058" />
+      <option name="project" value="LOCAL" />
+      <updated>1551715561075</updated>
+    </task>
+    <task id="LOCAL-00059" summary="Some minor defects corrected&#10;Store not resolved isbn in 'noisbn' collection&#10;Search both Google and Goodreads for ISBNs">
+      <created>1551718709813</created>
+      <option name="number" value="00059" />
+      <option name="presentableId" value="LOCAL-00059" />
+      <option name="project" value="LOCAL" />
+      <updated>1551718709813</updated>
+    </task>
+    <task id="LOCAL-00060" summary="Increase version">
+      <created>1551722451153</created>
+      <option name="number" value="00060" />
+      <option name="presentableId" value="LOCAL-00060" />
+      <option name="project" value="LOCAL" />
+      <updated>1551722451153</updated>
+    </task>
+    <task id="LOCAL-00061" summary="Add shelf from gallery">
+      <created>1551761432401</created>
+      <option name="number" value="00061" />
+      <option name="presentableId" value="LOCAL-00061" />
+      <option name="project" value="LOCAL" />
+      <updated>1551761432402</updated>
+    </task>
+    <task id="LOCAL-00062" summary="Workaround to fix defect on iOS paste to TextField">
+      <created>1551763332192</created>
+      <option name="number" value="00062" />
+      <option name="presentableId" value="LOCAL-00062" />
+      <option name="project" value="LOCAL" />
+      <updated>1551763332192</updated>
+    </task>
+    <task id="LOCAL-00063" summary="Change versionCode for auto-build">
+      <created>1551765939416</created>
+      <option name="number" value="00063" />
+      <option name="presentableId" value="LOCAL-00063" />
+      <option name="project" value="LOCAL" />
+      <updated>1551765939416</updated>
+    </task>
+    <task id="LOCAL-00064" summary="Python code to segment books">
+      <created>1555215495342</created>
+      <option name="number" value="00064" />
+      <option name="presentableId" value="LOCAL-00064" />
+      <option name="project" value="LOCAL" />
+      <updated>1555215495343</updated>
+    </task>
+    <task id="LOCAL-00065" summary="Add search by ISBN from RSL (Russian State Library) for books started from 9785&#10;Add transit process and control on taken/given books (Cart/Outbox/Lent/Borrowed)&#10;Add points (community currency)">
+      <created>1557078826874</created>
+      <option name="number" value="00065" />
+      <option name="presentableId" value="LOCAL-00065" />
+      <option name="project" value="LOCAL" />
+      <updated>1557078826874</updated>
+    </task>
+    <task id="LOCAL-00066" summary="Correct bug with chat from books and person cards&#10;Correct bug with empty book image">
+      <created>1557163821618</created>
+      <option name="number" value="00066" />
+      <option name="presentableId" value="LOCAL-00066" />
+      <option name="project" value="LOCAL" />
+      <updated>1557163821619</updated>
+    </task>
+    <task id="LOCAL-00067" summary="Adjust for the new version">
+      <created>1557379479685</created>
+      <option name="number" value="00067" />
+      <option name="presentableId" value="LOCAL-00067" />
+      <option name="project" value="LOCAL" />
+      <updated>1557379479686</updated>
+    </task>
+    <task id="LOCAL-00068" summary="Remove depricated">
+      <created>1557380859409</created>
+      <option name="number" value="00068" />
+      <option name="presentableId" value="LOCAL-00068" />
+      <option name="project" value="LOCAL" />
+      <updated>1557380859409</updated>
+    </task>
+    <task id="LOCAL-00069" summary="Migrate to AndroidX (plugin versions updated)">
+      <created>1557389822801</created>
+      <option name="number" value="00069" />
+      <option name="presentableId" value="LOCAL-00069" />
+      <option name="project" value="LOCAL" />
+      <updated>1557389822801</updated>
+    </task>
+    <task id="LOCAL-00070" summary="Add good  segmenting">
+      <created>1558628934943</created>
+      <option name="number" value="00070" />
+      <option name="presentableId" value="LOCAL-00070" />
+      <option name="project" value="LOCAL" />
+      <updated>1558628934944</updated>
+    </task>
+    <task id="LOCAL-00071" summary="Add search by ISBN from RSL (Russian State Library) for books started from 9785&#10;Add transit process and control on taken/given books (Cart/Outbox/Lent/Borrowed)&#10;Add points (community currency)">
+      <created>1560620379135</created>
+      <option name="number" value="00071" />
+      <option name="presentableId" value="LOCAL-00071" />
+      <option name="project" value="LOCAL" />
+      <updated>1560620379136</updated>
+    </task>
+    <task id="LOCAL-00072" summary="Add integration to Stellar&#10;Add in-app purchases&#10;Change design">
+      <created>1570800590794</created>
+      <option name="number" value="00072" />
+      <option name="presentableId" value="LOCAL-00072" />
+      <option name="project" value="LOCAL" />
+      <updated>1570800590796</updated>
+    </task>
+    <task id="LOCAL-00073" summary="Add search by ISBN from RSL (Russian State Library) for books started from 9785&#10;Add transit process and control on taken/given books (Cart/Outbox/Lent/Borrowed)&#10;Add points (community currency)">
+      <created>1570801386360</created>
+      <option name="number" value="00073" />
+      <option name="presentableId" value="LOCAL-00073" />
+      <option name="project" value="LOCAL" />
+      <updated>1570801386360</updated>
+    </task>
+    <task id="LOCAL-00074" summary="Add search by ISBN from RSL (Russian State Library) for books started from 9785&#10;Add transit process and control on taken/given books (Cart/Outbox/Lent/Borrowed)&#10;Add points (community currency)">
+      <created>1570801639284</created>
+      <option name="number" value="00074" />
+      <option name="presentableId" value="LOCAL-00074" />
+      <option name="project" value="LOCAL" />
+      <updated>1570801639285</updated>
+    </task>
+    <task id="LOCAL-00075" summary="Add search by ISBN from RSL (Russian State Library) for books started from 9785&#10;Add transit process and control on taken/given books (Cart/Outbox/Lent/Borrowed)&#10;Add points (community currency)">
+      <created>1570801711859</created>
+      <option name="number" value="00075" />
+      <option name="presentableId" value="LOCAL-00075" />
+      <option name="project" value="LOCAL" />
+      <updated>1570801711859</updated>
+    </task>
+    <task id="LOCAL-00076" summary="Correct flutter &quot;analyze&quot; issues">
+      <created>1570804375698</created>
+      <option name="number" value="00076" />
+      <option name="presentableId" value="LOCAL-00076" />
+      <option name="project" value="LOCAL" />
+      <updated>1570804375698</updated>
+    </task>
+    <task id="LOCAL-00077" summary="Show total to pay on handover&#10;Add condition for handover (only if sufficient balance)">
+      <created>1570865001178</created>
+      <option name="number" value="00077" />
+      <option name="presentableId" value="LOCAL-00077" />
+      <option name="project" value="LOCAL" />
+      <updated>1570865001178</updated>
+    </task>
+    <task id="LOCAL-00078" summary="Remove unused plugins">
+      <created>1570865237865</created>
+      <option name="number" value="00078" />
+      <option name="presentableId" value="LOCAL-00078" />
+      <option name="project" value="LOCAL" />
+      <updated>1570865237866</updated>
+    </task>
+    <task id="LOCAL-00079" summary="Add Stellar In/Out&#10;Add Financial History screen&#10;Add referral program (screen of history and logic)&#10;Change fonts to default (Roboto)">
+      <created>1572116468114</created>
+      <option name="number" value="00079" />
+      <option name="presentableId" value="LOCAL-00079" />
+      <option name="project" value="LOCAL" />
+      <updated>1572116468115</updated>
+    </task>
+    <task id="LOCAL-00080" summary="Delete unused fonts">
+      <created>1572116613356</created>
+      <option name="number" value="00080" />
+      <option name="presentableId" value="LOCAL-00080" />
+      <option name="project" value="LOCAL" />
+      <updated>1572116613358</updated>
+    </task>
+    <task id="LOCAL-00081" summary="Correct defect with adding books">
+      <created>1572119191035</created>
+      <option name="number" value="00081" />
+      <option name="presentableId" value="LOCAL-00081" />
+      <option name="project" value="LOCAL" />
+      <updated>1572119191036</updated>
+    </task>
+    <task id="LOCAL-00082" summary="Add search by ISBN from RSL (Russian State Library) for books started from 9785&#10;Add transit process and control on taken/given books (Cart/Outbox/Lent/Borrowed)&#10;Add points (community currency)">
+      <created>1572279924763</created>
+      <option name="number" value="00082" />
+      <option name="presentableId" value="LOCAL-00082" />
+      <option name="project" value="LOCAL" />
+      <updated>1572279924764</updated>
+    </task>
+    <option name="localTasksCounter" value="83" />
+    <servers />
+  </component>
+  <component name="ToolWindowManager">
+    <frame x="-6" y="-6" width="1293" height="693" extended-state="6" />
+    <editor active="true" />
+    <layout>
+      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.22834007" />
+      <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
+      <window_info id="Designer" order="2" />
+      <window_info id="Image Layers" order="3" />
+      <window_info id="Favorites" order="4" side_tool="true" />
+      <window_info id="Captures" order="5" side_tool="true" weight="0.25" />
+      <window_info id="Capture Tool" order="6" />
+      <window_info id="Build Variants" order="7" side_tool="true" />
+      <window_info anchor="bottom" id="Message" order="0" />
+      <window_info anchor="bottom" id="Find" order="1" sideWeight="0.5796813" weight="0.6868327" />
+      <window_info anchor="bottom" id="Run" order="2" />
+      <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
+      <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
+      <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
+      <window_info anchor="bottom" id="TODO" order="6" />
+      <window_info anchor="bottom" id="Android Profiler" order="7" show_stripe_button="false" />
+      <window_info anchor="bottom" id="Event Log" order="8" sideWeight="0.50121456" side_tool="true" weight="0.15658364" />
+      <window_info anchor="bottom" id="Dart Analysis" order="9" weight="0.3293201" />
+      <window_info anchor="bottom" id="Terminal" order="10" sideWeight="0.49878544" weight="0.15658364" />
+      <window_info anchor="bottom" id="Logcat" order="11" sideWeight="0.49878544" weight="0.9003559" />
+      <window_info anchor="bottom" id="Flutter Performance" order="12" sideWeight="0.50121456" side_tool="true" weight="0.15658364" />
+      <window_info anchor="bottom" id="Messages" order="13" sideWeight="0.49959514" visible="true" weight="0.12989324" />
+      <window_info anchor="bottom" id="Version Control" order="14" weight="0.3291815" />
+      <window_info anchor="right" id="Commander" order="0" weight="0.4" />
+      <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
+      <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
+      <window_info anchor="right" id="Flutter Outline" order="3" weight="0.32955465" />
+      <window_info anchor="right" id="Flutter Inspector" order="4" weight="0.32955465" />
+      <window_info anchor="right" id="Device File Explorer" order="5" side_tool="true" weight="0.32955465" />
+      <window_info anchor="right" id="Capture Analysis" order="6" />
+      <window_info anchor="right" id="Palette&#9;" order="7" />
+      <window_info anchor="right" id="Theme Preview" order="8" />
+      <window_info anchor="right" id="Assistant" order="9" weight="0.3360324" />
+    </layout>
+    <layout-to-restore>
+      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.22834007" />
+      <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
+      <window_info id="Designer" order="2" />
+      <window_info id="Image Layers" order="3" />
+      <window_info id="Favorites" order="4" side_tool="true" />
+      <window_info id="Captures" order="5" side_tool="true" weight="0.25" />
+      <window_info id="Capture Tool" order="6" />
+      <window_info id="Build Variants" order="7" side_tool="true" />
+      <window_info anchor="bottom" id="Message" order="0" />
+      <window_info anchor="bottom" id="Find" order="1" sideWeight="0.5796813" weight="0.6868327" />
+      <window_info anchor="bottom" id="Run" order="2" />
+      <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
+      <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
+      <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
+      <window_info anchor="bottom" id="TODO" order="6" />
+      <window_info anchor="bottom" id="Android Profiler" order="7" show_stripe_button="false" />
+      <window_info anchor="bottom" id="Event Log" order="8" sideWeight="0.50121456" side_tool="true" weight="0.15658364" />
+      <window_info anchor="bottom" id="Dart Analysis" order="9" weight="0.3293201" />
+      <window_info anchor="bottom" id="Terminal" order="10" sideWeight="0.49878544" weight="0.15658364" />
+      <window_info anchor="bottom" id="Logcat" order="11" sideWeight="0.49878544" weight="0.9003559" />
+      <window_info anchor="bottom" id="Flutter Performance" order="12" sideWeight="0.50121456" side_tool="true" weight="0.15658364" />
+      <window_info anchor="bottom" id="Messages" order="13" sideWeight="0.49959514" visible="true" weight="0.12989324" />
+      <window_info anchor="bottom" id="Version Control" order="14" weight="0.3291815" />
+      <window_info anchor="right" id="Commander" order="0" weight="0.4" />
+      <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
+      <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
+      <window_info anchor="right" id="Flutter Outline" order="3" weight="0.32955465" />
+      <window_info anchor="right" id="Flutter Inspector" order="4" weight="0.32955465" />
+      <window_info anchor="right" id="Device File Explorer" order="5" side_tool="true" weight="0.32955465" />
+      <window_info anchor="right" id="Capture Analysis" order="6" />
+      <window_info anchor="right" id="Palette&#9;" order="7" />
+      <window_info anchor="right" id="Theme Preview" order="8" />
+      <window_info anchor="right" id="Assistant" order="9" weight="0.3360324" />
+    </layout-to-restore>
+  </component>
+  <component name="UnknownFeatures">
+    <option featureType="com.intellij.fileTypeFactory" implementationName="*.js" />
+  </component>
+  <component name="VcsContentAnnotationSettings">
+    <option name="myLimit" value="2678400000" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="Correct all issues for flutter analyzer" />
+    <MESSAGE value="Add checkReleaseBuilds false for Android gradle to avoid exception with some plugins" />
+    <MESSAGE value="Remove unnecessary dependancy scan (solve timeout issue)" />
+    <MESSAGE value="Increase version for autobuild" />
+    <MESSAGE value="Correct translation&#10;Add wishlist addition" />
+    <MESSAGE value="Add node.js updateUsers&#10;Correct loading user counters" />
+    <MESSAGE value="Some minor defects corrected&#10;Store not resolved isbn in 'noisbn' collection&#10;Search both Google and Goodreads for ISBNs" />
+    <MESSAGE value="Increase version" />
+    <MESSAGE value="Add shelf from gallery" />
+    <MESSAGE value="Workaround to fix defect on iOS paste to TextField" />
+    <MESSAGE value="Change versionCode for auto-build" />
+    <MESSAGE value="Python code to segment books" />
+    <MESSAGE value="Correct bug with chat from books and person cards&#10;Correct bug with empty book image" />
+    <MESSAGE value="Adjust for the new version" />
+    <MESSAGE value="Remove depricated" />
+    <MESSAGE value="Migrate to AndroidX (plugin versions updated)" />
+    <MESSAGE value="Add good  segmenting" />
+    <MESSAGE value="Add integration to Stellar&#10;Add in-app purchases&#10;Change design" />
+    <MESSAGE value="Correct flutter &quot;analyze&quot; issues" />
+    <MESSAGE value="Show total to pay on handover&#10;Add condition for handover (only if sufficient balance)" />
+    <MESSAGE value="Remove unused plugins" />
+    <MESSAGE value="Add Stellar In/Out&#10;Add Financial History screen&#10;Add referral program (screen of history and logic)&#10;Change fonts to default (Roboto)" />
+    <MESSAGE value="Delete unused fonts" />
+    <MESSAGE value="Correct defect with adding books" />
+    <MESSAGE value="Add search by ISBN from RSL (Russian State Library) for books started from 9785&#10;Add transit process and control on taken/given books (Cart/Outbox/Lent/Borrowed)&#10;Add points (community currency)" />
+    <option name="LAST_COMMIT_MESSAGE" value="Add search by ISBN from RSL (Russian State Library) for books started from 9785&#10;Add transit process and control on taken/given books (Cart/Outbox/Lent/Borrowed)&#10;Add points (community currency)" />
+  </component>
+  <component name="editorHistoryManager">
+    <entry file="file://$PROJECT_DIR$/android/app/build32.gradle" />
+    <entry file="file://$PROJECT_DIR$/lib/l10n/messages_all.dart">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-856">
+          <caret line="4" column="7" lean-forward="true" selection-start-line="4" selection-start-column="7" selection-end-line="4" selection-end-column="7" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/lib/l10n/messages_ru.dart">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/lib/settings.dart" />
+    <entry file="file://$PROJECT_DIR$/lib/icons.dart" />
+    <entry file="file://$PROJECT_DIR$/lib/SignInScreen.dart" />
+    <entry file="file://$PROJECT_DIR$/lib/l10n/messages_en.dart">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="323">
+          <caret line="20" column="5" lean-forward="true" selection-start-line="20" selection-start-column="5" selection-end-line="20" selection-end-column="5" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/lib/x.json" />
+    <entry file="file://$PROJECT_DIR$/lib/rsl.dart" />
+    <entry file="file://$PROJECT_DIR$/lib/oauth1.dart">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-280">
+          <caret line="2" column="42" selection-start-line="2" selection-start-column="42" selection-end-line="2" selection-end-column="42" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/android/gradle/wrapper/gradle-wrapper.properties">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="34">
+          <caret line="2" column="30" selection-start-line="2" selection-start-column="30" selection-end-line="2" selection-end-column="30" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/lib/goodreads.dart" />
+    <entry file="file://$PROJECT_DIR$/nodejs/firebase.json">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="213">
+          <caret line="18" column="34" selection-start-line="18" selection-start-column="20" selection-end-line="18" selection-end-column="34" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/lib/bookshelf.dart" />
+    <entry file="file://$PROJECT_DIR$/lib/camera.dart" />
+    <entry file="file://$PROJECT_DIR$/test/unit_mock_firestore.01_test.dart" />
+    <entry file="file://$PROJECT_DIR$/android/app/src/main/java/com/biblosphere/biblosphere/MainActivity.java" />
+    <entry file="file://$PROJECT_DIR$/test/widget_intro.02_test.dart">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="404">
+          <caret line="42" column="6" selection-start-line="42" selection-start-column="6" selection-end-line="42" selection-end-column="6" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/test/widget_intro.03_test.dart">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="500">
+          <caret line="71" lean-forward="true" selection-start-line="71" selection-end-line="71" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/test/widget_camera.01_test.dart" />
+    <entry file="file://$PROJECT_DIR$/test/widget_intro.01_test.dart">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="49">
+          <caret line="35" column="17" selection-start-line="35" selection-start-column="17" selection-end-line="35" selection-end-column="17" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/android/key.properties">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="51">
+          <caret line="3" column="17" selection-start-line="3" selection-start-column="17" selection-end-line="3" selection-end-column="17" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/android/app/proguard-rules.pro">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="238">
+          <caret line="14" selection-start-line="14" selection-end-line="14" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/android/gradle.properties">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="68">
+          <caret line="4" selection-start-line="4" selection-end-line="4" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/android/build.gradle">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="340">
+          <caret line="20" column="18" selection-start-line="20" selection-start-column="18" selection-end-line="20" selection-end-column="18" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/android/app/src/main/kotlin/com/biblosphere/biblosphere/MainActivity.kt" />
+    <entry file="file://$PROJECT_DIR$/android/app/src/main/AndroidManifest.xml">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="17">
+          <caret line="3" selection-start-line="3" selection-end-line="3" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/android/app/build.gradle">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="595">
+          <caret line="35" column="23" selection-start-line="35" selection-start-column="23" selection-end-line="35" selection-end-column="23" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/lib/mock_firestore.dart">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="347">
+          <caret line="159" column="43" selection-start-line="159" selection-start-column="14" selection-end-line="159" selection-end-column="43" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/android/app/google-services.json">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="170">
+          <caret line="10" column="12" selection-start-line="10" selection-start-column="12" selection-end-line="10" selection-end-column="12" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://D:/Flutter/packages/flutter/lib/src/widgets/framework.dart">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="178">
+          <caret line="1016" column="7" selection-start-line="1016" selection-start-column="7" selection-end-line="1016" selection-end-column="7" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/lib/l10n/intl_messages.arb">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="287">
+          <caret line="863" selection-start-line="856" selection-end-line="863" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pubspec.yaml">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="433">
+          <caret line="140" column="39" selection-start-line="140" selection-start-column="39" selection-end-line="140" selection-end-column="39" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/lib/l10n/intl_ru.arb">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="198">
+          <caret line="1075" column="2" selection-start-line="1075" selection-start-column="2" selection-end-line="1075" selection-end-column="2" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/lib/l10n/intl_en.arb">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="215">
+          <caret line="1076" selection-start-line="1075" selection-end-line="1076" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/lib/l10n/intl_it.arb">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="198">
+          <caret line="1070" selection-start-line="1070" selection-end-line="1070" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/nodejs/functions/index.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="187">
+          <caret line="20" column="24" selection-start-line="20" selection-start-column="24" selection-end-line="20" selection-end-column="24" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/test/widget_test.dart" />
+    <entry file="file://$PROJECT_DIR$/test/unit_mock_firestore_test.dart">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="415">
+          <caret line="93" column="5" selection-start-line="93" selection-start-column="5" selection-end-line="93" selection-end-column="5" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/lib/lifecycle.dart">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-298">
+          <caret line="669" column="42" selection-start-line="669" selection-start-column="42" selection-end-line="669" selection-end-column="42" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/test/unit_lifecycle_test.dart">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="432">
+          <caret line="2569" column="5" selection-start-line="2569" selection-start-column="5" selection-end-line="2569" selection-end-column="5" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/lib/search.dart">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="279">
+          <caret line="55" column="39" selection-start-line="55" selection-start-column="39" selection-end-line="55" selection-end-column="39" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/lib/chat.dart">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="177">
+          <caret line="347" column="48" lean-forward="true" selection-start-line="347" selection-start-column="48" selection-end-line="347" selection-end-column="48" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/lib/payments.dart">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="555">
+          <caret line="311" column="29" selection-start-line="311" selection-start-column="13" selection-end-line="311" selection-end-column="29" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/lib/books.dart">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="10132">
+          <caret line="611" column="19" selection-start-line="611" selection-start-column="19" selection-end-line="611" selection-end-column="19" />
+          <folding>
+            <element signature="e#0#39#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/lib/main.dart">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="17">
+          <caret line="1" column="26" selection-start-line="1" selection-start-column="26" selection-end-line="1" selection-end-column="26" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/lib/const.dart">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="20162">
+          <caret line="1194" column="83" selection-start-line="1194" selection-start-column="83" selection-end-line="1194" selection-end-column="83" />
+          <folding>
+            <element signature="e#0#39#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/test/unit_const_test.dart">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1819">
+          <caret line="111" column="18" selection-start-line="111" selection-start-column="18" selection-end-line="111" selection-end-column="18" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/lib/helpers.dart">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="102">
+          <caret line="498" column="66" selection-start-line="498" selection-start-column="66" selection-end-line="498" selection-end-column="66" />
+          <folding>
+            <element signature="e#0#17#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/lib/l10n.dart">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="323">
+          <caret line="1107" column="71" selection-start-line="1107" selection-start-column="71" selection-end-line="1107" selection-end-column="71" />
+          <folding>
+            <element signature="e#0#20#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/lib/home.dart">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="385">
+          <caret line="1481" selection-start-line="1481" selection-end-line="1481" />
+          <folding>
+            <element signature="e#0#39#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+  </component>
+  <component name="masterDetails">
+    <states>
+      <state key="ArtifactsStructureConfigurable.UI">
+        <settings>
+          <artifact-editor />
+          <splitter-proportions>
+            <option name="proportions">
+              <list>
+                <option value="0.2" />
+              </list>
+            </option>
+          </splitter-proportions>
+        </settings>
+      </state>
+      <state key="FacetStructureConfigurable.UI">
+        <settings>
+          <last-edited>Android</last-edited>
+          <splitter-proportions>
+            <option name="proportions">
+              <list>
+                <option value="0.2" />
+              </list>
+            </option>
+          </splitter-proportions>
+        </settings>
+      </state>
+      <state key="GlobalLibrariesConfigurable.UI">
+        <settings>
+          <splitter-proportions>
+            <option name="proportions">
+              <list>
+                <option value="0.2" />
+              </list>
+            </option>
+          </splitter-proportions>
+        </settings>
+      </state>
+      <state key="JdkListConfigurable.UI">
+        <settings>
+          <last-edited>1.8</last-edited>
+          <splitter-proportions>
+            <option name="proportions">
+              <list>
+                <option value="0.2" />
+              </list>
+            </option>
+          </splitter-proportions>
+        </settings>
+      </state>
+      <state key="ModuleStructureConfigurable.UI">
+        <settings>
+          <last-edited>biblosphere</last-edited>
+          <splitter-proportions>
+            <option name="proportions">
+              <list>
+                <option value="0.2" />
+                <option value="0.6" />
+              </list>
+            </option>
+          </splitter-proportions>
+        </settings>
+      </state>
+      <state key="ProjectLibrariesConfigurable.UI">
+        <settings>
+          <last-edited>Dart Packages</last-edited>
+          <splitter-proportions>
+            <option name="proportions">
+              <list>
+                <option value="0.2" />
+              </list>
+            </option>
+          </splitter-proportions>
+        </settings>
+      </state>
+    </states>
+  </component>
+</project>

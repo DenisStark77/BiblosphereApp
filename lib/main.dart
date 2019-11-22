@@ -7,6 +7,7 @@ import 'package:firebase_ui/flutter_firebase_ui.dart';
 import 'package:firebase_ui/utils.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_crashlytics/flutter_crashlytics.dart';
 import 'package:intro_views_flutter/Models/page_view_model.dart';
@@ -15,7 +16,11 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/gestures.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
-import 'package:firebase_dynamic_links/firebase_dynamic_links.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
+// Debug analytics: 
+// adb shell setprop debug.firebase.analytics.app <package_name>
+// adb shell setprop debug.firebase.analytics.app .none.
+
 //Temporary for visual debugging
 import 'package:flutter/rendering.dart';
 
@@ -27,7 +32,6 @@ import 'package:biblosphere/home.dart';
 import 'package:biblosphere/chat.dart';
 import 'package:biblosphere/l10n.dart';
 
-
 //TODO: Credit page with link to author of icons:  Icon made by Freepik (http://www.freepik.com/) from www.flaticon.com
 
 final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -38,7 +42,7 @@ void main() async {
 
   WidgetsFlutterBinding.ensureInitialized();
 
-  await Firestore.instance.settings(persistenceEnabled: false);
+  await Firestore.instance.settings(persistenceEnabled: true);
 
   FlutterError.onError = (FlutterErrorDetails details) {
     if (isInDebugMode) {
@@ -52,7 +56,7 @@ void main() async {
   };
 
   // TODO: Didn't work on WEB
-  if (! kIsWeb) {
+  if (!kIsWeb) {
     await FlutterCrashlytics().initialize();
   }
 
@@ -84,14 +88,13 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
-  User currentUser;
   final FirebaseMessaging _firebaseMessaging = FirebaseMessaging();
   // Subscription for in-app purchases
   StreamSubscription<List<PurchaseDetails>> _subscription;
   StreamSubscription<FirebaseUser> _listener;
   //StreamSubscription<stellar.OperationResponse> _stellar;
   // Subscription to changes for user balance
-  StreamSubscription<DocumentSnapshot> _userSubscription;
+  StreamSubscription<DocumentSnapshot> _walletSubscription;
   FirebaseUser firebaseUser;
   bool unreadMessage = false;
   bool firstRun = true;
@@ -114,18 +117,20 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       },
       onResume: (Map<String, dynamic> message) {
         return new Future.delayed(Duration.zero, () {
-          Chat.runChat(context, currentUser, message['sender']);
+          // TODO: Change sender to chat id
+          Chat.runChatById(context, null, chatId: message['chat']);
         });
       },
       onLaunch: (Map<String, dynamic> message) {
         return new Future.delayed(Duration.zero, () {
-          Chat.runChat(context, currentUser, message['sender']);
+          // TODO: Change sender to chat id
+          Chat.runChatById(context, null, chatId: message['chat']);
         });
       },
     );
 
     // TODO: Didn't work on WEB
-    if (! kIsWeb) {
+    if (!kIsWeb) {
       _firebaseMessaging.requestNotificationPermissions(
           const IosNotificationSettings(sound: true, badge: true, alert: true));
 
@@ -135,9 +140,8 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       //       as parameter on widget push (is it possible?).
     }
 
-
     // TODO: Didn't work on WEB
-    if (! kIsWeb) {
+    if (!kIsWeb) {
       // Listen to in-app purchases update
       final Stream purchaseUpdates =
           InAppPurchaseConnection.instance.purchaseUpdatedStream;
@@ -149,18 +153,35 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
             double amount = double.parse(purchase.productID);
 
             // Create an operation and update user balance
-            await payment(user: currentUser, amount: amount, type: OperationType.InputInApp);
+            await payment(
+                user: B.user,
+                amount: amount,
+                type: OperationType.InputInApp);
+
+            FirebaseAnalytics().logEvent(
+                                name: 'ecommerce_purchase',
+                                parameters: <String, dynamic>{
+                                  'amount': amount,
+                                  'channel': 'in-app',
+                                  'user': B.user.id,
+                                  'locality': B.locality,
+                                  'country': B.country,
+                                  'latitude': B.position.latitude,
+                                  'longitude': B.position.longitude
+});
           }
         });
       });
     }
+
+    getPaymentContext();
   }
 
   @override
   void dispose() {
     _listener.cancel();
     _subscription.cancel();
-    _userSubscription.cancel();
+    _walletSubscription.cancel();
     //_stellar.cancel();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
@@ -168,12 +189,16 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed && currentUser != null) {
+    if (state == AppLifecycleState.resumed && B.user != null) {
       new Future.delayed(Duration.zero, () async {
         final position = await currentPosition();
         setState(() {
-
-          currentUser.position = position;
+          // Update position after the resume
+          B.user = B.user..position = position;
+        });
+        Geolocator().placemarkFromCoordinates(position.latitude, position.longitude, localeIdentifier: 'en').then((placemarks) {
+          B.locality = placemarks.first.locality;
+          B.country = placemarks.first.country;
         });
       });
     }
@@ -195,19 +220,25 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     }
 
     firebaseUser = await _auth.currentUser();
+
     firebaseUser?.getIdToken(refresh: true);
 
     _listener = _auth.onAuthStateChanged.listen((FirebaseUser user) {
-      setState(() {
+
         firebaseUser = user;
 
         if (firebaseUser != null) {
+          FirebaseAnalytics().setUserId(firebaseUser.uid);
+
           // That's async function so need to refresh widget as soon as it completes
           _initUserRecord().then((_) {
             setState(() {});
           });
+        } else {
+            setState(() {
+              B.user = null;
+            });
         }
-      });
     });
   }
 
@@ -216,45 +247,57 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       if (firebaseUser == null)
         throw "CurrentUserId is null, login failed or not completed";
 
-      currentUser = new User(
+      final position = await currentPosition();
+
+      Geolocator().placemarkFromCoordinates(position.latitude, position.longitude, localeIdentifier: 'en').then((placemarks) {
+        B.locality = placemarks.first.locality;
+        B.country = placemarks.first.country;
+      });
+
+      User user = new User(
           id: firebaseUser.uid,
           name: firebaseUser.displayName,
           photo: firebaseUser.photoUrl,
-          position: await currentPosition());
+          position: position);
+
+
+      Wallet wallet = new Wallet(id: firebaseUser.uid);
 
       // Check if user record exist
-      final DocumentSnapshot userSnap = await Firestore.instance
-          .collection('users').document(firebaseUser.uid).get();
+      final DocumentSnapshot userSnap = await user.ref.get();
 
-      if ( !userSnap.exists) {
-        // Update data to server if new user
-        Firestore.instance
-            .collection('users')
-            .document(firebaseUser.uid)
-            .setData({
-          'name': firebaseUser.displayName,
-          'photoUrl': firebaseUser.photoUrl,
-          'id': firebaseUser.uid
-        });
+      if (!userSnap.exists) {
+        // Create user and wallet if user is not there
+        await B.user.ref.setData(user.toJson());
+
+        // TODO: ensure if it works with data persistently
+        await wallet.ref.setData(wallet.toJson());
       } else {
-        currentUser.balance = userSnap.data['balance'] != null
-            ? (userSnap.data['balance'] as num).toDouble()
-            : 0;
-        currentUser.payoutId = userSnap.data['payoutId'];
-        currentUser.accountId = userSnap.data['accountId'];
-        currentUser.secretSeed = userSnap.data['secretSeed'];
-        currentUser.cursor = userSnap.data['cursor'];
-        currentUser.link = userSnap.data['link'];
+        // Update user fields from Firestore
+        user = User.fromJson(userSnap.data);
+
+        if (user.currency != null &&
+            xlmRates[B.currency] != null) {
+          B.currency = user.currency;
+        }
+
+        // Update balance and blocked
+        final DocumentSnapshot walletSnap = await wallet.ref.get();
+
+        if (!walletSnap.exists) {
+          // Create wallet if not exist (case for old users)
+          await wallet.ref.setData(wallet.toJson());
+        } else {
+          // Read wallet if exist
+          wallet = Wallet.fromJson(walletSnap.data);
+        }
       }
 
-      DocumentReference userRef =
-          Firestore.instance.collection('users').document(firebaseUser.uid);
-
-      _userSubscription = userRef.snapshots().listen((DocumentSnapshot doc) {
+      // TODO: Cancel subscription befor log out (Exception PERMISSION_DENIED)
+      _walletSubscription =
+          wallet.ref.snapshots().listen((DocumentSnapshot doc) {
         setState(() {
-          currentUser.balance = doc.data['balance'] != null
-              ? (doc.data['balance'] as num).toDouble()
-              : 0;
+          B.wallet = Wallet.fromJson(doc.data);
         });
       });
 
@@ -268,68 +311,17 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         });
       });
 
-      //If user does not have Stellar account crete one
-      if (currentUser.accountId == null) {
-        createStellarAccount(currentUser);
-      }
-
-      /*
-      // Subscription works unstable (stop after first event)
-      // Subscribe to Stellar payment stream to get payments
-      stellar.Network.useTestNetwork();
-      stellar.Server server = new stellar.Server("https://horizon-testnet.stellar.org");
-      stellar.KeyPair destination = stellar.KeyPair.fromAccountId(currentUser.accountId);
-
-      _stellar = server.payments.forAccount(destination)
-          .order(stellar.RequestBuilderOrder.ASC)
-          .cursor(currentUser.cursor).stream().listen((response) async {
-        print('!!!DEBUG payment callback ${response}');
-        if (response is stellar.PaymentOperationResponse) {
-          print('!!!DEBUG payment amount ${response.amount}');
-          // TODO: Protect from multiple parallel payments (stress-test)
-          //await checkStellarPayments(currentUser);
-        }
-      });
-*/
-      await checkStellarPayments(currentUser);
-
       // If refferal program link is empty generate one
-      if (currentUser.link == null) {
-        final DynamicLinkParameters parameters = new DynamicLinkParameters(
-          uriPrefix: 'https://biblosphere.page.link',
-          link: Uri.parse('https://biblosphere.org/chat?user=${currentUser.id}'),
-          androidParameters: AndroidParameters(
-            packageName: 'com.biblosphere.biblosphere',
-            minimumVersion: 0,
-          ),
-          dynamicLinkParametersOptions: DynamicLinkParametersOptions(
-            shortDynamicLinkPathLength: ShortDynamicLinkPathLength.short,
-          ),
-          iosParameters: IosParameters(
-            bundleId: 'com.biblosphere.biblosphere',
-            minimumVersion: '0',
-          ),
-          // TODO: S.of(context) does not work as it's a top Widget MyApp
-          /*
-          socialMetaTagParameters: SocialMetaTagParameters(
-              title: S.of(context).title,
-              description: S.of(context).shareBooks,
-              imageUrl: Uri.parse(sharingUrl)),
-          */
-          navigationInfoParameters:
-              NavigationInfoParameters(forcedRedirectEnabled: true),
-        );
-
-        final ShortDynamicLink shortLink = await parameters.buildShortLink();
-
-        currentUser.link = shortLink.shortUrl.toString();
-        Firestore.instance
-            .collection('users')
-            .document(currentUser.id)
-            .updateData({
-          'link': currentUser.link,
-        });
+      if (user.link == null) {
+        // TODO: Make this call async to minimize waiting time for login
+        user.link = await buildLink('chat?user=${user.id}');
       }
+
+      // Set global value to user
+      B.wallet = wallet;
+      B.user = user;
+
+      user.ref.updateData(user.toJson());
     } catch (ex, stack) {
       print(ex);
       FlutterCrashlytics().logException(ex, stack);
@@ -348,7 +340,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         GlobalWidgetsLocalizations.delegate
       ],
       supportedLocales: [Locale("en"), Locale("ru")],
-      onGenerateTitle: (BuildContext context) => S.of(context).title,
+      //onGenerateTitle: (BuildContext context) => S.of(context).title,
       theme: new ThemeData(
         // This is the theme of your application.
         //
@@ -359,31 +351,41 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         // or press Run > Flutter Hot Reload in IntelliJ). Notice that the
         // counter didn't reset back to zero; the application is not restarted.
 //        fontFamily: 'AmaticSc',
+        scaffoldBackgroundColor: C.background, // Background of Scaffolds
+        cardColor: C.cardBackground,
+        cardTheme: CardTheme(color: C.cardBackground),
+        buttonColor: C.button,
+        //primaryColorLight: C.title,
+        chipTheme: ChipThemeData(
+            backgroundColor: C.chipUnselected, //C.chipUnselected,
+            selectedColor: C.chipSelected,//C.chipSelected,
+            disabledColor: Colors.red, // TODO: define color
+            secondarySelectedColor: Colors.black, // TODO: define color
+            labelPadding: EdgeInsets.all(0.0),
+            padding: EdgeInsets.only(left: 7.0, right: 10.0),
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20.0)),
+            labelStyle: TextStyle(fontSize: 14.0, fontWeight: FontWeight.w300, color: C.chipText),
+            secondaryLabelStyle:
+                TextStyle(fontSize: 14.0, fontWeight: FontWeight.w200, color: Colors.white),
+            brightness: Brightness.light),
         textTheme: TextTheme(
-          headline: TextStyle(
-              fontSize: 48.0,
-              fontWeight: FontWeight.w700),
-          subhead: TextStyle(
-              fontSize: 32.0,
-              fontWeight: FontWeight.w500),
-          title: TextStyle(
-              fontSize: 20.0,
-              fontWeight: FontWeight.w300),
-          subtitle: TextStyle(
-              fontSize: 18.0,
-              fontWeight: FontWeight.w400),
+          headline: TextStyle(fontSize: 48.0, fontWeight: FontWeight.w700),
+          subhead: TextStyle(fontSize: 32.0, fontWeight: FontWeight.w500),
+          title: TextStyle(fontSize: 20.0, fontWeight: FontWeight.w300),
+          subtitle: TextStyle(fontSize: 18.0, fontWeight: FontWeight.w400),
           body1: TextStyle(fontSize: 16.0, fontWeight: FontWeight.w300),
           body2: TextStyle(fontSize: 14.0, fontWeight: FontWeight.w200),
           button: TextStyle(fontSize: 16.0, fontWeight: FontWeight.w300),
         ),
         colorScheme: ColorScheme(
-            primary: Colors.teal[800],
-            primaryVariant: Colors.teal[600],
-            secondary: Colors.teal[600],
-            secondaryVariant: Colors.teal[200],
+            primary: C.titleBackground,
+            primaryVariant: C.titleBackground,
+            secondary: C.titleBackground,
+            secondaryVariant: C.titleBackground,
             surface: Colors.black12,
             error: Colors.red,
-            background: Colors.white,
+            background: C.titleBackground,
             onPrimary: Colors.white,
             onSecondary: Colors.white,
             onBackground: Colors.black,
@@ -391,12 +393,13 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
             onSurface: Colors.lightBlueAccent,
             brightness: Brightness.light),
         brightness: Brightness.light,
-        primaryColor: Colors.teal[800],
+        primaryColor: C.titleBackground,
+        backgroundColor: C.background,
         accentColor: Colors.teal[600],
 //        primarySwatch: Colors.green,
       ),
       home: new Builder(builder: (context) {
-        if (!skipIntro && firebaseUser == null) {
+        if (!skipIntro && B.user == null) {
           return new IntroPage(onTapDoneButton: () {
             setState(() {
               skipIntro = true;
@@ -408,7 +411,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
             SharedPreferences prefs = await SharedPreferences.getInstance();
             prefs.setBool('skipIntro', true);
           });
-        } else if (firebaseUser == null) {
+        } else if (B.user == null) {
           return new SignInScreen(
             avoidBottomInset: true,
             bottomPadding: 10.0,
@@ -483,7 +486,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
             ],
           );
         } else {
-          return MyHomePage(currentUser: currentUser);
+          return MyHomePage();
         }
       }),
       onGenerateRoute: _getRoute,
@@ -496,11 +499,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         return _buildRoute(
             settings,
             new Chat(
-              //TODO: How to get currentUser here?
-              currentUser: currentUser,
               partner: settings.arguments as User,
-              //TODO: Why isNewChar required?
-              isNewChat: true,
             ));
       default:
         return null;

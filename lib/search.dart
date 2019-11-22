@@ -5,6 +5,7 @@ import 'package:http/http.dart';
 import 'package:xml/xml.dart' as xml;
 import 'dart:convert';
 import 'package:biblosphere/const.dart';
+import 'package:biblosphere/payments.dart';
 
 //TODO: Not sure it's good idea to have it as global valiables. Need to find
 // better way. Hwever to have it in widget is not good idea either as it used
@@ -38,28 +39,37 @@ class LibConnect {
   }
 }
 
-Future<List<Book>> searchByTitleAuthorBiblosphere(String text) async {
+Future<List<dynamic>> searchByTitleAuthorBiblosphere(String text,
+    {bool actual = false}) async {
   //TODO: Redesign search as now it only use ONE keyword
   // and doing rest of filtering on client side
   Set<String> keys = getKeys(text);
   QuerySnapshot snapshot;
 
-  if (keys.length == 0)
+  if (keys.length == 0) {
     return [];
-  else
-    snapshot = await Firestore.instance
-        .collection('books')
-        .where('keys', arrayContains: keys.elementAt(0))
-        .getDocuments();
+  } else {
+    if (actual)
+      snapshot = await Firestore.instance
+          .collection('bookrecords')
+          .where('wish', isEqualTo: false)
+          .where('transit', isEqualTo: false)
+          .where('keys', arrayContains: keys.elementAt(0))
+          .getDocuments();
+    else
+      snapshot = await Firestore.instance
+          .collection('books')
+          .where('keys', arrayContains: keys.elementAt(0))
+          .getDocuments();
 
-  List<Book> books = snapshot.documents.where((doc) {
-    return doc.data['keys'].toSet().containsAll(keys);
-  }).map((doc) {
-    Book book = new Book.fromJson(doc.data);
-    return book;
-  }).toList();
+    List<dynamic> books = snapshot.documents.where((doc) {
+      return doc.data['keys'].toSet().containsAll(keys);
+    }).map((doc) {
+      return actual ? Bookrecord.fromJson(doc.data) : Book.fromJson(doc.data);
+    }).toList();
 
-  return books;
+    return books;
+  }
 }
 
 Future<List<Book>> searchByTitleAuthorGoogle(String text) async {
@@ -70,14 +80,15 @@ Future<List<Book>> searchByTitleAuthorGoogle(String text) async {
   if (books.items != null && books.items.isNotEmpty) {
     return books.items
         .where((v) =>
-    v.volumeInfo.title != null &&
-        v.volumeInfo.authors != null &&
-        v.volumeInfo.authors.isNotEmpty &&
-        v.volumeInfo.imageLinks != null &&
-        v.volumeInfo.imageLinks.thumbnail != null &&
-        v.volumeInfo.industryIdentifiers != null &&
-        v.saleInfo != null &&
-        !v.saleInfo.isEbook)
+            v.volumeInfo.title != null &&
+            v.volumeInfo.authors != null &&
+            v.volumeInfo.authors.isNotEmpty &&
+            v.volumeInfo.imageLinks != null &&
+            v.volumeInfo.imageLinks.thumbnail != null &&
+            v.volumeInfo.industryIdentifiers != null &&
+            v.volumeInfo.industryIdentifiers.any((i) => i.type == 'ISBN_13') &&
+            v.saleInfo != null &&
+            !v.saleInfo.isEbook)
         .map((v) {
       return new Book.volume(v);
     }).toList();
@@ -94,7 +105,7 @@ Future<List<Book>> searchByTitleAuthorGoodreads(String text) async {
   var document = xml.parse(res.body);
 
   List<Book> books =
-  document.findAllElements('best_book')?.take(5)?.map((xml.XmlElement e) {
+      document.findAllElements('best_book')?.take(5)?.map((xml.XmlElement e) {
     return new Book.goodreads(e);
     //As Goodreads doesn't have ISBN in search responce keep Goodreads ID instead.
     // It'll be replaced by ISBN by enrichBookRecord function on confirm stage.
@@ -107,6 +118,7 @@ Future<Book> enrichBookRecord(Book book) async {
   //As Goodreads search by title/author does not return ISBN it's empty for
   // these records
   try {
+    // TODO: refactor code around sourceId
     if (book.isbn == null || book.isbn.isEmpty || book.isbn == 'NA') {
       if (book.sourceId != null && book.sourceId.isNotEmpty) {
         var res = await LibConnect.getGoodreadClient().get(
@@ -114,21 +126,27 @@ Future<Book> enrichBookRecord(Book book) async {
 
         var document = xml.parse(res.body);
         String isbn =
-        document.findAllElements('isbn13')?.first?.text?.toString();
+            document.findAllElements('isbn13')?.first?.text?.toString();
 
         if (isbn != null) book.isbn = isbn;
       }
-      if (book.isbn == null || book.isbn.isEmpty) book.isbn = 'NA';
+      // if (book.isbn == null || book.isbn.isEmpty) book.isbn = 'NA';
     }
 
     //As many Goodreads books doesn't have images enrich it from Google
     if (book.image == null || book.image.isEmpty) {
-      if (book.isbn != 'NA' && book.source != BookSource.google) {
+      if (book.isbn != null && book.source != BookSource.google) {
         Book b = await searchByIsbnGoogle(book.isbn);
         if (b?.image != null) book.image = b.image;
         if (b?.language != null) book.language = b.language;
       }
     }
+
+    // TODO: Get image from Labirint for russian books
+    // Use same request as for price!
+
+    if (book.price == null || book.price == 0.0)
+      book.price = await getPriceFromWeb(book);
 
     return book;
   } catch (e) {
@@ -140,7 +158,7 @@ Future<Book> enrichBookRecord(Book book) async {
 Future<Book> searchByIsbnGoogle(String isbn) async {
   try {
     Volumes books =
-    await LibConnect.getGoogleBookApi().volumes.list('isbn:$isbn');
+        await LibConnect.getGoogleBookApi().volumes.list('isbn:$isbn');
     if (books?.items != null && books.items.isNotEmpty) {
       var v = books?.items[0];
       if (v?.volumeInfo?.title != null &&
@@ -220,9 +238,9 @@ Future<Book> searchByIsbnRsl(String isbn) async {
 //                     'X-CSRF-Token': token,
       'Origin': 'https://search.rsl.ru',
       'User-Agent':
-      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.108 Safari/537.36',
+          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.108 Safari/537.36',
       'Accept-Language':
-      'en-GB,en;q=0.9,ru-RU;q=0.8,ru;q=0.7,ka-GE;q=0.6,ka;q=0.5,en-US;q=0.4',
+          'en-GB,en;q=0.9,ru-RU;q=0.8,ru;q=0.7,ka-GE;q=0.6,ka;q=0.5,en-US;q=0.4',
       'Accept-Encoding': 'gzip, deflate, br',
       'Cookie': cleanCookie.join(';') + ';'
     };
@@ -270,24 +288,109 @@ Future<Book> searchByIsbnRsl(String isbn) async {
   }
 }
 
-
 Future<Book> searchByIsbn(String isbn) async {
   try {
-    QuerySnapshot q = await Firestore.instance
-        .collection('books')
-        .where('isbn', isEqualTo: isbn)
-        .getDocuments();
+    DocumentSnapshot doc =
+        await Firestore.instance.collection('books').document(isbn).get();
 
-    if (q.documents.isEmpty) {
+    if (!doc.exists) {
       //No books found
       return null;
     } else {
-      Book b = new Book.fromJson(q.documents.first.data);
-      b.id = q.documents.first.documentID;
+      var b = new Book.fromJson(doc.data);
       return b;
     }
   } catch (e) {
     print('Unknown error in searchByIsbn: $e');
     return null;
   }
+}
+
+Future<List<Bookrecord>> searchByIsbnBookrecords(String isbn) async {
+  try {
+    QuerySnapshot snap =
+        await Firestore.instance.collection('bookrecords').where('isbn', isEqualTo: isbn)
+        .where('wish', isEqualTo: false)
+        .where('transit', isEqualTo: false)
+        .getDocuments();
+
+    List<Bookrecord> list = snap.documents.map( (doc) => Bookrecord.fromJson(doc.data)).toList();
+    list.sort((b1, b2) => ((b1.distance - b2.distance) * 1000).round());
+
+    return list.take(1).toList();
+  } catch (e) {
+    print('Unknown error in searchByIsbn: $e');
+    return null;
+  }
+}
+
+Future<double> getPriceFromWeb(Book book) async {
+  if (book.isbn.startsWith('9785')) {
+    // Search in labirinth
+    Response response =
+        await get('https://www.labirint.ru/search/${book.isbn}/?stype=0');
+    int index = response.body.indexOf(r"class='search-error'");
+    if (index == -1) {
+      index = response.body.indexOf('price=\"');
+      if (index != -1) {
+        int priceStart = index;
+        int priceEnd = response.body.indexOf(r'"', priceStart + 7);
+        String priceStr = response.body.substring(priceStart + 7, priceEnd);
+
+        RegExp re = new RegExp(r'(\d+)');
+        Match firstMatch = re.firstMatch(priceStr);
+        if (firstMatch != null) {
+          String price = priceStr.substring(firstMatch.start, firstMatch.end);
+          return double.parse(price) / xlmRates['RUB'];
+        }
+      }
+    }
+
+    // If not found on Labirint try Ozon
+    response = await get(
+        'https://www.ozon.ru/category/knigi-16500/?text=${book.isbn}');
+    index = response.body.indexOf('tile-price');
+
+    // If not found by ISBN try by author and title
+    if (index == -1) {
+      response = await get(
+          'https://www.ozon.ru/category/knigi-16500/?text=${book.title + ' ' + book.authors.join(' ')}');
+      index = response.body.indexOf('tile-price');
+    }
+
+    if (index != -1) {
+      int priceStart = response.body.indexOf('>', index);
+      int priceEnd = response.body.indexOf('<', priceStart);
+
+      String priceStr = response.body.substring(priceStart + 1, priceEnd - 1);
+
+      RegExp re = new RegExp(r'(\d+)');
+      Match firstMatch = re.firstMatch(priceStr);
+      String price = priceStr.substring(firstMatch.start, firstMatch.end);
+
+      return double.parse(price) / xlmRates['RUB'];
+    }
+  } else {
+    Response response = await get(
+        'https://www.abebooks.com/servlet/SearchResults?bi=0&bx=off&cm_sp=SearchF-_-Advtab1-_-Results&ds=30&isbn=${book.isbn}&n=100121501&recentlyadded=all&sortby=17&sts=t');
+    int index = response.body.indexOf(r'<h1>No results</h1>');
+
+    if (index == -1) {
+      index = response.body.indexOf(r'itemprop="price" content="');
+      if (index != -1) {
+        int priceStart = index + 26;
+        int priceEnd = response.body.indexOf('"', priceStart);
+
+        String priceStr = response.body.substring(priceStart, priceEnd);
+
+        RegExp re = new RegExp(r'(\d+)');
+        Match firstMatch = re.firstMatch(priceStr);
+        String price = priceStr.substring(firstMatch.start, firstMatch.end);
+
+        return double.parse(price) / xlmRates['USD'];
+      }
+    }
+  }
+
+  return 0.0;
 }

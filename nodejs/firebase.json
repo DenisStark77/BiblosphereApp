@@ -14,43 +14,6 @@
     ],
     "appAssociation": "AUTO",
     "rewrites": [
-      { "source": "/links/**", "dynamicLinks": true },
-      {
-        "source": "/createBalances", "function": "createBalances"
-      },
-      {
-        "source": "/addKeys", "function": "addKeys"
-      },
-      {
-        "source": "/addHolders", "function": "addHolders"
-      },
-      {
-        "source": "/recogniseShelfHttp", "function": "recogniseShelfHttp"
-      },
-      {
-        "source": "/exportUsers", "function": "exportUsers"
-      },
-      {
-        "source": "/updateUsers", "function": "updateUsers"
-      },
-      {
-        "source": "/detectBooks", "function": "detectBooks"
-      },
-      {
-        "source": "/detectLanguage", "function": "detectLanguage"
-      },
-      {
-        "source": "/userNames", "function": "userNames"
-      },
-      {
-        "source": "/blockedMessages", "function": "blockedMessages"
-      },
-      {
-        "source": "/shelf", "function": "shelf"
-      },
-      {
-        "source": "/thumbnail", "function": "thumbnail"
-      },
       {
         "source": "**", "destination": "/index.html"
       }
