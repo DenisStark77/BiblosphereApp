@@ -1,5 +1,5 @@
 {
-  "@@last_modified": "2019-11-19T15:15:17.451487",
+  "@@last_modified": "2019-11-25T17:05:47.108060",
   "title": "Biblosphere",
   "@title": {
     "description": "The application title",
@@ -1250,7 +1250,7 @@
       "total": {}
     }
   },
-  "bookRent": "Аренда: {month} в месяц",
+  "bookRent": "Цена: {month} в месяц",
   "@bookRent": {
     "type": "text",
     "placeholders": {
@@ -1522,5 +1522,12 @@
   "@supportSignature": {
     "type": "text",
     "placeholders": {}
+  },
+  "bookIncome": "Доход: {month} в месяц",
+  "@bookIncome": {
+    "type": "text",
+    "placeholders": {
+      "month": {}
+    }
   }
 }

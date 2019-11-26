@@ -394,7 +394,7 @@
     "type": "text",
     "placeholders": {}
   },
-     "scanISBN": "Scan ISBN from the back of the book",
+     "scanISBN": "Scan ISBN",
      "@scanISBN": {
        "type": "text",
        "placeholders": {}
@@ -434,6 +434,11 @@
     "placeholders": {
       "count": {}
     }
+  },
+  "loadPhotoOfShelf": "Load shelf photo from gallery",
+  "@loadPhotoOfShelf": {
+    "type": "text",
+    "placeholders": {}
   },
   "myBorrowedBooksItem": "Borrowed books",
   "@myBorrowedBooksItem": {
@@ -505,7 +510,7 @@
     "type": "text",
     "placeholders": {}
   },
-  "messageRecepient": "Chat with book recepient.",
+  "messageRecepient": "Chat with book recipient.",
   "@messageRecepient": {
     "type": "text",
     "placeholders": {}
@@ -1032,7 +1037,7 @@
     "type": "text",
     "placeholders": {}
   },
-  "userHave": "from user {user}",
+  "userHave": "from {user}",
   "@userHave": {
     "type": "text",
     "placeholders": {
@@ -1129,130 +1134,130 @@
     "type": "text",
     "placeholders": {}
   },
-  "buttonGivenBooks": "Книги отдал ✓",
+  "buttonGivenBooks": "Books handed over ✓",
   "@buttonGivenBooks": {
     "type": "text",
     "placeholders": {}
   },
-  "displayCurrency": "Валюта отображения:",
+  "displayCurrency": "Display currency:",
   "@displayCurrency": {
     "type": "text",
     "placeholders": {}
   },
-  "selectDisplayCurrency": "Выберите валюту отображения:",
+  "selectDisplayCurrency": "Choose display currency:",
   "@selectDisplayCurrency": {
     "type": "text",
     "placeholders": {}
   },
-  "bookImageLabel": "Ссылка на фото обложки:",
+  "bookImageLabel": "Link to book cover image:",
   "@bookImageLabel": {
     "type": "text",
     "placeholders": {}
   },
-  "wrongImageUrl": "Неверная ссылка",
+  "wrongImageUrl": "Wrong link",
   "@wrongImageUrl": {
     "type": "text",
     "placeholders": {}
   },
-  "imageLinkHint": "Скопируйте ссылку на обложку книги",
+  "imageLinkHint": "Copy link to bookcover image",
   "@imageLinkHint": {
     "type": "text",
     "placeholders": {}
   },
-  "bookPriceLabel": "Цена книги",
+  "bookPriceLabel": "Book price",
   "@bookPriceLabel": {
     "type": "text",
     "placeholders": {}
   },
-  "bookPriceHint": "Введите цену книги",
+  "bookPriceHint": "Enter book price",
   "@bookPriceHint": {
     "type": "text",
     "placeholders": {}
   },
-  "titleBookSettings": "О КНИГЕ",
+  "titleBookSettings": "ABOUT BOOK",
   "@titleBookSettings": {
     "type": "text",
     "placeholders": {}
   },
-  "titleUserBooks": "ОБМЕН КНИГАМИ",
+  "titleUserBooks": "BOOK EXCHENGE",
   "@titleUserBooks": {
     "type": "text",
     "placeholders": {}
   },
-  "requestReturn": "Хочу вернуть вам \"{book}\"?",
+  "requestReturn": "I'd like to return \"{book}\"?",
   "@requestReturn": {
     "type": "text",
     "placeholders": {
       "book": {}
     }
   },
-  "requestReturnByOwner": "Пожалуйста, верните книгу \"{book}\"?",
+  "requestReturnByOwner": "Please, return me \"{book}\"?",
   "@requestReturnByOwner": {
     "type": "text",
     "placeholders": {
       "book": {}
     }
   },
-  "chatStatusInitialFrom": "Отдайте книги",
+  "chatStatusInitialFrom": "Return book",
   "@chatStatusInitialFrom": {
     "type": "text",
     "placeholders": {}
   },
-  "chatStatusHandoverFrom": "Завершите передачу книг",
+  "chatStatusHandoverFrom": "Complete book(s) handover",
   "@chatStatusHandoverFrom": {
     "type": "text",
     "placeholders": {}
   },
-  "chatStatusCompleteFrom": "Книги переданы",
+  "chatStatusCompleteFrom": "Book(s) handed over",
   "@chatStatusCompleteFrom": {
     "type": "text",
     "placeholders": {}
   },
-  "chatStatusInitialTo": "Получите книги",
+  "chatStatusInitialTo": "Get book(s)",
   "@chatStatusInitialTo": {
     "type": "text",
     "placeholders": {}
   },
-  "chatStatusHandoverTo": "Подтвердите получение книг",
+  "chatStatusHandoverTo": "Confirm book(s) handover",
   "@chatStatusHandoverTo": {
     "type": "text",
     "placeholders": {}
   },
-  "chatStatusCompleteTo": "Книги получены",
+  "chatStatusCompleteTo": "Book(s) accepted",
   "@chatStatusCompleteTo": {
     "type": "text",
     "placeholders": {}
   },
-  "chipMyBooksWithHim": "Мои книги у него",
+  "chipMyBooksWithHim": "My books with him(her)",
   "@chipMyBooksWithHim": {
     "type": "text",
     "placeholders": {}
   },
-  "chipHisBooks": "Его книги",
+  "chipHisBooks": "His(her) books",
   "@chipHisBooks": {
     "type": "text",
     "placeholders": {}
   },
-  "chipHisBooksWithMe": "Его книги у меня",
+  "chipHisBooksWithMe": "His(her) books with me",
   "@chipHisBooksWithMe": {
     "type": "text",
     "placeholders": {}
   },
-  "bookPrice": "Цена: {total}",
+  "bookPrice": "Price: {total}",
   "@bookPrice": {
     "type": "text",
     "placeholders": {
       "total": {}
     }
   },
-  "bookRent": "Аренда: {month} в месяц",
+  "bookRent": "Price: {month} per month",
   "@bookRent": {
     "type": "text",
     "placeholders": {
       "month": {}
     }
   },
-  "bookOwner": "Владелец: {user}",
+  "bookOwner": "Owner: {user}",
   "@bookOwner": {
     "type": "text",
     "placeholders": {
@@ -1517,5 +1522,12 @@
   "@supportSignature": {
     "type": "text",
     "placeholders": {}
+  },
+  "bookIncome": "Income: {month} per month",
+  "@bookIncome": {
+    "type": "text",
+    "placeholders": {
+      "month": {}
+    }
   }
 }

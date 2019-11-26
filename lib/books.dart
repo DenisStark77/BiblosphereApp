@@ -12,6 +12,7 @@ import 'package:biblosphere/const.dart';
 import 'package:biblosphere/helpers.dart';
 import 'package:biblosphere/search.dart';
 import 'package:biblosphere/lifecycle.dart';
+import 'package:biblosphere/payments.dart';
 import 'package:biblosphere/chat.dart';
 import 'package:biblosphere/home.dart';
 import 'package:biblosphere/l10n.dart';
@@ -93,7 +94,8 @@ class _AddBookWidgetState extends State<AddBookWidget> {
                                 });
                           },
                           shape: new RoundedRectangleBorder(
-                              borderRadius: new BorderRadius.circular(20.0)),
+                              borderRadius: new BorderRadius.circular(15.0),
+                              side: BorderSide(color: C.buttonBorder)),
                         ),
                       ],
                     ),
@@ -141,7 +143,8 @@ class _AddBookWidgetState extends State<AddBookWidget> {
                               },
                               shape: new RoundedRectangleBorder(
                                   borderRadius:
-                                      new BorderRadius.circular(20.0)),
+                                      new BorderRadius.circular(15.0),
+                                      side: BorderSide(color: C.buttonBorder)),
                             )),
                       ],
                     ),
@@ -250,7 +253,7 @@ class _AddBookWidgetState extends State<AddBookWidget> {
 
       if (book != null) {
         //Many books on goodreads does not have images. Enreach it from Google
-        book = await enrichBookRecord(book);
+        //book = await enrichBookRecord(book);
         setState(() {
           suggestions = <Book>[book];
         });
@@ -573,6 +576,13 @@ class _FindBookWidgetState extends State<FindBookWidget> {
                                             distance(rec.distance)),
                                         style:
                                             Theme.of(context).textTheme.body1),
+                                    B.user.id != rec.ownerId && !rec.wish ? Text(
+                                            S.of(context).bookRent(money(monthly(
+                                                    rec.getPrice()))),
+                                            overflow: TextOverflow.ellipsis,
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .body1) : Container(),
                                     Text(
                                         (rec.holderId == B.user.id)
                                             ? S.of(context).youHaveThisBook

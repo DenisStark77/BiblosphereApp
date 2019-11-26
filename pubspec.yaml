@@ -24,7 +24,7 @@ dependencies:
 
   #firebase_storage: ^3.0.6
 
-  firebase_auth: ^0.11.1+12
+  firebase_auth: ^0.14.0+5
 
   permission_handler: ^3.0.1
 
@@ -60,7 +60,7 @@ dependencies:
 
   googleapis_auth: ^0.2.6
 
-  firebase_ui: ^1.0.7
+  firebase_ui: ^1.0.8
 
   flutter_launcher_icons: ^0.7.3
 

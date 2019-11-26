@@ -183,7 +183,8 @@ exports.payoutStellar = functions.firestore
     }
   });
 
-
+// Function to send notification for message
+// Deploy with: firebase deploy --only functions:sendNotification
 exports.sendNotification = functions.firestore
   .document("messages/{chatId}/{chatCollectionId}/{msgId}")
   .onCreate((snap, context) => {
@@ -202,7 +203,7 @@ exports.sendNotification = functions.firestore
             body: 'Message from ' + userFrom.data().name
           },
           data: {
-            chat: chatId,
+            chat: context.params.chatId,
             click_action: 'FLUTTER_NOTIFICATION_CLICK'
           }
         };

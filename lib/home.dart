@@ -254,7 +254,6 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                   Navigator.push(
                       context,
                       new MaterialPageRoute(
-                          //TODO: translation
                           builder: (context) => buildScaffold(
                               context,
                               S.of(context).financeTitle(
@@ -856,7 +855,6 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                   Navigator.push(
                       context,
                       new MaterialPageRoute(
-                          //TODO: translation
                           builder: (context) => buildScaffold(
                               context,
                               S.of(context).titleMessages,
@@ -1287,32 +1285,34 @@ class _MyBookWidgetState extends State<MyBook> {
                                                 .textTheme
                                                 .subtitle)),
                                     // Show price without fee for the book owners
-                                    Container(
+                                    B.user.id == bookrecord.ownerId && !bookrecord.wish 
+                                    ? Container(
                                         child: Text(
-                                            S.of(context).bookPrice(B.user.id ==
-                                                        bookrecord.ownerId &&
-                                                    !bookrecord.wish
-                                                ? money(bookrecord.getPrice())
-                                                : money(total(
+                                            S.of(context).bookPrice(money(bookrecord.getPrice())),
+                                            overflow: TextOverflow.ellipsis,
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .body1)) : Container(),
+                                    // Show income for lent books
+                                    bookrecord.isLent 
+                                    ? Container(
+                                        child: Text(
+                                            S.of(context).bookIncome(money(income(
                                                     bookrecord.getPrice()))),
                                             overflow: TextOverflow.ellipsis,
                                             style: Theme.of(context)
                                                 .textTheme
-                                                .body1)),
-                                    // Show income without system fee for book owners
-                                    Container(
+                                                .body1)) : Container(),
+                                    // Show rent for borrowed books
+                                    bookrecord.isBorrowed 
+                                    ? Container(
                                         child: Text(
-                                            S.of(context).bookRent(B.user.id ==
-                                                        bookrecord.ownerId &&
-                                                    !bookrecord.wish
-                                                ? money(income(
-                                                    bookrecord.getPrice()))
-                                                : money(monthly(
+                                            S.of(context).bookRent(money(monthly(
                                                     bookrecord.getPrice()))),
                                             overflow: TextOverflow.ellipsis,
                                             style: Theme.of(context)
                                                 .textTheme
-                                                .body1)),
+                                                .body1)) : Container(),
                                     B.user.id != bookrecord.ownerId
                                         ? Container(
                                             child: Text(

@@ -1250,7 +1250,7 @@
       "total": {}
     }
   },
-  "bookRent": "Аренда: {month} в месяц",
+  "bookRent": "Цена: {month} в месяц",
   "@bookRent": {
     "type": "text",
     "placeholders": {
@@ -1522,5 +1522,12 @@
   "@supportSignature": {
     "type": "text",
     "placeholders": {}
+  },
+  "bookIncome": "Доход: {month} в месяц",
+  "@bookIncome": {
+    "type": "text",
+    "placeholders": {
+      "month": {}
+    }
   }
 }

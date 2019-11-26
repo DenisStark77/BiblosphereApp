@@ -364,7 +364,8 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
             labelPadding: EdgeInsets.all(0.0),
             padding: EdgeInsets.only(left: 7.0, right: 10.0),
             shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20.0)),
+                borderRadius: BorderRadius.circular(13.0),
+                side: BorderSide(color: C.buttonBorder)),
             labelStyle: TextStyle(fontSize: 14.0, fontWeight: FontWeight.w300, color: C.chipText),
             secondaryLabelStyle:
                 TextStyle(fontSize: 14.0, fontWeight: FontWeight.w200, color: Colors.white),
@@ -479,8 +480,8 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
             ),
             providers: [
               ProvidersTypes.google,
-              ProvidersTypes.facebook,
-              ProvidersTypes.twitter,
+//          ProvidersTypes.facebook,
+//          ProvidersTypes.twitter,
 //          ProvidersTypes.phone,
 //          ProvidersTypes.email
             ],

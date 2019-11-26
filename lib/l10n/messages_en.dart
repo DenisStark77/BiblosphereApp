@@ -21,95 +21,97 @@ class MessageLookup extends MessageLookupByLibrary {
 
   static m0(count) => "${Intl.plural(count, zero: 'No books', one: '${count} book', other: '${count} books')}";
 
-  static m1(lang) => "Language: ${lang}";
+  static m1(month) => "Income: ${month} per month";
 
-  static m2(user) => "Владелец: ${user}";
+  static m2(lang) => "Language: ${lang}";
 
-  static m3(total) => "Цена: ${total}";
+  static m3(user) => "Owner: ${user}";
 
-  static m4(month) => "Аренда: ${month} в месяц";
+  static m4(total) => "Price: ${total}";
 
-  static m5(user) => "Book with ${user}";
+  static m5(month) => "Price: ${month} per month";
 
-  static m6(count) => "His books with me (${count})";
+  static m6(user) => "Book with ${user}";
 
-  static m7(name, title) => "Book \'${title}\' belong to user \'${name}\'. Press outbox button below to initiate return.";
+  static m7(count) => "His books with me (${count})";
 
-  static m8(name, title) => "User \'${name}\' offer you his book \'${title}\'. Please arrange handover and confirm on receive. Or reject in case you are not interested.";
+  static m8(name, title) => "Book \'${title}\' belong to user \'${name}\'. Press outbox button below to initiate return.";
 
-  static m9(name, title) => "User \'${name}\' has accepted your request for his book \'${title}\'. Please arrange handover and confirm on receive.";
+  static m9(name, title) => "User \'${name}\' offer you his book \'${title}\'. Please arrange handover and confirm on receive. Or reject in case you are not interested.";
 
-  static m10(name, title) => "Wait for user \'${name}\' to accept your request of his book \'${title}\'. Chat to facilitate.";
+  static m10(name, title) => "User \'${name}\' has accepted your request for his book \'${title}\'. Please arrange handover and confirm on receive.";
 
-  static m11(name, title) => "User \'${name}\' has rejected your request for his book \'${title}\'. You can chat to get explamations.";
+  static m11(name, title) => "Wait for user \'${name}\' to accept your request of his book \'${title}\'. Chat to facilitate.";
 
-  static m12(name, title) => "User \'${name}\' wish to return your book \'${title}\'. Please arrange handover.";
+  static m12(name, title) => "User \'${name}\' has rejected your request for his book \'${title}\'. You can chat to get explamations.";
 
-  static m13(amount) => "Top-up balance ${amount}";
+  static m13(name, title) => "User \'${name}\' wish to return your book \'${title}\'. Please arrange handover.";
 
-  static m14(distance) => "Distance: ${distance} km";
+  static m14(amount) => "Top-up balance ${amount}";
 
-  static m15(balance) => "MY BALANCE: ${balance}";
+  static m15(distance) => "Distance: ${distance} km";
 
-  static m16(amount) => "Enter amount not more than ${amount}";
+  static m16(balance) => "MY BALANCE: ${balance}";
 
-  static m17(total, month) => "Deposit for books: ${total}, monthly payment ${month}";
+  static m17(amount) => "Enter amount not more than ${amount}";
 
-  static m18(name, title) => "Your book \'${title}\' now with user \'${name}\'. Chat with him to remind about return.";
+  static m18(total, month) => "Deposit for books: ${total}, monthly payment ${month}";
 
-  static m19(count) => "My books at this user (${count})";
+  static m19(name, title) => "Your book \'${title}\' now with user \'${name}\'. Chat with him to remind about return.";
 
-  static m20(missing, total, month) => "Missing ${missing}. Deposit for books: ${total}, monthly payment ${month}";
+  static m20(count) => "My books at this user (${count})";
 
-  static m21(name, title) => "You\'ve offered book \'${title}\' to user \'${name}\'. Please chat to arrange handover.";
+  static m21(missing, total, month) => "Missing ${missing}. Deposit for books: ${total}, monthly payment ${month}";
 
-  static m22(name, title) => "User \'${name}\' confirmed handover of book \'${title}\'. You can see this book in your MY LENT books.";
+  static m22(name, title) => "You\'ve offered book \'${title}\' to user \'${name}\'. Please chat to arrange handover.";
 
-  static m23(name, title) => "User \'${name}\' rejected your offer for book \'${title}\'. You can chat to get details.";
+  static m23(name, title) => "User \'${name}\' confirmed handover of book \'${title}\'. You can see this book in your MY LENT books.";
 
-  static m24(name, title) => "User \'${name}\' request your book \'${title}\'. Please accept or reject. Chat for more details.";
+  static m24(name, title) => "User \'${name}\' rejected your offer for book \'${title}\'. You can chat to get details.";
 
-  static m25(name, title) => "Please arrange handover of book \'${title}\' to user \'${name}\'. Chat to coordinate.";
+  static m25(name, title) => "User \'${name}\' request your book \'${title}\'. Please accept or reject. Chat for more details.";
 
-  static m26(name, title) => "User \'${name}\' canceled request for your book \'${title}\'.";
+  static m26(name, title) => "Please arrange handover of book \'${title}\' to user \'${name}\'. Chat to coordinate.";
 
-  static m27(name, title) => "Handover of book \'${title}\' to user \'${name}\' confirmed. You can see this book in MY LENT books.";
+  static m27(name, title) => "User \'${name}\' canceled request for your book \'${title}\'.";
 
-  static m28(name, title) => "Arrange handover of book \'${title}\' to user \'${name}\'. Chat to facilitate.";
+  static m28(name, title) => "Handover of book \'${title}\' to user \'${name}\' confirmed. You can see this book in MY LENT books.";
 
-  static m29(name, title) => "User \'${name}\' confirmed handover of the book \'${title}\'.";
+  static m29(name, title) => "Arrange handover of book \'${title}\' to user \'${name}\'. Chat to facilitate.";
 
-  static m30(count) => "All his books (${count})";
+  static m30(name, title) => "User \'${name}\' confirmed handover of the book \'${title}\'.";
 
-  static m31(num) => "Receiving books (${num})";
+  static m31(count) => "All his books (${count})";
 
-  static m32(book) => "Can you give me \"${book}\"?";
+  static m32(num) => "Receiving books (${num})";
 
-  static m33(book) => "Can you send me \"${book}\"?";
+  static m33(book) => "Can you give me \"${book}\"?";
 
-  static m34(book) => "Хочу вернуть вам \"${book}\"?";
+  static m34(book) => "Can you send me \"${book}\"?";
 
-  static m35(book) => "Пожалуйста, верните книгу \"${book}\"?";
+  static m35(book) => "I\'d like to return \"${book}\"?";
 
-  static m36(num) => "Handover books (${num})";
+  static m36(book) => "Please, return me \"${book}\"?";
 
-  static m37(amount) => "Total shared: +${amount}";
+  static m37(num) => "Handover books (${num})";
 
-  static m38(count) => "${Intl.plural(count, zero: 'No bookshelves', one: '${count} bookshelf', other: '${count} bookshelves')}";
+  static m38(amount) => "Total shared: +${amount}";
 
-  static m39(amount) => "Deposit: ${amount}";
+  static m39(count) => "${Intl.plural(count, zero: 'No bookshelves', one: '${count} bookshelf', other: '${count} bookshelves')}";
 
-  static m40(amount) => "Monthly pay: ${amount}";
+  static m40(amount) => "Deposit: ${amount}";
 
-  static m41(balance) => "Balance: ${balance}";
+  static m41(amount) => "Monthly pay: ${amount}";
 
-  static m42(user) => "from ${user}";
+  static m42(balance) => "Balance: ${balance}";
 
-  static m43(count) => "${Intl.plural(count, zero: 'No wishes', one: '${count} wish', other: '${count} wishes')}";
+  static m43(user) => "from ${user}";
 
-  static m44(name, title) => "${name} wish to read your book \'${title}\'";
+  static m44(count) => "${Intl.plural(count, zero: 'No wishes', one: '${count} wish', other: '${count} wishes')}";
 
-  static m45(user) => "Book with ${user}";
+  static m45(name, title) => "${name} wish to read your book \'${title}\'";
+
+  static m46(user) => "Book with ${user}";
 
   final messages = _notInlinedMessages(_notInlinedMessages);
   static _notInlinedMessages(_) => <String, Function> {
@@ -131,23 +133,24 @@ class MessageLookup extends MessageLookupByLibrary {
     "bookByPost" : MessageLookupByLibrary.simpleMessage("Receive by post"),
     "bookCount" : m0,
     "bookDeleted" : MessageLookupByLibrary.simpleMessage("Book has been deleted from your library"),
-    "bookImageLabel" : MessageLookupByLibrary.simpleMessage("Ссылка на фото обложки:"),
+    "bookImageLabel" : MessageLookupByLibrary.simpleMessage("Link to book cover image:"),
     "bookInLibrary" : MessageLookupByLibrary.simpleMessage("Find in library via"),
-    "bookLanguage" : m1,
+    "bookIncome" : m1,
+    "bookLanguage" : m2,
     "bookNotFound" : MessageLookupByLibrary.simpleMessage("This book is not found in Biblosphere. Add it to your wishlist and we\'ll inform you once it\'s available."),
-    "bookOwner" : m2,
-    "bookPrice" : m3,
-    "bookPriceHint" : MessageLookupByLibrary.simpleMessage("Введите цену книги"),
-    "bookPriceLabel" : MessageLookupByLibrary.simpleMessage("Цена книги"),
-    "bookRent" : m4,
-    "bookWith" : m5,
+    "bookOwner" : m3,
+    "bookPrice" : m4,
+    "bookPriceHint" : MessageLookupByLibrary.simpleMessage("Enter book price"),
+    "bookPriceLabel" : MessageLookupByLibrary.simpleMessage("Book price"),
+    "bookRent" : m5,
+    "bookWith" : m6,
     "books" : MessageLookupByLibrary.simpleMessage("Books"),
-    "booksOfUserWithMe" : m6,
+    "booksOfUserWithMe" : m7,
     "bookshelves" : MessageLookupByLibrary.simpleMessage("Bookshelves"),
     "borrow" : MessageLookupByLibrary.simpleMessage("Borrow"),
-    "borrowedBookText" : m7,
+    "borrowedBookText" : m8,
     "buttonConfirmBooks" : MessageLookupByLibrary.simpleMessage("Confirm handover ✓"),
-    "buttonGivenBooks" : MessageLookupByLibrary.simpleMessage("Книги отдал ✓"),
+    "buttonGivenBooks" : MessageLookupByLibrary.simpleMessage("Books handed over ✓"),
     "buttonPayin" : MessageLookupByLibrary.simpleMessage("Get balance"),
     "buttonTransfer" : MessageLookupByLibrary.simpleMessage("Transfer"),
     "buyBook" : MessageLookupByLibrary.simpleMessage("Buy on"),
@@ -158,29 +161,29 @@ class MessageLookup extends MessageLookupByLibrary {
     "cartConfirmHandover" : MessageLookupByLibrary.simpleMessage("Confirm that book(s) given"),
     "cartConfirmReceived" : MessageLookupByLibrary.simpleMessage("Confirm that books received"),
     "cartMakeApointment" : MessageLookupByLibrary.simpleMessage("Make an apointment"),
-    "cartOfferConfirmReject" : m8,
-    "cartRequestAccepted" : m9,
-    "cartRequestCancel" : m10,
-    "cartRequestRejected" : m11,
+    "cartOfferConfirmReject" : m9,
+    "cartRequestAccepted" : m10,
+    "cartRequestCancel" : m11,
+    "cartRequestRejected" : m12,
     "cartRequesterHasToConfirm" : MessageLookupByLibrary.simpleMessage("Your peer has to accept books"),
     "cartRequesterHasToTopup" : MessageLookupByLibrary.simpleMessage("Your peer has to top-up his balance"),
-    "cartReturnConfirm" : m12,
-    "cartTopup" : m13,
+    "cartReturnConfirm" : m13,
+    "cartTopup" : m14,
     "chat" : MessageLookupByLibrary.simpleMessage("CHAT"),
-    "chatStatusCompleteFrom" : MessageLookupByLibrary.simpleMessage("Книги переданы"),
-    "chatStatusCompleteTo" : MessageLookupByLibrary.simpleMessage("Книги получены"),
-    "chatStatusHandoverFrom" : MessageLookupByLibrary.simpleMessage("Завершите передачу книг"),
-    "chatStatusHandoverTo" : MessageLookupByLibrary.simpleMessage("Подтвердите получение книг"),
-    "chatStatusInitialFrom" : MessageLookupByLibrary.simpleMessage("Отдайте книги"),
-    "chatStatusInitialTo" : MessageLookupByLibrary.simpleMessage("Получите книги"),
+    "chatStatusCompleteFrom" : MessageLookupByLibrary.simpleMessage("Book(s) handed over"),
+    "chatStatusCompleteTo" : MessageLookupByLibrary.simpleMessage("Book(s) accepted"),
+    "chatStatusHandoverFrom" : MessageLookupByLibrary.simpleMessage("Complete book(s) handover"),
+    "chatStatusHandoverTo" : MessageLookupByLibrary.simpleMessage("Confirm book(s) handover"),
+    "chatStatusInitialFrom" : MessageLookupByLibrary.simpleMessage("Return book"),
+    "chatStatusInitialTo" : MessageLookupByLibrary.simpleMessage("Get book(s)"),
     "chatbotWelcome" : MessageLookupByLibrary.simpleMessage("Hello! I\'m chat-bot of Biblosphere. Please ask me any questions about this app."),
     "chipBorrowed" : MessageLookupByLibrary.simpleMessage("Borrowed"),
-    "chipHisBooks" : MessageLookupByLibrary.simpleMessage("Его книги"),
-    "chipHisBooksWithMe" : MessageLookupByLibrary.simpleMessage("Его книги у меня"),
+    "chipHisBooks" : MessageLookupByLibrary.simpleMessage("His(her) books"),
+    "chipHisBooksWithMe" : MessageLookupByLibrary.simpleMessage("His(her) books with me"),
     "chipLeasing" : MessageLookupByLibrary.simpleMessage("Spent"),
     "chipLent" : MessageLookupByLibrary.simpleMessage("Lent"),
     "chipMyBooks" : MessageLookupByLibrary.simpleMessage("My books"),
-    "chipMyBooksWithHim" : MessageLookupByLibrary.simpleMessage("Мои книги у него"),
+    "chipMyBooksWithHim" : MessageLookupByLibrary.simpleMessage("My books with him(her)"),
     "chipPayin" : MessageLookupByLibrary.simpleMessage("Pay In"),
     "chipPayout" : MessageLookupByLibrary.simpleMessage("Pay Out"),
     "chipReferrals" : MessageLookupByLibrary.simpleMessage("Referrals"),
@@ -190,8 +193,8 @@ class MessageLookup extends MessageLookupByLibrary {
     "confirmBlockUser" : MessageLookupByLibrary.simpleMessage("Do you want to block this user?"),
     "confirmReportPhoto" : MessageLookupByLibrary.simpleMessage("Do you want to report this photo as abusive?"),
     "deleteShelf" : MessageLookupByLibrary.simpleMessage("Delete your bookshelf"),
-    "displayCurrency" : MessageLookupByLibrary.simpleMessage("Валюта отображения:"),
-    "distanceLine" : m14,
+    "displayCurrency" : MessageLookupByLibrary.simpleMessage("Display currency:"),
+    "distanceLine" : m15,
     "drawerHeader" : MessageLookupByLibrary.simpleMessage("Choose mode"),
     "earn" : MessageLookupByLibrary.simpleMessage("Earn"),
     "emptyAmount" : MessageLookupByLibrary.simpleMessage("Empty amount not accepted"),
@@ -199,20 +202,20 @@ class MessageLookup extends MessageLookupByLibrary {
     "exceedAmount" : MessageLookupByLibrary.simpleMessage("Amount exceed available balance"),
     "explore" : MessageLookupByLibrary.simpleMessage("Explore"),
     "favorite" : MessageLookupByLibrary.simpleMessage("Add shelf to favorite"),
-    "financeTitle" : m15,
+    "financeTitle" : m16,
     "findBook" : MessageLookupByLibrary.simpleMessage("Find Book"),
     "findbookTitle" : MessageLookupByLibrary.simpleMessage("FIND BOOK"),
     "hintAuthorTitle" : MessageLookupByLibrary.simpleMessage("Author or title"),
     "hintBookDetails" : MessageLookupByLibrary.simpleMessage("Change book info"),
     "hintChatOpen" : MessageLookupByLibrary.simpleMessage("Start conversation"),
     "hintDeleteBook" : MessageLookupByLibrary.simpleMessage("Delete book"),
-    "hintNotMore" : m16,
+    "hintNotMore" : m17,
     "hintOutptAcount" : MessageLookupByLibrary.simpleMessage("Enter your Stellar account for pay out"),
     "hintRequestReturn" : MessageLookupByLibrary.simpleMessage("Ask for return"),
     "hintReturn" : MessageLookupByLibrary.simpleMessage("Return book"),
     "hintShareBook" : MessageLookupByLibrary.simpleMessage("Share link"),
     "ifNotFound" : MessageLookupByLibrary.simpleMessage("Add book to wishlist if not found"),
-    "imageLinkHint" : MessageLookupByLibrary.simpleMessage("Скопируйте ссылку на обложку книги"),
+    "imageLinkHint" : MessageLookupByLibrary.simpleMessage("Copy link to bookcover image"),
     "importToBooks" : MessageLookupByLibrary.simpleMessage("Import to available books:"),
     "importToWishlist" : MessageLookupByLibrary.simpleMessage("Import to Wishlist:"),
     "importYouBooks" : MessageLookupByLibrary.simpleMessage("Import your books to Biblosphere"),
@@ -230,8 +233,8 @@ class MessageLookup extends MessageLookupByLibrary {
     "introSurfHint" : MessageLookupByLibrary.simpleMessage("App shows bookcases in 200 km around you sorted by distance. Get an access to a wide variety of books."),
     "isbnNotFound" : MessageLookupByLibrary.simpleMessage("Book is not found by ISBN"),
     "km" : MessageLookupByLibrary.simpleMessage(" km"),
-    "leaseAgreement" : m17,
-    "lentBookText" : m18,
+    "leaseAgreement" : m18,
+    "lentBookText" : m19,
     "linkCopied" : MessageLookupByLibrary.simpleMessage("Link copied to clipboard"),
     "linkToGoodreads" : MessageLookupByLibrary.simpleMessage("Link your Goodreads"),
     "linkYourAccount" : MessageLookupByLibrary.simpleMessage("Link your Goodreads account"),
@@ -255,7 +258,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "myBooks" : MessageLookupByLibrary.simpleMessage("My books"),
     "myBooksItem" : MessageLookupByLibrary.simpleMessage("My books"),
     "myBooksTitle" : MessageLookupByLibrary.simpleMessage("MY BOOKS"),
-    "myBooksWithUser" : m19,
+    "myBooksWithUser" : m20,
     "myBookshelvesItem" : MessageLookupByLibrary.simpleMessage("My bookshelves"),
     "myBookshelvesTitle" : MessageLookupByLibrary.simpleMessage("MY BOOKSHELVES"),
     "myBorrowedBooksItem" : MessageLookupByLibrary.simpleMessage("Borrowed books"),
@@ -282,7 +285,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "noReferrals" : MessageLookupByLibrary.simpleMessage("No referrals"),
     "noWishes" : MessageLookupByLibrary.simpleMessage("You don\'t have any books in your wishlist. Add it manually or import from Goodreads."),
     "notBooks" : MessageLookupByLibrary.simpleMessage("Hey, this does not look like a bookshelf to me."),
-    "notSufficientForAgreement" : m20,
+    "notSufficientForAgreement" : m21,
     "nothingToSend" : MessageLookupByLibrary.simpleMessage("Nothing to send"),
     "ok" : MessageLookupByLibrary.simpleMessage("Ok"),
     "opInAppPurchase" : MessageLookupByLibrary.simpleMessage("Pay In (In-App)"),
@@ -292,50 +295,50 @@ class MessageLookup extends MessageLookupByLibrary {
     "opReferral" : MessageLookupByLibrary.simpleMessage("Referrals pay"),
     "opReward" : MessageLookupByLibrary.simpleMessage("Reward for book"),
     "outbox" : MessageLookupByLibrary.simpleMessage("Books you are giving away"),
-    "outboxOfferAccepted" : m21,
-    "outboxOfferConfirmed" : m22,
-    "outboxOfferRejected" : m23,
-    "outboxRequestAcceptReject" : m24,
-    "outboxRequestAccepted" : m25,
-    "outboxRequestCanceled" : m26,
-    "outboxRequestConfirmed" : m27,
-    "outboxReturnAccepted" : m28,
-    "outboxReturnConfirmed" : m29,
+    "outboxOfferAccepted" : m22,
+    "outboxOfferConfirmed" : m23,
+    "outboxOfferRejected" : m24,
+    "outboxRequestAcceptReject" : m25,
+    "outboxRequestAccepted" : m26,
+    "outboxRequestCanceled" : m27,
+    "outboxRequestConfirmed" : m28,
+    "outboxReturnAccepted" : m29,
+    "outboxReturnConfirmed" : m30,
     "outputStellarAccount" : MessageLookupByLibrary.simpleMessage("Stellar account for Pay Out:"),
     "outputStellarMemo" : MessageLookupByLibrary.simpleMessage("Memo for payout via Stellar:"),
     "paymentError" : MessageLookupByLibrary.simpleMessage("Something went wrong, contact administrator"),
     "people" : MessageLookupByLibrary.simpleMessage("People"),
-    "profileUserBooks" : m30,
+    "profileUserBooks" : m31,
     "read" : MessageLookupByLibrary.simpleMessage("Read"),
-    "receiveBooks" : m31,
+    "receiveBooks" : m32,
     "recentWishes" : MessageLookupByLibrary.simpleMessage("Recent wishes:"),
     "referralLink" : MessageLookupByLibrary.simpleMessage("Your referral link:"),
     "referralTitle" : MessageLookupByLibrary.simpleMessage("MY REFERRALS"),
     "reportShelf" : MessageLookupByLibrary.simpleMessage("Report an objectionable content"),
     "reportedPhoto" : MessageLookupByLibrary.simpleMessage("This photo is reported as an objectionable content."),
-    "requestBook" : m32,
-    "requestPost" : m33,
-    "requestReturn" : m34,
-    "requestReturnByOwner" : m35,
+    "requestBook" : m33,
+    "requestPost" : m34,
+    "requestReturn" : m35,
+    "requestReturnByOwner" : m36,
     "scanISBN" : MessageLookupByLibrary.simpleMessage("Scan ISBN"),
     "seeLocation" : MessageLookupByLibrary.simpleMessage("See location"),
-    "selectDisplayCurrency" : MessageLookupByLibrary.simpleMessage("Выберите валюту отображения:"),
-    "sendBooks" : m36,
+    "selectDisplayCurrency" : MessageLookupByLibrary.simpleMessage("Choose display currency:"),
+    "sendBooks" : m37,
     "settings" : MessageLookupByLibrary.simpleMessage("Settings"),
     "share" : MessageLookupByLibrary.simpleMessage("Share"),
     "shareBooks" : MessageLookupByLibrary.simpleMessage("I\'m sharing my books on Biblosphere. Join me to read it."),
     "shareBookshelf" : MessageLookupByLibrary.simpleMessage("That\'s my bookshelf. Join Biblosphere to share books and find like-minded people."),
     "shareShelf" : MessageLookupByLibrary.simpleMessage("Share your bookshelf"),
     "shareWishlist" : MessageLookupByLibrary.simpleMessage("I\'m sharing my book wishlist on Biblosphere. Join me."),
-    "sharedFeeLine" : m37,
+    "sharedFeeLine" : m38,
     "sharingMotto" : MessageLookupByLibrary.simpleMessage("Take books from people instead of buying"),
     "shelfAdded" : MessageLookupByLibrary.simpleMessage("New bookshelf has been added"),
-    "shelfCount" : m38,
+    "shelfCount" : m39,
     "shelfDeleted" : MessageLookupByLibrary.simpleMessage("Bookshelf has been deleted"),
     "shelfSettings" : MessageLookupByLibrary.simpleMessage("Bookshelf settings"),
     "shelves" : MessageLookupByLibrary.simpleMessage("Shelves"),
-    "showDeposit" : m39,
-    "showRent" : m40,
+    "showDeposit" : m40,
+    "showRent" : m41,
     "snackBookAddedToCart" : MessageLookupByLibrary.simpleMessage("Book was added to the cart"),
     "snackBookAlreadyInTransit" : MessageLookupByLibrary.simpleMessage("Book is booked by another user. Choose another one."),
     "snackBookImageChanged" : MessageLookupByLibrary.simpleMessage("New cover image is set"),
@@ -359,14 +362,14 @@ class MessageLookup extends MessageLookupByLibrary {
     "supportTitlePayout" : MessageLookupByLibrary.simpleMessage("Payouts"),
     "supportTitleReferrals" : MessageLookupByLibrary.simpleMessage("Referral program"),
     "title" : MessageLookupByLibrary.simpleMessage("Biblosphere"),
-    "titleBookSettings" : MessageLookupByLibrary.simpleMessage("О КНИГЕ"),
+    "titleBookSettings" : MessageLookupByLibrary.simpleMessage("ABOUT BOOK"),
     "titleGetBook" : MessageLookupByLibrary.simpleMessage("GET BOOK"),
     "titleMessages" : MessageLookupByLibrary.simpleMessage("MESSAGES"),
     "titleReceiveBooks" : MessageLookupByLibrary.simpleMessage("RECEIVING BOOKS"),
     "titleSendBooks" : MessageLookupByLibrary.simpleMessage("HANDOVER BOOKS"),
     "titleSettings" : MessageLookupByLibrary.simpleMessage("SETTINGS"),
     "titleSupport" : MessageLookupByLibrary.simpleMessage("SUPPORT"),
-    "titleUserBooks" : MessageLookupByLibrary.simpleMessage("ОБМЕН КНИГАМИ"),
+    "titleUserBooks" : MessageLookupByLibrary.simpleMessage("BOOK EXCHENGE"),
     "transitAccept" : MessageLookupByLibrary.simpleMessage("Accept"),
     "transitCancel" : MessageLookupByLibrary.simpleMessage("Cancel"),
     "transitConfirm" : MessageLookupByLibrary.simpleMessage("Confirm"),
@@ -375,20 +378,20 @@ class MessageLookup extends MessageLookupByLibrary {
     "transitReject" : MessageLookupByLibrary.simpleMessage("Reject"),
     "typeMsg" : MessageLookupByLibrary.simpleMessage("Type your message..."),
     "useCurrentLocation" : MessageLookupByLibrary.simpleMessage("Use current location for import"),
-    "userBalance" : m41,
-    "userHave" : m42,
+    "userBalance" : m42,
+    "userHave" : m43,
     "welcome" : MessageLookupByLibrary.simpleMessage("Welcome"),
     "wishAdded" : MessageLookupByLibrary.simpleMessage("Book has been added to your wishlist"),
     "wishAlreadyThere" : MessageLookupByLibrary.simpleMessage("This book is already in your wishlist"),
-    "wishCount" : m43,
+    "wishCount" : m44,
     "wishDeleted" : MessageLookupByLibrary.simpleMessage("Book has been deleted from your wishlist"),
-    "wishToRead" : m44,
+    "wishToRead" : m45,
     "wished" : MessageLookupByLibrary.simpleMessage("Wished"),
     "wrongAccount" : MessageLookupByLibrary.simpleMessage("Wrong account"),
-    "wrongImageUrl" : MessageLookupByLibrary.simpleMessage("Неверная ссылка"),
+    "wrongImageUrl" : MessageLookupByLibrary.simpleMessage("Wrong link"),
     "youBorrowThisBook" : MessageLookupByLibrary.simpleMessage("You borrowed this book"),
     "youHaveThisBook" : MessageLookupByLibrary.simpleMessage("You keep this book"),
-    "youLentThisBook" : m45,
+    "youLentThisBook" : m46,
     "youTransitThisBook" : MessageLookupByLibrary.simpleMessage("This book is in transit"),
     "youWishThisBook" : MessageLookupByLibrary.simpleMessage("This book in your wishlist"),
     "yourBiblosphere" : MessageLookupByLibrary.simpleMessage("Your Biblosphere"),

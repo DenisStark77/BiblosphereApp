@@ -53,6 +53,7 @@ class BiblosphereColorScheme {
   Color bar = new Color(0xffcbc1c4);
   Color button = new Color(0xffd3c0c0);
   Color buttonText = Colors.white;
+  Color buttonBorder = Colors.grey;
   Color chatMy = new Color(0xffdedede);
   Color chatMyText = Colors.black;
   Color chatHis = new Color(0xff344d64); // new Color(0xff829fb9);
@@ -74,6 +75,7 @@ class BiblosphereColorScheme {
       this.bar,
       this.button,
       this.buttonText,
+      this.buttonBorder,
       this.chatMy,
       this.chatMyText,
       this.chatHis,
@@ -85,29 +87,22 @@ class BiblosphereColorScheme {
 }
 
 BiblosphereColorScheme C = new BiblosphereColorScheme(
-  titleBackground: Color(0xff8eaac3), //0xff344d64),
+  titleBackground: Color(0xffb5dfff), //0xff344d64),
   titleText: Colors.black, //0xff344d64),
-  // titleBackground: Color(0xffb5ced6), nice light blue
   background: Color(0xffdeedf9),
-  // background: Color(0xfff4f4f3), almost white
   cardBackground: Color(0xfff4f4f3),
-  // cardBackground: Color(0xffd8dede), // cold grey
   bar: Color(0xffebe1e1),
-  button: Color(0xff6789a8),
+  button: Color(0xffbde3ff), // light
   buttonText: Colors.white,
-  //button: Color(0xffc7d2d1),
+  buttonBorder: Colors.grey[600],
   chatMy: Color(0xffd8dede),
   chatMyText: Colors.black,
-  // chatMy: Color(0xffbde1de),
   chatHis: Colors.white,
   chatHisText: Colors.black,
-  //chatHis: Color(0xffb2c7cb),
-  chipSelected: Color(0xff6789a8),
-  //chipSelected: Color(0xffc4c4c4), // pinkish grey
-  chipUnselected: Color(0xffdeedf9),
+  chipSelected: Color(0xffdeedf9),
+  chipUnselected: Color(0xffbde3ff),
   chipText: Colors.black,
   inputHints: Colors.black,
-  //chipUnselected: Color(0xffe3e6e5)
 );
 
 Firestore db = Firestore.instance;

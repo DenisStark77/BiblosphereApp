@@ -640,7 +640,6 @@ class _ChatState extends State<Chat> {
                         showCart = !showCart;
                       });
                     },
-                    //TODO: Change tooltip
                     tooltip: S.of(context).cart,
                     icon: Stack(children: <Widget>[
                       new Container(
@@ -1205,6 +1204,7 @@ class ChatScreenState extends State<ChatScreen> {
           .limit(1)
           .getDocuments()
           .then((snap) {
+            if (snap.documents.length == 0)
         injectChatbotMessage(
             context, B.user.id, chat, S.of(context).chatbotWelcome);
       });
@@ -1318,6 +1318,8 @@ class ChatScreenState extends State<ChatScreen> {
   }
 
   Widget buildItem(int index, DocumentSnapshot document) {
+    double width = MediaQuery.of(context).size.width * 0.80;
+
     if (document['idFrom'] == myId) {
       // Right (my message)
       return Row(
@@ -1329,8 +1331,8 @@ class ChatScreenState extends State<ChatScreen> {
                     document['content'],
                     style: TextStyle(color: C.chatMyText),
                   ),
-                  padding: EdgeInsets.fromLTRB(15.0, 10.0, 15.0, 10.0),
-                  width: 200.0,
+                  padding: EdgeInsets.fromLTRB(10.0, 10.0, 10.0, 10.0),
+                  width: width,
                   decoration: BoxDecoration(
                       color: C.chatMy,
                       borderRadius: BorderRadius.circular(8.0)),
@@ -1344,7 +1346,7 @@ class ChatScreenState extends State<ChatScreen> {
                       child: Material(
                         child: CachedNetworkImage(
                           imageUrl: document['content'],
-                          width: 200.0,
+                          width: width,
                           height: 200.0,
                           fit: BoxFit.cover,
                         ),
@@ -1382,8 +1384,8 @@ class ChatScreenState extends State<ChatScreen> {
                           document['content'],
                           style: TextStyle(color: C.chatHisText),
                         ),
-                        padding: EdgeInsets.fromLTRB(15.0, 10.0, 15.0, 10.0),
-                        width: 200.0,
+                        padding: EdgeInsets.fromLTRB(10.0, 10.0, 10.0, 10.0),
+                        width: width,
                         decoration: BoxDecoration(
                             color: C.chatHis,
                             borderRadius: BorderRadius.circular(8.0)),
@@ -1394,7 +1396,7 @@ class ChatScreenState extends State<ChatScreen> {
                             child: Material(
                               child: CachedNetworkImage(
                                 imageUrl: document['content'],
-                                width: 200.0,
+                                width: width,
                                 height: 200.0,
                                 fit: BoxFit.cover,
                               ),

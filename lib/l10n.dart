@@ -1046,7 +1046,7 @@ class S {
   }
 
   String bookRent(month) {
-    return Intl.message('Аренда: $month в месяц',
+    return Intl.message('Цена: $month в месяц',
         name: 'bookRent', args: [month]);
   }
 
@@ -1277,6 +1277,11 @@ class S {
 
   String get supportSignature {
     return Intl.message('Денис Старк', name: 'supportSignature');
+  }
+
+  String bookIncome(month) {
+    return Intl.message('Доход: $month в месяц',
+        name: 'bookIncome', args: [month]);
   }
 }
 
