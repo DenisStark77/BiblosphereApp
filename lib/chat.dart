@@ -974,7 +974,8 @@ class _ChatState extends State<Chat> {
               .buyConsumable(purchaseParam: purchaseParam);
         },
         shape: new RoundedRectangleBorder(
-            borderRadius: new BorderRadius.circular(20.0)),
+            borderRadius: new BorderRadius.circular(15.0),
+                              side: BorderSide(color: C.buttonBorder)),
       );
     else if (chat.toMe &&
         chat.status == Messages.Handover &&
@@ -991,7 +992,8 @@ class _ChatState extends State<Chat> {
           await transferBooks(partner);
         },
         shape: new RoundedRectangleBorder(
-            borderRadius: new BorderRadius.circular(20.0)),
+            borderRadius: new BorderRadius.circular(15.0),
+                              side: BorderSide(color: C.buttonBorder)),
       );
     else if (chat.fromMe &&
         chat.status == Messages.Initial &&
@@ -1009,7 +1011,8 @@ class _ChatState extends State<Chat> {
           refreshChat();
         },
         shape: new RoundedRectangleBorder(
-            borderRadius: new BorderRadius.circular(20.0)),
+            borderRadius: new BorderRadius.circular(15.0),
+                              side: BorderSide(color: C.buttonBorder)),
       );
 
     return Container(width: 0.0, height: 0.0);

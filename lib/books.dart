@@ -410,8 +410,8 @@ class _FindBookWidgetState extends State<FindBookWidget> {
                                       });
                               },
                               shape: new RoundedRectangleBorder(
-                                  borderRadius:
-                                      new BorderRadius.circular(20.0)),
+                                  borderRadius: new BorderRadius.circular(15.0),
+                              side: BorderSide(color: C.buttonBorder)),
                             )),
                       ],
                     ),
@@ -464,7 +464,8 @@ class _FindBookWidgetState extends State<FindBookWidget> {
                                   });
                           },
                           shape: new RoundedRectangleBorder(
-                              borderRadius: new BorderRadius.circular(20.0)),
+                              borderRadius: new BorderRadius.circular(15.0),
+                              side: BorderSide(color: C.buttonBorder)),
                         ),
                       ],
                     ),
