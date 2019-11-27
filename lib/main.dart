@@ -596,11 +596,22 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       await _googleSignIn.signOut();
     }
 
+    // If not connected to Firebase but signed in to Google then sign out
+    if (_googleSignIn.currentUser != null && ! await _googleSignIn.isSignedIn()) {
+      print('!!!DEBUG: Loging out from Google if currentUser is not null');
+      await _googleSignIn.signOut();
+    }
+
     try {
+      print('!!!DEBUG: SignIn: ${await _googleSignIn.isSignedIn()} ${_googleSignIn.currentUser}');
+      
       GoogleSignInAccount googleSignInAccount = await _googleSignIn.signIn();
+      print('!!!DEBUG: SignIn account: ${googleSignInAccount}');
+      print('!!!DEBUG: SignIn auth: ${await googleSignInAccount.authentication}');
       if (googleSignInAccount != null) {
         GoogleSignInAuthentication googleAuth =
             await googleSignInAccount.authentication;
+        print('!!!DEBUG: SignIn authentication: ${googleAuth} ${googleAuth.accessToken}');
         if (googleAuth.accessToken != null) {
           AuthCredential credential = GoogleAuthProvider.getCredential(
               idToken: googleAuth.idToken, accessToken: googleAuth.accessToken);
