@@ -226,7 +226,7 @@ class S {
   }
 
   String get welcome {
-    return Intl.message('Welcome', name: 'welcome');
+    return Intl.message('WELCOME', name: 'welcome');
   }
 
   String get shareBooks {

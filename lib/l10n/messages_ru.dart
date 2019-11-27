@@ -380,7 +380,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "useCurrentLocation" : MessageLookupByLibrary.simpleMessage("Использовать текущее местоположение для загрузки"),
     "userBalance" : m42,
     "userHave" : m43,
-    "welcome" : MessageLookupByLibrary.simpleMessage("Добро пожаловать"),
+    "welcome" : MessageLookupByLibrary.simpleMessage("ДОБРО ПОЖАЛОВАТЬ"),
     "wishAdded" : MessageLookupByLibrary.simpleMessage("Книга была добавлена в список желаемых книг"),
     "wishAlreadyThere" : MessageLookupByLibrary.simpleMessage("Эта книга уже есть в вашем списке желаний"),
     "wishCount" : m44,

@@ -3,8 +3,11 @@ import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_ui/flutter_firebase_ui.dart';
-import 'package:firebase_ui/utils.dart';
+import 'package:flutter_facebook_login/flutter_facebook_login.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:flutter_signin_button/flutter_signin_button.dart';
+//import 'package:firebase_ui/flutter_firebase_ui.dart';
+//import 'package:firebase_ui/utils.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:geolocator/geolocator.dart';
@@ -17,7 +20,7 @@ import 'package:flutter/gestures.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
-// Debug analytics: 
+// Debug analytics:
 // adb shell setprop debug.firebase.analytics.app <package_name>
 // adb shell setprop debug.firebase.analytics.app .none.
 
@@ -34,6 +37,8 @@ import 'package:biblosphere/l10n.dart';
 
 //TODO: Credit page with link to author of icons:  Icon made by Freepik (http://www.freepik.com/) from www.flaticon.com
 
+final GoogleSignIn _googleSignIn = GoogleSignIn(scopes: ['email']);
+final FacebookLogin _facebookLogin = FacebookLogin();
 final FirebaseAuth _auth = FirebaseAuth.instance;
 
 void main() async {
@@ -106,7 +111,28 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
 
     WidgetsBinding.instance.addObserver(this);
 
-    _checkCurrentUser();
+    _checkInitialState();
+
+    _listener =
+        FirebaseAuth.instance.onAuthStateChanged.listen((FirebaseUser user) {
+      print('!!!DEBUG: listener on auth change ${user}');
+
+      firebaseUser = user;
+
+      if (firebaseUser != null) {
+        firebaseUser.getIdToken(refresh: true);
+        FirebaseAnalytics().setUserId(firebaseUser.uid);
+
+        // That's async function so need to refresh widget as soon as it completes
+        _initUserRecord().then((_) {
+          setState(() {});
+        });
+      } else {
+        setState(() {
+          B.user = null;
+        });
+      }
+    });
 
     _firebaseMessaging.configure(
       onMessage: (Map<String, dynamic> message) {
@@ -154,27 +180,23 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
 
             // Create an operation and update user balance
             await payment(
-                user: B.user,
-                amount: amount,
-                type: OperationType.InputInApp);
+                user: B.user, amount: amount, type: OperationType.InputInApp);
 
             FirebaseAnalytics().logEvent(
-                                name: 'ecommerce_purchase',
-                                parameters: <String, dynamic>{
-                                  'amount': amount,
-                                  'channel': 'in-app',
-                                  'user': B.user.id,
-                                  'locality': B.locality,
-                                  'country': B.country,
-                                  'latitude': B.position.latitude,
-                                  'longitude': B.position.longitude
-});
+                name: 'ecommerce_purchase',
+                parameters: <String, dynamic>{
+                  'amount': amount,
+                  'channel': 'in-app',
+                  'user': B.user.id,
+                  'locality': B.locality,
+                  'country': B.country,
+                  'latitude': B.position.latitude,
+                  'longitude': B.position.longitude
+                });
           }
         });
       });
     }
-
-    getPaymentContext();
   }
 
   @override
@@ -196,7 +218,10 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
           // Update position after the resume
           B.user = B.user..position = position;
         });
-        Geolocator().placemarkFromCoordinates(position.latitude, position.longitude, localeIdentifier: 'en').then((placemarks) {
+        Geolocator()
+            .placemarkFromCoordinates(position.latitude, position.longitude,
+                localeIdentifier: 'en')
+            .then((placemarks) {
           B.locality = placemarks.first.locality;
           B.country = placemarks.first.country;
         });
@@ -204,8 +229,8 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     }
   }
 
-  void _checkCurrentUser() async {
-    print('!!!DEBUG: check current user ${B.user}');
+  void _checkInitialState() async {
+    print('!!!DEBUG: check initial state ${B.user}');
 
     SharedPreferences prefs = await SharedPreferences.getInstance();
 
@@ -220,29 +245,6 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       await prefs.setBool('firstRun', false);
       firstRun = false;
     }
-
-    firebaseUser = await _auth.currentUser();
-
-    firebaseUser?.getIdToken(refresh: true);
-
-    _listener = _auth.onAuthStateChanged.listen((FirebaseUser user) {
-        print('!!!DEBUG: listener on auth change ${user}');
-
-        firebaseUser = user;
-
-        if (firebaseUser != null) {
-          FirebaseAnalytics().setUserId(firebaseUser.uid);
-
-          // That's async function so need to refresh widget as soon as it completes
-          _initUserRecord().then((_) {
-            setState(() {});
-          });
-        } else {
-            setState(() {
-              B.user = null;
-            });
-        }
-    });
   }
 
   Future<void> _initUserRecord() async {
@@ -250,9 +252,14 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       if (firebaseUser == null)
         throw "CurrentUserId is null, login failed or not completed";
 
+      getPaymentContext();
+
       final position = await currentPosition();
 
-      Geolocator().placemarkFromCoordinates(position.latitude, position.longitude, localeIdentifier: 'en').then((placemarks) {
+      Geolocator()
+          .placemarkFromCoordinates(position.latitude, position.longitude,
+              localeIdentifier: 'en')
+          .then((placemarks) {
         B.locality = placemarks.first.locality;
         B.country = placemarks.first.country;
       });
@@ -263,8 +270,12 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
           photo: firebaseUser.photoUrl,
           position: position);
 
-
       Wallet wallet = new Wallet(id: firebaseUser.uid);
+
+      setState(() {
+        B.user = user;
+        B.wallet = wallet;
+      });
 
       // Check if user record exist
       final DocumentSnapshot userSnap = await user.ref.get();
@@ -279,8 +290,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         // Update user fields from Firestore
         user = User.fromJson(userSnap.data);
 
-        if (user.currency != null &&
-            xlmRates[B.currency] != null) {
+        if (user.currency != null && xlmRates[B.currency] != null) {
           B.currency = user.currency;
         }
 
@@ -296,7 +306,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         }
       }
 
-      // TODO: Cancel subscription befor log out (Exception PERMISSION_DENIED)
+      // TODO: Cancel subscription before log out (Exception PERMISSION_DENIED)
       _walletSubscription =
           wallet.ref.snapshots().listen((DocumentSnapshot doc) {
         setState(() {
@@ -361,7 +371,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         //primaryColorLight: C.title,
         chipTheme: ChipThemeData(
             backgroundColor: C.chipUnselected, //C.chipUnselected,
-            selectedColor: C.chipSelected,//C.chipSelected,
+            selectedColor: C.chipSelected, //C.chipSelected,
             disabledColor: Colors.red, // TODO: define color
             secondarySelectedColor: Colors.black, // TODO: define color
             labelPadding: EdgeInsets.all(0.0),
@@ -369,9 +379,12 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
             shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(13.0),
                 side: BorderSide(color: C.buttonBorder)),
-            labelStyle: TextStyle(fontSize: 14.0, fontWeight: FontWeight.w300, color: C.chipText),
-            secondaryLabelStyle:
-                TextStyle(fontSize: 14.0, fontWeight: FontWeight.w200, color: Colors.white),
+            labelStyle: TextStyle(
+                fontSize: 14.0, fontWeight: FontWeight.w300, color: C.chipText),
+            secondaryLabelStyle: TextStyle(
+                fontSize: 14.0,
+                fontWeight: FontWeight.w200,
+                color: Colors.white),
             brightness: Brightness.light),
         textTheme: TextTheme(
           headline: TextStyle(fontSize: 48.0, fontWeight: FontWeight.w700),
@@ -416,6 +429,82 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
             prefs.setBool('skipIntro', true);
           });
         } else if (B.user == null) {
+          return new Scaffold(
+              appBar: AppBar(
+                  title: Text(S.of(context).welcome,
+                      style: Theme.of(context).textTheme.title),
+                  centerTitle: true),
+              body: Center(
+                  child: Column(children: <Widget>[
+                Container(
+                    padding: EdgeInsets.fromLTRB(5.0, 20.0, 5.0, 20.0),
+                    child: RichText(
+                      textAlign: TextAlign.center,
+                      text: new TextSpan(
+                        style: Theme.of(context).textTheme.body1,
+                        children: [
+                          new TextSpan(
+                            text: S.of(context).loginAgree1,
+                            style: new TextStyle(color: Colors.black),
+                          ),
+                          new TextSpan(
+                            text: S.of(context).loginAgree2,
+                            style: new TextStyle(
+                                color: Colors.blue,
+                                decoration: TextDecoration.underline),
+                            recognizer: new TapGestureRecognizer()
+                              ..onTap = () async {
+                                const url = 'https://biblosphere.org/eula.html';
+                                if (await canLaunch(url)) {
+                                  await launch(url);
+                                } else {
+                                  throw 'Could not launch url $url';
+                                }
+                              },
+                          ),
+                          new TextSpan(
+                            text: S.of(context).loginAgree3,
+                            style: new TextStyle(color: Colors.black),
+                          ),
+                          new TextSpan(
+                            text: S.of(context).loginAgree4,
+                            style: new TextStyle(
+                                color: Colors.blue,
+                                decoration: TextDecoration.underline),
+                            recognizer: new TapGestureRecognizer()
+                              ..onTap = () async {
+                                const url = 'https://biblosphere.org/pp.html';
+                                if (await canLaunch(url)) {
+                                  await launch(url);
+                                } else {
+                                  throw 'Could not launch url $url';
+                                }
+                              },
+                          ),
+                          new TextSpan(
+                            text: '.',
+                            style: new TextStyle(color: Colors.black),
+                          ),
+                        ],
+                      ),
+                    )),
+                SignInButton(
+                  Buttons.Google,
+                  padding: EdgeInsets.fromLTRB(10.0, 3.0, 10.0, 3.0),
+                  onPressed: () {
+                    _handleGoogleSignIn();
+                  },
+                ),
+                SignInButton(
+                  Buttons.Facebook,
+                  padding: EdgeInsets.all(10.0),
+                  onPressed: () {
+                    _handleFBSignIn();
+                  },
+                ),
+              ])));
+
+/*
           return new SignInScreen(
             avoidBottomInset: true,
             bottomPadding: 10.0,
@@ -491,12 +580,82 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
 //          ProvidersTypes.email
             ],
           );
+*/
         } else {
           return MyHomePage();
         }
       }),
       onGenerateRoute: _getRoute,
     );
+  }
+
+  Future<FirebaseUser> _handleGoogleSignIn() async {
+    // If not connected to Firebase but signed in to Google then sign out
+    if (await _auth.currentUser() == null && await _googleSignIn.isSignedIn()) {
+      print('!!!DEBUG: Loging out from Google');
+      await _googleSignIn.signOut();
+    }
+
+    try {
+      GoogleSignInAccount googleSignInAccount = await _googleSignIn.signIn();
+      if (googleSignInAccount != null) {
+        GoogleSignInAuthentication googleAuth =
+            await googleSignInAccount.authentication;
+        if (googleAuth.accessToken != null) {
+          AuthCredential credential = GoogleAuthProvider.getCredential(
+              idToken: googleAuth.idToken, accessToken: googleAuth.accessToken);
+          AuthResult authResult = await _auth.signInWithCredential(credential);
+          FirebaseUser user = authResult.user;
+          print("!!!DEBUG: User :  ${authResult.user}");
+          return user;
+        }
+      }
+    } catch (e, stack) {
+      print('!!!DEBUG: Google Sign-in exception: ${e}');
+      FlutterCrashlytics().logException(e, stack);
+    }
+    return null;
+  }
+
+  Future<FirebaseUser> _handleFBSignIn() async {
+    // Logout from FB if not signed in to Firebase
+    // (to ensure that previous incomplete login is canceled)
+    print(
+        '!!!DEBUG: auth: ${await _auth.currentUser()} fb: ${await _facebookLogin.isLoggedIn}');
+    if (await _auth.currentUser() == null && await _facebookLogin.isLoggedIn) {
+      print('!!!DEBUG: Loging out from FB');
+      await _facebookLogin.logOut();
+    }
+
+    try {
+      FacebookLoginResult facebookLoginResult =
+          await _facebookLogin.logIn(['email']);
+      switch (facebookLoginResult.status) {
+        case FacebookLoginStatus.cancelledByUser:
+          print("!!!DEBUG: Cancelled");
+          break;
+        case FacebookLoginStatus.error:
+          print("!!!DEBUG: error ${facebookLoginResult.errorMessage}");
+          break;
+        case FacebookLoginStatus.loggedIn:
+          print("!!!DEBUG: Logged In [${facebookLoginResult.accessToken}]");
+          break;
+      }
+
+      final accessToken = facebookLoginResult.accessToken.token;
+      if (facebookLoginResult.status == FacebookLoginStatus.loggedIn) {
+        AuthCredential facebookAuthCred =
+            FacebookAuthProvider.getCredential(accessToken: accessToken);
+        AuthResult authResult =
+            await _auth.signInWithCredential(facebookAuthCred);
+        print("!!!DEBUG: User :  ${authResult.user}");
+        return authResult.user;
+      }
+    } catch (e, stack) {
+      print('!!!DEBUG: exception with FB login: ${e}');
+      FlutterCrashlytics().logException(e, stack);
+    }
+    return null;
   }
 
   Route _getRoute(RouteSettings settings) {

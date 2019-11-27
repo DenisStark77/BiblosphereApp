@@ -231,7 +231,7 @@
     "type": "text",
     "placeholders": {}
   },
-  "welcome": "Welcome",
+  "welcome": "WELCOME",
   "@welcome": {
     "type": "text",
     "placeholders": {}

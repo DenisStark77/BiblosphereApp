@@ -231,7 +231,7 @@
     "type": "text",
     "placeholders": {}
   },
-  "welcome": "Добро пожаловать",
+  "welcome": "ДОБРО ПОЖАЛОВАТЬ",
   "@welcome": {
     "type": "text",
     "placeholders": {}

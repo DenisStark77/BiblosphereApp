@@ -380,7 +380,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "useCurrentLocation" : MessageLookupByLibrary.simpleMessage("Use current location for import"),
     "userBalance" : m42,
     "userHave" : m43,
-    "welcome" : MessageLookupByLibrary.simpleMessage("Welcome"),
+    "welcome" : MessageLookupByLibrary.simpleMessage("WELCOME"),
     "wishAdded" : MessageLookupByLibrary.simpleMessage("Book has been added to your wishlist"),
     "wishAlreadyThere" : MessageLookupByLibrary.simpleMessage("This book is already in your wishlist"),
     "wishCount" : m44,

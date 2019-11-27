@@ -11,6 +11,9 @@ import 'package:flushbar/flushbar.dart';
 
 import 'package:biblosphere/l10n.dart';
 import 'package:biblosphere/const.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_facebook_login/flutter_facebook_login.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 final themeColor = new Color(0xfff5a623);
 final primaryColor = new Color(0xff203152);
@@ -596,4 +599,30 @@ Future<void> injectChatbotMessage(
   });
 
   return;
+}
+
+final GoogleSignIn _googleSignIn = GoogleSignIn();
+final FacebookLogin _facebookLogin = FacebookLogin();
+final FirebaseAuth _auth = FirebaseAuth.instance;
+
+Future<void> signOutProviders() async {
+  var currentUser = await FirebaseAuth.instance.currentUser();
+  if (currentUser != null) {
+    await signOut(currentUser.providerData);
+  }
+
+  return await FirebaseAuth.instance.signOut();
+}
+
+Future<dynamic> signOut(Iterable providers) async {
+  return Future.forEach(providers, (p) async {
+    switch (p.providerId) {
+      case 'facebook.com':
+        await _facebookLogin.logOut();
+        break;
+      case 'google.com':
+        await _googleSignIn.signOut();
+        break;
+    }
+  });
 }
