@@ -115,8 +115,6 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
 
     _listener =
         FirebaseAuth.instance.onAuthStateChanged.listen((FirebaseUser user) {
-      print('!!!DEBUG: listener on auth change ${user}');
-
       firebaseUser = user;
 
       if (firebaseUser != null) {
@@ -230,8 +228,6 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   }
 
   void _checkInitialState() async {
-    print('!!!DEBUG: check initial state ${B.user}');
-
     SharedPreferences prefs = await SharedPreferences.getInstance();
 
     firstRun = prefs.getBool('firstRun') ?? true;
@@ -592,37 +588,28 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   Future<FirebaseUser> _handleGoogleSignIn() async {
     // If not connected to Firebase but signed in to Google then sign out
     if (await _auth.currentUser() == null && await _googleSignIn.isSignedIn()) {
-      print('!!!DEBUG: Loging out from Google');
       await _googleSignIn.signOut();
     }
 
     // If not connected to Firebase but signed in to Google then sign out
     if (_googleSignIn.currentUser != null && ! await _googleSignIn.isSignedIn()) {
-      print('!!!DEBUG: Loging out from Google if currentUser is not null');
       await _googleSignIn.signOut();
     }
 
     try {
-      print('!!!DEBUG: SignIn: ${await _googleSignIn.isSignedIn()} ${_googleSignIn.currentUser}');
-      
       GoogleSignInAccount googleSignInAccount = await _googleSignIn.signIn();
-      print('!!!DEBUG: SignIn account: ${googleSignInAccount}');
-      print('!!!DEBUG: SignIn auth: ${await googleSignInAccount.authentication}');
       if (googleSignInAccount != null) {
         GoogleSignInAuthentication googleAuth =
             await googleSignInAccount.authentication;
-        print('!!!DEBUG: SignIn authentication: ${googleAuth} ${googleAuth.accessToken}');
         if (googleAuth.accessToken != null) {
           AuthCredential credential = GoogleAuthProvider.getCredential(
               idToken: googleAuth.idToken, accessToken: googleAuth.accessToken);
           AuthResult authResult = await _auth.signInWithCredential(credential);
           FirebaseUser user = authResult.user;
-          print("!!!DEBUG: User :  ${authResult.user}");
           return user;
         }
       }
     } catch (e, stack) {
-      print('!!!DEBUG: Google Sign-in exception: ${e}');
       FlutterCrashlytics().logException(e, stack);
     }
     return null;
@@ -631,25 +618,20 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   Future<FirebaseUser> _handleFBSignIn() async {
     // Logout from FB if not signed in to Firebase
     // (to ensure that previous incomplete login is canceled)
-    print(
-        '!!!DEBUG: auth: ${await _auth.currentUser()} fb: ${await _facebookLogin.isLoggedIn}');
     if (await _auth.currentUser() == null && await _facebookLogin.isLoggedIn) {
-      print('!!!DEBUG: Loging out from FB');
       await _facebookLogin.logOut();
     }
+
 
     try {
       FacebookLoginResult facebookLoginResult =
           await _facebookLogin.logIn(['email']);
       switch (facebookLoginResult.status) {
         case FacebookLoginStatus.cancelledByUser:
-          print("!!!DEBUG: Cancelled");
           break;
         case FacebookLoginStatus.error:
-          print("!!!DEBUG: error ${facebookLoginResult.errorMessage}");
           break;
         case FacebookLoginStatus.loggedIn:
-          print("!!!DEBUG: Logged In [${facebookLoginResult.accessToken}]");
           break;
       }
 
@@ -659,7 +641,6 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
             FacebookAuthProvider.getCredential(accessToken: accessToken);
         AuthResult authResult =
             await _auth.signInWithCredential(facebookAuthCred);
-        print("!!!DEBUG: User :  ${authResult.user}");
         return authResult.user;
       }
     } catch (e, stack) {
