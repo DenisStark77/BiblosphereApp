@@ -603,7 +603,6 @@ Future<void> injectChatbotMessage(
 
 final GoogleSignIn _googleSignIn = GoogleSignIn();
 final FacebookLogin _facebookLogin = FacebookLogin();
-final FirebaseAuth _auth = FirebaseAuth.instance;
 
 Future<void> signOutProviders() async {
   var currentUser = await FirebaseAuth.instance.currentUser();
