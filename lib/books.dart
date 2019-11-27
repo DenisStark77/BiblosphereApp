@@ -478,9 +478,7 @@ class _FindBookWidgetState extends State<FindBookWidget> {
         delegate: SliverChildBuilderDelegate((context, index) {
           var book = books.values.elementAt(index);
           if (book is Book) {
-            return Container(
-                margin: EdgeInsets.all(3.0),
-                child: GestureDetector(
+            return GestureDetector(
                     onTap: () async {
                       FirebaseAnalytics().logEvent(
                           name: 'search_elsewhere',
@@ -501,7 +499,10 @@ class _FindBookWidgetState extends State<FindBookWidget> {
                                   context, null, new GetBookWidget(book: book),
                                   appbar: false)));
                     },
-                    child: Row(children: <Widget>[
+                    child: Container(
+                      color: C.cardBackground,
+                margin: EdgeInsets.all(3.0),
+                child: Row(children: <Widget>[
                       bookImage(book, 60, padding: 5.0),
                       Expanded(
                           child: Container(
@@ -522,13 +523,11 @@ class _FindBookWidgetState extends State<FindBookWidget> {
                                                 .textTheme
                                                 .subtitle),
                                   ]))),
-                      Container(child: assetIcon(search_100, size: 30))
+                      Container(child: assetIcon(search_100, size: 40, padding: 5.0))
                     ])));
           } else if (book is Bookrecord) {
             Bookrecord rec = book;
-            return Container(
-                margin: EdgeInsets.all(3.0),
-                child: GestureDetector(
+            return GestureDetector(
                     onTap: () async {
                       if (rec.holderId == B.user.id) {
                         // For user own books open in My Book screen
@@ -552,7 +551,10 @@ class _FindBookWidgetState extends State<FindBookWidget> {
                             message: S.of(context).requestBook(rec.title));
                       }
                     },
-                    child: Row(children: <Widget>[
+                    child: Container(
+                      color: C.cardBackground,
+                margin: EdgeInsets.all(3.0),
+                child: Row(children: <Widget>[
                       bookImage(rec, 60, padding: 5.0),
                       Expanded(
                           child: Container(
@@ -595,8 +597,8 @@ class _FindBookWidgetState extends State<FindBookWidget> {
                                   ]))),
                       Container(
                           child: (rec.holderId == B.user.id)
-                              ? assetIcon(books_100, size: 30)
-                              : assetIcon(shopping_cart_100, size: 30))
+                              ? assetIcon(books_100, size: 40, padding: 5.0)
+                              : assetIcon(shopping_cart_100, size: 40, padding: 5.0))
                     ])));
           }
           return Container();

@@ -90,10 +90,11 @@ BiblosphereColorScheme C = new BiblosphereColorScheme(
   titleBackground: Color(0xffb5dfff), //0xff344d64),
   titleText: Colors.black, //0xff344d64),
   background: Color(0xffdeedf9),
-  cardBackground: Color(0xfff4f4f3),
+  //cardBackground: Color(0xfff4f4f3),
+  cardBackground: Color(0xffe2f2fe),
   bar: Color(0xffebe1e1),
   button: Color(0xffbde3ff), // light
-  buttonText: Colors.white,
+  buttonText: Colors.black,
   buttonBorder: Colors.grey[600],
   chatMy: Color(0xffd8dede),
   chatMyText: Colors.black,
@@ -145,14 +146,14 @@ const String filter_100 = 'images/icons/icons8-filter-100.png';
 const String clear_filters_100 = 'images/icons/icons8-clear-filters-100.png';
 const String account_100 = 'images/icons/icons8-account-100.png';
 
-Widget assetIcon(String asset, {double size}) {
+Widget assetIcon(String asset, {double size, double padding = 0.0}) {
   if (size != null)
-    return Container(
+    return Container(padding: EdgeInsets.all(padding), 
         width: size,
         height: size,
         child: Image.asset(asset, fit: BoxFit.contain));
   else
-    return Image.asset(asset, fit: BoxFit.contain);
+    return Container(padding: EdgeInsets.all(padding), child: Image.asset(asset, fit: BoxFit.contain));
 }
 
 Widget drawerMenuItem(BuildContext context, String text, String icon,

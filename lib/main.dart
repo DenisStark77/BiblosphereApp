@@ -205,6 +205,8 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   }
 
   void _checkCurrentUser() async {
+    print('!!!DEBUG: check current user ${B.user}');
+
     SharedPreferences prefs = await SharedPreferences.getInstance();
 
     firstRun = prefs.getBool('firstRun') ?? true;
@@ -224,6 +226,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     firebaseUser?.getIdToken(refresh: true);
 
     _listener = _auth.onAuthStateChanged.listen((FirebaseUser user) {
+        print('!!!DEBUG: listener on auth change ${user}');
 
         firebaseUser = user;
 
@@ -268,7 +271,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
 
       if (!userSnap.exists) {
         // Create user and wallet if user is not there
-        await B.user.ref.setData(user.toJson());
+        await user.ref.setData(user.toJson());
 
         // TODO: ensure if it works with data persistently
         await wallet.ref.setData(wallet.toJson());
@@ -480,7 +483,9 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
             ),
             providers: [
               ProvidersTypes.google,
-//          ProvidersTypes.facebook,
+              ProvidersTypes.facebook,
+              ProvidersTypes.email,
+              ProvidersTypes.phone,
 //          ProvidersTypes.twitter,
 //          ProvidersTypes.phone,
 //          ProvidersTypes.email

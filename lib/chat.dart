@@ -201,9 +201,9 @@ class _ChatCardState extends State<ChatCard> {
                                       overflow: TextOverflow.ellipsis,
                                       style: Theme.of(context)
                                           .textTheme
-                                          .body1)), // Description
+                                          .subtitle)), // Description
                               Text(chat.message ?? '',
-                                  style: Theme.of(context).textTheme.body1)
+                                  style: Theme.of(context).textTheme.body1.apply(color: Colors.grey[400]))
                             ]))),
                 Container(
                     margin: EdgeInsets.all(5.0),
@@ -232,7 +232,7 @@ class _ChatCardState extends State<ChatCard> {
                   margin: EdgeInsets.all(5.0),
                   child: Text(statusText(chat),
                       overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.subtitle)),
+                      style: Theme.of(context).textTheme.body1)),
             ])));
   }
 
