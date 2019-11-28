@@ -488,14 +488,14 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
                   Buttons.Google,
                   padding: EdgeInsets.fromLTRB(10.0, 3.0, 10.0, 3.0),
                   onPressed: () {
-                    _handleGoogleSignIn();
+                    _handleGoogleSignIn(context);
                   },
                 ),
                 SignInButton(
                   Buttons.Facebook,
                   padding: EdgeInsets.all(10.0),
                   onPressed: () {
-                    _handleFBSignIn();
+                    _handleFBSignIn(context);
                   },
                 ),
               ])));
@@ -585,7 +585,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     );
   }
 
-  Future<FirebaseUser> _handleGoogleSignIn() async {
+  Future<FirebaseUser> _handleGoogleSignIn(BuildContext context) async {
     // If not connected to Firebase but signed in to Google then sign out
     if (await _auth.currentUser() == null && await _googleSignIn.isSignedIn()) {
       await _googleSignIn.signOut();
@@ -611,11 +611,12 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       }
     } catch (e, stack) {
       FlutterCrashlytics().logException(e, stack);
+      showSnackBar(context, 'Sign-in failed: ${e}');
     }
     return null;
   }
 
-  Future<FirebaseUser> _handleFBSignIn() async {
+  Future<FirebaseUser> _handleFBSignIn(BuildContext context) async {
     // Logout from FB if not signed in to Firebase
     // (to ensure that previous incomplete login is canceled)
     if (await _auth.currentUser() == null && await _facebookLogin.isLoggedIn) {
@@ -645,6 +646,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       }
     } catch (e, stack) {
       print('!!!DEBUG: exception with FB login: ${e}');
+      showSnackBar(context, 'Sign-in failed: ${e}');
       FlutterCrashlytics().logException(e, stack);
     }
     return null;

@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_crashlytics/flutter_crashlytics.dart';
 import 'package:googleapis/books/v1.dart';
 import 'package:googleapis_auth/auth_io.dart';
 import 'package:http/http.dart';
@@ -149,7 +150,9 @@ Future<Book> enrichBookRecord(Book book) async {
       book.price = await getPriceFromWeb(book);
 
     return book;
-  } catch (e) {
+  } catch (e, stack) {
+    FlutterCrashlytics().logException(e, stack);
+
     print('Unknown error in enrichBookRecord: $e');
     return book;
   }
@@ -173,7 +176,9 @@ Future<Book> searchByIsbnGoogle(String isbn) async {
       }
     }
     return null;
-  } catch (e) {
+  } catch (e, stack) {
+    FlutterCrashlytics().logException(e, stack);
+
     print('Unknown error in searchByIsbnGoogle: $e');
     return null;
   }
@@ -191,7 +196,9 @@ Future<Book> searchByIsbnGoodreads(String isbn) async {
       return new Book.goodreads(bookXml)..isbn = isbn;
     }
     return null;
-  } catch (e) {
+  } catch (e, stack) {
+    FlutterCrashlytics().logException(e, stack);
+
     print('Unknown error in searchByIsbnGoodreads: $e');
     return null;
   }
@@ -282,7 +289,9 @@ Future<Book> searchByIsbnRsl(String isbn) async {
       return new Book(title: title, authors: [author], isbn: isbn);
     }
     return null;
-  } catch (e) {
+  } catch (e, stack) {
+    FlutterCrashlytics().logException(e, stack);
+
     print('Unknown error in searchByIsbnRsi: $e');
     return null;
   }
@@ -300,7 +309,9 @@ Future<Book> searchByIsbn(String isbn) async {
       var b = new Book.fromJson(doc.data);
       return b;
     }
-  } catch (e) {
+  } catch (e, stack) {
+    FlutterCrashlytics().logException(e, stack);
+
     print('Unknown error in searchByIsbn: $e');
     return null;
   }
@@ -318,7 +329,9 @@ Future<List<Bookrecord>> searchByIsbnBookrecords(String isbn) async {
     list.sort((b1, b2) => ((b1.distance - b2.distance) * 1000).round());
 
     return list.take(1).toList();
-  } catch (e) {
+  } catch (e, stack) {
+    FlutterCrashlytics().logException(e, stack);
+
     print('Unknown error in searchByIsbn: $e');
     return null;
   }

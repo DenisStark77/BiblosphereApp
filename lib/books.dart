@@ -7,6 +7,7 @@ import 'package:barcode_scan/barcode_scan.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:flutter_crashlytics/flutter_crashlytics.dart';
 
 import 'package:biblosphere/const.dart';
 import 'package:biblosphere/helpers.dart';
@@ -273,17 +274,20 @@ class _AddBookWidgetState extends State<AddBookWidget> {
           'longitude': B.position.longitude
         });
       }
-    } on PlatformException catch (e) {
+    } on PlatformException catch (e, stack) {
       if (e.code == BarcodeScanner.CameraAccessDenied) {
         //TODO: Inform user
         print('The user did not grant the camera permission!');
+        FlutterCrashlytics().logException(e, stack);
       } else {
         print('Unknown platform error in scanIsbn: $e');
+        FlutterCrashlytics().logException(e, stack);
       }
     } on FormatException {
       print(
           'null (User returned using the "back"-button before scanning anything. Result)');
-    } catch (e) {
+    } catch (e, stack) {
+        FlutterCrashlytics().logException(e, stack);
       print('Unknown error in scanIsbn: $e');
     }
   }
@@ -725,16 +729,19 @@ class _FindBookWidgetState extends State<FindBookWidget> {
         //print("No record found for isbn: $barcode");
         showSnackBar(context, S.of(context).isbnNotFound);
       }
-    } on PlatformException catch (e) {
+    } on PlatformException catch (e, stack) {
       if (e.code == BarcodeScanner.CameraAccessDenied) {
+        FlutterCrashlytics().logException(e, stack);
         print('The user did not grant the camera permission!');
       } else {
+        FlutterCrashlytics().logException(e, stack);
         print('Unknown platform error in scanIsbn: $e');
       }
     } on FormatException {
       print(
           'null (User returned using the "back"-button before scanning anything. Result)');
-    } catch (e) {
+    } catch (e, stack) {
+      FlutterCrashlytics().logException(e, stack);
       print('Unknown error in scanIsbn: $e');
     }
   }

@@ -1,4 +1,5 @@
 import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:flutter_crashlytics/flutter_crashlytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter/services.dart';
@@ -306,7 +307,8 @@ class Book {
             currency: v.saleInfo.listPrice.currencyCode);
       source = BookSource.google;
       keys = getKeys(' ' + authors.join(' ') + ' ' + title + ' ' + isbn);
-    } catch (e) {
+    } catch (e, stack) {
+      FlutterCrashlytics().logException(e, stack);
       print('Unknown error in Book.volume: $e');
     }
   }

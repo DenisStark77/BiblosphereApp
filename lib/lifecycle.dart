@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:geoflutterfire/geoflutterfire.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_crashlytics/flutter_crashlytics.dart';
 
 import 'package:biblosphere/const.dart';
 import 'package:biblosphere/helpers.dart';
@@ -169,6 +170,8 @@ void deposit({List<Bookrecord> books, User owner, User payer}) async {
               .update(ownerWalletRef, {'balance': FieldValue.increment(paid)});
         }
       } catch (ex, stack) {
+        FlutterCrashlytics().logException(ex, stack);
+
         // TODO: Handle exception
         print(
             '!!!DEBUG: >>>>>>>>>>>>>> Exception within transaction <<<<<<<<<<<<<<<<');
@@ -476,6 +479,8 @@ void pass({List<Bookrecord> books, User holder, User payer}) async {
           });
         }
       } catch (ex, stack) {
+        FlutterCrashlytics().logException(ex, stack);
+
         // TODO: Handle exception
         print(
             '!!!DEBUG: >>>>>>>>>>>>>> Exception within transaction <<<<<<<<<<<<<<<<');
@@ -773,6 +778,8 @@ void complete({List<Bookrecord> books, User holder, User owner}) async {
           });
         }
       } catch (ex, stack) {
+        FlutterCrashlytics().logException(ex, stack);
+
         // TODO: Handle exception
         print('!!!DEBUG: >>>>>>>>>> Exception within transaction <<<<<<<<<<<');
         print(ex);

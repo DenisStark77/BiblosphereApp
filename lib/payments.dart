@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:flutter_crashlytics/flutter_crashlytics.dart';
 import 'package:stellar/stellar.dart' as stellar;
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
@@ -115,7 +116,9 @@ Future<bool> checkStellarAccount(String accountId) async {
     await server.accounts.account(pair);
 
     return true;
-  } catch (error) {
+  } catch (error, stack) {
+    FlutterCrashlytics().logException(error, stack);
+
     print((error as stellar.ErrorResponse).body);
     // TODO: Log exception to Firebase
     return false;

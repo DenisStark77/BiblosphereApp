@@ -2487,7 +2487,9 @@ class _SettingsWidgetState extends State<SettingsWidget> {
 
                                   showSnackBar(
                                       context, S.of(context).successfulPayment);
-                                } catch (ex) {
+                                } catch (ex, stack) {
+                                  FlutterCrashlytics().logException(ex, stack);
+
                                   // TODO: Log event for administrator to investigate
                                   showSnackBar(
                                       context, S.of(context).paymentError);
