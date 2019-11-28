@@ -586,17 +586,22 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   }
 
   Future<FirebaseUser> _handleGoogleSignIn(BuildContext context) async {
+    try {
+    // If connected to Firebase sign out
+    if (await _auth.currentUser() != null) {
+      await signOutProviders();
+    }
+
     // If not connected to Firebase but signed in to Google then sign out
     if (await _auth.currentUser() == null && await _googleSignIn.isSignedIn()) {
       await _googleSignIn.signOut();
     }
 
-    // If not connected to Firebase but signed in to Google then sign out
+    // If Google current user is not null but not signed-in then sign out (warkaround)
     if (_googleSignIn.currentUser != null && ! await _googleSignIn.isSignedIn()) {
       await _googleSignIn.signOut();
     }
 
-    try {
       GoogleSignInAccount googleSignInAccount = await _googleSignIn.signIn();
       if (googleSignInAccount != null) {
         GoogleSignInAuthentication googleAuth =
@@ -617,20 +622,24 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   }
 
   Future<FirebaseUser> _handleFBSignIn(BuildContext context) async {
+    try {
+    // If connected to Firebase sign out
+    if (await _auth.currentUser() != null) {
+      await signOutProviders();
+    }
     // Logout from FB if not signed in to Firebase
     // (to ensure that previous incomplete login is canceled)
     if (await _auth.currentUser() == null && await _facebookLogin.isLoggedIn) {
       await _facebookLogin.logOut();
     }
 
-
-    try {
       FacebookLoginResult facebookLoginResult =
           await _facebookLogin.logIn(['email']);
       switch (facebookLoginResult.status) {
         case FacebookLoginStatus.cancelledByUser:
           break;
         case FacebookLoginStatus.error:
+          showSnackBar(context, 'Sign-in error: ${facebookLoginResult.errorMessage}');
           break;
         case FacebookLoginStatus.loggedIn:
           break;

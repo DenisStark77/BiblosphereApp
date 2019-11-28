@@ -94,8 +94,9 @@ BiblosphereColorScheme C = new BiblosphereColorScheme(
   titleBackground: Color(0xffb5dfff), //0xff344d64),
   titleText: Colors.black, //0xff344d64),
   background: Color(0xffdeedf9),
-  cardBackground: Color(0xfff4f4f3),
-  //cardBackground: Color(0xffe2f2fe),
+  cardBackground: Colors.white,
+  //cardBackground: Color(0xfff4f4f3), // yellowish
+  //cardBackground: Color(0xffe2f2fe), // bluish
   bar: Color(0xffebe1e1),
   button: Color(0xffbde3ff), // light
   buttonText: Colors.black,
