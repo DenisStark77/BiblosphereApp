@@ -110,8 +110,8 @@ Future<bool> checkStellarAccount(String accountId) async {
     stellar.KeyPair pair = stellar.KeyPair.fromAccountId(accountId);
 
     stellar.Network.useTestNetwork();
-    stellar.Server server =
-        stellar.Server("https://horizon-testnet.stellar.org");
+    //stellar.Server server = stellar.Server("https://horizon-testnet.stellar.org");
+    stellar.Server server = stellar.Server("https://horizon.stellar.org");
     await server.accounts.account(pair);
 
     return true;

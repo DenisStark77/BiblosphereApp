@@ -969,7 +969,7 @@ class _ChatState extends State<Chat> {
           }
           List<ProductDetails> products = response.productDetails;
           final PurchaseParam purchaseParam = PurchaseParam(
-              productDetails: products.first, sandboxTesting: true);
+              productDetails: products.first, sandboxTesting: false);
           InAppPurchaseConnection.instance
               .buyConsumable(purchaseParam: purchaseParam);
         },

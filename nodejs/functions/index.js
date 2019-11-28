@@ -23,7 +23,8 @@ const vision = require('@google-cloud/vision');
 const client = new vision.ImageAnnotatorClient();
 
 const StellarSdk = require('stellar-sdk')
-const server = new StellarSdk.Server('https://horizon-testnet.stellar.org');
+//const server = new StellarSdk.Server('https://horizon-testnet.stellar.org');
+const server = new StellarSdk.Server('https://horizon.stellar.org');
 
 //Keep secret with:
 // firebase functions:config:set stellar.secret="SA2S63V5U35YY3QCAZ7WZSPPQ7JL34HQVK4W7RTWBU3AKHSW7SNTP5YJ"
@@ -55,7 +56,7 @@ exports.checkStellarIn = functions.pubsub.topic('cron-topic').onPublish(async (m
     // Update cursor for last operation id
     if (resp.records.length > 0) {
       cursor = resp.records[resp.records.length - 1].id;
-      await ref.update({ 'cursor': cursor, 'running': false });
+      await ref.update({ 'cursor': cursor, 'running': true });
     }
 
     // For each Stellar payment get a transaction Memo and create Biblosphere payment
@@ -128,8 +129,8 @@ exports.payoutStellar = functions.firestore
 
       const transaction = new StellarSdk.TransactionBuilder(account, {
         fee,
-        // networkPassphrase: StellarSdk.Networks.PUBLIC,
-        networkPassphrase: StellarSdk.Networks.TESTNET
+        networkPassphrase: StellarSdk.Networks.PUBLIC,
+        //networkPassphrase: StellarSdk.Networks.TESTNET
       })
         // Add a payment operation to the transaction
         .addOperation(StellarSdk.Operation.payment({
