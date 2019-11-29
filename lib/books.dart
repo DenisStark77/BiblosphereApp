@@ -577,9 +577,9 @@ class _FindBookWidgetState extends State<FindBookWidget> {
                                             Theme.of(context)
                                                 .textTheme
                                                 .subtitle),
-                                    Text(
-                                        S.of(context).distanceLine(
-                                            distance(rec.distance)),
+                                    Text(rec.distance.isFinite ?
+                                        S.of(context).distanceLine(distance(rec.distance)) :
+                                        S.of(context).distanceUnknown,
                                         style:
                                             Theme.of(context).textTheme.body1),
                                     B.user.id != rec.ownerId && !rec.wish ? Text(

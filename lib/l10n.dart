@@ -1283,6 +1283,11 @@ class S {
     return Intl.message('Доход: $month в месяц',
         name: 'bookIncome', args: [month]);
   }
+
+  String get distanceUnknown {
+    return Intl.message('Расстояние: неизвестно',
+        name: 'distanceUnknown');
+  }
 }
 
 class AppLocalizationsDelegate extends LocalizationsDelegate<S> {

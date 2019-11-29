@@ -402,7 +402,9 @@ double dp(double val, int places) {
 }
 
 dynamic distance(double d) {
-  if (d < 0.1)
+  if (d == null || d.isInfinite || d.isNaN)
+    return 50000;
+  else if (d < 0.1)
     return dp(d, 2);
   else if (d < 1.0)
     return dp(d, 1);
