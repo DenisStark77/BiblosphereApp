@@ -315,19 +315,6 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         user.link = await buildLink('chat?user=${user.id}');
       }
       
-      // TODO: Make this async to minimize waiting for refresh
-      final position = await currentPosition();
-      if (position != null) {
-        user.position = position;
-      Geolocator()
-          .placemarkFromCoordinates(position.latitude, position.longitude,
-              localeIdentifier: 'en')
-          .then((placemarks) {
-        B.locality = placemarks.first.locality;
-        B.country = placemarks.first.country;
-      });
-      }
-
       // Set global value to user
       B.wallet = wallet;
       B.user = user;
