@@ -28,26 +28,24 @@ class B {
 
   static User get user => _currentUser;
   static set user (User user) {
-    print('!!!DEBUG >>>>>>>>>>>>>>>>>>>>>>>>>>>>>  ${user}');
     _currentUser = user;
   }
 
   static Wallet get wallet => _currentWallet;
-  static set wallet (Wallet wallet) => _currentWallet = wallet;
+  static set wallet(Wallet wallet) => _currentWallet = wallet;
 
-  static String get currency => _currency; 
-  static set currency (String currency) => _currency = currency;
+  static String get currency => _currency;
+  static set currency(String currency) => _currency = currency;
 
-  static Position get position => _position; 
-  static set position (Position pos) => _position = pos;
+  static Position get position => _position;
+  static set position(Position pos) => _position = pos;
 
-  static String get locality => _locality; 
-  static set locality (String locality) => _locality = locality;
+  static String get locality => _locality;
+  static set locality(String locality) => _locality = locality;
 
-  static String get country => _country; 
-  static set country (String country) => _country = country;
+  static String get country => _country;
+  static set country(String country) => _country = country;
 }
-
 
 class BiblosphereColorScheme {
   Color titleBackground = new Color(0xff344d64);
@@ -153,12 +151,15 @@ const String account_100 = 'images/icons/icons8-account-100.png';
 
 Widget assetIcon(String asset, {double size, double padding = 0.0}) {
   if (size != null)
-    return Container(padding: EdgeInsets.all(padding), 
+    return Container(
+        padding: EdgeInsets.all(padding),
         width: size,
         height: size,
         child: Image.asset(asset, fit: BoxFit.contain));
   else
-    return Container(padding: EdgeInsets.all(padding), child: Image.asset(asset, fit: BoxFit.contain));
+    return Container(
+        padding: EdgeInsets.all(padding),
+        child: Image.asset(asset, fit: BoxFit.contain));
 }
 
 Widget drawerMenuItem(BuildContext context, String text, String icon,
@@ -689,7 +690,9 @@ class Bookrecord {
   }
 
   bool get isTransit {
-    return (transitId == B.user.id || holderId == B.user.id) && transit && !wish;
+    return (transitId == B.user.id || holderId == B.user.id) &&
+        transit &&
+        !wish;
   }
 
   bool get isConfirmed {
@@ -728,137 +731,145 @@ class Bookrecord {
   }
 
   bool get complete {
-    return isbn == null && title == null || image == null || price == null
-    || ownerId == null || ownerName == null || ownerImage == null
-    || holderId == null || holderName == null || holderImage == null;
+    return isbn == null && title == null ||
+        image == null ||
+        price == null ||
+        ownerId == null ||
+        ownerName == null ||
+        ownerImage == null ||
+        holderId == null ||
+        holderName == null ||
+        holderImage == null;
   }
 
   // Copy all values from other bookrecord
   void copyFrom(Bookrecord rec) {
-      id = rec.id;
-      ownerId = rec.ownerId;
-      ownerName = rec.ownerName;
-      ownerImage = rec.ownerImage;
-      holderId = rec.holderId;
-      holderName = rec.holderName;
-      holderImage = rec.holderImage;
-      transitId = rec.transitId;
-      rewardId = rec.rewardId;
-      leasingId = rec.leasingId;
-      users = rec.users;
-      isbn = rec.isbn;
-      location = rec.location;
-      matched = rec.matched;
-      matchedId = rec.matchedId;
-      chatId = rec.chatId;
-      lent = rec.lent;
-      wish = rec.wish;
-      transit = rec.transit;
-      confirmed = rec.confirmed;
-      price = rec.price;
-      distance = rec.distance;
-      title = rec.title;
-      authors = rec.authors;
-      image = rec.image;
-      keys = rec.keys;
-      fromDb = rec.fromDb;
+    id = rec.id;
+    ownerId = rec.ownerId;
+    ownerName = rec.ownerName;
+    ownerImage = rec.ownerImage;
+    holderId = rec.holderId;
+    holderName = rec.holderName;
+    holderImage = rec.holderImage;
+    transitId = rec.transitId;
+    rewardId = rec.rewardId;
+    leasingId = rec.leasingId;
+    users = rec.users;
+    isbn = rec.isbn;
+    location = rec.location;
+    matched = rec.matched;
+    matchedId = rec.matchedId;
+    chatId = rec.chatId;
+    lent = rec.lent;
+    wish = rec.wish;
+    transit = rec.transit;
+    confirmed = rec.confirmed;
+    price = rec.price;
+    distance = rec.distance;
+    title = rec.title;
+    authors = rec.authors;
+    image = rec.image;
+    keys = rec.keys;
+    fromDb = rec.fromDb;
   }
 
   // Copy all values from other bookrecord
   bool equalsTo(Bookrecord rec) {
-      // keys and authors are excluded as no simple way to compare lists
-      return id == rec.id
-      && ownerId == rec.ownerId
-      && ownerName == rec.ownerName
-      && ownerImage == rec.ownerImage
-      && holderId == rec.holderId
-      && holderName == rec.holderName
-      && holderImage == rec.holderImage
-      && transitId == rec.transitId
-      && rewardId == rec.rewardId
-      && leasingId == rec.leasingId
-      && users == rec.users
-      && isbn == rec.isbn
-      && location == rec.location
-      && matched == rec.matched
-      && matchedId == rec.matchedId
-      && chatId == rec.chatId
-      && lent == rec.lent
-      && wish == rec.wish
-      && transit == rec.transit
-      && confirmed == rec.confirmed
-      && price == rec.price
-      && distance == rec.distance
-      && title == rec.title
-      && image == rec.image;
+    // keys and authors are excluded as no simple way to compare lists
+    return id == rec.id &&
+        ownerId == rec.ownerId &&
+        ownerName == rec.ownerName &&
+        ownerImage == rec.ownerImage &&
+        holderId == rec.holderId &&
+        holderName == rec.holderName &&
+        holderImage == rec.holderImage &&
+        transitId == rec.transitId &&
+        rewardId == rec.rewardId &&
+        leasingId == rec.leasingId &&
+        users == rec.users &&
+        isbn == rec.isbn &&
+        location == rec.location &&
+        matched == rec.matched &&
+        matchedId == rec.matchedId &&
+        chatId == rec.chatId &&
+        lent == rec.lent &&
+        wish == rec.wish &&
+        transit == rec.transit &&
+        confirmed == rec.confirmed &&
+        price == rec.price &&
+        distance == rec.distance &&
+        title == rec.title &&
+        image == rec.image;
   }
 
   Stream<Bookrecord> snapshots() async* {
     // Data are not from DB
-    if ( !fromDb && !complete ) {
+    if (!fromDb && !complete) {
       final DocumentSnapshot snap = await ref.get();
       if (snap.exists) {
-          Bookrecord rec = Bookrecord.fromJson(snap.data);
-          if ( !this.equalsTo(rec) ) {
-            copyFrom(rec);
-            yield this;
-          }
-          fromDb = true;
+        Bookrecord rec = Bookrecord.fromJson(snap.data);
+        if (!this.equalsTo(rec)) {
+          copyFrom(rec);
+          yield this;
         }
+        fromDb = true;
+      }
     }
 
-    assert (isbn != null && ownerId != null && holderId != null);
+    assert(isbn != null && ownerId != null && holderId != null);
 
     bool changed = false;
 
     // Book data is not complete need to read original record
-    if  (title == null || image == null || price == null) {
+    if (title == null || image == null || price == null) {
       final DocumentSnapshot snap = await Book.Ref(isbn).get();
       if (snap.exists) {
-          Book rec = Book.fromJson(snap.data);
-          if ( title != rec.title || image != rec.image || price == null && rec.price != null ) {
-            title = rec.title;
-            image = rec.image;
-            if (price == null) price = rec.price;
+        Book rec = Book.fromJson(snap.data);
+        if (title != rec.title ||
+            image != rec.image ||
+            price == null && rec.price != null) {
+          title = rec.title;
+          image = rec.image;
+          if (price == null) price = rec.price;
 
-            changed = true;
-          }
+          changed = true;
+        }
       }
     }
 
     // Owner data is not complete need to read original record
-    if  (ownerName == null || ownerImage == null) {
+    if (ownerName == null || ownerImage == null) {
       final DocumentSnapshot snap = await User.Ref(ownerId).get();
       if (snap.exists) {
-          User rec = User.fromJson(snap.data);
-          if ( ownerName != rec.name || ownerImage != rec.photo ) {
-            ownerName = rec.name;
-            ownerImage = rec.photo;
-            if (holderId == ownerId) {
-              holderName = rec.name;
-              holderImage = rec.photo;
-            }
-
-            changed = true;
+        User rec = User.fromJson(snap.data);
+        if (ownerName != rec.name || ownerImage != rec.photo) {
+          ownerName = rec.name;
+          ownerImage = rec.photo;
+          if (holderId == ownerId) {
+            holderName = rec.name;
+            holderImage = rec.photo;
           }
+
+          changed = true;
+        }
       }
     }
 
     // Owner data is not complete need to read original record
-    if  (holderId != ownerId && (holderName == null || holderImage == null)) {
+    if (holderId != ownerId && (holderName == null || holderImage == null)) {
       final DocumentSnapshot snap = await User.Ref(holderId).get();
       if (snap.exists) {
-          User rec = User.fromJson(snap.data);
-          if ( holderName != rec.name || holderName != rec.photo ) {
-            holderName = rec.name;
-            holderImage = rec.photo;
+        User rec = User.fromJson(snap.data);
+        if (holderName != rec.name || holderName != rec.photo) {
+          holderName = rec.name;
+          holderImage = rec.photo;
 
-            changed = true;
-          }
+          changed = true;
+        }
       }
     }
 
-    if ( changed ) {
+    if (changed) {
       // If data updated send it to stream and update record in DB
       yield this;
       ref.updateData(toJson());
@@ -1127,10 +1138,10 @@ class Operation {
   }
 
   User get referralUser {
-    if ( B.user.id == ownerFeeUserId1 || B.user.id == ownerFeeUserId2 )
-       return User(id: peerId, name: peerName, photo: peerImage);
+    if (B.user.id == ownerFeeUserId1 || B.user.id == ownerFeeUserId2)
+      return User(id: peerId, name: peerName, photo: peerImage);
     else if (B.user.id == payerFeeUserId1 || B.user.id == payerFeeUserId2)
-       return User(id: userId, name: userName, photo: userImage);
+      return User(id: userId, name: userName, photo: userImage);
 
     return null;
   }
@@ -1149,20 +1160,22 @@ class Operation {
   }
 
   String get bookTooltip {
-    return (bookAuthors != null ? bookAuthors : '') + (bookTitle != null ? '\n' + bookTitle : '');
+    return (bookAuthors != null ? bookAuthors : '') +
+        (bookTitle != null ? '\n' + bookTitle : '');
   }
 
   Stream<Operation> snapshots() async* {
     bool changed = false;
 
-    if (isbn != null && (bookImage == null || bookTitle == null || bookAuthors == null)) {
+    if (isbn != null &&
+        (bookImage == null || bookTitle == null || bookAuthors == null)) {
       DocumentSnapshot snap = await Book.Ref(isbn).get();
-        if (snap.exists) {
-          Book book = Book.fromJson(snap.data);
-          bookImage = book.image;
-          bookTitle = book.title;
-          bookAuthors = book.authors.join(', ');
-          changed = true;
+      if (snap.exists) {
+        Book book = Book.fromJson(snap.data);
+        bookImage = book.image;
+        bookTitle = book.title;
+        bookAuthors = book.authors.join(', ');
+        changed = true;
       }
     }
 
@@ -1180,7 +1193,7 @@ class Operation {
           changed = true;
         }
       }
-    }  
+    }
 
     if (peerId != null && peerName == null) {
       if (peerId == B.user.id) {
@@ -1195,7 +1208,7 @@ class Operation {
           changed = true;
         }
       }
-    }  
+    }
 
     // return updated record and keep changes in DB
     if (changed) {
@@ -1434,21 +1447,19 @@ class Messages {
       this.system = false,
       this.status = Initial,
       this.books}) {
+    assert(from != null && (system || !system && to != null));
 
-    assert (from != null && (system || !system && to != null));
-
-    fromId = from.id;    
-    fromName = from.name;    
-    fromImage = from.photo;    
+    fromId = from.id;
+    fromName = from.name;
+    fromImage = from.photo;
 
     if (to != null) {
-      toId = to.id;    
-      toName = to.name;    
+      toId = to.id;
+      toName = to.name;
       toImage = to.photo;
-    }    
+    }
 
-    if (!system)
-      ids = <String>[fromId, toId];
+    if (!system) ids = <String>[fromId, toId];
 
     id = this.ref.documentID;
 
@@ -1456,7 +1467,7 @@ class Messages {
     unread = {fromId: 0, 'system': 0};
 
     if (books == null) books = <String>[];
- 
+
     amount = 0.0;
 
     fromDb = false;
@@ -1474,7 +1485,8 @@ class Messages {
         books = json['books'] != null
             ? List<String>.from(json['books'] as List<dynamic>)
             : List<String>.from([]),
-        amount = json['amount'] != null ? (json['amount'] as num).toDouble() : 0.0,
+        amount =
+            json['amount'] != null ? (json['amount'] as num).toDouble() : 0.0,
         status = json['status'],
         fromId = json['fromId'],
         fromName = json['fromName'],
@@ -1526,13 +1538,12 @@ class Messages {
 
   // Return userId of the counterparty
   String get partnerId {
-    assert (B.user.id == fromId || B.user.id == toId);
+    assert(B.user.id == fromId || B.user.id == toId);
     if (!system)
       return B.user.id == ids[0] ? ids[1] : ids[0];
     else if (partnerId == B.user.id)
       return 'system';
-    else if (partnerId == 'system')
-      return fromId;
+    else if (partnerId == 'system') return fromId;
 
     return null;
   }
@@ -1547,13 +1558,13 @@ class Messages {
 
   // Return name of the peer
   String get partnerName {
-    assert (B.user.id == fromId || B.user.id == toId);
+    assert(B.user.id == fromId || B.user.id == toId);
     return (fromId == B.user.id) ? toName : fromName;
   }
 
   // Return image of the peer
   String get partnerImage {
-    assert (B.user.id == fromId || B.user.id == toId);
+    assert(B.user.id == fromId || B.user.id == toId);
     return (fromId == B.user.id) ? toImage : fromImage;
   }
 
@@ -1565,41 +1576,43 @@ class Messages {
   }
 
   bool get complete {
-    return toId != null && toName != null || toImage != null 
-    || fromId != null || fromName != null || fromImage != null;
+    return toId != null && toName != null ||
+        toImage != null ||
+        fromId != null ||
+        fromName != null ||
+        fromImage != null;
   }
-
 
   bool equalsTo(Messages rec) {
     // books, unread and ids excluded from comparison (no simple way to compare lists)
     // handover excluded as it's not used
-      return system == rec.system
-      && message == rec.message
-      && timestamp == rec.timestamp
-      && status == rec.status
-      && fromId == rec.fromId
-      && fromName == rec.fromName
-      && fromImage == rec.fromImage
-      && toId == rec.toId
-      && toName == rec.toName
-      && toImage == rec.toImage;
+    return system == rec.system &&
+        message == rec.message &&
+        timestamp == rec.timestamp &&
+        status == rec.status &&
+        fromId == rec.fromId &&
+        fromName == rec.fromName &&
+        fromImage == rec.fromImage &&
+        toId == rec.toId &&
+        toName == rec.toName &&
+        toImage == rec.toImage;
   }
 
   void copyFrom(Messages rec) {
-      system = rec.system;
-      message = rec.message;
-      timestamp = rec.timestamp;
-      status = rec.status;
-      fromId = rec.fromId;
-      fromName = rec.fromName;
-      fromImage = rec.fromImage;
-      toId = rec.toId;
-      toName = rec.toName;
-      toImage = rec.toImage;
-      books = rec.books;
-      ids = rec.ids;
-      unread = rec.unread;
-      handover = rec.handover;
+    system = rec.system;
+    message = rec.message;
+    timestamp = rec.timestamp;
+    status = rec.status;
+    fromId = rec.fromId;
+    fromName = rec.fromName;
+    fromImage = rec.fromImage;
+    toId = rec.toId;
+    toName = rec.toName;
+    toImage = rec.toImage;
+    books = rec.books;
+    ids = rec.ids;
+    unread = rec.unread;
+    handover = rec.handover;
   }
 
   Stream<Messages> snapshots() async* {
@@ -1607,50 +1620,50 @@ class Messages {
     if (!fromDb) {
       final DocumentSnapshot snap = await ref.get();
       if (snap.exists) {
-          Messages rec = Messages.fromJson(snap.data, snap);
-          if ( !this.equalsTo(rec) ) {
-            copyFrom(rec);
-            yield this;
-          }
-          fromDb = true;
-        } else {
-          // Chat does not exist in DB create it
-          ref.setData(toJson());
+        Messages rec = Messages.fromJson(snap.data, snap);
+        if (!this.equalsTo(rec)) {
+          copyFrom(rec);
+          yield this;
         }
+        fromDb = true;
+      } else {
+        // Chat does not exist in DB create it
+        ref.setData(toJson());
+      }
     }
 
-    assert (fromId != null && (system || toId != null));
+    assert(fromId != null && (system || toId != null));
     bool changed = false;
 
     // FROM user data is not complete need to read original record
-    if  (fromName == null || fromImage == null) {
+    if (fromName == null || fromImage == null) {
       final DocumentSnapshot snap = await User.Ref(fromId).get();
       if (snap.exists) {
-          User rec = User.fromJson(snap.data);
-          if ( fromName != rec.name || fromImage != rec.photo ) {
-            fromName = rec.name;
-            fromImage = rec.photo;
+        User rec = User.fromJson(snap.data);
+        if (fromName != rec.name || fromImage != rec.photo) {
+          fromName = rec.name;
+          fromImage = rec.photo;
 
-            changed = true;
-          }
+          changed = true;
+        }
       }
     }
 
     // TO user data is not complete need to read original record
-    if  (!system && (toName == null || toImage == null)) {
+    if (!system && (toName == null || toImage == null)) {
       final DocumentSnapshot snap = await User.Ref(toId).get();
       if (snap.exists) {
-          User rec = User.fromJson(snap.data);
-          if ( toName != rec.name || toName != rec.photo ) {
-            toName = rec.name;
-            toImage = rec.photo;
+        User rec = User.fromJson(snap.data);
+        if (toName != rec.name || toName != rec.photo) {
+          toName = rec.name;
+          toImage = rec.photo;
 
-            changed = true;
-          }
+          changed = true;
+        }
       }
     }
 
-    if ( changed ) {
+    if (changed) {
       // If data updated send it to stream and update record in DB
       yield this;
       ref.updateData(toJson());
@@ -1659,13 +1672,11 @@ class Messages {
 
   DocumentReference get ref {
     if (id != null)
-      return db
-        .collection('messages')
-        .document(id);
+      return db.collection('messages').document(id);
     else
       return db
-        .collection('messages')
-        .document(system ? fromId : fromId + ':' + toId);
+          .collection('messages')
+          .document(system ? fromId : fromId + ':' + toId);
   }
 
   static DocumentReference Ref(String id) {
@@ -1796,6 +1807,29 @@ Set<String> getKeys(String s) {
   keys.sort((a, b) => b.length - a.length);
   if (keys == null) keys = <String>[];
   return keys.toSet();
+}
+
+Future<void> initLocation() {
+  return Geolocator().checkGeolocationPermissionStatus(
+      locationPermission: GeolocationPermission.locationWhenInUse)
+    .then((status) async {
+      if (status == GeolocationStatus.granted) {
+        final position = await currentPosition();
+        if (position != null) {
+          B.user = (B.user..position = position);
+
+          if (B.locality == null || B.country == null) {
+            Geolocator()
+                .placemarkFromCoordinates(position.latitude, position.longitude,
+                    localeIdentifier: 'en')
+                .then((placemarks) {
+              B.locality = placemarks.first.locality;
+              B.country = placemarks.first.country;
+            });
+          }
+        }
+      }
+    });
 }
 
 Future<GeoPoint> currentPosition() async {

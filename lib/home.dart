@@ -672,7 +672,8 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
               children: <Widget>[
                 new Expanded(
                     child: new InkWell(
-                        onTap: () {
+                        onTap: () async {
+                          await initLocation();
                           Navigator.push(
                               context,
                               new MaterialPageRoute(
@@ -698,7 +699,8 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                                     ]))))),
                 new Expanded(
                   child: new InkWell(
-                    onTap: () {
+                    onTap: () async {
+                      await initLocation();
                       Navigator.push(
                           context,
                           new MaterialPageRoute(
