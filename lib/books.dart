@@ -90,8 +90,8 @@ class _AddBookWidgetState extends State<AddBookWidget> {
                                   'results': suggestions.length,
                                   'locality': B.locality,
                                   'country': B.country,
-                                  'latitude': B.position.latitude,
-                                  'longitude': B.position.longitude
+                                  'latitude': B.position?.latitude,
+                                  'longitude': B.position?.longitude
                                 });
                           },
                           shape: new RoundedRectangleBorder(
@@ -138,8 +138,8 @@ class _AddBookWidgetState extends State<AddBookWidget> {
                                       'results': suggestions.length,
                                       'locality': B.locality,
                                       'country': B.country,
-                                      'latitude': B.position.latitude,
-                                      'longitude': B.position.longitude
+                                      'latitude': B.position?.latitude,
+                                      'longitude': B.position?.longitude
                                     });
                               },
                               shape: new RoundedRectangleBorder(
@@ -164,7 +164,6 @@ class _AddBookWidgetState extends State<AddBookWidget> {
                     setState(() {
                       suggestions.clear();
                     });
-                    print('!!!DEBUG ${book.toJson()}');
                     addBookrecord(
                         context, book, B.user, false, await currentLocation(),
                         source: 'googlebooks');
@@ -270,8 +269,8 @@ class _AddBookWidgetState extends State<AddBookWidget> {
           'isbn': barcode,
           'locality': B.locality,
           'country': B.country,
-          'latitude': B.position.latitude,
-          'longitude': B.position.longitude
+          'latitude': B.position?.latitude,
+          'longitude': B.position?.longitude
         });
       }
     } on PlatformException catch (e, stack) {
@@ -391,8 +390,8 @@ class _FindBookWidgetState extends State<FindBookWidget> {
                                       'in_biblosphere': biblos.length,
                                       'locality': B.locality,
                                       'country': B.country,
-                                      'latitude': B.position.latitude,
-                                      'longitude': B.position.longitude
+                                      'latitude': B.position?.latitude,
+                                      'longitude': B.position?.longitude
                                     });
 
                                 if (biblos.length > 0)
@@ -409,8 +408,8 @@ class _FindBookWidgetState extends State<FindBookWidget> {
                                             .distance,
                                         'locality': B.locality,
                                         'country': B.country,
-                                        'latitude': B.position.latitude,
-                                        'longitude': B.position.longitude
+                                        'latitude': B.position?.latitude,
+                                        'longitude': B.position?.longitude
                                       });
                               },
                               shape: new RoundedRectangleBorder(
@@ -446,8 +445,8 @@ class _FindBookWidgetState extends State<FindBookWidget> {
                                   'in_biblosphere': biblos.length,
                                   'locality': B.locality,
                                   'country': B.country,
-                                  'latitude': B.position.latitude,
-                                  'longitude': B.position.longitude
+                                  'latitude': B.position?.latitude,
+                                  'longitude': B.position?.longitude
                                 });
 
                             if (biblos.length > 0)
@@ -463,8 +462,8 @@ class _FindBookWidgetState extends State<FindBookWidget> {
                                         (biblos.first as Bookrecord).distance,
                                     'locality': B.locality,
                                     'country': B.country,
-                                    'latitude': B.position.latitude,
-                                    'longitude': B.position.longitude
+                                    'latitude': B.position?.latitude,
+                                    'longitude': B.position?.longitude
                                   });
                           },
                           shape: new RoundedRectangleBorder(
@@ -491,8 +490,8 @@ class _FindBookWidgetState extends State<FindBookWidget> {
                             'isbn': book.isbn,
                             'locality': B.locality,
                             'country': B.country,
-                            'latitude': B.position.latitude,
-                            'longitude': B.position.longitude
+                            'latitude': B.position?.latitude,
+                            'longitude': B.position?.longitude
                           });
 
                       //book = await enrichBookRecord(book);
@@ -844,8 +843,8 @@ class _GetBookWidgetState extends State<GetBookWidget> {
                         'library': libraryQuery,
                         'locality': B.locality,
                         'country': B.country,
-                        'latitude': B.position.latitude,
-                        'longitude': B.position.longitude
+                        'latitude': B.position?.latitude,
+                        'longitude': B.position?.longitude
                       });
 
                   if (await canLaunch(libraryQuery)) {
@@ -901,8 +900,8 @@ class _GetBookWidgetState extends State<GetBookWidget> {
                         'store': bookstore,
                         'locality': B.locality,
                         'country': B.country,
-                        'latitude': B.position.latitude,
-                        'longitude': B.position.longitude
+                        'latitude': B.position?.latitude,
+                        'longitude': B.position?.longitude
                       });
 
                   var encoded = Uri.encodeFull(url);
@@ -962,6 +961,8 @@ class _GetBookWidgetState extends State<GetBookWidget> {
   ];
 
   Future<Map<String, String>> searchLibraries(Book book) async {
+    Provider provider;
+    if (B.position != null) {
     List<Placemark> placemarks = await Geolocator()
         .placemarkFromCoordinates(B.position.latitude, B.position.longitude);
 
@@ -981,11 +982,13 @@ class _GetBookWidgetState extends State<GetBookWidget> {
     List<Provider> providers = libraryServers
         .where((p) => p.country == country && p.area == area)
         .toList();
-    Provider provider;
 
     if (providers != null && providers.isNotEmpty) {
       provider = providers.first;
-    } else {
+    }
+    }
+
+    if (provider == null) {
       provider = libraryServers.firstWhere((p) => p.country == 'ALL');
     }
 

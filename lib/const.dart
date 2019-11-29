@@ -28,7 +28,6 @@ class B {
 
   static User get user => _currentUser;
   static set user (User user) {
-    print('!!!DEBUG >>>>>>>>>>>>>>>>>>>>>>>>>>>>>  ${user}');
     _currentUser = user;
   }
 
@@ -1803,8 +1802,9 @@ Future<GeoPoint> currentPosition() async {
     final position = await Geolocator().getLastKnownPosition();
     B.position = position;
     return new GeoPoint(position.latitude, position.longitude);
-  } on PlatformException {
-    print("POSITION: GeoPisition failed");
+  } on PlatformException catch (e, stack) {
+    FlutterCrashlytics().logException(e, stack);
+    print("POSITION: GeoPisition failed ${e} ");
     return null;
   }
 }
@@ -1815,8 +1815,9 @@ Future<GeoFirePoint> currentLocation() async {
     B.position = position;
     return Geoflutterfire()
         .point(latitude: position.latitude, longitude: position.longitude);
-  } on PlatformException {
-    print("POSITION: GeoPisition failed");
+  } on PlatformException catch (e, stack) {
+    FlutterCrashlytics().logException(e, stack);
+    print("POSITION: GeoPisition failed ${e} ");
     return null;
   }
 }

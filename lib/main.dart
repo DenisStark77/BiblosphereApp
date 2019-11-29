@@ -188,8 +188,8 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
                   'user': B.user.id,
                   'locality': B.locality,
                   'country': B.country,
-                  'latitude': B.position.latitude,
-                  'longitude': B.position.longitude
+                  'latitude': B.position?.latitude,
+                  'longitude': B.position?.longitude
                 });
           }
         });
@@ -250,21 +250,10 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
 
       getPaymentContext();
 
-      final position = await currentPosition();
-
-      Geolocator()
-          .placemarkFromCoordinates(position.latitude, position.longitude,
-              localeIdentifier: 'en')
-          .then((placemarks) {
-        B.locality = placemarks.first.locality;
-        B.country = placemarks.first.country;
-      });
-
       User user = new User(
           id: firebaseUser.uid,
           name: firebaseUser.displayName,
-          photo: firebaseUser.photoUrl,
-          position: position);
+          photo: firebaseUser.photoUrl);
 
       Wallet wallet = new Wallet(id: firebaseUser.uid);
 
@@ -324,6 +313,19 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       if (user.link == null) {
         // TODO: Make this call async to minimize waiting time for login
         user.link = await buildLink('chat?user=${user.id}');
+      }
+      
+      // TODO: Make this async to minimize waiting for refresh
+      final position = await currentPosition();
+      if (position != null) {
+        user.position = position;
+      Geolocator()
+          .placemarkFromCoordinates(position.latitude, position.longitude,
+              localeIdentifier: 'en')
+          .then((placemarks) {
+        B.locality = placemarks.first.locality;
+        B.country = placemarks.first.country;
+      });
       }
 
       // Set global value to user
@@ -615,8 +617,8 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         }
       }
     } catch (e, stack) {
-      FlutterCrashlytics().logException(e, stack);
       showSnackBar(context, 'Sign-in failed: ${e}');
+      FlutterCrashlytics().logException(e, stack);
     }
     return null;
   }
@@ -654,8 +656,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         return authResult.user;
       }
     } catch (e, stack) {
-      print('!!!DEBUG: exception with FB login: ${e}');
-      showSnackBar(context, 'Sign-in failed: ${e}');
+      showSnackBar(context, 'Sign-in failed: ${e}');    
       FlutterCrashlytics().logException(e, stack);
     }
     return null;

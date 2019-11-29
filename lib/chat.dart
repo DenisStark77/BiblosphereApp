@@ -747,9 +747,9 @@ class _ChatState extends State<Chat> {
                                                 'distance': rec.distance,
                                                 'locality': B.locality,
                                                 'country': B.country,
-                                                'latitude': B.position.latitude,
+                                                'latitude': B.position?.latitude,
                                                 'longitude':
-                                                    B.position.longitude
+                                                    B.position?.longitude
                                               });
                                         },
                                         child: ClipOval(

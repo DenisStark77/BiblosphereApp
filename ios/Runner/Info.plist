@@ -70,8 +70,10 @@
 	<string>You camera will be used to take photo of your bookshelf for publishing in the app.</string>
 	<key>NSContactsUsageDescription</key>
 	<string>This app requires access to contacts.</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>Your current location will be used to search nearby books matching your wishlist.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>You current location will be used to search nearby bookshelves and as a location of your bookshelves at a moment of adding it.</string>
+	<string>Your current location will be used to search nearby bookshelves and as a location of your bookshelves at a moment of adding it.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>This app does not require access to the microphone.</string>
 	<key>NSMotionUsageDescription</key>

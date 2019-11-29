@@ -123,8 +123,8 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
               'surerior': ref.id,
               'locality': B.locality,
               'country': B.country,
-              'latitude': B.position.latitude,
-              'longitude': B.position.longitude
+              'latitude': B.position?.latitude,
+              'longitude': B.position?.longitude
             });
           }
         }
@@ -828,8 +828,8 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                                         'user': B.user.id,
                                         'locality': B.locality,
                                         'country': B.country,
-                                        'latitude': B.position.latitude,
-                                        'longitude': B.position.longitude
+                                        'latitude': B.position?.latitude,
+                                        'longitude': B.position?.longitude
                                       });
                                 },
                                 child: Text(B.user.link,
@@ -1197,7 +1197,6 @@ class _MyBookWidgetState extends State<MyBook> {
   @override
   void initState() {
     _listener = bookrecord.snapshots().listen((rec) {
-      print('!!!DEBUG event received ${rec.toJson()}');
       setState(() {});
     });
 
@@ -1472,8 +1471,8 @@ class _MyBookWidgetState extends State<MyBook> {
                                   'user': B.user.id,
                                   'locality': B.locality,
                                   'country': B.country,
-                                  'latitude': B.position.latitude,
-                                  'longitude': B.position.longitude
+                                  'latitude': B.position?.latitude,
+                                  'longitude': B.position?.longitude
                                 });
                           },
                           tooltip: S.of(context).hintShareBook,
@@ -1544,9 +1543,9 @@ class _MyBookWidgetState extends State<MyBook> {
                                                       'locality': B.locality,
                                                       'country': B.country,
                                                       'latitude':
-                                                          B.position.latitude,
+                                                          B.position?.latitude,
                                                       'longitude':
-                                                          B.position.longitude
+                                                          B.position?.longitude
                                                     });
                                               }
                                             },
@@ -1624,8 +1623,8 @@ class _MyBookWidgetState extends State<MyBook> {
                                               'price': bookrecord.price,
                                               'locality': B.locality,
                                               'country': B.country,
-                                              'latitude': B.position.latitude,
-                                              'longitude': B.position.longitude
+                                              'latitude': B.position?.latitude,
+                                              'longitude': B.position?.longitude
                                             });
                                       },
                                       maxLines: 1,
@@ -2090,8 +2089,8 @@ class _ReferralWidgetState extends State<ReferralWidget> {
                                     'user': B.user.id,
                                     'locality': B.locality,
                                     'country': B.country,
-                                    'latitude': B.position.latitude,
-                                    'longitude': B.position.longitude
+                                    'latitude': B.position?.latitude,
+                                    'longitude': B.position?.longitude
                                   });
                             },
                             child: Text(B.user.link,
@@ -2269,8 +2268,8 @@ class _SettingsWidgetState extends State<SettingsWidget> {
                                       'user': B.user.id,
                                       'locality': B.locality,
                                       'country': B.country,
-                                      'latitude': B.position.latitude,
-                                      'longitude': B.position.longitude
+                                      'latitude': B.position?.latitude,
+                                      'longitude': B.position?.longitude
                                     });
                               },
                               child: Text(B.user.link,

@@ -517,8 +517,8 @@ Future<Messages> doTransit(
                                   'distance': rec.distance,
                                   'locality': B.locality,
                                   'country': B.country,
-                                  'latitude': B.position.latitude,
-                                  'longitude': B.position.longitude
+                                  'latitude': B.position?.latitude,
+                                  'longitude': B.position?.longitude
                                 });
   }
 

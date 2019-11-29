@@ -169,7 +169,7 @@ Future<void> payoutStellar(User user, double amount, {String memo=''}) async {
                                   'user': user.id,
                                   'locality': B.locality,
                                   'country': B.country,
-                                  'latitude': B.position.latitude,
-                                  'longitude': B.position.longitude,
+                                  'latitude': B.position?.latitude,
+                                  'longitude': B.position?.longitude,
                                 });
 }

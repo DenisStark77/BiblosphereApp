@@ -72,8 +72,8 @@ Future addBookrecord(
           'isbn': b.isbn,
           'locality': B.locality,
           'country': B.country,
-          'latitude': B.position.latitude,
-          'longitude': B.position.longitude
+          'latitude': B.position?.latitude,
+          'longitude': B.position?.longitude
         });
   }
 }
@@ -189,8 +189,8 @@ void deposit({List<Bookrecord> books, User owner, User payer}) async {
       'distance': book.distance,
       'locality': B.locality,
       'country': B.country,
-      'latitude': B.position.latitude,
-      'longitude': B.position.longitude
+      'latitude': B.position?.latitude,
+      'longitude': B.position?.longitude
     });
   }
 }
@@ -499,8 +499,8 @@ void pass({List<Bookrecord> books, User holder, User payer}) async {
       'distance': book.distance,
       'locality': B.locality,
       'country': B.country,
-      'latitude': B.position.latitude,
-      'longitude': B.position.longitude
+      'latitude': B.position?.latitude,
+      'longitude': B.position?.longitude
     });
 
     analytics
@@ -511,8 +511,8 @@ void pass({List<Bookrecord> books, User holder, User payer}) async {
       'fee': feeStat,
       'locality': B.locality,
       'country': B.country,
-      'latitude': B.position.latitude,
-      'longitude': B.position.longitude
+      'latitude': B.position?.latitude,
+      'longitude': B.position?.longitude
     });
   }
 }
@@ -799,8 +799,8 @@ void complete({List<Bookrecord> books, User holder, User owner}) async {
       'distance': book.distance,
       'locality': B.locality,
       'country': B.country,
-      'latitude': B.position.latitude,
-      'longitude': B.position.longitude
+      'latitude': B.position?.latitude,
+      'longitude': B.position?.longitude
     });
 
     analytics
@@ -811,8 +811,8 @@ void complete({List<Bookrecord> books, User holder, User owner}) async {
       'fee': feeStat,
       'locality': B.locality,
       'country': B.country,
-      'latitude': B.position.latitude,
-      'longitude': B.position.longitude
+      'latitude': B.position?.latitude,
+      'longitude': B.position?.longitude
     });
   }
 }
