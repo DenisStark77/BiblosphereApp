@@ -624,7 +624,7 @@ Future<void> refreshLocation(BuildContext context) {
     .then((status) async {
       if (status == GeolocationStatus.denied || status == GeolocationStatus.unknown)
         showSnackBar(context, S.of(context).snackAllowLocation,
-        button: FlatButton(child: Text('OK'), onPressed: AppSettings.openLocationSettings));
+        button: FlatButton(child: Text('OK', style: Theme.of(context).textTheme.body1.apply(color: Colors.white)), onPressed: AppSettings.openAppSettings));
         
       if (status == GeolocationStatus.granted || status == GeolocationStatus.denied  || status == GeolocationStatus.unknown)  {
          GeoPoint position = await currentPosition();
