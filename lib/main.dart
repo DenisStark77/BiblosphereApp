@@ -349,8 +349,8 @@ class _MyAppState extends State<MyApp> {
                 color: Colors.white),
             brightness: Brightness.light),
         textTheme: TextTheme(
-          headline: TextStyle(fontSize: 48.0, fontWeight: FontWeight.w700),
-          subhead: TextStyle(fontSize: 32.0, fontWeight: FontWeight.w500),
+          headline: TextStyle(fontSize: 48.0, fontWeight: FontWeight.w200),
+          subhead: TextStyle(fontSize: 32.0, fontWeight: FontWeight.w200),
           title: TextStyle(fontSize: 20.0, fontWeight: FontWeight.w300),
           subtitle: TextStyle(fontSize: 18.0, fontWeight: FontWeight.w400),
           body1: TextStyle(fontSize: 16.0, fontWeight: FontWeight.w300),
@@ -669,8 +669,8 @@ class IntroPage extends StatelessWidget {
           iconImageAssetPath: 'images/home.png',
           iconColor: null,
           bubbleBackgroundColor: const Color(0x88FFFFFF),
-          body: Text(S.of(context).introShootHint),
-          title: Text(S.of(context).introShoot),
+          body: Text(S.of(context).introShootHint, style: Theme.of(context).textTheme.body1.apply(color: Colors.white)),
+          title: Text(S.of(context).introShoot, style: Theme.of(context).textTheme.subhead.apply(color: Colors.white)),
           textStyle: TextStyle(color: Colors.white),
           mainImage: Image.asset(
             'images/shoot.png',
@@ -683,8 +683,8 @@ class IntroPage extends StatelessWidget {
         iconImageAssetPath: 'images/local_library.png',
         iconColor: null,
         bubbleBackgroundColor: Color(0x88FFFFFF),
-        body: Text(S.of(context).introSurfHint),
-        title: Text(S.of(context).introSurf),
+        body: Text(S.of(context).introSurfHint, style: Theme.of(context).textTheme.body1.apply(color: Colors.white)),
+        title: Text(S.of(context).introSurf, style: Theme.of(context).textTheme.subhead.apply(color: Colors.white)),
         mainImage: Image.asset(
           'images/surf.png',
 //        height: 285.0,
@@ -698,8 +698,8 @@ class IntroPage extends StatelessWidget {
         iconImageAssetPath: 'images/message.png',
         iconColor: null,
         bubbleBackgroundColor: Color(0x88FFFFFF),
-        body: Text(S.of(context).introMeetHint),
-        title: Text(S.of(context).introMeet),
+        body: Text(S.of(context).introMeetHint, style: Theme.of(context).textTheme.body1.apply(color: Colors.white)),
+        title: Text(S.of(context).introMeet, style: Theme.of(context).textTheme.subhead.apply(color: Colors.white)),
         mainImage: Image.asset(
           'images/meet.png',
 //        height: 285.0,
