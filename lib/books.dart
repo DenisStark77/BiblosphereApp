@@ -35,7 +35,9 @@ class _AddBookWidgetState extends State<AddBookWidget> {
   @override
   void initState() {
     super.initState();
-
+    
+    //refreshLocation(context);
+    
     textController = new TextEditingController();
   }
 
@@ -311,6 +313,8 @@ class _FindBookWidgetState extends State<FindBookWidget> {
   @override
   void initState() {
     super.initState();
+
+    //refreshLocation(context);
 
     textController = new TextEditingController();
 

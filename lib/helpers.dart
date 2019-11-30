@@ -613,14 +613,19 @@ Future<dynamic> signOut(Iterable providers) async {
 }
 
 Future<void> refreshLocation(BuildContext context) {
-  return Geolocator().checkGeolocationPermissionStatus(
-      locationPermission: GeolocationPermission.locationWhenInUse)
+  return Geolocator().checkGeolocationPermissionStatus()
     .then((status) async {
-      if (status == GeolocationStatus.denied)
+      if (status == GeolocationStatus.denied || status == GeolocationStatus.unknown)
         showSnackBar(context, S.of(context).snackAllowLocation);
         
-      if (status == GeolocationStatus.granted || status == GeolocationStatus.denied)  {
-        final position = await currentPosition();
+      if (status == GeolocationStatus.granted || status == GeolocationStatus.denied  || status == GeolocationStatus.unknown)  {
+         GeoPoint position = await currentPosition();
+
+        if (position == null && status == GeolocationStatus.unknown) {
+          status = await Geolocator().checkGeolocationPermissionStatus();
+          position = await currentPosition();
+        }
+
         if (position != null) {
           B.user = (B.user..position = position);
 
@@ -634,6 +639,6 @@ Future<void> refreshLocation(BuildContext context) {
             });
           }
         }
-      }
+      }      
     });
 }
