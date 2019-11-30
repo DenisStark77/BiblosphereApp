@@ -9,6 +9,7 @@ import 'package:firebase_dynamic_links/firebase_dynamic_links.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flushbar/flushbar.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:app_settings/app_settings.dart';
 
 import 'package:biblosphere/l10n.dart';
 import 'package:biblosphere/const.dart';
@@ -171,8 +172,14 @@ MaterialPageRoute cardListPage(
 }
 
 
-showSnackBar(BuildContext context, String text) {
+showSnackBar(BuildContext context, String text, {FlatButton button}) {
+  if (button != null )
   Flushbar(message:  text,
+           mainButton: button,
+    duration:  Duration(seconds: 3),              
+  )..show(context);
+  else
+    Flushbar(message:  text,
     duration:  Duration(seconds: 3),              
   )..show(context);
 }
@@ -616,7 +623,8 @@ Future<void> refreshLocation(BuildContext context) {
   return Geolocator().checkGeolocationPermissionStatus()
     .then((status) async {
       if (status == GeolocationStatus.denied || status == GeolocationStatus.unknown)
-        showSnackBar(context, S.of(context).snackAllowLocation);
+        showSnackBar(context, S.of(context).snackAllowLocation,
+        button: FlatButton(child: Text('OK'), onPressed: AppSettings.openLocationSettings));
         
       if (status == GeolocationStatus.granted || status == GeolocationStatus.denied  || status == GeolocationStatus.unknown)  {
          GeoPoint position = await currentPosition();

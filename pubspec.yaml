@@ -84,6 +84,8 @@ dependencies:
 
   flushbar: ^1.9.1
 
+  app_settings: ^2.0.2
+
 # Run flutter pub pub run flutter_launcher_icons:main
 flutter_icons:
   image_path: "images/biblosphere.jpg"
