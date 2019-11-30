@@ -1,6 +1,6 @@
 {
   "@@last_modified": "2019-01-29T21:04:04.079240",
-  "title": "Biblosphere",
+  "title": "BIBLOSPHERE",
   "@title": {
     "description": "The application title",
     "type": "text",
@@ -1529,5 +1529,15 @@
     "placeholders": {
       "month": {}
     }
+  },
+  "distanceUnknown": "Distance: unknown",
+  "@distanceUnknown": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "snackAllowLocation": "Please allow access to location for searching and adding books",
+  "@snackAllowLocation": {
+    "type": "text",
+    "placeholders": {}
   }
 }

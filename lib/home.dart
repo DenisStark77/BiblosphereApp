@@ -673,7 +673,6 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                 new Expanded(
                     child: new InkWell(
                         onTap: () async {
-                          await initLocation();
                           Navigator.push(
                               context,
                               new MaterialPageRoute(
@@ -682,6 +681,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                                       S.of(context).addbookTitle,
                                       new AddBookWidget(),
                                       appbar: false)));
+                          refreshLocation(context);
                         },
                         child: new Card(
                             child: new Container(
@@ -700,7 +700,6 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                 new Expanded(
                   child: new InkWell(
                     onTap: () async {
-                      await initLocation();
                       Navigator.push(
                           context,
                           new MaterialPageRoute(
@@ -709,6 +708,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                                   S.of(context).findbookTitle,
                                   new FindBookWidget(),
                                   appbar: false)));
+                      refreshLocation(context);
                     },
                     child: new Card(
                       child: new Container(

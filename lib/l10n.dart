@@ -1288,6 +1288,12 @@ class S {
     return Intl.message('Расстояние: неизвестно',
         name: 'distanceUnknown');
   }
+
+  String get snackAllowLocation {
+    return Intl.message('Дайте разрешение на использование текущей позиции для поиска и добавления книг',
+        name: 'snackAllowLocation');
+  }
+
 }
 
 class AppLocalizationsDelegate extends LocalizationsDelegate<S> {

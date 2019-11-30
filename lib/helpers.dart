@@ -8,6 +8,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_dynamic_links/firebase_dynamic_links.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flushbar/flushbar.dart';
+import 'package:geolocator/geolocator.dart';
 
 import 'package:biblosphere/l10n.dart';
 import 'package:biblosphere/const.dart';
@@ -169,23 +170,6 @@ MaterialPageRoute cardListPage(
               })));
 }
 
-showSnackBar1(BuildContext context, String text) {
-  final snackBar = SnackBar(
-    behavior: SnackBarBehavior.fixed,
-    content: Text(text),
-    /*
-    action: SnackBarAction(
-      label: 'Undo',
-      onPressed: () {
-        // Some code to undo the change!
-      },
-    ),
-    */
-  );
-
-// Find the Scaffold in the Widget tree and use it to show a SnackBar!
-  Scaffold.of(context).showSnackBar(snackBar);
-}
 
 showSnackBar(BuildContext context, String text) {
   Flushbar(message:  text,
@@ -626,4 +610,30 @@ Future<dynamic> signOut(Iterable providers) async {
         break;
     }
   });
+}
+
+Future<void> refreshLocation(BuildContext context) {
+  return Geolocator().checkGeolocationPermissionStatus(
+      locationPermission: GeolocationPermission.locationWhenInUse)
+    .then((status) async {
+      if (status == GeolocationStatus.denied)
+        showSnackBar(context, S.of(context).snackAllowLocation);
+        
+      if (status == GeolocationStatus.granted || status == GeolocationStatus.denied)  {
+        final position = await currentPosition();
+        if (position != null) {
+          B.user = (B.user..position = position);
+
+          if (B.locality == null || B.country == null) {
+            Geolocator()
+                .placemarkFromCoordinates(position.latitude, position.longitude,
+                    localeIdentifier: 'en')
+                .then((placemarks) {
+              B.locality = placemarks.first.locality;
+              B.country = placemarks.first.country;
+            });
+          }
+        }
+      }
+    });
 }

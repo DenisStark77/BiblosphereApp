@@ -1,5 +1,5 @@
 {
-  "@@last_modified": "2019-11-25T17:05:47.108060",
+  "@@last_modified": "2019-11-30T11:19:18.048250",
   "title": "Biblosphere",
   "@title": {
     "description": "The application title",
@@ -231,7 +231,7 @@
     "type": "text",
     "placeholders": {}
   },
-  "welcome": "Welcome",
+  "welcome": "WELCOME",
   "@welcome": {
     "type": "text",
     "placeholders": {}
@@ -1529,5 +1529,15 @@
     "placeholders": {
       "month": {}
     }
+  },
+  "distanceUnknown": "Расстояние: неизвестно",
+  "@distanceUnknown": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "snackAllowLocation": "Дайте разрешение на использование текущей позиции для поиска и добавления книг",
+  "@snackAllowLocation": {
+    "type": "text",
+    "placeholders": {}
   }
 }

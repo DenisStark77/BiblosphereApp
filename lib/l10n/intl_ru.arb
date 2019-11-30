@@ -1529,5 +1529,15 @@
     "placeholders": {
       "month": {}
     }
+  },
+  "distanceUnknown": "Расстояние: неизвестно",
+  "@distanceUnknown": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "snackAllowLocation": "Дайте разрешение на использование текущей позиции для поиска и добавления книг",
+  "@snackAllowLocation": {
+    "type": "text",
+    "placeholders": {}
   }
 }

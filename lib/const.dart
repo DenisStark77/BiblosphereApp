@@ -1809,36 +1809,18 @@ Set<String> getKeys(String s) {
   return keys.toSet();
 }
 
-Future<void> initLocation() {
-  return Geolocator().checkGeolocationPermissionStatus(
-      locationPermission: GeolocationPermission.locationWhenInUse)
-    .then((status) async {
-      if (status == GeolocationStatus.granted) {
-        final position = await currentPosition();
-        if (position != null) {
-          B.user = (B.user..position = position);
-
-          if (B.locality == null || B.country == null) {
-            Geolocator()
-                .placemarkFromCoordinates(position.latitude, position.longitude,
-                    localeIdentifier: 'en')
-                .then((placemarks) {
-              B.locality = placemarks.first.locality;
-              B.country = placemarks.first.country;
-            });
-          }
-        }
-      }
-    });
-}
 
 Future<GeoPoint> currentPosition() async {
   try {
     final position = await Geolocator().getLastKnownPosition();
     B.position = position;
-    return new GeoPoint(position.latitude, position.longitude);
-  } on PlatformException {
-    print("POSITION: GeoPisition failed");
+    if (position != null)
+      return new GeoPoint(position.latitude, position.longitude);
+    else
+      return null;  
+  } on PlatformException catch (ex, stack) {
+    FlutterCrashlytics().logException(ex, stack);
+    print("POSITION: GeoPisition failed ${ex} ${stack}");
     return null;
   }
 }
@@ -1847,10 +1829,14 @@ Future<GeoFirePoint> currentLocation() async {
   try {
     final position = await Geolocator().getLastKnownPosition();
     B.position = position;
-    return Geoflutterfire()
+    if (position != null)
+      return Geoflutterfire()
         .point(latitude: position.latitude, longitude: position.longitude);
-  } on PlatformException {
-    print("POSITION: GeoPisition failed");
+    else
+      return null;    
+  } on PlatformException catch (ex, stack) {
+    FlutterCrashlytics().logException(ex, stack);
+    print("POSITION: GeoPisition failed ${ex} ${stack}");
     return null;
   }
 }

@@ -10,7 +10,6 @@ import 'package:flutter_signin_button/flutter_signin_button.dart';
 //import 'package:firebase_ui/utils.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_crashlytics/flutter_crashlytics.dart';
 import 'package:intro_views_flutter/Models/page_view_model.dart';
@@ -92,7 +91,7 @@ class MyApp extends StatefulWidget {
   _MyAppState createState() => new _MyAppState();
 }
 
-class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
+class _MyAppState extends State<MyApp> {
   final FirebaseMessaging _firebaseMessaging = FirebaseMessaging();
   // Subscription for in-app purchases
   StreamSubscription<List<PurchaseDetails>> _subscription;
@@ -108,8 +107,6 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
-
-    WidgetsBinding.instance.addObserver(this);
 
     _checkInitialState();
 
@@ -203,29 +200,9 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     _subscription.cancel();
     _walletSubscription.cancel();
     //_stellar.cancel();
-    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed && B.user != null) {
-      new Future.delayed(Duration.zero, () async {
-        final position = await currentPosition();
-        setState(() {
-          // Update position after the resume
-          B.user = B.user..position = position;
-        });
-        Geolocator()
-            .placemarkFromCoordinates(position.latitude, position.longitude,
-                localeIdentifier: 'en')
-            .then((placemarks) {
-          B.locality = placemarks.first.locality;
-          B.country = placemarks.first.country;
-        });
-      });
-    }
-  }
 
   void _checkInitialState() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
