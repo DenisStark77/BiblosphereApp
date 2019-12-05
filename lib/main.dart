@@ -17,7 +17,6 @@ import 'package:intro_views_flutter/intro_views_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/gestures.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 // Debug analytics:
 // adb shell setprop debug.firebase.analytics.app <package_name>
@@ -94,7 +93,6 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   final FirebaseMessaging _firebaseMessaging = FirebaseMessaging();
   // Subscription for in-app purchases
-  StreamSubscription<List<PurchaseDetails>> _subscription;
   StreamSubscription<FirebaseUser> _listener;
   //StreamSubscription<stellar.OperationResponse> _stellar;
   // Subscription to changes for user balance
@@ -160,44 +158,11 @@ class _MyAppState extends State<MyApp> {
       //       Better to minimize rebuilding. For example by providing currentUser
       //       as parameter on widget push (is it possible?).
     }
-
-    // TODO: Didn't work on WEB
-    if (!kIsWeb) {
-      // Listen to in-app purchases update
-      final Stream purchaseUpdates =
-          InAppPurchaseConnection.instance.purchaseUpdatedStream;
-      _subscription = purchaseUpdates.listen((purchases) {
-        List<PurchaseDetails> details = purchases;
-        // TODO: Redesign to accept multiple payments. It won't work in parallel.
-        details.forEach((purchase) async {
-          if (purchase.status == PurchaseStatus.purchased) {
-            double amount = double.parse(purchase.productID);
-
-            // Create an operation and update user balance
-            await payment(
-                user: B.user, amount: amount, type: OperationType.InputInApp);
-
-            FirebaseAnalytics().logEvent(
-                name: 'ecommerce_purchase',
-                parameters: <String, dynamic>{
-                  'amount': amount,
-                  'channel': 'in-app',
-                  'user': B.user.id,
-                  'locality': B.locality,
-                  'country': B.country,
-                  'latitude': B.position?.latitude,
-                  'longitude': B.position?.longitude
-                });
-          }
-        });
-      });
-    }
   }
 
   @override
   void dispose() {
     _listener.cancel();
-    _subscription.cancel();
     _walletSubscription.cancel();
     //_stellar.cancel();
     super.dispose();
@@ -307,6 +272,7 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return new MaterialApp(
+      debugShowCheckedModeBanner: false,
       // Uncomment to make screenshots in simulator without debug banner
       // debugShowCheckedModeBanner: false,
       localizationsDelegates: [

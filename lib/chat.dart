@@ -948,9 +948,11 @@ class _ChatState extends State<Chat> {
         color: C.button,
         child: new Text(S.of(context).buttonPayin),
         onPressed: () async {
+          print('!!!DEBUG: In-app purchase start');
           final bool available =
               await InAppPurchaseConnection.instance.isAvailable();
           if (!available) {
+          print('!!!DEBUG: In-app purchase 1');
             // TODO: Process this more nicely
             throw ('In-App store not available');
           }
@@ -961,17 +963,22 @@ class _ChatState extends State<Chat> {
               codes.firstWhere((code) => code > missing, orElse: () => 2000);
 
           Set<String> _kIds = {code.toString()};
+          print('!!!DEBUG: In-app purchase 2 ${_kIds.join(', ')}');
           final ProductDetailsResponse response =
               await InAppPurchaseConnection.instance.queryProductDetails(_kIds);
           if (!response.notFoundIDs.isEmpty) {
             // TODO: Process this more nicely
             throw ('Ids of in-app products not available');
           }
+          print('!!!DEBUG: In-app purchase 3 ${response.productDetails.first.description}');
           List<ProductDetails> products = response.productDetails;
           final PurchaseParam purchaseParam = PurchaseParam(
-              productDetails: products.first, sandboxTesting: false);
-          InAppPurchaseConnection.instance
+              productDetails: products.first, sandboxTesting: true);
+          print('!!!DEBUG: In-app purchase 4 ${purchaseParam.productDetails.description}');
+          bool res = await InAppPurchaseConnection.instance
               .buyConsumable(purchaseParam: purchaseParam);
+          print('!!!DEBUG: In-app purchase 5 ${res}');
+              
         },
         shape: new RoundedRectangleBorder(
             borderRadius: new BorderRadius.circular(15.0),
