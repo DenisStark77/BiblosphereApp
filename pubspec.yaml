@@ -151,6 +151,7 @@ flutter:
     - images/icons/icons8-filter-100.png
     - images/icons/icons8-clear-filters-100.png
     - images/icons/icons8-account-100.png
+    - images/icons/icons8-paper-plane-100.png
 
     # credentials for DialogFlow
     - assets/dialogflow.json

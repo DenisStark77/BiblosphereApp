@@ -1294,6 +1294,30 @@ class S {
         name: 'snackAllowLocation');
   }
 
+  String get hintOutputMemo {
+    return Intl.message('Memo для вывода средств через Stellar',
+        name: 'hintOutputMemo');
+  }
+ 
+  String get settingsTitleOutStellar {
+    return Intl.message('Выплаты через Stallar',
+        name: 'settingsTitleOutStellar');
+  }
+   
+  String get settingsTitleInStellar {
+    return Intl.message('Пополнение через Stallar',
+        name: 'settingsTitleInStellar');
+  }
+
+  String get settingsTitleIn {
+    return Intl.message('Пополнение баланса',
+        name: 'settingsTitleIn');
+  }
+   
+  String get settingsTitleGeneral {
+    return Intl.message('Общие настройки',
+        name: 'settingsTitleGeneral');
+  }
 }
 
 class AppLocalizationsDelegate extends LocalizationsDelegate<S> {

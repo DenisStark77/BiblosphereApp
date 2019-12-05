@@ -1,5 +1,5 @@
 {
-  "@@last_modified": "2019-11-30T11:19:18.048250",
+  "@@last_modified": "2019-12-05T23:38:19.867804",
   "title": "Biblosphere",
   "@title": {
     "description": "The application title",
@@ -1537,6 +1537,31 @@
   },
   "snackAllowLocation": "Дайте разрешение на использование текущей позиции для поиска и добавления книг",
   "@snackAllowLocation": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "hintOutputMemo": "Memo для вывода средств через Stellar",
+  "@hintOutputMemo": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "settingsTitleOutStellar": "Выплаты через Stallar",
+  "@settingsTitleOutStellar": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "settingsTitleInStellar": "Пополнение через Stallar",
+  "@settingsTitleInStellar": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "settingsTitleIn": "Пополнение баланса",
+  "@settingsTitleIn": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "settingsTitleGeneral": "Общие настройки",
+  "@settingsTitleGeneral": {
     "type": "text",
     "placeholders": {}
   }

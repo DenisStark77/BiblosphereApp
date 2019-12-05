@@ -1539,5 +1539,30 @@
   "@snackAllowLocation": {
     "type": "text",
     "placeholders": {}
+  },
+  "hintOutputMemo": "Memo для вывода средств через Stellar",
+  "@hintOutputMemo": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "settingsTitleOutStellar": "Выплаты через Stallar",
+  "@settingsTitleOutStellar": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "settingsTitleInStellar": "Пополнение через Stallar",
+  "@settingsTitleInStellar": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "settingsTitleIn": "Пополнение баланса",
+  "@settingsTitleIn": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "settingsTitleGeneral": "Общие настройки",
+  "@settingsTitleGeneral": {
+    "type": "text",
+    "placeholders": {}
   }
 }

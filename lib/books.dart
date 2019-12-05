@@ -6,7 +6,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:barcode_scan/barcode_scan.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter_crashlytics/flutter_crashlytics.dart';
 
 import 'package:biblosphere/const.dart';
@@ -84,16 +83,12 @@ class _AddBookWidgetState extends State<AddBookWidget> {
                           onPressed: () async {
                             String barcode = await BarcodeScanner.scan();
                             await scanIsbn(context, barcode);
-                            FirebaseAnalytics().logEvent(
+                            logAnalyticsEvent(
                                 name: 'book_add_attempt',
                                 parameters: <String, dynamic>{
                                   'type': 'isbn',
                                   'search_term': barcode,
                                   'results': suggestions.length,
-                                  'locality': B.locality,
-                                  'country': B.country,
-                                  'latitude': B.position?.latitude,
-                                  'longitude': B.position?.longitude
                                 });
                           },
                           shape: new RoundedRectangleBorder(
@@ -132,16 +127,12 @@ class _AddBookWidgetState extends State<AddBookWidget> {
                               onPressed: () async {
                                 FocusScope.of(context).unfocus();
                                 await searchByTitleAuthor(textController.text);
-                                FirebaseAnalytics().logEvent(
+                                logAnalyticsEvent(
                                     name: 'book_add_attempt',
                                     parameters: <String, dynamic>{
                                       'type': 'text',
                                       'search_term': textController.text,
                                       'results': suggestions.length,
-                                      'locality': B.locality,
-                                      'country': B.country,
-                                      'latitude': B.position?.latitude,
-                                      'longitude': B.position?.longitude
                                     });
                               },
                               shape: new RoundedRectangleBorder(
@@ -266,13 +257,8 @@ class _AddBookWidgetState extends State<AddBookWidget> {
         }, merge: true);
         //print("No record found for isbn: $barcode");
         showSnackBar(context, S.of(context).isbnNotFound);
-        FirebaseAnalytics()
-            .logEvent(name: 'book_noisbn', parameters: <String, dynamic>{
+        logAnalyticsEvent(name: 'book_noisbn', parameters: <String, dynamic>{
           'isbn': barcode,
-          'locality': B.locality,
-          'country': B.country,
-          'latitude': B.position?.latitude,
-          'longitude': B.position?.longitude
         });
       }
     } on PlatformException catch (e, stack) {
@@ -385,21 +371,18 @@ class _FindBookWidgetState extends State<FindBookWidget> {
                                 final List<dynamic> biblos = books.values
                                     .where((t) => t is Bookrecord)
                                     .toList();
-                                FirebaseAnalytics().logEvent(
+                                logAnalyticsEvent(
                                     name: 'search',
                                     parameters: <String, dynamic>{
                                       'type': 'text',
                                       'search_term': textController.text,
                                       'results': books.length,
                                       'in_biblosphere': biblos.length,
-                                      'locality': B.locality,
-                                      'country': B.country,
-                                      'latitude': B.position?.latitude,
-                                      'longitude': B.position?.longitude
                                     });
 
-                                if (biblos.length > 0)
-                                  FirebaseAnalytics().logEvent(
+                                if (biblos.length > 0) {
+                                  double distance = (biblos.first as Bookrecord).distance;
+                                  logAnalyticsEvent(
                                       name: 'book_found',
                                       parameters: <String, dynamic>{
                                         'type': 'text',
@@ -408,13 +391,9 @@ class _FindBookWidgetState extends State<FindBookWidget> {
                                             (biblos.first as Bookrecord).isbn,
                                         'results': books.length,
                                         'in_biblosphere': biblos.length,
-                                        'distance': (biblos.first as Bookrecord)
-                                            .distance,
-                                        'locality': B.locality,
-                                        'country': B.country,
-                                        'latitude': B.position?.latitude,
-                                        'longitude': B.position?.longitude
+                                        'distance': distance == double.infinity ? 50000.0 : distance,
                                       });
+                                }
                               },
                               shape: new RoundedRectangleBorder(
                                   borderRadius: new BorderRadius.circular(15.0),
@@ -440,21 +419,19 @@ class _FindBookWidgetState extends State<FindBookWidget> {
                             final List<dynamic> biblos = books.values
                                 .where((t) => t is Bookrecord)
                                 .toList();
-                            FirebaseAnalytics().logEvent(
+                            logAnalyticsEvent(
                                 name: 'search',
                                 parameters: <String, dynamic>{
                                   'type': 'isbn',
                                   'search_term': barcode,
                                   'results': books.length,
                                   'in_biblosphere': biblos.length,
-                                  'locality': B.locality,
-                                  'country': B.country,
-                                  'latitude': B.position?.latitude,
-                                  'longitude': B.position?.longitude
                                 });
 
-                            if (biblos.length > 0)
-                              FirebaseAnalytics().logEvent(
+                            if (biblos.length > 0) {
+                              double distance = (biblos.first as Bookrecord).distance;
+
+                              logAnalyticsEvent(
                                   name: 'book_found',
                                   parameters: <String, dynamic>{
                                     'type': 'isbn',
@@ -462,13 +439,9 @@ class _FindBookWidgetState extends State<FindBookWidget> {
                                     'isbn': (biblos.first as Bookrecord).isbn,
                                     'results': books.length,
                                     'in_biblosphere': biblos.length,
-                                    'distance':
-                                        (biblos.first as Bookrecord).distance,
-                                    'locality': B.locality,
-                                    'country': B.country,
-                                    'latitude': B.position?.latitude,
-                                    'longitude': B.position?.longitude
+                                    'distance': distance == double.infinity ? 50000.0 : distance,
                                   });
+                            }
                           },
                           shape: new RoundedRectangleBorder(
                               borderRadius: new BorderRadius.circular(15.0),
@@ -487,15 +460,11 @@ class _FindBookWidgetState extends State<FindBookWidget> {
           if (book is Book) {
             return GestureDetector(
                     onTap: () async {
-                      FirebaseAnalytics().logEvent(
+                      logAnalyticsEvent(
                           name: 'search_elsewhere',
                           parameters: <String, dynamic>{
                             'user': B.user.id,
                             'isbn': book.isbn,
-                            'locality': B.locality,
-                            'country': B.country,
-                            'latitude': B.position?.latitude,
-                            'longitude': B.position?.longitude
                           });
 
                       //book = await enrichBookRecord(book);
@@ -839,16 +808,12 @@ class _GetBookWidgetState extends State<GetBookWidget> {
         child: inLibraries
             ? new GestureDetector(
                 onTap: () async {
-                  FirebaseAnalytics().logEvent(
+                  logAnalyticsEvent(
                       name: 'library_click',
                       parameters: <String, dynamic>{
                         'isbn': widget.book.isbn,
                         'user': B.user.id,
                         'library': libraryQuery,
-                        'locality': B.locality,
-                        'country': B.country,
-                        'latitude': B.position?.latitude,
-                        'longitude': B.position?.longitude
                       });
 
                   if (await canLaunch(libraryQuery)) {
@@ -896,16 +861,12 @@ class _GetBookWidgetState extends State<GetBookWidget> {
                         'https://www.amazon.com/s?k=${widget.book.title + ' ' + widget.book.authors.join(' ')}';
                   }
 
-                  FirebaseAnalytics().logEvent(
+                  logAnalyticsEvent(
                       name: 'bookstore_click',
                       parameters: <String, dynamic>{
                         'isbn': widget.book.isbn,
                         'user': B.user.id,
                         'store': bookstore,
-                        'locality': B.locality,
-                        'country': B.country,
-                        'latitude': B.position?.latitude,
-                        'longitude': B.position?.longitude
                       });
 
                   var encoded = Uri.encodeFull(url);

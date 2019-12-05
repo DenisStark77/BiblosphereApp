@@ -171,17 +171,18 @@ MaterialPageRoute cardListPage(
               })));
 }
 
-
 showSnackBar(BuildContext context, String text, {FlatButton button}) {
-  if (button != null )
-  Flushbar(message:  text,
-           mainButton: button,
-    duration:  Duration(seconds: 3),              
-  )..show(context);
+  if (button != null)
+    Flushbar(
+      message: text,
+      mainButton: button,
+      duration: Duration(seconds: 3),
+    )..show(context);
   else
-    Flushbar(message:  text,
-    duration:  Duration(seconds: 3),              
-  )..show(context);
+    Flushbar(
+      message: text,
+      duration: Duration(seconds: 3),
+    )..show(context);
 }
 
 Scaffold buildScaffold(BuildContext context, String title, Widget body,
@@ -214,23 +215,27 @@ Widget bookImage(dynamic book, double size,
   if (sameHeight)
     return new Container(
         margin: EdgeInsets.all(padding),
-        child: new Tooltip(message: tooltip, child: Image(
-            image: new CachedNetworkImageProvider(
-                (image != null && image.isNotEmpty && image != '')
-                    ? image
-                    : nocoverUrl),
-            height: size,
-            fit: BoxFit.cover)));
+        child: new Tooltip(
+            message: tooltip,
+            child: Image(
+                image: new CachedNetworkImageProvider(
+                    (image != null && image.isNotEmpty && image != '')
+                        ? image
+                        : nocoverUrl),
+                height: size,
+                fit: BoxFit.cover)));
   else
     return new Container(
         margin: EdgeInsets.all(padding),
-        child: new Tooltip(message: tooltip, child: Image(
-            image: new CachedNetworkImageProvider(
-                (image != null && image.isNotEmpty && image != '')
-                    ? image
-                    : nocoverUrl),
-            width: size,
-            fit: BoxFit.cover)));
+        child: new Tooltip(
+            message: tooltip,
+            child: Image(
+                image: new CachedNetworkImageProvider(
+                    (image != null && image.isNotEmpty && image != '')
+                        ? image
+                        : nocoverUrl),
+                width: size,
+                fit: BoxFit.cover)));
 }
 
 Widget userPhoto(dynamic user, double size, {double padding = 0.0}) {
@@ -240,7 +245,7 @@ Widget userPhoto(dynamic user, double size, {double padding = 0.0}) {
     provider = user;
   else if (user is User && user.photo != null)
     provider = CachedNetworkImageProvider(user.photo);
-  else if (user is String && user != null) 
+  else if (user is String && user != null)
     provider = CachedNetworkImageProvider(user);
   else
     provider = AssetImage(account_100);
@@ -270,8 +275,8 @@ class BookrecordWidget extends StatefulWidget {
   final Set<String> filter;
 
   @override
-  _BookrecordWidgetState createState() => new _BookrecordWidgetState(
-      bookrecord: bookrecord, builder: builder);
+  _BookrecordWidgetState createState() =>
+      new _BookrecordWidgetState(bookrecord: bookrecord, builder: builder);
 }
 
 class _BookrecordWidgetState extends State<BookrecordWidget> {
@@ -284,7 +289,7 @@ class _BookrecordWidgetState extends State<BookrecordWidget> {
     super.initState();
 
     // Listen updated on bookrecord and refresh Widget
-    _listener = bookrecord.snapshots().listen( (rec) {
+    _listener = bookrecord.snapshots().listen((rec) {
       setState(() {});
     });
   }
@@ -300,7 +305,6 @@ class _BookrecordWidgetState extends State<BookrecordWidget> {
     if (_listener != null) _listener.cancel();
     super.dispose();
   }
-
 
   @override
   void didUpdateWidget(BookrecordWidget oldWidget) {
@@ -322,7 +326,8 @@ class _BookrecordWidgetState extends State<BookrecordWidget> {
   }
 }
 
-typedef UserWidgetBuilder = Widget Function(BuildContext context, User user, Wallet wallet);
+typedef UserWidgetBuilder = Widget Function(
+    BuildContext context, User user, Wallet wallet);
 
 class UserWidget extends StatefulWidget {
   UserWidget({Key key, @required this.user, @required this.builder})
@@ -380,8 +385,7 @@ class _UserWidgetState extends State<UserWidget> {
     wallet = Wallet(id: user.id);
     final DocumentSnapshot snap = await wallet.ref.get();
 
-    if (snap.exists)
-      wallet = Wallet.fromJson(snap.data);
+    if (snap.exists) wallet = Wallet.fromJson(snap.data);
 
     return;
   }
@@ -450,9 +454,9 @@ Future<Messages> doTransit(
   } else {
     rec = Bookrecord.fromJson(snap.data);
 
-    // If book belong to current user do nothing 
+    // If book belong to current user do nothing
     if (rec.holderId == chat.to)
-       rec = null;
+      rec = null;
     else if (rec.transit == true) {
       // Book already in transit with another user
       showSnackBar(context, S.of(context).snackBookAlreadyInTransit);
@@ -476,10 +480,10 @@ Future<Messages> doTransit(
       // Only add book in Initial status (in Handover fails - null)
       if (chat.toId == B.user.id)
         showSnackBar(context, S.of(context).snackBookNotConfirmed);
-      else  
+      else
         showSnackBar(context, S.of(context).snackBookPending);
-      
-        // Previous exchange not confirmed. Could not open a new one
+
+      // Previous exchange not confirmed. Could not open a new one
       rec = null;
     }
   }
@@ -499,20 +503,14 @@ Future<Messages> doTransit(
     });
 
     // Log book request ad return events
-            FirebaseAnalytics().logEvent(
-                                name: 'add_to_cart',
-                                parameters: <String, dynamic>{
-                                  'isbn': rec.isbn,
-                                  'type': (chat.toId == rec.owner) ? 'return' : 'request',
-                                  'by': (B.user.id == rec.holderId) ? 'holder' : 'peer', 
-                                  'from': chat.fromId,
-                                  'to': chat.toId,
-                                  'distance': rec.distance,
-                                  'locality': B.locality,
-                                  'country': B.country,
-                                  'latitude': B.position?.latitude,
-                                  'longitude': B.position?.longitude
-                                });
+    logAnalyticsEvent(name: 'add_to_cart', parameters: <String, dynamic>{
+      'isbn': rec.isbn,
+      'type': (chat.toId == rec.owner) ? 'return' : 'request',
+      'by': (B.user.id == rec.holderId) ? 'holder' : 'peer',
+      'from': chat.fromId,
+      'to': chat.toId,
+      'distance': rec.distance == double.infinity ? 50000.0 : rec.distance,
+    });
   }
 
   return chat;
@@ -620,33 +618,58 @@ Future<dynamic> signOut(Iterable providers) async {
 }
 
 Future<void> refreshLocation(BuildContext context) {
-  return Geolocator().checkGeolocationPermissionStatus()
-    .then((status) async {
-      if (status == GeolocationStatus.denied || status == GeolocationStatus.unknown)
-        showSnackBar(context, S.of(context).snackAllowLocation,
-        button: FlatButton(child: Text('OK', style: Theme.of(context).textTheme.body1.apply(color: Colors.white)), onPressed: AppSettings.openAppSettings));
-        
-      if (status == GeolocationStatus.granted || status == GeolocationStatus.denied  || status == GeolocationStatus.unknown)  {
-         GeoPoint position = await currentPosition();
+  return Geolocator().checkGeolocationPermissionStatus().then((status) async {
+    if (status == GeolocationStatus.denied ||
+        status == GeolocationStatus.unknown)
+      showSnackBar(context, S.of(context).snackAllowLocation,
+          button: FlatButton(
+              child: Text('OK',
+                  style: Theme.of(context)
+                      .textTheme
+                      .body1
+                      .apply(color: Colors.white)),
+              onPressed: AppSettings.openAppSettings));
 
-        if (position == null && status == GeolocationStatus.unknown) {
-          status = await Geolocator().checkGeolocationPermissionStatus();
-          position = await currentPosition();
+    if (status == GeolocationStatus.granted ||
+        status == GeolocationStatus.denied ||
+        status == GeolocationStatus.unknown) {
+      GeoPoint position = await currentPosition();
+
+      if (position == null && status == GeolocationStatus.unknown) {
+        status = await Geolocator().checkGeolocationPermissionStatus();
+        position = await currentPosition();
+      }
+
+      if (position != null) {
+        B.user = (B.user..position = position);
+
+        if (B.locality == null || B.country == null) {
+          Geolocator()
+              .placemarkFromCoordinates(position.latitude, position.longitude,
+                  localeIdentifier: 'en')
+              .then((placemarks) {
+            B.locality = placemarks.first.locality;
+            B.country = placemarks.first.country;
+          });
         }
+      }
+    }
+  });
+}
 
-        if (position != null) {
-          B.user = (B.user..position = position);
-
-          if (B.locality == null || B.country == null) {
-            Geolocator()
-                .placemarkFromCoordinates(position.latitude, position.longitude,
-                    localeIdentifier: 'en')
-                .then((placemarks) {
-              B.locality = placemarks.first.locality;
-              B.country = placemarks.first.country;
-            });
-          }
-        }
-      }      
+void logAnalyticsEvent({String name, Map<String, dynamic> parameters}) {
+  if (B.position != null)
+    parameters.addAll({
+      'latitude': B?.position?.latitude,
+      'longitude': B?.position?.longitude
     });
+
+  if (B.locality != null) parameters.addAll({'locality': B?.locality});
+
+  if (B.country != null)
+    parameters.addAll({
+      'country': B.country,
+    });
+
+  analytics.logEvent(name: name, parameters: parameters);
 }

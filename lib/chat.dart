@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
-import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -730,7 +729,7 @@ class _ChatState extends State<Chat> {
                                                 FieldValue.arrayRemove([rec.id])
                                           });
 
-                                          FirebaseAnalytics().logEvent(
+                                          logAnalyticsEvent(
                                               name: 'remove_from_cart',
                                               parameters: <String, dynamic>{
                                                 'isbn': rec.isbn,
@@ -744,12 +743,7 @@ class _ChatState extends State<Chat> {
                                                         : 'peer',
                                                 'from': chat.fromId,
                                                 'to': chat.toId,
-                                                'distance': rec.distance,
-                                                'locality': B.locality,
-                                                'country': B.country,
-                                                'latitude': B.position?.latitude,
-                                                'longitude':
-                                                    B.position?.longitude
+                                                'distance': rec.distance == double.infinity ? 50000.0 : rec.distance
                                               });
                                         },
                                         child: ClipOval(
@@ -948,11 +942,9 @@ class _ChatState extends State<Chat> {
         color: C.button,
         child: new Text(S.of(context).buttonPayin),
         onPressed: () async {
-          print('!!!DEBUG: In-app purchase start');
           final bool available =
               await InAppPurchaseConnection.instance.isAvailable();
           if (!available) {
-          print('!!!DEBUG: In-app purchase 1');
             // TODO: Process this more nicely
             throw ('In-App store not available');
           }
@@ -974,12 +966,9 @@ class _ChatState extends State<Chat> {
           ProductDetails product = products.firstWhere( (p) => missing < toXlm(p.skuDetail.priceAmountMicros / 1000000, currency: p.skuDetail.priceCurrencyCode), orElse: () => products.elementAt(products.length-1));
 
           final PurchaseParam purchaseParam = PurchaseParam(
-              productDetails: products.first, sandboxTesting: false);
-          print('!!!DEBUG: In-app purchase 4 ${purchaseParam.productDetails.description}');
+              productDetails: product, sandboxTesting: false);
           bool res = await InAppPurchaseConnection.instance
               .buyConsumable(purchaseParam: purchaseParam);
-          print('!!!DEBUG: In-app purchase 5 ${res}');
-              
         },
         shape: new RoundedRectangleBorder(
             borderRadius: new BorderRadius.circular(15.0),

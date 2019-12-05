@@ -65,15 +65,11 @@ Future addBookrecord(
       await bookrecord.ref.updateData(b.toJson(bookOnly: true));
     }
 
-    analytics.logEvent(
+    logAnalyticsEvent(
         name: wish ? 'add_to_wishlist' : 'book_add',
         parameters: <String, dynamic>{
           'language': b.language ?? '',
           'isbn': b.isbn,
-          'locality': B.locality,
-          'country': B.country,
-          'latitude': B.position?.latitude,
-          'longitude': B.position?.longitude
         });
   }
 }
@@ -180,17 +176,12 @@ void deposit({List<Bookrecord> books, User owner, User payer}) async {
       }
     });
 
-    analytics
-        .logEvent(name: 'book_paid', parameters: <String, dynamic>{
+    logAnalyticsEvent(name: 'book_paid', parameters: <String, dynamic>{
       'from': owner.id,
       'to': payer.id,
       'isbn': book.isbn,
       'price': book.getPrice(),
-      'distance': book.distance,
-      'locality': B.locality,
-      'country': B.country,
-      'latitude': B.position?.latitude,
-      'longitude': B.position?.longitude
+      'distance': book.distance == double.infinity ? 50000.0 : book.distance,
     });
   }
 }
@@ -489,30 +480,20 @@ void pass({List<Bookrecord> books, User holder, User payer}) async {
       }
     });
 
-    analytics
-        .logEvent(name: 'book_pass', parameters: <String, dynamic>{
+    logAnalyticsEvent(name: 'book_pass', parameters: <String, dynamic>{
       'from': holder.id,
       'to': payer.id,
       'isbn': book.isbn,
       'price': book.getPrice(),
       'days': days,
-      'distance': book.distance,
-      'locality': B.locality,
-      'country': B.country,
-      'latitude': B.position?.latitude,
-      'longitude': B.position?.longitude
+      'distance': book.distance == double.infinity ? 50000.0 : book.distance,
     });
 
-    analytics
-        .logEvent(name: 'referral_reward', parameters: <String, dynamic>{
+    logAnalyticsEvent(name: 'referral_reward', parameters: <String, dynamic>{
       'isbn': book.isbn,
       'price': book.getPrice(),
       'days': days,
       'fee': feeStat,
-      'locality': B.locality,
-      'country': B.country,
-      'latitude': B.position?.latitude,
-      'longitude': B.position?.longitude
     });
   }
 }
@@ -789,30 +770,20 @@ void complete({List<Bookrecord> books, User holder, User owner}) async {
       return;
     });
 
-    analytics
-        .logEvent(name: 'book_returned', parameters: <String, dynamic>{
+    logAnalyticsEvent(name: 'book_returned', parameters: <String, dynamic>{
       'from': holder.id,
       'to': owner.id,
       'isbn': book.isbn,
       'price': book.getPrice(),
       'days': days,
-      'distance': book.distance,
-      'locality': B.locality,
-      'country': B.country,
-      'latitude': B.position?.latitude,
-      'longitude': B.position?.longitude
+      'distance': book.distance == double.infinity ? 50000.0 : book.distance,
     });
 
-    analytics
-        .logEvent(name: 'referral_reward', parameters: <String, dynamic>{
+    logAnalyticsEvent(name: 'referral_reward', parameters: <String, dynamic>{
       'isbn': book.isbn,
       'price': book.getPrice(),
       'days': days,
       'fee': feeStat,
-      'locality': B.locality,
-      'country': B.country,
-      'latitude': B.position?.latitude,
-      'longitude': B.position?.longitude
     });
   }
 }

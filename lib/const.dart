@@ -148,6 +148,8 @@ const String sent_100 = 'images/icons/icons8-sent-100.png';
 const String filter_100 = 'images/icons/icons8-filter-100.png';
 const String clear_filters_100 = 'images/icons/icons8-clear-filters-100.png';
 const String account_100 = 'images/icons/icons8-account-100.png';
+const String paper_plane_100 = 'images/icons/icons8-paper-plane-100.png';
+
 
 Widget assetIcon(String asset, {double size, double padding = 0.0}) {
   if (size != null)

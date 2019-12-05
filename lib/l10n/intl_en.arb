@@ -1539,5 +1539,30 @@
   "@snackAllowLocation": {
     "type": "text",
     "placeholders": {}
+  },
+  "hintOutputMemo": "Memo for payout transaction",
+  "@hintOutputMemo": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "settingsTitleOutStellar": "PAyout via Stallar",
+  "@settingsTitleOutStellar": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "settingsTitleInStellar": "Get balance via Stallar",
+  "@settingsTitleInStellar": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "settingsTitleIn": "Get balance",
+  "@settingsTitleIn": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "settingsTitleGeneral": "General settings",
+  "@settingsTitleGeneral": {
+    "type": "text",
+    "placeholders": {}
   }
 }

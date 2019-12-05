@@ -1,12 +1,12 @@
 import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter_crashlytics/flutter_crashlytics.dart';
 import 'package:stellar/stellar.dart' as stellar;
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 
 import 'package:biblosphere/const.dart';
+import 'package:biblosphere/helpers.dart';
 
 String biblosphereAccountId;
 
@@ -41,8 +41,8 @@ double toCurrency(double amount) {
 }
 
 
-String money(double amount) {
-  return '${new NumberFormat.currency(symbol: currencySymbol[B.currency]).format((amount ?? 0) * xlmRates[B.currency])}';
+String money(double amount, {decimals = 2}) {
+  return '${new NumberFormat.currency(symbol: currencySymbol[B.currency], decimalDigits: decimals).format((amount ?? 0) * xlmRates[B.currency])}';
 }
 
 
@@ -163,15 +163,11 @@ Future<void> payoutStellar(User user, double amount, {String memo=''}) async {
       });
   });
 
-  FirebaseAnalytics().logEvent(
+  logAnalyticsEvent(
                                 name: 'ecommerce_refund',
                                 parameters: <String, dynamic>{
                                   'amount': amount,
                                   'channel': 'stellar',
                                   'user': user.id,
-                                  'locality': B.locality,
-                                  'country': B.country,
-                                  'latitude': B.position?.latitude,
-                                  'longitude': B.position?.longitude,
                                 });
 }

@@ -12,7 +12,6 @@ import 'package:share/share.dart';
 import 'package:flutter_crashlytics/flutter_crashlytics.dart';
 import 'package:flutter/gestures.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 
 import 'package:biblosphere/const.dart';
@@ -46,7 +45,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
     assert(B.user != null);
     initDynamicLinks();
 
-        // TODO: Didn't work on WEB
+    // TODO: Didn't work on WEB
     if (!kIsWeb) {
       // Listen to in-app purchases update
       final Stream purchaseUpdates =
@@ -59,35 +58,34 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
           if (purchase.status == PurchaseStatus.purchased) {
             // Get product
             final ProductDetailsResponse response =
-              await InAppPurchaseConnection.instance.queryProductDetails({purchase.productID});
+                await InAppPurchaseConnection.instance
+                    .queryProductDetails({purchase.productID});
 
             if (!response.notFoundIDs.isEmpty) {
-                // TODO: Process this more nicely
-                throw ('Ids of in-app products not available');
+              // TODO: Process this more nicely
+              throw ('Ids of in-app products not available');
             }
 
             ProductDetails product = response.productDetails.first;
- 
-            double amount = toXlm(product.skuDetail.priceAmountMicros / 1000000, currency: product.skuDetail.priceCurrencyCode);
-        
+
+            double amount = toXlm(product.skuDetail.priceAmountMicros / 1000000,
+                currency: product.skuDetail.priceCurrencyCode);
+
             // Create an operation and update user balance
             await payment(
                 user: B.user, amount: amount, type: OperationType.InputInApp);
 
-            FirebaseAnalytics().logEvent(
+            logAnalyticsEvent(
                 name: 'ecommerce_purchase',
                 parameters: <String, dynamic>{
                   'amount': amount,
                   'channel': 'in-app',
                   'user': B.user.id,
-                  'locality': B.locality,
-                  'country': B.country,
-                  'latitude': B.position?.latitude,
-                  'longitude': B.position?.longitude
                 });
           } else if (purchase.status == PurchaseStatus.error) {
-            showSnackBar(context,'Purchase error: ${purchase.error.details}');
-            print('!!!DEBUG purchases error:  ${purchase.error.code} ${purchase.error.details} ${purchase.error.message}  ${purchase.error.source}');
+            showSnackBar(context, 'Purchase error: ${purchase.error.details}');
+            print(
+                '!!!DEBUG purchases error:  ${purchase.error.code} ${purchase.error.details} ${purchase.error.message}  ${purchase.error.source}');
           }
         });
       });
@@ -169,15 +167,12 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
             // Update  beneficiary1, beneficiary2, feeShared
             B.user.ref.updateData(B.user.toJson());
 
-            FirebaseAnalytics()
-                .logEvent(name: 'referral_set', parameters: <String, dynamic>{
-              'user': B.user.id,
-              'surerior': ref.id,
-              'locality': B.locality,
-              'country': B.country,
-              'latitude': B.position?.latitude,
-              'longitude': B.position?.longitude
-            });
+            logAnalyticsEvent(
+                name: 'referral_set',
+                parameters: <String, dynamic>{
+                  'user': B.user.id,
+                  'surerior': ref.id,
+                });
           }
         }
 
@@ -275,19 +270,19 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
           // Here we take the value from the MyHomePage object that was created by
           // the App.build method, and use it to set our appbar title.
           actions: <Widget>[
-          new IconButton(
-            onPressed: () {
-                  Navigator.push(
-                      context,
-                      new MaterialPageRoute(
-                          builder: (context) => buildScaffold(
-                              context,
-                              S.of(context).titleMessages,
-                              new ChatListWidget())));
-            },
-            tooltip: S.of(context).hintChatOpen,
-            icon: assetIcon(communication_100, size: 30),
-          ),
+            new IconButton(
+              onPressed: () {
+                Navigator.push(
+                    context,
+                    new MaterialPageRoute(
+                        builder: (context) => buildScaffold(
+                            context,
+                            S.of(context).titleMessages,
+                            new ChatListWidget())));
+              },
+              tooltip: S.of(context).hintChatOpen,
+              icon: assetIcon(communication_100, size: 30),
+            ),
 /*
           Container(
               margin: EdgeInsets.only(right: 10.0, left: 10.0),
@@ -874,16 +869,12 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                                   showSnackBar(
                                       context, S.of(context).linkCopied);
 
-                                  FirebaseAnalytics().logEvent(
+                                  logAnalyticsEvent(
                                       name: 'share',
                                       parameters: <String, dynamic>{
                                         'type': 'link',
                                         'screen': 'drawer',
                                         'user': B.user.id,
-                                        'locality': B.locality,
-                                        'country': B.country,
-                                        'latitude': B.position?.latitude,
-                                        'longitude': B.position?.longitude
                                       });
                                 },
                                 child: Text(B.user.link,
@@ -1338,34 +1329,41 @@ class _MyBookWidgetState extends State<MyBook> {
                                                 .textTheme
                                                 .subtitle)),
                                     // Show price without fee for the book owners
-                                    B.user.id == bookrecord.ownerId && !bookrecord.wish 
-                                    ? Container(
-                                        child: Text(
-                                            S.of(context).bookPrice(money(bookrecord.getPrice())),
-                                            overflow: TextOverflow.ellipsis,
-                                            style: Theme.of(context)
-                                                .textTheme
-                                                .body1)) : Container(),
+                                    B.user.id == bookrecord.ownerId &&
+                                            !bookrecord.wish
+                                        ? Container(
+                                            child: Text(
+                                                S.of(context).bookPrice(money(
+                                                    bookrecord.getPrice())),
+                                                overflow: TextOverflow.ellipsis,
+                                                style: Theme.of(context)
+                                                    .textTheme
+                                                    .body1))
+                                        : Container(),
                                     // Show income for lent books
-                                    bookrecord.isLent 
-                                    ? Container(
-                                        child: Text(
-                                            S.of(context).bookIncome(money(income(
-                                                    bookrecord.getPrice()))),
-                                            overflow: TextOverflow.ellipsis,
-                                            style: Theme.of(context)
-                                                .textTheme
-                                                .body1)) : Container(),
+                                    bookrecord.isLent
+                                        ? Container(
+                                            child: Text(
+                                                S.of(context).bookIncome(money(
+                                                    income(bookrecord
+                                                        .getPrice()))),
+                                                overflow: TextOverflow.ellipsis,
+                                                style: Theme.of(context)
+                                                    .textTheme
+                                                    .body1))
+                                        : Container(),
                                     // Show rent for borrowed books
-                                    bookrecord.isBorrowed 
-                                    ? Container(
-                                        child: Text(
-                                            S.of(context).bookRent(money(monthly(
-                                                    bookrecord.getPrice()))),
-                                            overflow: TextOverflow.ellipsis,
-                                            style: Theme.of(context)
-                                                .textTheme
-                                                .body1)) : Container(),
+                                    bookrecord.isBorrowed
+                                        ? Container(
+                                            child: Text(
+                                                S.of(context).bookRent(money(
+                                                    monthly(bookrecord
+                                                        .getPrice()))),
+                                                overflow: TextOverflow.ellipsis,
+                                                style: Theme.of(context)
+                                                    .textTheme
+                                                    .body1))
+                                        : Container(),
                                     B.user.id != bookrecord.ownerId
                                         ? Container(
                                             child: Text(
@@ -1517,16 +1515,12 @@ class _MyBookWidgetState extends State<MyBook> {
                             // Share link to the book
                             Share.share(link);
 
-                            FirebaseAnalytics().logEvent(
+                            logAnalyticsEvent(
                                 name: 'share',
                                 parameters: <String, dynamic>{
                                   'type': 'share',
                                   'isbn': bookrecord.isbn,
                                   'user': B.user.id,
-                                  'locality': B.locality,
-                                  'country': B.country,
-                                  'latitude': B.position?.latitude,
-                                  'longitude': B.position?.longitude
                                 });
                           },
                           tooltip: S.of(context).hintShareBook,
@@ -1588,18 +1582,12 @@ class _MyBookWidgetState extends State<MyBook> {
                                                         .of(context)
                                                         .snackBookImageChanged);
 
-                                                FirebaseAnalytics().logEvent(
+                                                logAnalyticsEvent(
                                                     name: 'book_image_set',
                                                     parameters: <String,
                                                         dynamic>{
                                                       'isbn': bookrecord.isbn,
                                                       'user': B.user.id,
-                                                      'locality': B.locality,
-                                                      'country': B.country,
-                                                      'latitude':
-                                                          B.position?.latitude,
-                                                      'longitude':
-                                                          B.position?.longitude
                                                     });
                                               }
                                             },
@@ -1669,16 +1657,12 @@ class _MyBookWidgetState extends State<MyBook> {
                                                 .of(context)
                                                 .snackBookPriceChanged);
 
-                                        FirebaseAnalytics().logEvent(
+                                        logAnalyticsEvent(
                                             name: 'book_price_set',
                                             parameters: <String, dynamic>{
                                               'isbn': bookrecord.isbn,
                                               'user': B.user.id,
                                               'price': bookrecord.price,
-                                              'locality': B.locality,
-                                              'country': B.country,
-                                              'latitude': B.position?.latitude,
-                                              'longitude': B.position?.longitude
                                             });
                                       },
                                       maxLines: 1,
@@ -1940,7 +1924,8 @@ class _MyOperationWidgetState extends State<MyOperation> {
     if (operation.isLeasing) {
       return new Container(
           child: Row(children: <Widget>[
-        bookImage(operation.bookImage, 25, padding: 3.0, tooltip: operation.bookTooltip),
+        bookImage(operation.bookImage, 25,
+            padding: 3.0, tooltip: operation.bookTooltip),
         Expanded(
             child: Container(
                 child: Column(
@@ -1963,7 +1948,8 @@ class _MyOperationWidgetState extends State<MyOperation> {
     } else if (operation.isReward) {
       return new Container(
           child: Row(children: <Widget>[
-        bookImage(operation.bookImage, 25, padding: 3.0, tooltip: operation.bookTooltip),
+        bookImage(operation.bookImage, 25,
+            padding: 3.0, tooltip: operation.bookTooltip),
         Expanded(
             child: Container(
                 child: Column(
@@ -2135,16 +2121,12 @@ class _ReferralWidgetState extends State<ReferralWidget> {
                               //Navigator.pop(context);
                               showSnackBar(context, S.of(context).linkCopied);
 
-                              FirebaseAnalytics().logEvent(
+                              logAnalyticsEvent(
                                   name: 'share',
                                   parameters: <String, dynamic>{
                                     'type': 'link',
                                     'screen': 'referral',
                                     'user': B.user.id,
-                                    'locality': B.locality,
-                                    'country': B.country,
-                                    'latitude': B.position?.latitude,
-                                    'longitude': B.position?.longitude
                                   });
                             },
                             child: Text(B.user.link,
@@ -2239,6 +2221,8 @@ class _SettingsWidgetState extends State<SettingsWidget> {
   String _accountErrorText;
   String _amountErrorText;
 
+  List<ProductDetails> products;
+
   @override
   void initState() {
     super.initState();
@@ -2247,6 +2231,33 @@ class _SettingsWidgetState extends State<SettingsWidget> {
     if (B.user.payoutId != null) payoutTextCtr.text = B.user.payoutId;
     payoutMemoCtr = new TextEditingController();
     amountTextCtr = new TextEditingController();
+
+    initInAppPurchase();
+  }
+
+  Future<void> initInAppPurchase() async {
+    final bool available = await InAppPurchaseConnection.instance.isAvailable();
+
+    if (!available) {
+      // TODO: Process this more nicely
+      throw ('In-App store not available');
+    }
+
+    // Only show bigger amounts
+    Set<String> _kIds = {'50', '100', '200', '500', '1000', '2000'};
+    final ProductDetailsResponse response =
+        await InAppPurchaseConnection.instance.queryProductDetails(_kIds);
+
+    if (!response.notFoundIDs.isEmpty) {
+      // TODO: Process this more nicely
+      throw ('Ids of in-app products not available');
+    }
+
+    setState(() {
+      products = response.productDetails;
+      products.sort((p2, p1) =>
+          p1.skuDetail.priceAmountMicros - p2.skuDetail.priceAmountMicros);
+    });
   }
 
   @override
@@ -2275,281 +2286,352 @@ class _SettingsWidgetState extends State<SettingsWidget> {
               child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
-                    Row(mainAxisAlignment: MainAxisAlignment.start, children: <
-                        Widget>[
-                      userPhoto(B.user, 90),
-                      Expanded(
-                          child: Container(
-                              padding: EdgeInsets.only(left: 10.0),
-                              child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: <Widget>[
-                                    Text(B.user.name,
-                                        style:
-                                            Theme.of(context).textTheme.title),
-                                    Row(children: <Widget>[
-                                      new Container(
-                                          margin: EdgeInsets.only(right: 5.0),
-                                          child:
-                                              assetIcon(coins_100, size: 20)),
-                                      new Text(money(B.wallet.getAvailable()),
-                                          style:
-                                              Theme.of(context).textTheme.body1)
-                                    ]),
-                                  ]))),
-                    ]),
                     Container(
-                        padding: EdgeInsets.only(top: 20.0),
-                        child: Text(S.of(context).referralLink)),
-                    Container(
-                        padding: EdgeInsets.only(bottom: 20.0),
-                        child: Builder(
-                            // Create an inner BuildContext so that the onPressed methods
-                            // can refer to the Scaffold with Scaffold.of().
-                            builder: (BuildContext context) {
-                          return InkWell(
-                              onTap: () {
-                                Clipboard.setData(
-                                    new ClipboardData(text: B.user.link));
-                                //Navigator.pop(context);
-                                showSnackBar(context, S.of(context).linkCopied);
+                        padding: EdgeInsets.only(bottom: 10.0),
+                        child: Row(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            children: <Widget>[
+                              userPhoto(B.user, 90),
+                              Expanded(
+                                  child: Container(
+                                      padding: EdgeInsets.only(left: 10.0),
+                                      child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: <Widget>[
+                                            Text(B.user.name,
+                                                style: Theme.of(context)
+                                                    .textTheme
+                                                    .title),
+                                            Row(children: <Widget>[
+                                              new Container(
+                                                  margin: EdgeInsets.only(
+                                                      right: 5.0),
+                                                  child: assetIcon(coins_100,
+                                                      size: 20)),
+                                              new Text(
+                                                  money(
+                                                      B.wallet.getAvailable()),
+                                                  style: Theme.of(context)
+                                                      .textTheme
+                                                      .body1)
+                                            ]),
+                                          ]))),
+                            ])),
+                    ExpansionTile(
+                        title: Text(S.of(context).settingsTitleGeneral,
+                            style: Theme.of(context).textTheme.title),
+                        children: <Widget>[
+                          Container(child: Text(S.of(context).referralLink)),
+                          Container(
+                              padding: EdgeInsets.only(bottom: 20.0),
+                              child: Builder(
+                                  // Create an inner BuildContext so that the onPressed methods
+                                  // can refer to the Scaffold with Scaffold.of().
+                                  builder: (BuildContext context) {
+                                return InkWell(
+                                    onTap: () {
+                                      Clipboard.setData(
+                                          new ClipboardData(text: B.user.link));
+                                      //Navigator.pop(context);
+                                      showSnackBar(
+                                          context, S.of(context).linkCopied);
 
-                                FirebaseAnalytics().logEvent(
-                                    name: 'share',
-                                    parameters: <String, dynamic>{
-                                      'type': 'link',
-                                      'screen': 'settings',
-                                      'user': B.user.id,
-                                      'locality': B.locality,
-                                      'country': B.country,
-                                      'latitude': B.position?.latitude,
-                                      'longitude': B.position?.longitude
-                                    });
+                                      logAnalyticsEvent(
+                                          name: 'share',
+                                          parameters: <String, dynamic>{
+                                            'type': 'link',
+                                            'screen': 'settings',
+                                            'user': B.user.id,
+                                          });
+                                    },
+                                    child: Text(B.user.link,
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .body1
+                                            .apply(
+                                                decoration:
+                                                    TextDecoration.underline)));
+                              })),
+                          Container(child: Text(S.of(context).displayCurrency)),
+                          Container(
+                            width: 230.0,
+                            alignment: Alignment.center,
+                            padding: EdgeInsets.only(bottom: 20.0),
+                            child: DropdownButton(
+                              isExpanded: true,
+                              isDense: true,
+                              hint: Text(S
+                                  .of(context)
+                                  .selectDisplayCurrency), // Not necessary for Option 1
+                              value: B.currency,
+                              onChanged: (newValue) {
+                                setState(() {
+                                  B.currency = newValue;
+                                });
+                                // Update preferred currency for user
+                                B.user = B.user..currency = newValue;
+                                B.user.ref.updateData(B.user.toJson());
                               },
-                              child: Text(B.user.link,
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .body1
-                                      .apply(
-                                          decoration:
-                                              TextDecoration.underline)));
-                        })),
-                    Container(
-                        padding: EdgeInsets.only(top: 5.0),
-                        child: Text(S.of(context).displayCurrency)),
-                    Container(
-                      padding: EdgeInsets.only(bottom: 20.0),
-                      child: DropdownButton(
-                        isExpanded: true,
-                        isDense: true,
-                        hint: Text(S
-                            .of(context)
-                            .selectDisplayCurrency), // Not necessary for Option 1
-                        value: B.currency,
-                        onChanged: (newValue) {
-                          setState(() {
-                            B.currency = newValue;
-                          });
-                          // Update preferred currency for user
-                          B.user = B.user..currency = newValue;
-                          B.user.ref.updateData(B.user.toJson());
-                        },
-                        items: currencySymbol.entries.map((entry) {
-                          return DropdownMenuItem(
-                            child: new Text(
-                              entry.key,
-                              style: Theme.of(context).textTheme.body1,
+                              items: currencySymbol.entries.map((entry) {
+                                return DropdownMenuItem(
+                                  child: Container(alignment: Alignment.center, child: Text(entry.key,
+                                      style: Theme.of(context).textTheme.body1,
+                                      textAlign: TextAlign.center)),
+                                  value: entry.key,
+                                );
+                              }).toList(),
                             ),
-                            value: entry.key,
-                          );
-                        }).toList(),
-                      ),
-                    ),
-                    Text(S.of(context).inputStellarAcount),
-                    new Container(
-                        padding: EdgeInsets.only(bottom: 20.0),
-                        child: Builder(
-                            // Create an inner BuildContext so that the onPressed methods
-                            // can refer to the Scaffold with Scaffold.of().
-                            builder: (BuildContext context) {
-                          return InkWell(
-                              onTap: () {
-                                Clipboard.setData(new ClipboardData(
-                                    text: biblosphereAccountId));
-                                //Navigator.pop(context);
-                                showSnackBar(
-                                    context, S.of(context).accountCopied);
+                          )
+                        ]),
+                    products != null ? ExpansionTile(
+                        title: Text(S.of(context).settingsTitleIn,
+                            style: Theme.of(context).textTheme.title),
+                        children: <Widget>[
+                          Container(
+                            //width: 230.0,
+                            alignment: Alignment.center,
+                            padding: EdgeInsets.only(bottom: 20.0),
+                            child: DropdownButton(
+                              isExpanded: true,
+                              isDense: true,
+                              //hint: , // Not necessary for Option 1
+                              value: products.first,
+                              onChanged: (product) async {
+                                final PurchaseParam purchaseParam =
+                                    PurchaseParam(
+                                        productDetails: product,
+                                        sandboxTesting: false);
+                                bool res = await InAppPurchaseConnection
+                                    .instance
+                                    .buyConsumable(
+                                        purchaseParam: purchaseParam);
+                                print('!!!DEBUG result ${res}');
                               },
-                              child: Text(biblosphereAccountId,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .body1
-                                      .apply(
-                                          decoration:
-                                              TextDecoration.underline)));
-                        })),
-                    Text(S.of(context).inputStellarMemo),
-                    new Container(
-                        padding: EdgeInsets.only(bottom: 20.0),
-                        child: Builder(
-                            // Create an inner BuildContext so that the onPressed methods
-                            // can refer to the Scaffold with Scaffold.of().
-                            builder: (BuildContext context) {
-                          return InkWell(
-                              onTap: () {
-                                Clipboard.setData(
-                                    new ClipboardData(text: B.user.id));
-                                //Navigator.pop(context);
-                                showSnackBar(context, S.of(context).memoCopied);
-                              },
-                              child: Text(B.user.id,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .body1
-                                      .apply(
-                                          decoration:
-                                              TextDecoration.underline)));
-                        })),
-                    Text(S.of(context).outputStellarAccount),
-                    new Container(
-                      padding: EdgeInsets.only(bottom: 20.0),
-                      child: Theme(
-                          data: ThemeData(platform: TargetPlatform.android),
-                          child: TextField(
-                            onSubmitted: (value) async {
-                              if (!await checkStellarAccount(value))
-                                setState(() {
-                                  _accountErrorText =
-                                      S.of(context).wrongAccount;
-                                });
-                              else
-                                setState(() {
-                                  _accountErrorText = null;
-                                });
+                              items: products.map((p) {
+                                return DropdownMenuItem(
+                                  child: Container(alignment: Alignment.center, child: Text(
+                                      '${p.title} (${money(toXlm(p.skuDetail.priceAmountMicros / 1000000, currency: p.skuDetail.priceCurrencyCode), decimals: 0)})',
+                                      style: Theme.of(context).textTheme.body1,
+                                      textAlign: TextAlign.center)),
+                                  value: p,
+                                );
+                              }).toList(),
+                            ),
+                          )
+                        ]) : Container(),
+                    ExpansionTile(
+                        title: Text(S.of(context).settingsTitleInStellar,
+                            style: Theme.of(context).textTheme.title),
+                        children: <Widget>[
+                          Text(S.of(context).inputStellarAcount),
+                          new Container(
+                              alignment: Alignment.centerLeft,
+                              padding: EdgeInsets.only(bottom: 20.0),
+                              child: Builder(
+                                  // Create an inner BuildContext so that the onPressed methods
+                                  // can refer to the Scaffold with Scaffold.of().
+                                  builder: (BuildContext context) {
+                                return InkWell(
+                                    onTap: () {
+                                      Clipboard.setData(new ClipboardData(
+                                          text: biblosphereAccountId));
+                                      //Navigator.pop(context);
+                                      showSnackBar(
+                                          context, S.of(context).accountCopied);
+                                    },
+                                    child: Text(biblosphereAccountId,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .body1
+                                            .apply(
+                                                decoration:
+                                                    TextDecoration.underline)));
+                              })),
+                          Text(S.of(context).inputStellarMemo),
+                          new Container(
+                              padding: EdgeInsets.only(bottom: 20.0),
+                              child: Builder(
+                                  // Create an inner BuildContext so that the onPressed methods
+                                  // can refer to the Scaffold with Scaffold.of().
+                                  builder: (BuildContext context) {
+                                return InkWell(
+                                    onTap: () {
+                                      Clipboard.setData(
+                                          new ClipboardData(text: B.user.id));
+                                      //Navigator.pop(context);
+                                      showSnackBar(
+                                          context, S.of(context).memoCopied);
+                                    },
+                                    child: Text(B.user.id,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .body1
+                                            .apply(
+                                                decoration:
+                                                    TextDecoration.underline)));
+                              })),
+                        ]),
+                    ExpansionTile(
+                        title: Text(S.of(context).settingsTitleOutStellar,
+                            style: Theme.of(context).textTheme.title),
+                        children: <Widget>[
+                          Text(S.of(context).outputStellarAccount),
+                          new Container(
+                            padding: EdgeInsets.only(bottom: 20.0),
+                            child: Theme(
+                                data:
+                                    ThemeData(platform: TargetPlatform.android),
+                                child: TextField(
+                                  onSubmitted: (value) async {
+                                    if (!await checkStellarAccount(value))
+                                      setState(() {
+                                        _accountErrorText =
+                                            S.of(context).wrongAccount;
+                                      });
+                                    else
+                                      setState(() {
+                                        _accountErrorText = null;
+                                      });
 
-                              // Update Payout Stellar Account for user
-                              B.user = B.user..payoutId = value;
-                              await B.user.ref.updateData(B.user.toJson());
-                            },
-                            maxLines: 1,
-                            controller: payoutTextCtr,
-                            style: Theme.of(context).textTheme.body1,
-                            decoration: InputDecoration(
-                                isDense: true,
-                                contentPadding: EdgeInsets.all(2.0),
-                                hintText: S.of(context).hintOutptAcount,
-                                errorText: _accountErrorText),
-                          )),
-                    ),
-                    Text(S.of(context).outputStellarMemo),
-                    new Container(
-                      padding: EdgeInsets.only(bottom: 20.0),
-                      child: Theme(
-                          data: ThemeData(platform: TargetPlatform.android),
-                          child: TextField(
-                            maxLines: 1,
-                            controller: payoutMemoCtr,
-                            style: Theme.of(context).textTheme.body1,
-                            decoration: InputDecoration(
-                                isDense: true,
-                                contentPadding: EdgeInsets.all(2.0),
-                                hintText: S.of(context).hintOutptAcount,
-                                errorText: _accountErrorText),
-                          )),
-                    ),
-                    Text(S.of(context).stellarOutput),
-                    new Container(
-                        padding: EdgeInsets.only(bottom: 20.0),
-                        child: Row(children: <Widget>[
-                          Flexible(
-                              child: Container(
-                                  padding: EdgeInsets.only(right: 10.0),
-                                  child: Theme(
-                                      data: ThemeData(
-                                          platform: TargetPlatform.android),
-                                      child: TextField(
-                                        maxLines: 1,
-                                        keyboardType: TextInputType.number,
-                                        inputFormatters: <TextInputFormatter>[
-                                          WhitelistingTextInputFormatter(RegExp(
-                                              r'((\d+(\.\d*)?)|(\.\d+))'))
-                                        ],
-                                        controller: amountTextCtr,
-                                        style:
-                                            Theme.of(context).textTheme.body1,
-                                        decoration: InputDecoration(
-                                            isDense: true,
-                                            contentPadding: EdgeInsets.all(2.0),
-                                            hintText: S.of(context).hintNotMore(
-                                                money(B.wallet.getAvailable())),
-                                            errorText: _amountErrorText),
-                                      )))),
-                          RaisedButton(
-                              onPressed: () async {
-                                try {
-                                  if (!await checkStellarAccount(
-                                      B.user.payoutId)) {
-                                    setState(() {
-                                      _accountErrorText =
-                                          S.of(context).wrongAccount;
-                                    });
-                                    return;
-                                  }
-                                  if (amountTextCtr.text == null ||
-                                      amountTextCtr.text.isEmpty) {
-                                    setState(() {
-                                      _amountErrorText =
-                                          S.of(context).emptyAmount;
-                                    });
-                                    return;
-                                  }
+                                    // Update Payout Stellar Account for user
+                                    B.user = B.user..payoutId = value;
+                                    await B.user.ref
+                                        .updateData(B.user.toJson());
+                                  },
+                                  maxLines: 1,
+                                  controller: payoutTextCtr,
+                                  style: Theme.of(context).textTheme.body1,
+                                  decoration: InputDecoration(
+                                      isDense: true,
+                                      contentPadding: EdgeInsets.all(2.0),
+                                      hintText: S.of(context).hintOutptAcount,
+                                      errorText: _accountErrorText),
+                                )),
+                          ),
+                          Text(S.of(context).outputStellarMemo),
+                          new Container(
+                            padding: EdgeInsets.only(bottom: 20.0),
+                            child: Theme(
+                                data:
+                                    ThemeData(platform: TargetPlatform.android),
+                                child: TextField(
+                                  maxLines: 1,
+                                  controller: payoutMemoCtr,
+                                  style: Theme.of(context).textTheme.body1,
+                                  decoration: InputDecoration(
+                                      isDense: true,
+                                      contentPadding: EdgeInsets.all(2.0),
+                                      hintText: S.of(context).hintOutputMemo,
+                                      errorText: _accountErrorText),
+                                )),
+                          ),
+                          Text(S.of(context).stellarOutput),
+                          new Container(
+                              padding: EdgeInsets.only(bottom: 20.0),
+                              child: Row(children: <Widget>[
+                                Flexible(
+                                    child: Container(
+                                        padding: EdgeInsets.only(right: 10.0),
+                                        child: Theme(
+                                            data: ThemeData(
+                                                platform:
+                                                    TargetPlatform.android),
+                                            child: TextField(
+                                              maxLines: 1,
+                                              keyboardType:
+                                                  TextInputType.number,
+                                              inputFormatters: <
+                                                  TextInputFormatter>[
+                                                WhitelistingTextInputFormatter(
+                                                    RegExp(
+                                                        r'((\d+(\.\d*)?)|(\.\d+))'))
+                                              ],
+                                              controller: amountTextCtr,
+                                              style: Theme.of(context)
+                                                  .textTheme
+                                                  .body1,
+                                              decoration: InputDecoration(
+                                                  isDense: true,
+                                                  contentPadding:
+                                                      EdgeInsets.all(2.0),
+                                                  hintText: S
+                                                      .of(context)
+                                                      .hintNotMore(money(B
+                                                          .wallet
+                                                          .getAvailable())),
+                                                  errorText: _amountErrorText),
+                                            )))),
+                                IconButton(
+                                    onPressed: () async {
+                                      try {
+                                        if (!await checkStellarAccount(
+                                            B.user.payoutId)) {
+                                          setState(() {
+                                            _accountErrorText =
+                                                S.of(context).wrongAccount;
+                                          });
+                                          return;
+                                        }
+                                        if (amountTextCtr.text == null ||
+                                            amountTextCtr.text.isEmpty) {
+                                          setState(() {
+                                            _amountErrorText =
+                                                S.of(context).emptyAmount;
+                                          });
+                                          return;
+                                        }
 
-                                  double amount =
-                                      double.tryParse(amountTextCtr.text);
+                                        double amount =
+                                            double.tryParse(amountTextCtr.text);
 
-                                  if (amount == null || amount <= 0.0) {
-                                    setState(() {
-                                      _amountErrorText =
-                                          S.of(context).negativeAmount;
-                                    });
-                                    return;
-                                  }
+                                        if (amount == null || amount <= 0.0) {
+                                          setState(() {
+                                            _amountErrorText =
+                                                S.of(context).negativeAmount;
+                                          });
+                                          return;
+                                        }
 
-                                  if (toXlm(amount) > B.wallet.getAvailable()) {
-                                    setState(() {
-                                      _amountErrorText =
-                                          S.of(context).exceedAmount;
-                                    });
-                                    return;
-                                  }
+                                        if (toXlm(amount) >
+                                            B.wallet.getAvailable()) {
+                                          setState(() {
+                                            _amountErrorText =
+                                                S.of(context).exceedAmount;
+                                          });
+                                          return;
+                                        }
 
-                                  if (_amountErrorText != null ||
-                                      _accountErrorText != null)
-                                    setState(() {
-                                      _amountErrorText = null;
-                                      _accountErrorText = null;
-                                    });
+                                        if (_amountErrorText != null ||
+                                            _accountErrorText != null)
+                                          setState(() {
+                                            _amountErrorText = null;
+                                            _accountErrorText = null;
+                                          });
 
-                                  FocusScope.of(context).unfocus();
-                                  amount = dp(toXlm(amount), 5);
+                                        FocusScope.of(context).unfocus();
+                                        amount = dp(toXlm(amount), 5);
 
-                                  await payoutStellar(B.user, amount,
-                                      memo: payoutMemoCtr.text);
+                                        await payoutStellar(B.user, amount,
+                                            memo: payoutMemoCtr.text);
 
-                                  showSnackBar(
-                                      context, S.of(context).successfulPayment);
-                                } catch (ex, stack) {
-                                  FlutterCrashlytics().logException(ex, stack);
+                                        showSnackBar(context,
+                                            S.of(context).successfulPayment);
+                                      } catch (ex, stack) {
+                                        FlutterCrashlytics()
+                                            .logException(ex, stack);
 
-                                  // TODO: Log event for administrator to investigate
-                                  showSnackBar(
-                                      context, S.of(context).paymentError);
-                                }
-                              },
-                              child: Text(S.of(context).buttonTransfer))
-                        ])),
+                                        // TODO: Log event for administrator to investigate
+                                        showSnackBar(context,
+                                            S.of(context).paymentError);
+                                      }
+                                    },
+                                    icon: assetIcon(paper_plane_100, size: 30))
+                                    //child: Text(S.of(context).buttonTransfer))
+                              ])),
+                        ]),
                   ]),
             ),
           ),
@@ -2630,7 +2712,8 @@ class SupportWidget extends StatelessWidget {
       Container(
           margin: EdgeInsets.fromLTRB(8.0, 8.0, 30.0, 8.0),
           alignment: Alignment.topRight,
-          child: Text(S.of(context).supportSignature, style: Theme.of(context).textTheme.body1)),
+          child: Text(S.of(context).supportSignature,
+              style: Theme.of(context).textTheme.body1)),
     ]));
   }
 }
