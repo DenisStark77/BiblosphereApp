@@ -13,6 +13,7 @@ import 'package:flutter_crashlytics/flutter_crashlytics.dart';
 import 'package:flutter/gestures.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:in_app_purchase/in_app_purchase.dart';
 
 import 'package:biblosphere/const.dart';
 import 'package:biblosphere/helpers.dart';
@@ -32,6 +33,8 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
+  StreamSubscription<List<PurchaseDetails>> _subscription;
+
   _MyHomePageState({
     Key key,
   });
@@ -42,10 +45,50 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
 
     assert(B.user != null);
     initDynamicLinks();
+
+        // TODO: Didn't work on WEB
+    if (!kIsWeb) {
+      // Listen to in-app purchases update
+      final Stream purchaseUpdates =
+          InAppPurchaseConnection.instance.purchaseUpdatedStream;
+      _subscription = purchaseUpdates.listen((purchases) {
+        List<PurchaseDetails> details = purchases;
+
+        print('!!!DEBUG purchases list: ${details.first.purchaseID} ${details.first.productID} ${details.first.status}');
+        // TODO: Redesign to accept multiple payments. It won't work in parallel.
+        details.forEach((purchase) async {
+          if (purchase.status == PurchaseStatus.purchased) {
+            double amount = double.parse(purchase.productID);
+            print('!!!DEBUG purchases done, amount=${amount}');
+        
+            // Create an operation and update user balance
+            await payment(
+                user: B.user, amount: amount, type: OperationType.InputInApp);
+
+            FirebaseAnalytics().logEvent(
+                name: 'ecommerce_purchase',
+                parameters: <String, dynamic>{
+                  'amount': amount,
+                  'channel': 'in-app',
+                  'user': B.user.id,
+                  'locality': B.locality,
+                  'country': B.country,
+                  'latitude': B.position?.latitude,
+                  'longitude': B.position?.longitude
+                });
+          } else if (purchase.status == PurchaseStatus.error) {
+            showSnackBar(context,'Purchase error: ${purchase.error.details}');
+            print('!!!DEBUG purchases error:  ${purchase.error.code} ${purchase.error.details} ${purchase.error.message}  ${purchase.error.source}');
+          }
+        });
+      });
+    }
   }
 
   @override
   void dispose() {
+    _subscription.cancel();
+
     super.dispose();
   }
 

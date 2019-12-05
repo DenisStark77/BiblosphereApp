@@ -948,9 +948,11 @@ class _ChatState extends State<Chat> {
         color: C.button,
         child: new Text(S.of(context).buttonPayin),
         onPressed: () async {
+          print('!!!DEBUG: In-app purchase start');
           final bool available =
               await InAppPurchaseConnection.instance.isAvailable();
           if (!available) {
+          print('!!!DEBUG: In-app purchase 1');
             // TODO: Process this more nicely
             throw ('In-App store not available');
           }
@@ -972,9 +974,12 @@ class _ChatState extends State<Chat> {
           ProductDetails product = products.firstWhere( (p) => missing < toXlm(p.skuDetail.priceAmountMicros / 1000000, currency: p.skuDetail.priceCurrencyCode), orElse: () => products.elementAt(products.length-1));
 
           final PurchaseParam purchaseParam = PurchaseParam(
-              productDetails: product, sandboxTesting: false);
-          InAppPurchaseConnection.instance
+              productDetails: products.first, sandboxTesting: false);
+          print('!!!DEBUG: In-app purchase 4 ${purchaseParam.productDetails.description}');
+          bool res = await InAppPurchaseConnection.instance
               .buyConsumable(purchaseParam: purchaseParam);
+          print('!!!DEBUG: In-app purchase 5 ${res}');
+              
         },
         shape: new RoundedRectangleBorder(
             borderRadius: new BorderRadius.circular(15.0),
