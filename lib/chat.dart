@@ -969,6 +969,7 @@ class _ChatState extends State<Chat> {
               productDetails: product, sandboxTesting: false);
           bool res = await InAppPurchaseConnection.instance
               .buyConsumable(purchaseParam: purchaseParam);
+          print('!!!DEBUG in-app purchase result: ${res}');    
         },
         shape: new RoundedRectangleBorder(
             borderRadius: new BorderRadius.circular(15.0),

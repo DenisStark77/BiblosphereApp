@@ -27,7 +27,6 @@ import 'package:flutter/rendering.dart';
 
 import 'package:biblosphere/const.dart';
 import 'package:biblosphere/helpers.dart';
-import 'package:biblosphere/lifecycle.dart';
 import 'package:biblosphere/payments.dart';
 import 'package:biblosphere/home.dart';
 import 'package:biblosphere/chat.dart';
