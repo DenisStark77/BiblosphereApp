@@ -54,12 +54,21 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
       _subscription = purchaseUpdates.listen((purchases) {
         List<PurchaseDetails> details = purchases;
 
-        print('!!!DEBUG purchases list: ${details.first.purchaseID} ${details.first.productID} ${details.first.status}');
         // TODO: Redesign to accept multiple payments. It won't work in parallel.
         details.forEach((purchase) async {
           if (purchase.status == PurchaseStatus.purchased) {
-            double amount = double.parse(purchase.productID);
-            print('!!!DEBUG purchases done, amount=${amount}');
+            // Get product
+            final ProductDetailsResponse response =
+              await InAppPurchaseConnection.instance.queryProductDetails({purchase.productID});
+
+            if (!response.notFoundIDs.isEmpty) {
+                // TODO: Process this more nicely
+                throw ('Ids of in-app products not available');
+            }
+
+            ProductDetails product = response.productDetails.first;
+ 
+            double amount = toXlm(product.skuDetail.priceAmountMicros / 1000000, currency: product.skuDetail.priceCurrencyCode);
         
             // Create an operation and update user balance
             await payment(
