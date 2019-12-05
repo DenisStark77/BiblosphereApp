@@ -2653,7 +2653,7 @@ class _SettingsWidgetState extends State<SettingsWidget> {
 
 String purchaseProductText(ProductDetails p) {
   if (Theme.of(context).platform == TargetPlatform.android) {
-      return '${p.title} (${money(toXlm(p.skuDetail.priceAmountMicros / 1000000, currency: p.skuDetail.priceCurrencyCode), decimals: 0)})';
+      return '${p.title} ${money(toXlm(p.skuDetail.priceAmountMicros / 1000000, currency: p.skuDetail.priceCurrencyCode), decimals: 0)}';
     } else if (Theme.of(context).platform == TargetPlatform.iOS) {
       return '${p.title} (${money(toXlm(double.parse(p.skProduct.price), currency: p.skProduct.priceLocale.currencyCode), decimals: 0)})';
     } else
