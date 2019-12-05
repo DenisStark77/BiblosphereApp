@@ -330,7 +330,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "settingsTitleGeneral" : MessageLookupByLibrary.simpleMessage("General settings"),
     "settingsTitleIn" : MessageLookupByLibrary.simpleMessage("Get balance"),
     "settingsTitleInStellar" : MessageLookupByLibrary.simpleMessage("Get balance via Stallar"),
-    "settingsTitleOutStellar" : MessageLookupByLibrary.simpleMessage("PAyout via Stallar"),
+    "settingsTitleOutStellar" : MessageLookupByLibrary.simpleMessage("Payout via Stallar"),
     "share" : MessageLookupByLibrary.simpleMessage("Share"),
     "shareBooks" : MessageLookupByLibrary.simpleMessage("I\'m sharing my books on Biblosphere. Join me to read it."),
     "shareBookshelf" : MessageLookupByLibrary.simpleMessage("That\'s my bookshelf. Join Biblosphere to share books and find like-minded people."),
