@@ -29,8 +29,10 @@ Map<String, double> xlmRates = {
 };
 
 
-double toXlm(double amount) {
-  return amount / xlmRates[B.currency];
+double toXlm(double amount, {String currency}) {
+  if (currency == null)
+    currency = B.currency;
+  return amount / xlmRates[currency];
 }
 
 

@@ -955,21 +955,24 @@ class _ChatState extends State<Chat> {
             throw ('In-App store not available');
           }
           // Only show bigger amounts
-          List<int> codes = [50, 100, 200, 500, 1000, 2000];
-          int missing = (total(amountToPay) - B.wallet.getAvailable()).ceil();
-          int code =
-              codes.firstWhere((code) => code > missing, orElse: () => 2000);
-
-          Set<String> _kIds = {code.toString()};
+          Set<String> _kIds = {'50', '100', '200', '500', '1000', '2000'};
           final ProductDetailsResponse response =
               await InAppPurchaseConnection.instance.queryProductDetails(_kIds);
+
           if (!response.notFoundIDs.isEmpty) {
             // TODO: Process this more nicely
             throw ('Ids of in-app products not available');
           }
+
           List<ProductDetails> products = response.productDetails;
+
+          products.sort( (p1, p2) => p1.skuDetail.priceAmountMicros - p2.skuDetail.priceAmountMicros);
+       
+          int missing = ((total(amountToPay) - B.wallet.getAvailable()) * 1.05).ceil();
+          ProductDetails product = products.firstWhere( (p) => missing < toXlm(p.skuDetail.priceAmountMicros / 1000000, currency: p.skuDetail.priceCurrencyCode), orElse: () => products.elementAt(products.length-1));
+
           final PurchaseParam purchaseParam = PurchaseParam(
-              productDetails: products.first, sandboxTesting: false);
+              productDetails: product, sandboxTesting: false);
           InAppPurchaseConnection.instance
               .buyConsumable(purchaseParam: purchaseParam);
         },
