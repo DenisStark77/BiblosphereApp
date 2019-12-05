@@ -10,7 +10,7 @@ import 'package:biblosphere/helpers.dart';
 
 String biblosphereAccountId;
 
-Map<String,String> currencySymbol = {
+Map<String, String> currencySymbol = {
   'RUB': r'₽',
   'AED': r'aed',
   'GEL': '\u{20BE}',
@@ -28,30 +28,25 @@ Map<String, double> xlmRates = {
   'XLM': 1.0
 };
 
-
 double toXlm(double amount, {String currency}) {
-  if (currency == null)
-    currency = B.currency;
+  if (currency == null) currency = B.currency;
   return amount / xlmRates[currency];
 }
-
 
 double toCurrency(double amount) {
   return amount * xlmRates[B.currency];
 }
 
-
 String money(double amount, {decimals = 2}) {
   return '${new NumberFormat.currency(symbol: currencySymbol[B.currency], decimalDigits: decimals).format((amount ?? 0) * xlmRates[B.currency])}';
 }
 
-
 Future<void> getPaymentContext() async {
   // Read Stellar account id
-  DocumentReference stellarRef = Firestore.instance.document('system/stellar_in');
+  DocumentReference stellarRef =
+      Firestore.instance.document('system/stellar_in');
   DocumentSnapshot stellarSnap = await stellarRef.get();
-  if (stellarSnap.exists)
-    biblosphereAccountId = stellarSnap.data['accountId'];
+  if (stellarSnap.exists) biblosphereAccountId = stellarSnap.data['accountId'];
 
   // Read rates record
   DocumentReference ratesRef = Firestore.instance.document('system/rates');
@@ -66,14 +61,13 @@ Future<void> getPaymentContext() async {
       (snap.data['timestamp'] as Timestamp).seconds > threshold.seconds &&
       snap.data['rates'] != null) {
     // Read rates from Firestore
-    Map<String, double> savedRates =
-    snap.data['rates'].map<String, double>((code, rate) => MapEntry<String, double>(code, 1.0 * rate));
+    Map<String, double> savedRates = snap.data['rates'].map<String, double>(
+        (code, rate) => MapEntry<String, double>(code, 1.0 * rate));
 
     xlmRates = savedRates;
   } else if (!snap.exists ||
       snap.data['timestamp'] == null ||
       (snap.data['timestamp'] as Timestamp).seconds < threshold.seconds) {
-
     // Get rates from APIs
     http.Response resp = await http
         .get('https://apiv2.bitcoinaverage.com/indices/local/ticker/XLMEUR');
@@ -88,9 +82,9 @@ Future<void> getPaymentContext() async {
     if (resp.statusCode != 200)
       throw "Request to apiv2.bitcoinaverage.com failed. Code: ${resp.statusCode}";
 
-
     Map<String, dynamic> ratesBody = json.decode(resp.body);
-    Map<String, double> rates = ratesBody['rates'].map<String, double>((code, rate) => MapEntry<String, double>(code, 1.0*rate));
+    Map<String, double> rates = ratesBody['rates'].map<String, double>(
+        (code, rate) => MapEntry<String, double>(code, 1.0 * rate));
     Map<String, double> newRates =
         rates.map((code, rate) => MapEntry(code, rate * xlm2eur));
 
@@ -127,7 +121,7 @@ Future<bool> checkStellarAccount(String accountId) async {
   }
 }
 
-Future<void> payoutStellar(User user, double amount, {String memo=''}) async {
+Future<void> payoutStellar(User user, double amount, {String memo = ''}) async {
   DocumentReference walletRef = Wallet.Ref(user.id);
   if (user.payoutId == null) {
     throw ('Stellar payout account not configured ${user.name}');
@@ -151,23 +145,24 @@ Future<void> payoutStellar(User user, double amount, {String memo=''}) async {
   });
 
   // Request Stellar payments
-  DocumentReference payoutRef = Firestore.instance.collection('payouts').document();
+  DocumentReference payoutRef =
+      Firestore.instance.collection('payouts').document();
   await db.runTransaction((Transaction tx) async {
     payoutRef.setData({
       'userId': user.id,
-      'amount': amount,
+      'amount': payout(amount),
+      'fee': payoutFee(amount),
       'accountId': user.payoutId,
       'memo': memo,
       'status': 'waiting',
       'type': 'stellar'
-      });
+    });
   });
 
-  logAnalyticsEvent(
-                                name: 'ecommerce_refund',
-                                parameters: <String, dynamic>{
-                                  'amount': amount,
-                                  'channel': 'stellar',
-                                  'user': user.id,
-                                });
+  logAnalyticsEvent(name: 'ecommerce_refund', parameters: <String, dynamic>{
+    'amount': payout(amount),
+    'fee': payoutFee(amount),
+    'channel': 'stellar',
+    'user': user.id,
+  });
 }

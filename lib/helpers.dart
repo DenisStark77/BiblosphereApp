@@ -673,3 +673,45 @@ void logAnalyticsEvent({String name, Map<String, dynamic> parameters}) {
 
   analytics.logEvent(name: name, parameters: parameters);
 }
+
+
+double total(double price) {
+  return price * 1.2;
+}
+
+double monthly(double price) {
+  return total(price) * 30 / rentDuration();
+}
+
+// Monthly income for the book owner
+double income(double price) {
+  return price * 30 / rentDuration();
+}
+
+double first(double price) {
+  return price / 6;
+}
+
+double fee(double price) {
+  return price * 0.2;
+}
+
+double bbsFee(double fee) {
+  return fee * 0.5;
+}
+
+double beneficiary1(double fee) {
+  return fee * 0.15;
+}
+
+double beneficiary2(double fee) {
+  return fee * 0.10;
+}
+
+int rentDuration() {
+  return 183;
+}
+
+double payout(amount) => amount * 0.8;
+
+double payoutFee(amount) => amount * 0.2;
