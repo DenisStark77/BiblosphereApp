@@ -78,7 +78,7 @@ Future<void> getPaymentContext() async {
     double xlm2eur = xlmBody['averages']['day'];
 
     resp = await http.get(
-        'http://data.fixer.io/api/latest?access_key=8dd7d7c931c45c0346af488bd1154269&symbols=RUB,AED,GEL,USD,EUR');
+        'http://data.fixer.io/api/latest?access_key=8dd7d7c931c45c0346af488bd1154269');
     if (resp.statusCode != 200)
       throw "Request to apiv2.bitcoinaverage.com failed. Code: ${resp.statusCode}";
 

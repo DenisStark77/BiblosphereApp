@@ -66,10 +66,14 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
               throw ('Ids of in-app products not available');
             }
 
-            ProductDetails product = response.productDetails.first;
+            ProductDetails p = response.productDetails.first;
 
-            double amount = toXlm(product.skuDetail.priceAmountMicros / 1000000,
-                currency: product.skuDetail.priceCurrencyCode);
+            double amount = 0.0;
+            if (Theme.of(context).platform == TargetPlatform.android) {
+              amount = toXlm(p.skuDetail.priceAmountMicros / 1000000, currency: p.skuDetail.priceCurrencyCode);
+            } else if (Theme.of(context).platform == TargetPlatform.iOS) {
+              amount = toXlm(double.parse(p.skProduct.price), currency: p.skProduct.priceLocale.currencyCode);
+            }
 
             // Create an operation and update user balance
             await payment(
@@ -2253,10 +2257,18 @@ class _SettingsWidgetState extends State<SettingsWidget> {
       throw ('Ids of in-app products not available');
     }
 
-    setState(() {
-      products = response.productDetails;
+    products = response.productDetails;
+    
+    if (Theme.of(context).platform == TargetPlatform.android) {
       products.sort((p2, p1) =>
           p1.skuDetail.priceAmountMicros - p2.skuDetail.priceAmountMicros);
+    } else if (Theme.of(context).platform == TargetPlatform.iOS) {
+      products.sort((p2, p1) =>
+          (double.parse(p1.skProduct.price)*100).round() - (double.parse(p2.skProduct.price)*100).round());
+    }
+    products.forEach( (p) => print('!!!DEBUG ${p.price} ${p.title}'));
+  
+    setState(() {
     });
   }
 
@@ -2410,8 +2422,7 @@ class _SettingsWidgetState extends State<SettingsWidget> {
                               },
                               items: products.map((p) {
                                 return DropdownMenuItem(
-                                  child: Container(alignment: Alignment.center, child: Text(
-                                      '${p.title} (${money(toXlm(p.skuDetail.priceAmountMicros / 1000000, currency: p.skuDetail.priceCurrencyCode), decimals: 0)})',
+                                  child: Container(alignment: Alignment.center, child: Text(purchaseProductText(p),
                                       style: Theme.of(context).textTheme.body1,
                                       textAlign: TextAlign.center)),
                                   value: p,
@@ -2639,6 +2650,16 @@ class _SettingsWidgetState extends State<SettingsWidget> {
       ),
     );
   }
+
+String purchaseProductText(ProductDetails p) {
+  if (Theme.of(context).platform == TargetPlatform.android) {
+      return '${p.title} (${money(toXlm(p.skuDetail.priceAmountMicros / 1000000, currency: p.skuDetail.priceCurrencyCode), decimals: 0)})';
+    } else if (Theme.of(context).platform == TargetPlatform.iOS) {
+      return '${p.title} (${money(toXlm(double.parse(p.skProduct.price), currency: p.skProduct.priceLocale.currencyCode), decimals: 0)})';
+    } else
+      return null;
+}
+
 }
 
 class SupportWidget extends StatelessWidget {

@@ -959,11 +959,18 @@ class _ChatState extends State<Chat> {
           }
 
           List<ProductDetails> products = response.productDetails;
-
-          products.sort( (p1, p2) => p1.skuDetail.priceAmountMicros - p2.skuDetail.priceAmountMicros);
-       
           int missing = ((total(amountToPay) - B.wallet.getAvailable()) * 1.05).ceil();
-          ProductDetails product = products.firstWhere( (p) => missing < toXlm(p.skuDetail.priceAmountMicros / 1000000, currency: p.skuDetail.priceCurrencyCode), orElse: () => products.elementAt(products.length-1));
+          ProductDetails product;
+
+              if (Theme.of(context).platform == TargetPlatform.android) {
+      products.sort((p1, p2) =>
+          p1.skuDetail.priceAmountMicros - p2.skuDetail.priceAmountMicros);
+          product = products.firstWhere( (p) => missing < toXlm(p.skuDetail.priceAmountMicros / 1000000, currency: p.skuDetail.priceCurrencyCode), orElse: () => products.elementAt(products.length-1));
+    } else if (Theme.of(context).platform == TargetPlatform.iOS) {
+      products.sort((p1, p2) =>
+          (double.parse(p1.skProduct.price)*100).round() - (double.parse(p2.skProduct.price)*100).round());
+          product = products.firstWhere( (p) => missing < toXlm(double.parse(p.skProduct.price), currency: p.skProduct.priceLocale.currencyCode), orElse: () => products.elementAt(products.length-1));
+    }
 
           final PurchaseParam purchaseParam = PurchaseParam(
               productDetails: product, sandboxTesting: false);
