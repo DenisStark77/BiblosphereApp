@@ -1402,7 +1402,7 @@ class _MyBookWidgetState extends State<MyBook> {
                                   Chat.runChatById(context, null,
                                       chatId: bookrecord.chatId);
                                 },
-                                tooltip: S.of(context).deleteShelf,
+                                tooltip: S.of(context).hintChatOpen,
                                 icon: assetIcon(communication_100, size: 30),
                               )
                             : Container(),
@@ -1457,7 +1457,6 @@ class _MyBookWidgetState extends State<MyBook> {
                         // Delete button only for OWN book and WISH
                         bookrecord.isWish || bookrecord.isOwn
                             ? new IconButton(
-                                //TODO: Delete book/wish
                                 onPressed: () => deleteBook(context),
                                 tooltip: S.of(context).hintDeleteBook,
                                 icon: assetIcon(trash_100, size: 25),
@@ -2653,9 +2652,12 @@ class _SettingsWidgetState extends State<SettingsWidget> {
 
 String purchaseProductText(ProductDetails p) {
   if (Theme.of(context).platform == TargetPlatform.android) {
-      return '${p.title} ${money(toXlm(p.skuDetail.priceAmountMicros / 1000000, currency: p.skuDetail.priceCurrencyCode), decimals: 0)}';
+      String title = p.title;
+      if (title.indexOf('(') != -1)
+        title = title.substring(0, p.title.indexOf('(') - 1);
+      return '${title} (${p.price})';
     } else if (Theme.of(context).platform == TargetPlatform.iOS) {
-      return '${p.title} (${money(toXlm(double.parse(p.skProduct.price), currency: p.skProduct.priceLocale.currencyCode), decimals: 0)})';
+      return '${p.title} (${p.price})';
     } else
       return null;
 }
