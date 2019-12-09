@@ -2657,7 +2657,22 @@ String purchaseProductText(ProductDetails p) {
         title = title.substring(0, p.title.indexOf('(') - 1);
       return '${title} (${p.price})';
     } else if (Theme.of(context).platform == TargetPlatform.iOS) {
-      return '${p.title} (${p.price})';
+      String title = p.title;
+      if (title == null) {
+      if (p.id == '50')
+        title = 'Power package';
+      else if (p.id == '100')
+        title = 'Order package';
+      else if (p.id == '200')
+        title = 'Success package';
+      else if (p.id == '500')
+        title = 'Community package';
+      else if (p.id == '1000')
+        title = 'Synergy package';
+      else if (p.id == '2000')
+        title = 'Holistic package';
+      }
+      return '${title} (${p.price})';
     } else
       return null;
 }
