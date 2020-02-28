@@ -14,9 +14,10 @@
       <change beforePath="$PROJECT_DIR$/.idea/libraries/Dart_Packages.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Dart_Packages.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/libraries/Flutter_Plugins.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Flutter_Plugins.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/main.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/main.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ios/Flutter/flutter_export_environment.sh" beforeDir="false" afterPath="$PROJECT_DIR$/ios/Flutter/flutter_export_environment.sh" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/nodejs/firebase.json" beforeDir="false" afterPath="$PROJECT_DIR$/nodejs/firebase.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/nodejs/functions/index.js" beforeDir="false" afterPath="$PROJECT_DIR$/nodejs/functions/index.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pubspec.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/pubspec.yaml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/python/.ipynb_checkpoints/biblosphere-checkpoint.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/python/.ipynb_checkpoints/biblosphere-checkpoint.ipynb" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/python/CloudVision.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/python/CloudVision.ipynb" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/python/biblosphere.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/python/biblosphere.ipynb" afterDir="false" />
@@ -70,7 +71,7 @@
           <entry key="pro" value="1" />
           <entry key="properties" value="9" />
           <entry key="xml" value="7" />
-          <entry key="yaml" value="19" />
+          <entry key="yaml" value="20" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.types.open">
@@ -85,7 +86,7 @@
           <entry key="ProGuard File" value="1" />
           <entry key="Properties" value="9" />
           <entry key="XML" value="7" />
-          <entry key="YAML" value="19" />
+          <entry key="YAML" value="20" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.extensions.edit">
@@ -97,9 +98,9 @@
           <entry key="json" value="23" />
           <entry key="pro" value="15" />
           <entry key="properties" value="24" />
-          <entry key="txt" value="1641" />
+          <entry key="txt" value="1713" />
           <entry key="xml" value="6" />
-          <entry key="yaml" value="533" />
+          <entry key="yaml" value="534" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.types.edit">
@@ -108,11 +109,11 @@
           <entry key="Groovy" value="245" />
           <entry key="JSON" value="23" />
           <entry key="JavaScript" value="2249" />
-          <entry key="PLAIN_TEXT" value="7149" />
+          <entry key="PLAIN_TEXT" value="7221" />
           <entry key="ProGuard File" value="15" />
           <entry key="Properties" value="24" />
           <entry key="XML" value="6" />
-          <entry key="YAML" value="533" />
+          <entry key="YAML" value="534" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.vcs.git.usages">
@@ -124,11 +125,20 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file pinned="false" current-in-tab="true">
+      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/lib/main.dart">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="315">
               <caret line="589" column="5" selection-start-line="589" selection-start-column="5" selection-end-line="589" selection-end-column="5" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/pubspec.yaml">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="136">
+              <caret line="42" selection-start-line="42" selection-end-line="42" />
             </state>
           </provider>
         </entry>
@@ -144,7 +154,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>Bookrecord</find>
       <find>!!!DEBUG stellar</find>
       <find>Messages</find>
       <find>MyBook</find>
@@ -174,6 +183,7 @@
       <find>SignO</find>
       <find>token</find>
       <find>.token</find>
+      <find>cach</find>
     </findStrings>
     <dirStrings>
       <dir>C:\Users\DenisStark\AndroidStudioProjects\biblosphere</dir>
@@ -227,7 +237,6 @@
         <option value="$PROJECT_DIR$/lib/chat.dart" />
         <option value="$PROJECT_DIR$/lib/home.dart" />
         <option value="$PROJECT_DIR$/android/app/src/main/res/values/string.xml" />
-        <option value="$PROJECT_DIR$/pubspec.yaml" />
         <option value="$PROJECT_DIR$/lib/l10n.dart" />
         <option value="$PROJECT_DIR$/lib/l10n/intl_en.arb" />
         <option value="$PROJECT_DIR$/lib/l10n/intl_it.arb" />
@@ -235,6 +244,7 @@
         <option value="$PROJECT_DIR$/lib/const.dart" />
         <option value="$PROJECT_DIR$/lib/helpers.dart" />
         <option value="$PROJECT_DIR$/lib/main.dart" />
+        <option value="$PROJECT_DIR$/pubspec.yaml" />
       </list>
     </option>
   </component>
@@ -367,20 +377,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1534746472527</updated>
-    </task>
-    <task id="LOCAL-00034" summary="Correct some issues with localizations&#10;Correct russian translations&#10;Add names into bookshelf view">
-      <created>1548829033972</created>
-      <option name="number" value="00034" />
-      <option name="presentableId" value="LOCAL-00034" />
-      <option name="project" value="LOCAL" />
-      <updated>1548829033972</updated>
-    </task>
-    <task id="LOCAL-00035" summary="Corrected defect with empty userName for shelves">
-      <created>1548930450311</created>
-      <option name="number" value="00035" />
-      <option name="presentableId" value="LOCAL-00035" />
-      <option name="project" value="LOCAL" />
-      <updated>1548930450311</updated>
     </task>
     <task id="LOCAL-00036" summary="Add italian translation">
       <created>1548960412513</created>
@@ -711,7 +707,21 @@
       <option name="project" value="LOCAL" />
       <updated>1572279924764</updated>
     </task>
-    <option name="localTasksCounter" value="83" />
+    <task id="LOCAL-00083" summary="Correct defect with Facebook login (cancel)">
+      <created>1582890845502</created>
+      <option name="number" value="00083" />
+      <option name="presentableId" value="LOCAL-00083" />
+      <option name="project" value="LOCAL" />
+      <updated>1582890845503</updated>
+    </task>
+    <task id="LOCAL-00084" summary="Intl package version changed">
+      <created>1582893310593</created>
+      <option name="number" value="00084" />
+      <option name="presentableId" value="LOCAL-00084" />
+      <option name="project" value="LOCAL" />
+      <updated>1582893310593</updated>
+    </task>
+    <option name="localTasksCounter" value="85" />
     <servers />
   </component>
   <component name="ToolWindowManager">
@@ -794,8 +804,6 @@
     <option name="myLimit" value="2678400000" />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Correct all issues for flutter analyzer" />
-    <MESSAGE value="Add checkReleaseBuilds false for Android gradle to avoid exception with some plugins" />
     <MESSAGE value="Remove unnecessary dependancy scan (solve timeout issue)" />
     <MESSAGE value="Increase version for autobuild" />
     <MESSAGE value="Correct translation&#10;Add wishlist addition" />
@@ -819,7 +827,9 @@
     <MESSAGE value="Delete unused fonts" />
     <MESSAGE value="Correct defect with adding books" />
     <MESSAGE value="Add search by ISBN from RSL (Russian State Library) for books started from 9785&#10;Add transit process and control on taken/given books (Cart/Outbox/Lent/Borrowed)&#10;Add points (community currency)" />
-    <option name="LAST_COMMIT_MESSAGE" value="Add search by ISBN from RSL (Russian State Library) for books started from 9785&#10;Add transit process and control on taken/given books (Cart/Outbox/Lent/Borrowed)&#10;Add points (community currency)" />
+    <MESSAGE value="Correct defect with Facebook login (cancel)" />
+    <MESSAGE value="Intl package version changed" />
+    <option name="LAST_COMMIT_MESSAGE" value="Intl package version changed" />
   </component>
   <component name="editorHistoryManager">
     <entry file="file://$PROJECT_DIR$/lib/l10n/messages_all.dart">
@@ -1034,13 +1044,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/pubspec.yaml">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="493">
-          <caret line="29" column="31" selection-start-line="29" selection-start-column="31" selection-end-line="29" selection-end-column="31" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/lib/const.dart">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="442">
@@ -1094,6 +1097,13 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="315">
           <caret line="589" column="5" selection-start-line="589" selection-start-column="5" selection-end-line="589" selection-end-column="5" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pubspec.yaml">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="136">
+          <caret line="42" selection-start-line="42" selection-end-line="42" />
         </state>
       </provider>
     </entry>
