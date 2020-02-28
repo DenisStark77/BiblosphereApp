@@ -17,8 +17,8 @@ dependencies:
   #firestore_helpers: ^3.1.0
 
   #geoflutterfire: ^2.0.3+5
-  geoflutterfire:
-      git: git://github.com/DarshanGowda0/GeoFlutterFire.git
+  geoflutterfire: ^2.0.2
+      #git: git://github.com/DarshanGowda0/GeoFlutterFire.git
 
   cloud_firestore: ^0.12.9+5
 
