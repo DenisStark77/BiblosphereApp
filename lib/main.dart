@@ -576,8 +576,8 @@ class _MyAppState extends State<MyApp> {
           break;
       }
 
-      final accessToken = facebookLoginResult.accessToken.token;
       if (facebookLoginResult.status == FacebookLoginStatus.loggedIn) {
+        final accessToken = facebookLoginResult.accessToken.token;
         AuthCredential facebookAuthCred =
             FacebookAuthProvider.getCredential(accessToken: accessToken);
         AuthResult authResult =
