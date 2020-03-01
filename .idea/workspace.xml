@@ -11,10 +11,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="5c769b2a-65a6-435b-8eb0-f4dd7634b03e" name="Default" comment="Add search by ISBN from RSL (Russian State Library) for books started from 9785&#10;Add transit process and control on taken/given books (Cart/Outbox/Lent/Borrowed)&#10;Add points (community currency)">
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Flutter_Plugins.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Flutter_Plugins.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/nodejs/firebase.json" beforeDir="false" afterPath="$PROJECT_DIR$/nodejs/firebase.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/nodejs/functions/index.js" beforeDir="false" afterPath="$PROJECT_DIR$/nodejs/functions/index.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pubspec.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/pubspec.yaml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/python/.ipynb_checkpoints/biblosphere-checkpoint.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/python/.ipynb_checkpoints/biblosphere-checkpoint.ipynb" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/python/CloudVision.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/python/CloudVision.ipynb" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/python/biblosphere.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/python/biblosphere.ipynb" afterDir="false" />
@@ -30,7 +28,7 @@
     <session id="57994669">
       <usages-collector id="statistics.lifecycle.project">
         <counts>
-          <entry key="project.closed" value="22" />
+          <entry key="project.closed" value="23" />
           <entry key="project.open.time.16" value="2" />
           <entry key="project.open.time.18" value="1" />
           <entry key="project.open.time.19" value="1" />
@@ -40,7 +38,7 @@
           <entry key="project.open.time.22" value="9" />
           <entry key="project.open.time.23" value="2" />
           <entry key="project.open.time.24" value="3" />
-          <entry key="project.open.time.25" value="2" />
+          <entry key="project.open.time.25" value="3" />
           <entry key="project.open.time.26" value="1" />
           <entry key="project.open.time.27" value="1" />
           <entry key="project.open.time.29" value="2" />
@@ -53,14 +51,14 @@
           <entry key="project.open.time.45" value="1" />
           <entry key="project.open.time.46" value="1" />
           <entry key="project.open.time.6" value="1" />
-          <entry key="project.opened" value="43" />
+          <entry key="project.opened" value="44" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.extensions.open">
         <counts>
           <entry key="arb" value="52" />
           <entry key="dart" value="219" />
-          <entry key="gradle" value="21" />
+          <entry key="gradle" value="22" />
           <entry key="java" value="1" />
           <entry key="js" value="8" />
           <entry key="json" value="7" />
@@ -74,7 +72,7 @@
       <usages-collector id="statistics.file.types.open">
         <counts>
           <entry key="Dart" value="219" />
-          <entry key="Groovy" value="21" />
+          <entry key="Groovy" value="22" />
           <entry key="JAVA" value="1" />
           <entry key="JSON" value="7" />
           <entry key="JavaScript" value="8" />
@@ -90,12 +88,12 @@
         <counts>
           <entry key="arb" value="5508" />
           <entry key="dart" value="155053" />
-          <entry key="gradle" value="245" />
+          <entry key="gradle" value="255" />
           <entry key="js" value="2249" />
           <entry key="json" value="23" />
           <entry key="pro" value="15" />
           <entry key="properties" value="24" />
-          <entry key="txt" value="1736" />
+          <entry key="txt" value="1788" />
           <entry key="xml" value="6" />
           <entry key="yaml" value="538" />
         </counts>
@@ -103,10 +101,10 @@
       <usages-collector id="statistics.file.types.edit">
         <counts>
           <entry key="Dart" value="155053" />
-          <entry key="Groovy" value="245" />
+          <entry key="Groovy" value="255" />
           <entry key="JSON" value="23" />
           <entry key="JavaScript" value="2249" />
-          <entry key="PLAIN_TEXT" value="7244" />
+          <entry key="PLAIN_TEXT" value="7296" />
           <entry key="ProGuard File" value="15" />
           <entry key="Properties" value="24" />
           <entry key="XML" value="6" />
@@ -125,17 +123,26 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/lib/main.dart">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="315">
+            <state relative-caret-position="9469">
               <caret line="589" column="5" selection-start-line="589" selection-start-column="5" selection-end-line="589" selection-end-column="5" />
             </state>
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="true">
+      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/pubspec.yaml">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="119">
+            <state relative-caret-position="323">
               <caret line="19" column="24" selection-start-line="19" selection-start-column="24" selection-end-line="19" selection-end-column="24" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/android/app/build.gradle">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="78">
+              <caret line="74" column="27" selection-start-line="74" selection-start-column="12" selection-end-line="74" selection-end-column="27" />
             </state>
           </provider>
         </entry>
@@ -151,7 +158,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>!!!DEBUG stellar</find>
       <find>Messages</find>
       <find>MyBook</find>
       <find>page.link</find>
@@ -181,6 +187,7 @@
       <find>token</find>
       <find>.token</find>
       <find>cach</find>
+      <find>mock</find>
     </findStrings>
     <dirStrings>
       <dir>C:\Users\DenisStark\AndroidStudioProjects\biblosphere</dir>
@@ -221,7 +228,6 @@
         <option value="$PROJECT_DIR$/test/widget_intro.02_test.dart" />
         <option value="$PROJECT_DIR$/test/widget_intro.03_test.dart" />
         <option value="$PROJECT_DIR$/android/app/proguard-rules.pro" />
-        <option value="$PROJECT_DIR$/android/app/build.gradle" />
         <option value="$PROJECT_DIR$/lib/mock_firestore.dart" />
         <option value="$PROJECT_DIR$/lib/payments.dart" />
         <option value="$PROJECT_DIR$/nodejs/functions/index.js" />
@@ -242,10 +248,11 @@
         <option value="$PROJECT_DIR$/lib/helpers.dart" />
         <option value="$PROJECT_DIR$/lib/main.dart" />
         <option value="$PROJECT_DIR$/pubspec.yaml" />
+        <option value="$PROJECT_DIR$/android/app/build.gradle" />
       </list>
     </option>
   </component>
-  <component name="ProjectFrameBounds" extendedState="6">
+  <component name="ProjectFrameBounds" extendedState="7">
     <option name="x" value="-15" />
     <option name="width" value="3235" />
     <option name="height" value="1735" />
@@ -258,6 +265,9 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
+      <pane id="PackagesPane" />
+      <pane id="AndroidView" />
+      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -285,9 +295,6 @@
           <select />
         </subPane>
       </pane>
-      <pane id="AndroidView" />
-      <pane id="PackagesPane" />
-      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -374,20 +381,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1534746472527</updated>
-    </task>
-    <task id="LOCAL-00037" summary="Add italian translation">
-      <created>1548961006465</created>
-      <option name="number" value="00037" />
-      <option name="presentableId" value="LOCAL-00037" />
-      <option name="project" value="LOCAL" />
-      <updated>1548961006465</updated>
-    </task>
-    <task id="LOCAL-00038" summary="Corrected defect with userName">
-      <created>1548997935782</created>
-      <option name="number" value="00038" />
-      <option name="presentableId" value="LOCAL-00038" />
-      <option name="project" value="LOCAL" />
-      <updated>1548997935782</updated>
     </task>
     <task id="LOCAL-00039" summary="First auto test created.Checking IntroPage.">
       <created>1549534884742</created>
@@ -718,11 +711,25 @@
       <option name="project" value="LOCAL" />
       <updated>1582894240999</updated>
     </task>
-    <option name="localTasksCounter" value="86" />
+    <task id="LOCAL-00086" summary="New package version for geoflutterfire">
+      <created>1582894897024</created>
+      <option name="number" value="00086" />
+      <option name="presentableId" value="LOCAL-00086" />
+      <option name="project" value="LOCAL" />
+      <updated>1582894897025</updated>
+    </task>
+    <task id="LOCAL-00087" summary="Add shrinkResources to build">
+      <created>1582897078778</created>
+      <option name="number" value="00087" />
+      <option name="presentableId" value="LOCAL-00087" />
+      <option name="project" value="LOCAL" />
+      <updated>1582897078778</updated>
+    </task>
+    <option name="localTasksCounter" value="88" />
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="-6" y="-6" width="1293" height="693" extended-state="6" />
+    <frame x="-6" y="-6" width="1293" height="693" extended-state="7" />
     <editor active="true" />
     <layout>
       <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.22834007" />
@@ -802,8 +809,6 @@
     <option name="myLimit" value="2678400000" />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Increase version for autobuild" />
-    <MESSAGE value="Correct translation&#10;Add wishlist addition" />
     <MESSAGE value="Add node.js updateUsers&#10;Correct loading user counters" />
     <MESSAGE value="Some minor defects corrected&#10;Store not resolved isbn in 'noisbn' collection&#10;Search both Google and Goodreads for ISBNs" />
     <MESSAGE value="Increase version" />
@@ -823,11 +828,13 @@
     <MESSAGE value="Add Stellar In/Out&#10;Add Financial History screen&#10;Add referral program (screen of history and logic)&#10;Change fonts to default (Roboto)" />
     <MESSAGE value="Delete unused fonts" />
     <MESSAGE value="Correct defect with adding books" />
-    <MESSAGE value="Add search by ISBN from RSL (Russian State Library) for books started from 9785&#10;Add transit process and control on taken/given books (Cart/Outbox/Lent/Borrowed)&#10;Add points (community currency)" />
     <MESSAGE value="Correct defect with Facebook login (cancel)" />
     <MESSAGE value="Intl package version changed" />
     <MESSAGE value="Update package versions" />
-    <option name="LAST_COMMIT_MESSAGE" value="Update package versions" />
+    <MESSAGE value="New package version for geoflutterfire" />
+    <MESSAGE value="Add search by ISBN from RSL (Russian State Library) for books started from 9785&#10;Add transit process and control on taken/given books (Cart/Outbox/Lent/Borrowed)&#10;Add points (community currency)" />
+    <MESSAGE value="Add shrinkResources to build" />
+    <option name="LAST_COMMIT_MESSAGE" value="Add shrinkResources to build" />
   </component>
   <component name="editorHistoryManager">
     <entry file="file://$PROJECT_DIR$/lib/l10n/messages_all.dart">
@@ -933,13 +940,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="17">
           <caret line="3" selection-start-line="3" selection-end-line="3" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/android/app/build.gradle">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="595">
-          <caret line="35" column="23" selection-start-line="35" selection-start-column="23" selection-end-line="35" selection-end-column="23" />
         </state>
       </provider>
     </entry>
@@ -1093,15 +1093,22 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/lib/main.dart">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="315">
+        <state relative-caret-position="9469">
           <caret line="589" column="5" selection-start-line="589" selection-start-column="5" selection-end-line="589" selection-end-column="5" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/pubspec.yaml">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="119">
+        <state relative-caret-position="323">
           <caret line="19" column="24" selection-start-line="19" selection-start-column="24" selection-end-line="19" selection-end-column="24" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/android/app/build.gradle">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="78">
+          <caret line="74" column="27" selection-start-line="74" selection-start-column="12" selection-end-line="74" selection-end-column="27" />
         </state>
       </provider>
     </entry>
