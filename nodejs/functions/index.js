@@ -637,7 +637,7 @@ exports.recogniseShelfHttp = functions.runWith(runtimeOpts).https.onRequest(asyn
 // export users with emails and counters
 exports.exportUsers = functions.https.onRequest(async (req, res) => {
   try {
-    const fields = ['id', 'name', 'shelfCount', 'bookCount', 'wishCount', 'email'];
+    const fields = ['id', 'name', 'email'];
     const opts = { fields };
 
     var users = [];
