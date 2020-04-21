@@ -184,6 +184,28 @@ showSnackBar(BuildContext context, String text, {FlatButton button}) {
     )..show(context);
 }
 
+Map<String, Route> singleRoutes = {};
+
+pushSingle(BuildContext context, Route route, String key) {
+  if (singleRoutes[key] != null)
+    try {
+      Navigator.removeRoute(context, singleRoutes[key]);
+      print('!!!DEBUG: route removed');
+    } catch (e, stack) {
+      print('!!!DEBUG: failed to removeRoute');
+      //TODO: Report exception to Crashalitic
+    }
+
+  // Keep Route for the key
+  singleRoutes[key] = route;
+
+  // Remove key if Route completed in a normal way
+  return Navigator.push(context, route).then((value) {
+    singleRoutes[key] = null;
+  });
+}
+
+
 Scaffold buildScaffold(BuildContext context, String title, Widget body,
     {appbar: true}) {
   if (appbar)
@@ -201,7 +223,7 @@ Scaffold buildScaffold(BuildContext context, String title, Widget body,
 }
 
 Widget bookImage(dynamic book, double size,
-    {padding = 3.0, sameHeight = false, String tooltip = ''}) {
+    {padding = const EdgeInsets.all(3.0), sameHeight = false, String tooltip = ''}) {
   String image;
   if (book is Book) {
     image = book.image;
@@ -213,7 +235,7 @@ Widget bookImage(dynamic book, double size,
 
   if (sameHeight)
     return new Container(
-        margin: EdgeInsets.all(padding),
+        margin: padding,
         child: new Tooltip(
             message: tooltip,
             child: Image(
@@ -225,7 +247,7 @@ Widget bookImage(dynamic book, double size,
                 fit: BoxFit.cover)));
   else
     return new Container(
-        margin: EdgeInsets.all(padding),
+        margin: padding,
         child: new Tooltip(
             message: tooltip,
             child: Image(
@@ -326,7 +348,7 @@ class _BookrecordWidgetState extends State<BookrecordWidget> {
 }
 
 typedef UserWidgetBuilder = Widget Function(
-    BuildContext context, User user, Wallet wallet);
+    BuildContext context, User user);
 
 class UserWidget extends StatefulWidget {
   UserWidget({Key key, @required this.user, @required this.builder})
@@ -342,15 +364,11 @@ class UserWidget extends StatefulWidget {
 
 class _UserWidgetState extends State<UserWidget> {
   User user;
-  Wallet wallet;
   final UserWidgetBuilder builder;
 
   @override
   void initState() {
     super.initState();
-    getUserDetails().whenComplete(() {
-      if (mounted) setState(() {});
-    });
   }
 
   _UserWidgetState({
@@ -365,9 +383,6 @@ class _UserWidgetState extends State<UserWidget> {
 
     if (oldWidget.user.id != widget.user.id) {
       user = widget.user;
-      getUserDetails().whenComplete(() {
-        if (mounted) setState(() {});
-      });
     }
   }
 
@@ -376,17 +391,8 @@ class _UserWidgetState extends State<UserWidget> {
     if (user == null) {
       return Container(width: 0.0, height: 0.0);
     } else {
-      return builder(context, user, wallet);
+      return builder(context, user);
     }
-  }
-
-  Future<void> getUserDetails() async {
-    wallet = Wallet(id: user.id);
-    final DocumentSnapshot snap = await wallet.ref.get();
-
-    if (snap.exists) wallet = Wallet.fromJson(snap.data);
-
-    return;
   }
 }
 
@@ -394,6 +400,7 @@ double dp(double val, int places) {
   double mod = math.pow(10.0, places);
   return ((val * mod).round().toDouble() / mod);
 }
+
 
 dynamic distance(double d) {
   if (d == null || d.isInfinite || d.isNaN)
@@ -436,84 +443,6 @@ dynamic distance(double d) {
       )
     ]);
 */
-
-// Function return chat record (create if needed) and transit book record
-Future<Messages> doTransit(
-    {@required BuildContext context,
-    @required Messages chat,
-    String bookrecordId}) async {
-  assert(chat.complete && !chat.system && bookrecordId != null);
-
-  Bookrecord rec;
-
-  DocumentSnapshot snap = await Bookrecord.Ref(bookrecordId).get();
-
-  if (!snap.exists) {
-    showSnackBar(context, S.of(context).snackBookNotFound);
-  } else {
-    rec = Bookrecord.fromJson(snap.data);
-
-    // If book belong to current user do nothing
-    if (rec.holderId == chat.to)
-      rec = null;
-    else if (rec.transit == true) {
-      // Book already in transit with another user
-      showSnackBar(context, S.of(context).snackBookAlreadyInTransit);
-      rec = null;
-    }
-  }
-
-  if (rec != null) {
-    // If previous deal is completed reset it
-    if (chat.status == Messages.Complete) {
-      chat.reset();
-    }
-
-    if (chat.status == Messages.Initial) {
-      chat.books.add(bookrecordId);
-      await chat.ref.updateData({
-        'books': FieldValue.arrayUnion([bookrecordId]),
-        'status': chat.status
-      });
-    } else {
-      // Only add book in Initial status (in Handover fails - null)
-      if (chat.toId == B.user.id)
-        showSnackBar(context, S.of(context).snackBookNotConfirmed);
-      else
-        showSnackBar(context, S.of(context).snackBookPending);
-
-      // Previous exchange not confirmed. Could not open a new one
-      rec = null;
-    }
-  }
-
-  // TODO: do it in transaction to avoid simultaneous update to transit
-  // by different users
-
-  // Update bookrecord (link to chat)
-  if (rec != null) {
-    showSnackBar(context, S.of(context).snackBookAddedToCart);
-
-    await rec.ref.updateData({
-      'transit': true,
-      'transitId': chat.toId,
-      'users': FieldValue.arrayUnion([chat.toId]),
-      'chatId': chat.id
-    });
-
-    // Log book request ad return events
-    logAnalyticsEvent(name: 'add_to_cart', parameters: <String, dynamic>{
-      'isbn': rec.isbn,
-      'type': (chat.toId == rec.owner) ? 'return' : 'request',
-      'by': (B.user.id == rec.holderId) ? 'holder' : 'peer',
-      'from': chat.fromId,
-      'to': chat.toId,
-      'distance': rec.distance == double.infinity ? 50000.0 : rec.distance,
-    });
-  }
-
-  return chat;
-}
 
 Future<String> buildLink(String query,
     {String image, String title, String description}) async {

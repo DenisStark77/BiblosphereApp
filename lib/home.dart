@@ -1,3 +1,4 @@
+import 'package:biblosphere/search.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 //import 'package:firebase_ui/flutter_firebase_ui.dart';
@@ -12,7 +13,7 @@ import 'package:share/share.dart';
 import 'package:flutter_crashlytics/flutter_crashlytics.dart';
 import 'package:flutter/gestures.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:in_app_purchase/in_app_purchase.dart';
+import 'package:purchases_flutter/purchases_flutter.dart';
 
 import 'package:biblosphere/const.dart';
 import 'package:biblosphere/helpers.dart';
@@ -32,8 +33,6 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
-  StreamSubscription<List<PurchaseDetails>> _subscription;
-
   _MyHomePageState({
     Key key,
   });
@@ -44,62 +43,10 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
 
     assert(B.user != null);
     initDynamicLinks();
-
-    // TODO: Didn't work on WEB
-    if (!kIsWeb) {
-      // Listen to in-app purchases update
-      final Stream purchaseUpdates =
-          InAppPurchaseConnection.instance.purchaseUpdatedStream;
-      _subscription = purchaseUpdates.listen((purchases) {
-        List<PurchaseDetails> details = purchases;
-
-        // TODO: Redesign to accept multiple payments. It won't work in parallel.
-        details.forEach((purchase) async {
-          if (purchase.status == PurchaseStatus.purchased) {
-            // Get product
-            final ProductDetailsResponse response =
-                await InAppPurchaseConnection.instance
-                    .queryProductDetails({purchase.productID});
-
-            if (!response.notFoundIDs.isEmpty) {
-              // TODO: Process this more nicely
-              throw ('Ids of in-app products not available');
-            }
-
-            ProductDetails p = response.productDetails.first;
-
-            double amount = 0.0;
-            if (Theme.of(context).platform == TargetPlatform.android) {
-              amount = toXlm(p.skuDetail.priceAmountMicros / 1000000, currency: p.skuDetail.priceCurrencyCode);
-            } else if (Theme.of(context).platform == TargetPlatform.iOS) {
-              amount = toXlm(double.parse(p.skProduct.price), currency: p.skProduct.priceLocale.currencyCode);
-            }
-
-            // Create an operation and update user balance
-            await payment(
-                user: B.user, amount: amount, type: OperationType.InputInApp);
-
-            logAnalyticsEvent(
-                name: 'ecommerce_purchase',
-                parameters: <String, dynamic>{
-                  'amount': amount,
-                  'channel': 'in-app',
-                  'user': B.user.id,
-                });
-          } else if (purchase.status == PurchaseStatus.error) {
-            showSnackBar(context, 'Purchase error: ${purchase.error.details}');
-            print(
-                '!!!DEBUG purchases error:  ${purchase.error.code} ${purchase.error.details} ${purchase.error.message}  ${purchase.error.source}');
-          }
-        });
-      });
-    }
   }
 
   @override
   void dispose() {
-    _subscription.cancel();
-
     super.dispose();
   }
 
@@ -185,7 +132,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
           Messages chat = Messages(from: user, to: B.user);
 
           // Open chat widget
-          Chat.runChat(context, user, chat: chat, transit: bookrecordId);
+          Chat.runChat(context, user, chat: chat);
         }
       }
       // It was Navigator.pushNamed in original example. Don't know why...
@@ -195,20 +142,13 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
       // Book have to be registered in Biblosphere
       String isbn = deepLink.queryParameters['isbn'];
       if (isbn != null) {
-        DocumentSnapshot snap = await Book.Ref(isbn).get();
-
-        if (snap.exists) {
-          Book book = new Book.fromJson(snap.data);
-
-          Navigator.push(
-              context,
-              new MaterialPageRoute(
-                  builder: (context) => buildScaffold(
-                      context, null, new FindBookWidget(filter: book.title),
-                      appbar: false)));
-        } else {
-          // TODO: report missing book in the link
-        }
+        pushSingle(
+            context,
+            new MaterialPageRoute(
+                builder: (context) => buildScaffold(
+                    context, null, new FindBookWidget(isbn: isbn),
+                    appbar: false)),
+            'search');
       } else {
         // TODO: report broken link: bookId is null
       }
@@ -218,9 +158,9 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
       bool wish = (deepLink.path == "/addwish");
       String isbn = deepLink.queryParameters['isbn'];
       if (isbn != null) {
-        DocumentSnapshot snap = await Book.Ref(isbn).get();
-        if (snap.exists) {
-          Book book = new Book.fromJson(snap.data);
+        Book book = await searchByIsbn(isbn);
+
+        if (book != null) {
           await addBookrecord(
               context, book, B.user, wish, await currentLocation(),
               snackbar: false);
@@ -262,6 +202,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
 
       if (deepLink != null) processDeepLink(deepLink);
     }, onError: (OnLinkErrorException e) async {
+      // TODO: Add to Crashalitics
       print('onLinkError');
       print(e.message);
     });
@@ -331,11 +272,11 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                 if( chat.ids == null || chat.ids[0] == null || chat.ids[1] == null)
                   return;
 
-                chat.fromId = chat.ids[0]; 
+                chat.fromId = chat.ids[0];
                 chat.toId = chat.ids[1];
 
-                await doc.reference.updateData({'fromId': chat.fromId, 'toId': chat.toId, 
-                'fromName': null, 'fromImage': null, 
+                await doc.reference.updateData({'fromId': chat.fromId, 'toId': chat.toId,
+                'fromName': null, 'fromImage': null,
                 'toName': null, 'toImage': null
                 });
               });
@@ -751,14 +692,15 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                 new Expanded(
                   child: new InkWell(
                     onTap: () async {
-                      Navigator.push(
+                      pushSingle(
                           context,
                           new MaterialPageRoute(
                               builder: (context) => buildScaffold(
                                   context,
                                   S.of(context).findbookTitle,
                                   new FindBookWidget(),
-                                  appbar: false)));
+                                  appbar: false)),
+                          'search');
                       refreshLocation(context);
                     },
                     child: new Card(
@@ -837,19 +779,6 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                                                       .title
                                                       .apply(
                                                           color: C.titleText))),
-                                          Row(children: <Widget>[
-                                            new Container(
-                                                margin:
-                                                    EdgeInsets.only(right: 5.0),
-                                                child: assetIcon(coins_100,
-                                                    size: 20)),
-                                            new Text(
-                                                money(B.wallet.getAvailable()),
-                                                style: Theme.of(context)
-                                                    .textTheme
-                                                    .body1
-                                                    .apply(color: C.titleText))
-                                          ]),
                                         ]))),
                           ]),
                       Container(
@@ -929,6 +858,9 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                               new SettingsWidget())));
                 },
               ),
+              // TODO: Convert FinancialWidget into HistoryWidget
+              //  to show books give/take history of the user
+              /*
               ListTile(
                 title: drawerMenuItem(
                     context, S.of(context).menuBalance, coins_100,
@@ -938,7 +870,6 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                   Navigator.push(
                       context,
                       new MaterialPageRoute(
-                          //TODO: translation
                           builder: (context) => buildScaffold(
                               context,
                               S
@@ -948,6 +879,9 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                               appbar: false)));
                 },
               ),
+              */
+              // TODO: Convert it to FriendsWidget instead of referral
+              /*
               ListTile(
                 title: drawerMenuItem(
                     context, S.of(context).menuReferral, handshake_100,
@@ -957,13 +891,13 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                   Navigator.push(
                       context,
                       new MaterialPageRoute(
-                          //TODO: translation
                           builder: (context) => buildScaffold(
                               context,
                               S.of(context).referralTitle,
                               new ReferralWidget())));
                 },
               ),
+              */
               ListTile(
                 title: drawerMenuItem(
                     context, S.of(context).menuSupport, online_support_100,
@@ -1010,7 +944,7 @@ class _ShowBooksWidgetState extends State<ShowBooksWidget> {
   Set<String> keys = {};
   List<Book> suggestions = [];
   TextEditingController textController;
-  bool transit = true, own = true, lent = true, borrowed = true, wish = true;
+  bool own = true, lent = true, borrowed = true, wish = true;
   StreamSubscription<QuerySnapshot> bookSubscription;
 
   bool showClearFilters = false;
@@ -1181,16 +1115,6 @@ class _ShowBooksWidgetState extends State<ShowBooksWidget> {
                                       });
                                     },
                                   ),
-                                  FilterChip(
-                                    //avatar: icon,
-                                    label: Text(S.of(context).chipTransit),
-                                    selected: transit,
-                                    onSelected: (bool s) {
-                                      setState(() {
-                                        transit = s;
-                                      });
-                                    },
-                                  ),
                                 ]))
                           ]))
                 ])),
@@ -1204,8 +1128,7 @@ class _ShowBooksWidgetState extends State<ShowBooksWidget> {
           if (own && rec.isOwn ||
               wish && rec.isWish ||
               lent && rec.isLent ||
-              borrowed && rec.isBorrowed ||
-              transit && rec.isTransit) {
+              borrowed && rec.isBorrowed) {
             return new MyBook(bookrecord: rec, filter: keys);
           } else {
             return Container(height: 0.0, width: 0.0);
@@ -1287,10 +1210,6 @@ class _MyBookWidgetState extends State<MyBook> {
       //Delete book record in Firestore database
       bookrecord.ref.delete();
       showSnackBar(context, S.of(context).bookDeleted);
-
-      // Update book with counter for copies/wishes
-      await Book.Ref(bookrecord.isbn).updateData(
-          {(bookrecord.wish ? 'wishes' : 'copies'): FieldValue.increment(-1)});
     } catch (ex, stack) {
       print('Bookrecord delete failed for [${bookrecord.id}, ${B.user.id}]: ' +
           ex.toString());
@@ -1312,7 +1231,8 @@ class _MyBookWidgetState extends State<MyBook> {
                         mainAxisAlignment: MainAxisAlignment.start,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: <Widget>[
-                          bookImage(bookrecord, 80, padding: 5.0),
+                          bookImage(bookrecord, 80,
+                              padding: EdgeInsets.all(5.0)),
                           Expanded(
                             child: Container(
                               child: Column(
@@ -1332,42 +1252,6 @@ class _MyBookWidgetState extends State<MyBook> {
                                             style: Theme.of(context)
                                                 .textTheme
                                                 .subtitle)),
-                                    // Show price without fee for the book owners
-                                    B.user.id == bookrecord.ownerId &&
-                                            !bookrecord.wish
-                                        ? Container(
-                                            child: Text(
-                                                S.of(context).bookPrice(money(
-                                                    bookrecord.getPrice())),
-                                                overflow: TextOverflow.ellipsis,
-                                                style: Theme.of(context)
-                                                    .textTheme
-                                                    .body1))
-                                        : Container(),
-                                    // Show income for lent books
-                                    bookrecord.isLent
-                                        ? Container(
-                                            child: Text(
-                                                S.of(context).bookIncome(money(
-                                                    income(bookrecord
-                                                        .getPrice()))),
-                                                overflow: TextOverflow.ellipsis,
-                                                style: Theme.of(context)
-                                                    .textTheme
-                                                    .body1))
-                                        : Container(),
-                                    // Show rent for borrowed books
-                                    bookrecord.isBorrowed
-                                        ? Container(
-                                            child: Text(
-                                                S.of(context).bookRent(money(
-                                                    monthly(bookrecord
-                                                        .getPrice()))),
-                                                overflow: TextOverflow.ellipsis,
-                                                style: Theme.of(context)
-                                                    .textTheme
-                                                    .body1))
-                                        : Container(),
                                     B.user.id != bookrecord.ownerId
                                         ? Container(
                                             child: Text(
@@ -1394,18 +1278,6 @@ class _MyBookWidgetState extends State<MyBook> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: <Widget>[
-                        // Chat button for transit
-                        bookrecord.isTransit
-                            ? new IconButton(
-                                onPressed: () async {
-                                  // Open chat widget
-                                  Chat.runChatById(context, null,
-                                      chatId: bookrecord.chatId);
-                                },
-                                tooltip: S.of(context).hintChatOpen,
-                                icon: assetIcon(communication_100, size: 30),
-                              )
-                            : Container(),
                         // Search button for the wishes
                         bookrecord.isWish
                             ? new IconButton(
@@ -1423,12 +1295,11 @@ class _MyBookWidgetState extends State<MyBook> {
                                       from: B.user, to: bookrecord.owner);
 
                                   // Open chat widget
-                                  Chat.runChat(context, null,
-                                      chat: chat,
+                                  Chat.runChatWithBookRequest(
+                                      context, bookrecord,
                                       message: S
                                           .of(context)
-                                          .requestReturn(bookrecord.title),
-                                      transit: bookrecord.id);
+                                          .requestReturn(bookrecord.title));
                                 },
                                 tooltip: S.of(context).hintReturn,
                                 icon: assetIcon(return_100, size: 25),
@@ -1442,13 +1313,12 @@ class _MyBookWidgetState extends State<MyBook> {
                                       from: bookrecord.holder, to: B.user);
 
                                   // Open chat widget
-                                  Chat.runChat(context, null,
-                                      chat: chat,
+                                  Chat.runChatWithBookRequest(
+                                      context, bookrecord,
                                       message: S
                                           .of(context)
                                           .requestReturnByOwner(
-                                              bookrecord.title),
-                                      transit: bookrecord.id);
+                                              bookrecord.title));
                                 },
                                 tooltip: S.of(context).hintRequestReturn,
                                 icon: assetIcon(return_100, size: 25),
@@ -1460,40 +1330,6 @@ class _MyBookWidgetState extends State<MyBook> {
                                 onPressed: () => deleteBook(context),
                                 tooltip: S.of(context).hintDeleteBook,
                                 icon: assetIcon(trash_100, size: 25),
-                              )
-                            : Container(),
-                        // Setting only for OWN books
-                        bookrecord.isOwn
-                            ? new IconButton(
-                                //TODO: Add setting screen for a book
-                                onPressed: () {
-                                  if (!settings) {
-                                    if (_linkTextCtr == null)
-                                      _linkTextCtr =
-                                          new TextEditingController();
-
-                                    if (_priceTextCtr == null)
-                                      _priceTextCtr =
-                                          new TextEditingController();
-
-                                    // Set price and link
-                                    double price = bookrecord.price;
-                                    if (price == null || price == 0.0)
-                                      price = bookrecord.getPrice();
-                                    _priceTextCtr.text =
-                                        dp(toCurrency(price), 2).toString();
-
-                                    setState(() {
-                                      settings = true;
-                                    });
-                                  } else {
-                                    setState(() {
-                                      settings = false;
-                                    });
-                                  }
-                                },
-                                tooltip: S.of(context).hintBookDetails,
-                                icon: assetIcon(settings_100, size: 25),
                               )
                             : Container(),
                         // Sharing button for everything
@@ -1532,159 +1368,6 @@ class _MyBookWidgetState extends State<MyBook> {
                       ],
                     ),
                   ),
-                  settings
-                      ? Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: <Widget>[
-                              bookrecord.image == null ||
-                                      bookrecord.image.isEmpty
-                                  ? Container(
-                                      padding: EdgeInsets.only(
-                                          left: 12.0, right: 12.0, top: 10.0),
-                                      child: Text(S.of(context).bookImageLabel))
-                                  : Container(),
-                              bookrecord.image == null ||
-                                      bookrecord.image.isEmpty
-                                  ? new Container(
-                                      padding: EdgeInsets.only(
-                                          left: 12.0,
-                                          right: 12.0,
-                                          bottom: 10.0),
-                                      child: Theme(
-                                          data: ThemeData(
-                                              platform: TargetPlatform.android),
-                                          child: TextField(
-                                            onSubmitted: (value) async {
-                                              if (!Uri.parse(value)
-                                                  .isAbsolute) {
-                                                setState(() {
-                                                  _linkError = S
-                                                      .of(context)
-                                                      .wrongImageUrl;
-                                                });
-                                              } else {
-                                                bookrecord.image = value;
-                                                setState(() {
-                                                  _linkError = null;
-                                                });
-
-                                                await Book.Ref(bookrecord.isbn)
-                                                    .updateData({
-                                                  'image': value,
-                                                  'userImage': true
-                                                });
-
-                                                await bookrecord.ref
-                                                    .updateData({
-                                                  'image': value,
-                                                });
-
-                                                showSnackBar(
-                                                    context,
-                                                    S
-                                                        .of(context)
-                                                        .snackBookImageChanged);
-
-                                                logAnalyticsEvent(
-                                                    name: 'book_image_set',
-                                                    parameters: <String,
-                                                        dynamic>{
-                                                      'isbn': bookrecord.isbn,
-                                                      'user': B.user.id,
-                                                    });
-                                              }
-                                            },
-                                            maxLines: 1,
-                                            controller: _linkTextCtr,
-                                            style: Theme.of(context)
-                                                .textTheme
-                                                .body1,
-                                            decoration: InputDecoration(
-                                                isDense: true,
-                                                contentPadding:
-                                                    EdgeInsets.all(2.0),
-                                                hintText:
-                                                    S.of(context).imageLinkHint,
-                                                errorText: _linkError),
-                                          )),
-                                    )
-                                  : Container(),
-                              Container(
-                                  padding: EdgeInsets.only(
-                                      left: 12.0, right: 12.0, top: 10.0),
-                                  child: Text(S.of(context).bookPriceLabel)),
-                              Container(
-                                padding: EdgeInsets.only(
-                                    left: 12.0, right: 12.0, bottom: 10.0),
-                                child: Theme(
-                                    data: ThemeData(
-                                        platform: TargetPlatform.android),
-                                    child: TextField(
-                                      onSubmitted: (value) async {
-                                        if (_priceTextCtr.text == null ||
-                                            _priceTextCtr.text.isEmpty) {
-                                          setState(() {
-                                            _priceError =
-                                                S.of(context).emptyAmount;
-                                          });
-                                          return;
-                                        }
-
-                                        double amount =
-                                            double.tryParse(_priceTextCtr.text);
-
-                                        if (amount == null || amount <= 0.0) {
-                                          setState(() {
-                                            _priceError =
-                                                S.of(context).negativeAmount;
-                                          });
-                                          return;
-                                        }
-
-                                        if (_priceError != null)
-                                          _priceError = null;
-
-                                        FocusScope.of(context).unfocus();
-
-                                        setState(() {
-                                          bookrecord.price =
-                                              dp(toXlm(amount), 5);
-                                        });
-
-                                        bookrecord.ref.updateData(
-                                            {'price': bookrecord.price});
-
-                                        showSnackBar(
-                                            context,
-                                            S
-                                                .of(context)
-                                                .snackBookPriceChanged);
-
-                                        logAnalyticsEvent(
-                                            name: 'book_price_set',
-                                            parameters: <String, dynamic>{
-                                              'isbn': bookrecord.isbn,
-                                              'user': B.user.id,
-                                              'price': bookrecord.price,
-                                            });
-                                      },
-                                      maxLines: 1,
-                                      controller: _priceTextCtr,
-                                      style: Theme.of(context).textTheme.body1,
-                                      decoration: InputDecoration(
-                                          prefix: Text(
-                                              currencySymbol[B.currency],
-                                              style: Theme.of(context)
-                                                  .textTheme
-                                                  .body1),
-                                          isDense: true,
-                                          contentPadding: EdgeInsets.all(2.0),
-                                          hintText: S.of(context).bookPriceHint,
-                                          errorText: _priceError),
-                                    )),
-                              )
-                            ])
-                      : Container(),
                 ],
               ),
               color: Theme.of(context).cardColor,
@@ -1713,10 +1396,6 @@ class _MyBookWidgetState extends State<MyBook> {
         return Text(S.of(context).youBorrowThisBook,
             overflow: TextOverflow.ellipsis,
             style: Theme.of(context).textTheme.body1);
-      case BookrecordType.transit:
-        return Text(S.of(context).youTransitThisBook,
-            overflow: TextOverflow.ellipsis,
-            style: Theme.of(context).textTheme.body1);
       case BookrecordType.none:
       default:
         return Container();
@@ -1724,6 +1403,8 @@ class _MyBookWidgetState extends State<MyBook> {
   }
 }
 
+// TODO: Make a HistoryWidget instead of FinancialWidget
+/*
 class FinancialWidget extends StatefulWidget {
   FinancialWidget({
     Key key,
@@ -1928,7 +1609,7 @@ class _MyOperationWidgetState extends State<MyOperation> {
       return new Container(
           child: Row(children: <Widget>[
         bookImage(operation.bookImage, 25,
-            padding: 3.0, tooltip: operation.bookTooltip),
+            padding: EdgeInsets.all(3.0), tooltip: operation.bookTooltip),
         Expanded(
             child: Container(
                 child: Column(
@@ -2075,7 +1756,10 @@ class _MyOperationWidgetState extends State<MyOperation> {
     }
   }
 }
+*/
 
+// TODO: Convert it to FriendsWidget instead of refferal
+/*
 class ReferralWidget extends StatefulWidget {
   ReferralWidget({
     Key key,
@@ -2170,7 +1854,7 @@ class _ReferralWidgetState extends State<ReferralWidget> {
 
                             return new UserWidget(
                                 user: user,
-                                builder: (context, user, wallet) {
+                                builder: (context, user) {
                                   return Container(
                                       child: Row(children: <Widget>[
                                     userPhoto(user, 40, padding: 3.0),
@@ -2207,6 +1891,7 @@ class _ReferralWidgetState extends State<ReferralWidget> {
     );
   }
 }
+*/
 
 class SettingsWidget extends StatefulWidget {
   SettingsWidget({
@@ -2223,8 +1908,11 @@ class _SettingsWidgetState extends State<SettingsWidget> {
   TextEditingController payoutMemoCtr;
   String _accountErrorText;
   String _amountErrorText;
-
-  List<ProductDetails> products;
+  Offerings offerings;
+  PurchaserInfo purchaserInfo;
+  PackageType upgradeChoice = PackageType.annual;
+  int booksAllowance = 2;
+  int wishesAllowance = 5;
 
   @override
   void initState() {
@@ -2235,39 +1923,33 @@ class _SettingsWidgetState extends State<SettingsWidget> {
     payoutMemoCtr = new TextEditingController();
     amountTextCtr = new TextEditingController();
 
-    initInAppPurchase();
-  }
+    try {
+      Purchases.getOfferings().then((Offerings res) {
+        if (res.current != null) {
+          print('!!!DEBUG: ${res}');
+          setState(() {
+            offerings = res;
+          });
+        }
+      });
 
-  Future<void> initInAppPurchase() async {
-    final bool available = await InAppPurchaseConnection.instance.isAvailable();
-
-    if (!available) {
-      // TODO: Process this more nicely
-      throw ('In-App store not available');
+      Purchases.getPurchaserInfo().then((PurchaserInfo info) {
+        print('!!!DEBUG: PurchaserInfo ${info}');
+        setState(() {
+          purchaserInfo = info;
+        });
+      });
+      // access latest purchaserInfo
+    } on PlatformException catch (e, stack) {
+      print('!!!DEBUG: Exception on Purchases plug-in, $e, $stack');
+      // TODO: Process exception crashalityck
     }
 
-    // Only show bigger amounts
-    Set<String> _kIds = {'50', '100', '200', '500', '1000', '2000'};
-    final ProductDetailsResponse response =
-        await InAppPurchaseConnection.instance.queryProductDetails(_kIds);
-
-    if (!response.notFoundIDs.isEmpty) {
-      // TODO: Process this more nicely
-      throw ('Ids of in-app products not available');
-    }
-
-    products = response.productDetails;
-    
-    if (Theme.of(context).platform == TargetPlatform.android) {
-      products.sort((p2, p1) =>
-          p1.skuDetail.priceAmountMicros - p2.skuDetail.priceAmountMicros);
-    } else if (Theme.of(context).platform == TargetPlatform.iOS) {
-      products.sort((p2, p1) =>
-          (double.parse(p1.skProduct.price)*100).round() - (double.parse(p2.skProduct.price)*100).round());
-    }
-    products.forEach( (p) => print('!!!DEBUG ${p.price} ${p.title}'));
-  
-    setState(() {
+    Purchases.addPurchaserInfoUpdateListener((info) {
+      // handle any changes to purchaserInfo
+      setState(() {
+        purchaserInfo = info;
+      });
     });
   }
 
@@ -2283,6 +1965,19 @@ class _SettingsWidgetState extends State<SettingsWidget> {
   _SettingsWidgetState({
     Key key,
   });
+
+  String currentPlan(BuildContext context) {
+    // TODO: Translate TRIAL
+    return isTrial()
+        ? S.of(context).planTrial
+        : purchaserInfo.activeSubscriptions[0];
+  }
+
+  bool isTrial() {
+    // TODO: Translate TRIAL
+    return purchaserInfo == null ||
+        purchaserInfo.activeSubscriptions.length == 0;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -2306,342 +2001,21 @@ class _SettingsWidgetState extends State<SettingsWidget> {
                               Expanded(
                                   child: Container(
                                       padding: EdgeInsets.only(left: 10.0),
-                                      child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: <Widget>[
-                                            Text(B.user.name,
-                                                style: Theme.of(context)
-                                                    .textTheme
-                                                    .title),
-                                            Row(children: <Widget>[
-                                              new Container(
-                                                  margin: EdgeInsets.only(
-                                                      right: 5.0),
-                                                  child: assetIcon(coins_100,
-                                                      size: 20)),
-                                              new Text(
-                                                  money(
-                                                      B.wallet.getAvailable()),
-                                                  style: Theme.of(context)
-                                                      .textTheme
-                                                      .body1)
-                                            ]),
-                                          ]))),
+                                      child: Column(children: <Widget>[
+                                        Text(B.user.name,
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .title),
+                                        Text(
+                                            S.of(context).settingsPlan(
+                                                currentPlan(context)),
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .body1),
+                                      ]))),
                             ])),
-                    ExpansionTile(
-                        title: Text(S.of(context).settingsTitleGeneral,
-                            style: Theme.of(context).textTheme.title),
-                        children: <Widget>[
-                          Container(child: Text(S.of(context).referralLink)),
-                          Container(
-                              padding: EdgeInsets.only(bottom: 20.0),
-                              child: Builder(
-                                  // Create an inner BuildContext so that the onPressed methods
-                                  // can refer to the Scaffold with Scaffold.of().
-                                  builder: (BuildContext context) {
-                                return InkWell(
-                                    onTap: () {
-                                      Clipboard.setData(
-                                          new ClipboardData(text: B.user.link));
-                                      //Navigator.pop(context);
-                                      showSnackBar(
-                                          context, S.of(context).linkCopied);
-
-                                      logAnalyticsEvent(
-                                          name: 'share',
-                                          parameters: <String, dynamic>{
-                                            'type': 'link',
-                                            'screen': 'settings',
-                                            'user': B.user.id,
-                                          });
-                                    },
-                                    child: Text(B.user.link,
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .body1
-                                            .apply(
-                                                decoration:
-                                                    TextDecoration.underline)));
-                              })),
-                          Container(child: Text(S.of(context).displayCurrency)),
-                          Container(
-                            width: 230.0,
-                            alignment: Alignment.center,
-                            padding: EdgeInsets.only(bottom: 20.0),
-                            child: DropdownButton(
-                              isExpanded: true,
-                              isDense: true,
-                              hint: Text(S
-                                  .of(context)
-                                  .selectDisplayCurrency), // Not necessary for Option 1
-                              value: B.currency,
-                              onChanged: (newValue) {
-                                setState(() {
-                                  B.currency = newValue;
-                                });
-                                // Update preferred currency for user
-                                B.user = B.user..currency = newValue;
-                                B.user.ref.updateData(B.user.toJson());
-                              },
-                              items: currencySymbol.entries.map((entry) {
-                                return DropdownMenuItem(
-                                  child: Container(alignment: Alignment.center, child: Text(entry.key,
-                                      style: Theme.of(context).textTheme.body1,
-                                      textAlign: TextAlign.center)),
-                                  value: entry.key,
-                                );
-                              }).toList(),
-                            ),
-                          )
-                        ]),
-                    products != null ? ExpansionTile(
-                        title: Text(S.of(context).settingsTitleIn,
-                            style: Theme.of(context).textTheme.title),
-                        children: <Widget>[
-                          Container(
-                            //width: 230.0,
-                            alignment: Alignment.center,
-                            padding: EdgeInsets.only(bottom: 20.0),
-                            child: DropdownButton(
-                              isExpanded: true,
-                              isDense: true,
-                              //hint: , // Not necessary for Option 1
-                              value: products.first,
-                              onChanged: (product) async {
-                                final PurchaseParam purchaseParam =
-                                    PurchaseParam(
-                                        productDetails: product,
-                                        sandboxTesting: false);
-                                bool res = await InAppPurchaseConnection
-                                    .instance
-                                    .buyConsumable(
-                                        purchaseParam: purchaseParam);
-                                print('!!!DEBUG result ${res}');
-                              },
-                              items: products.map((p) {
-                                return DropdownMenuItem(
-                                  child: Container(alignment: Alignment.center, child: Text(purchaseProductText(p),
-                                      style: Theme.of(context).textTheme.body1,
-                                      textAlign: TextAlign.center)),
-                                  value: p,
-                                );
-                              }).toList(),
-                            ),
-                          )
-                        ]) : Container(),
-                    ExpansionTile(
-                        title: Text(S.of(context).settingsTitleInStellar,
-                            style: Theme.of(context).textTheme.title),
-                        children: <Widget>[
-                          Text(S.of(context).inputStellarAcount),
-                          new Container(
-                              alignment: Alignment.centerLeft,
-                              padding: EdgeInsets.only(bottom: 20.0),
-                              child: Builder(
-                                  // Create an inner BuildContext so that the onPressed methods
-                                  // can refer to the Scaffold with Scaffold.of().
-                                  builder: (BuildContext context) {
-                                return InkWell(
-                                    onTap: () {
-                                      Clipboard.setData(new ClipboardData(
-                                          text: biblosphereAccountId));
-                                      //Navigator.pop(context);
-                                      showSnackBar(
-                                          context, S.of(context).accountCopied);
-                                    },
-                                    child: Text(biblosphereAccountId,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .body1
-                                            .apply(
-                                                decoration:
-                                                    TextDecoration.underline)));
-                              })),
-                          Text(S.of(context).inputStellarMemo),
-                          new Container(
-                              padding: EdgeInsets.only(bottom: 20.0),
-                              child: Builder(
-                                  // Create an inner BuildContext so that the onPressed methods
-                                  // can refer to the Scaffold with Scaffold.of().
-                                  builder: (BuildContext context) {
-                                return InkWell(
-                                    onTap: () {
-                                      Clipboard.setData(
-                                          new ClipboardData(text: B.user.id));
-                                      //Navigator.pop(context);
-                                      showSnackBar(
-                                          context, S.of(context).memoCopied);
-                                    },
-                                    child: Text(B.user.id,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .body1
-                                            .apply(
-                                                decoration:
-                                                    TextDecoration.underline)));
-                              })),
-                        ]),
-                    ExpansionTile(
-                        title: Text(S.of(context).settingsTitleOutStellar,
-                            style: Theme.of(context).textTheme.title),
-                        children: <Widget>[
-                          Text(S.of(context).outputStellarAccount),
-                          new Container(
-                            padding: EdgeInsets.only(bottom: 20.0),
-                            child: Theme(
-                                data:
-                                    ThemeData(platform: TargetPlatform.android),
-                                child: TextField(
-                                  onSubmitted: (value) async {
-                                    if (!await checkStellarAccount(value))
-                                      setState(() {
-                                        _accountErrorText =
-                                            S.of(context).wrongAccount;
-                                      });
-                                    else
-                                      setState(() {
-                                        _accountErrorText = null;
-                                      });
-
-                                    // Update Payout Stellar Account for user
-                                    B.user = B.user..payoutId = value;
-                                    await B.user.ref
-                                        .updateData(B.user.toJson());
-                                  },
-                                  maxLines: 1,
-                                  controller: payoutTextCtr,
-                                  style: Theme.of(context).textTheme.body1,
-                                  decoration: InputDecoration(
-                                      isDense: true,
-                                      contentPadding: EdgeInsets.all(2.0),
-                                      hintText: S.of(context).hintOutptAcount,
-                                      errorText: _accountErrorText),
-                                )),
-                          ),
-                          Text(S.of(context).outputStellarMemo),
-                          new Container(
-                            padding: EdgeInsets.only(bottom: 20.0),
-                            child: Theme(
-                                data:
-                                    ThemeData(platform: TargetPlatform.android),
-                                child: TextField(
-                                  maxLines: 1,
-                                  controller: payoutMemoCtr,
-                                  style: Theme.of(context).textTheme.body1,
-                                  decoration: InputDecoration(
-                                      isDense: true,
-                                      contentPadding: EdgeInsets.all(2.0),
-                                      hintText: S.of(context).hintOutputMemo,
-                                      errorText: _accountErrorText),
-                                )),
-                          ),
-                          Text(S.of(context).stellarOutput),
-                          new Container(
-                              padding: EdgeInsets.only(bottom: 20.0),
-                              child: Row(children: <Widget>[
-                                Flexible(
-                                    child: Container(
-                                        padding: EdgeInsets.only(right: 10.0),
-                                        child: Theme(
-                                            data: ThemeData(
-                                                platform:
-                                                    TargetPlatform.android),
-                                            child: TextField(
-                                              maxLines: 1,
-                                              keyboardType:
-                                                  TextInputType.number,
-                                              inputFormatters: <
-                                                  TextInputFormatter>[
-                                                WhitelistingTextInputFormatter(
-                                                    RegExp(
-                                                        r'((\d+(\.\d*)?)|(\.\d+))'))
-                                              ],
-                                              controller: amountTextCtr,
-                                              style: Theme.of(context)
-                                                  .textTheme
-                                                  .body1,
-                                              decoration: InputDecoration(
-                                                  isDense: true,
-                                                  contentPadding:
-                                                      EdgeInsets.all(2.0),
-                                                  hintText: S
-                                                      .of(context)
-                                                      .hintNotMore(money(B
-                                                          .wallet
-                                                          .getAvailable())),
-                                                  errorText: _amountErrorText),
-                                            )))),
-                                IconButton(
-                                    onPressed: () async {
-                                      try {
-                                        if (!await checkStellarAccount(
-                                            B.user.payoutId)) {
-                                          setState(() {
-                                            _accountErrorText =
-                                                S.of(context).wrongAccount;
-                                          });
-                                          return;
-                                        }
-                                        if (amountTextCtr.text == null ||
-                                            amountTextCtr.text.isEmpty) {
-                                          setState(() {
-                                            _amountErrorText =
-                                                S.of(context).emptyAmount;
-                                          });
-                                          return;
-                                        }
-
-                                        double amount =
-                                            double.tryParse(amountTextCtr.text);
-
-                                        if (amount == null || amount <= 0.0) {
-                                          setState(() {
-                                            _amountErrorText =
-                                                S.of(context).negativeAmount;
-                                          });
-                                          return;
-                                        }
-
-                                        if (toXlm(amount) >
-                                            B.wallet.getAvailable()) {
-                                          setState(() {
-                                            _amountErrorText =
-                                                S.of(context).exceedAmount;
-                                          });
-                                          return;
-                                        }
-
-                                        if (_amountErrorText != null ||
-                                            _accountErrorText != null)
-                                          setState(() {
-                                            _amountErrorText = null;
-                                            _accountErrorText = null;
-                                          });
-
-                                        FocusScope.of(context).unfocus();
-                                        amount = dp(toXlm(amount), 5);
-
-                                        await payoutStellar(B.user, amount,
-                                            memo: payoutMemoCtr.text);
-
-                                        showSnackBar(context,
-                                            S.of(context).successfulPayment);
-                                      } catch (ex, stack) {
-                                        FlutterCrashlytics()
-                                            .logException(ex, stack);
-
-                                        // TODO: Log event for administrator to investigate
-                                        showSnackBar(context,
-                                            S.of(context).paymentError);
-                                      }
-                                    },
-                                    icon: assetIcon(paper_plane_100, size: 30))
-                                    //child: Text(S.of(context).buttonTransfer))
-                              ])),
-                        ]),
+                    planInfoWidget(context),
+                    isTrial() ? upgradeWidget() : Container()
                   ]),
             ),
           ),
@@ -2650,33 +2024,182 @@ class _SettingsWidgetState extends State<SettingsWidget> {
     );
   }
 
-String purchaseProductText(ProductDetails p) {
-  if (Theme.of(context).platform == TargetPlatform.android) {
-      String title = p.title;
-      if (title.indexOf('(') != -1)
-        title = title.substring(0, p.title.indexOf('(') - 1);
-      return '${title} (${p.price})';
-    } else if (Theme.of(context).platform == TargetPlatform.iOS) {
-      String title = p.title;
-      if (title == null) {
-      if (p.id == '50')
-        title = 'Power package';
-      else if (p.id == '100')
-        title = 'Order package';
-      else if (p.id == '200')
-        title = 'Success package';
-      else if (p.id == '500')
-        title = 'Community package';
-      else if (p.id == '1000')
-        title = 'Synergy package';
-      else if (p.id == '2000')
-        title = 'Holistic package';
-      }
-      return '${title} (${p.price})';
-    } else
-      return null;
-}
+  Widget planInfoWidget(BuildContext context) {
+    if (isTrial()) {
+      booksAllowance = 2;
+      wishesAllowance = 5;
+    } else {
+      booksAllowance = 5;
+      wishesAllowance = 50;
+    }
 
+    return Container(
+        child: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+          // Row with three plan options to choose
+          Text('Limit on wish list: $wishesAllowance (upgrate to 100)',
+              style: Theme.of(context).textTheme.subtitle),
+          Container(
+              padding: EdgeInsets.only(bottom: 10.0),
+              child: Text(
+                  'You can keep up to $wishesAllowance books in your wish list. Upgrade to paid plan to increase to 100.',
+                  style: Theme.of(context).textTheme.body2)),
+          Text('Limit on taken books: $booksAllowance (upgrade to 5)',
+              style: Theme.of(context).textTheme.subtitle),
+          Container(
+              padding: EdgeInsets.only(bottom: 20.0),
+              child: Text(
+                  'You can take up to $booksAllowance books at a time plus number of books you\'ve given to other people. To take more books you have to return books previously taken.',
+                  style: Theme.of(context).textTheme.body2)),
+        ]));
+  }
+
+  Widget productWidget(Package package) {
+    // Get rid of "(Biblosphere)" in the title of Google Play products
+    String title = package.product.title.contains('(')
+        ? package.product.title.split('(')[0]
+        : package.product.title;
+
+    // Only Annual and monthly psubscriptions supported
+    String monthlyPrice = package.packageType == PackageType.annual
+        ? package.product.currencyCode +
+            ' ' +
+            (package.product.price / 12.0).toStringAsFixed(2)
+        : package.product.priceString;
+
+    return Expanded(
+        child: GestureDetector(
+            onTap: () {
+              setState(() {
+                upgradeChoice = package.packageType;
+              });
+            },
+            child: Container(
+                child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: <Widget>[
+                Container(
+                    padding: EdgeInsets.only(top: 10.0, bottom: 10.0),
+                    // Highlight user choice
+                    decoration: package.packageType == upgradeChoice
+                        ? BoxDecoration(
+                            border: Border.all(
+                              color: C.buttonBorder,
+                            ),
+                            borderRadius:
+                                BorderRadius.all(Radius.circular(5.0)),
+                            color: C.background)
+                        : BoxDecoration(),
+                    child: Column(children: <Widget>[
+                      //Container(child: Text(package.packageType.toString())),
+                      Container(
+                          child: Text(title,
+                              style: Theme.of(context).textTheme.title)),
+                      // Show per month price uness it's annual plan and it's choosen
+                      upgradeChoice != PackageType.annual ||
+                              package.packageType != PackageType.annual
+                          ? Container(
+                              padding: EdgeInsets.only(top: 5.0),
+                              child: Text(monthlyPrice,
+                                  style: Theme.of(context).textTheme.body1))
+                          : Container(),
+                      upgradeChoice != PackageType.annual ||
+                              package.packageType != PackageType.annual
+                          ? Container(
+                              child: Text('per month',
+                                  style: Theme.of(context).textTheme.body2))
+                          : Container(),
+                      package.packageType == PackageType.annual &&
+                              upgradeChoice == PackageType.annual
+                          ? Container(
+                              padding: EdgeInsets.only(top: 5.0),
+                              child: Text(package.product.priceString,
+                                  style: Theme.of(context).textTheme.body1))
+                          : Container(),
+                      package.packageType == PackageType.annual &&
+                              upgradeChoice == PackageType.annual
+                          ? Container(
+                              child: Text('per year',
+                                  style: Theme.of(context).textTheme.body2))
+                          : Container(),
+                    ])),
+                // SUBSCRIBE button
+                package.packageType == upgradeChoice
+                    ? Container(
+                        alignment: Alignment.center,
+                        //padding: EdgeInsets.only(bottom: 20.0),
+                        child: OutlineButton(
+                            // TODO: Translation
+                            child: Text('UPGRADE'),
+                            onPressed: () async {
+                              try {
+                                PurchaserInfo purchaserInfo =
+                                    await Purchases.purchasePackage(package);
+                                // print('!!!DEBUG: ${purchaserInfo}');
+
+                                if (purchaserInfo
+                                    .entitlements.all["basic"].isActive) {
+                                  // Unlock that great "pro" content
+                                  print('!!!DEBUG: Purchase completed');
+                                }
+                              } on PlatformException catch (e, stack) {
+                                var errorCode =
+                                    PurchasesErrorHelper.getErrorCode(e);
+                                if (errorCode !=
+                                    PurchasesErrorCode.purchaseCancelledError) {
+                                  print('Purchase canceled');
+                                }
+                                // TODO: Crashalytic
+                                print(
+                                    '!!!DEBUG: purchse failed \n $e, \n $stack');
+                              }
+                            },
+                            shape: new RoundedRectangleBorder(
+                                borderRadius: new BorderRadius.circular(10.0))))
+                    : Container(),
+              ],
+            ))));
+  }
+
+  Widget upgradeWidget() {
+    String optionText = '';
+    if (upgradeChoice == PackageType.monthly)
+      optionText = 'Keep more books and enjoy extended wish list with Monthly paid plan';
+    else if (upgradeChoice == PackageType.annual)
+      optionText = 'Enjoy book sharing with your friends and neighbours for a whole year';
+    else if (upgradeChoice == PackageType.custom)
+      optionText = 'Your generous contribution supports book sharing and makes this app better';
+
+    return Container(
+        child: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+          // Row with three plan options to choose
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            //isSelected: planOptions,
+            children: <Widget>[
+              // Monthly option
+              productWidget(offerings.current.monthly),
+              // Annual option
+              productWidget(offerings.current.annual),
+              // Patron option
+              productWidget(offerings.current.getPackage('Patron')),
+            ],
+          ),
+          // Information about paid plan
+          Text(optionText, style: Theme.of(context).textTheme.subtitle),
+              //Text('\t\u{2022} Up to 5 books at a time', style: Theme.of(context).textTheme.subtitle),
+              //Text('\t\u{2022} Up to 100 books in wish list', style: Theme.of(context).textTheme.subtitle),
+              Container(padding: EdgeInsets.only(top: 10.0),child: Text(
+              'Subscription will be charged to your ${Theme.of(context).platform == TargetPlatform.iOS ? 'iTunes' : 'Google Play'} account on confirmation. Subscriptions will automatically renew unless canceled within 24-hours before the end of the current period. You can cancel anytime with your ${Theme.of(context).platform == TargetPlatform.iOS ? 'iTunes' : 'Google Play'} account settings. Any unused portion of a free trial will be forfeited if you purchase a subscription.',
+              style: Theme.of(context).textTheme.body2)),
+// TODO: Add link to  ToS and PP: For more information, see our [link to ToS] and [link to Privacy Policy].
+        ]));
+  }
 }
 
 class SupportWidget extends StatelessWidget {

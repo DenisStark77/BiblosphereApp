@@ -18,6 +18,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/gestures.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:purchases_flutter/purchases_flutter.dart';
 // Debug analytics:
 // adb shell setprop debug.firebase.analytics.app <package_name>
 // adb shell setprop debug.firebase.analytics.app .none.
@@ -71,6 +72,10 @@ void main() async {
     await FlutterCrashlytics()
         .reportCrash(error, stackTrace, forceCrash: false);
   });
+
+  Purchases.setDebugLogsEnabled(true);
+  // TODO: Keep API Key in security values in Firebase (Security)
+  await Purchases.setup("QbXpgCrBDfUvMAEMyvVwBzhUGlIfbtdL");
 }
 
 class MyApp extends StatefulWidget {
@@ -114,6 +119,9 @@ class _MyAppState extends State<MyApp> {
       if (firebaseUser != null) {
         firebaseUser.getIdToken(refresh: true);
         FirebaseAnalytics().setUserId(firebaseUser.uid);
+        Purchases.identify(firebaseUser.uid).then((PurchaserInfo purchaserInfo) {
+          print('!!!DEBUG: User\'s subscriptions: ${purchaserInfo.activeSubscriptions}');
+        });
 
         // That's async function so need to refresh widget as soon as it completes
         _initUserRecord().then((_) {
@@ -128,6 +136,7 @@ class _MyAppState extends State<MyApp> {
 
     _firebaseMessaging.configure(
       onMessage: (Map<String, dynamic> message) {
+        print('!!!DEBUG: Message received ${message['data']}');
         setState(() {
           unreadMessage = true;
         });
@@ -196,11 +205,8 @@ class _MyAppState extends State<MyApp> {
           name: firebaseUser.displayName,
           photo: firebaseUser.photoUrl);
 
-      Wallet wallet = new Wallet(id: firebaseUser.uid);
-
       setState(() {
         B.user = user;
-        B.wallet = wallet;
       });
 
       // Check if user record exist
@@ -209,36 +215,10 @@ class _MyAppState extends State<MyApp> {
       if (!userSnap.exists) {
         // Create user and wallet if user is not there
         await user.ref.setData(user.toJson());
-
-        // TODO: ensure if it works with data persistently
-        await wallet.ref.setData(wallet.toJson());
       } else {
         // Update user fields from Firestore
         user = User.fromJson(userSnap.data);
-
-        if (user.currency != null && xlmRates[B.currency] != null) {
-          B.currency = user.currency;
-        }
-
-        // Update balance and blocked
-        final DocumentSnapshot walletSnap = await wallet.ref.get();
-
-        if (!walletSnap.exists) {
-          // Create wallet if not exist (case for old users)
-          await wallet.ref.setData(wallet.toJson());
-        } else {
-          // Read wallet if exist
-          wallet = Wallet.fromJson(walletSnap.data);
-        }
       }
-
-      // TODO: Cancel subscription before log out (Exception PERMISSION_DENIED)
-      _walletSubscription =
-          wallet.ref.snapshots().listen((DocumentSnapshot doc) {
-        setState(() {
-          B.wallet = Wallet.fromJson(doc.data);
-        });
-      });
 
       _firebaseMessaging.getToken().then((token) {
         // Update FCM token for notifications
@@ -257,7 +237,6 @@ class _MyAppState extends State<MyApp> {
       }
       
       // Set global value to user
-      B.wallet = wallet;
       B.user = user;
 
       user.ref.updateData(user.toJson());
@@ -300,7 +279,7 @@ class _MyAppState extends State<MyApp> {
             backgroundColor: C.chipUnselected, //C.chipUnselected,
             selectedColor: C.chipSelected, //C.chipSelected,
             disabledColor: Colors.red, // TODO: define color
-            secondarySelectedColor: Colors.black, // TODO: define color
+            secondarySelectedColor: C.chipSelected, // TODO: define color
             labelPadding: EdgeInsets.all(0.0),
             padding: EdgeInsets.only(left: 7.0, right: 10.0),
             shape: RoundedRectangleBorder(
@@ -309,9 +288,7 @@ class _MyAppState extends State<MyApp> {
             labelStyle: TextStyle(
                 fontSize: 14.0, fontWeight: FontWeight.w300, color: C.chipText),
             secondaryLabelStyle: TextStyle(
-                fontSize: 14.0,
-                fontWeight: FontWeight.w200,
-                color: Colors.white),
+                fontSize: 14.0, fontWeight: FontWeight.w300, color: C.chipText),
             brightness: Brightness.light),
         textTheme: TextTheme(
           headline: TextStyle(fontSize: 48.0, fontWeight: FontWeight.w200),
@@ -546,6 +523,7 @@ class _MyAppState extends State<MyApp> {
         }
       }
     } catch (e, stack) {
+      print('Sign-in failed: ${e}');
       showSnackBar(context, 'Sign-in failed: ${e}');
       FlutterCrashlytics().logException(e, stack);
     }
@@ -585,7 +563,8 @@ class _MyAppState extends State<MyApp> {
         return authResult.user;
       }
     } catch (e, stack) {
-      showSnackBar(context, 'Sign-in failed: ${e}');    
+      print('Sign-in failed: ${e}');
+      showSnackBar(context, 'Sign-in failed: ${e}');
       FlutterCrashlytics().logException(e, stack);
     }
     return null;

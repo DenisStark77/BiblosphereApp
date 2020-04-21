@@ -504,7 +504,7 @@ class S {
   }
 
   String get buttonConfirmBooks{
-    return Intl.message('Книги получил \u{02713}', name: 'buttonConfirmBooks');
+    return Intl.message('Нажмите при получении', name: 'buttonConfirmBook');
   }
 
   // Not translated beyond this line
@@ -686,10 +686,12 @@ class S {
   String get snackBookNotFound{
     return Intl.message('Книга не найдена. Добавьте книги в корзину вручную.', name: 'snackBookNotFound');
   }
-  
+
+  /*
   String get snackBookAlreadyInTransit{
     return Intl.message('Книга передаётся другому пользователю. Выберите другую книгу.', name: 'snackBookAlreadyInTransit');
   }
+  */
 
   String get snackBookImageChanged {
     return Intl.message('Новая обложка книги установлена.', name: 'snackBookImageChanged');
@@ -873,7 +875,81 @@ class S {
     return Intl.message('Общие настройки',
         name: 'settingsTitleGeneral');
   }
+
+  String get recognizeFromGallery {
+    return Intl.message('Распознать книги с фотографии',
+        name: 'recognizeFromGallery');
+  }
+  String get recognizeFromCamera {
+    return Intl.message('Сфотографировать полку',
+        name: 'recognizeFromCamera');
+  }
+
+  String get chooseHoldedBookForChat {
+    return Intl.message('ВЫБЕРИТЕ КНИГУ',
+        name: 'chooseHoldedBookForChat');
+  }
+
+  String get choosePartnerBookForChat {
+    return Intl.message('ВЫБЕРИТЕ КНИГУ',
+        name: 'chooseHoldedBookForChat');
+  }
+
+  String offerBook(book) {
+    return Intl.message('Рекомендую взять у меня \"$book\"',
+        name: 'offerBook', args: [book]);
+  }
+
+  String get chipBooksToRequest{
+    return Intl.message('Взять', name: 'chipBooksToRequest');
+  }
+
+  String get chipBooksToOffer{
+    return Intl.message('Предложить', name: 'chipBooksToOffer');
+  }
+
+  String get chipBooksToReturn{
+    return Intl.message('Вернуть', name: 'chipBooksToReturn');
+  }
+
+  String get chipBooksToAskForReturn{
+    return Intl.message('Забрать', name: 'chipBooksToAskForReturn');
+  }
+
+  String get buttonSearchThirdParty{
+    return Intl.message('Search in Stores & Libraries', name: 'buttonSearchThirdParty');
+  }
+
+  String get hintAddToWishlist {
+    return Intl.message('Add to wishlist', name: 'hintAddToWishlist');
+  }
+
+  String get hintHolderChatOpen {
+    return Intl.message('Open chat with person who hold the book', name: 'hintHolderChatOpen');
+  }
+
+  String get hintConfirmHandover {
+    return Intl.message('Confirm that you\'ve received this book', name: 'hintConfirmHandover');
+  }
+
+  String get hintManageBook {
+    return Intl.message('Open this book in MY BOOKS screen', name: 'hintManageBook');
+  }
+
+  String get buttonManageBook {
+    return Intl.message('Open in MY BOOKS', name: 'buttonManageBook');
+  }
+
+  String settingsPlan(name) {
+    return Intl.message("Current plan: $name",
+        name: 'settingsPlan', args: [name]);
+  }
+
+  String get planTrial {
+    return Intl.message('Trial', name: 'planTrial');
+  }
 }
+
 
 class AppLocalizationsDelegate extends LocalizationsDelegate<S> {
   const AppLocalizationsDelegate();

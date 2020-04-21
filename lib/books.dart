@@ -1,12 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:async';
+import 'dart:io';
 import 'dart:collection';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:barcode_scan/barcode_scan.dart';
+import 'package:geoflutterfire/geoflutterfire.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:flutter_crashlytics/flutter_crashlytics.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:http/http.dart';
+import 'dart:convert';
+//import 'package:cloud_functions/cloud_functions.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 import 'package:biblosphere/const.dart';
 import 'package:biblosphere/helpers.dart';
@@ -16,6 +24,47 @@ import 'package:biblosphere/payments.dart';
 import 'package:biblosphere/chat.dart';
 import 'package:biblosphere/home.dart';
 import 'package:biblosphere/l10n.dart';
+
+Future<String> scanIsbn(BuildContext context, BookCallback onSuccess) async {
+  String barcode = '';
+
+  try {
+    barcode = await BarcodeScanner.scan();
+
+    Book book = await searchByIsbn(barcode);
+
+    if (book != null) {
+      onSuccess(book);
+    } else {
+      Firestore.instance.collection('noisbn').document(barcode).setData({
+        'count': FieldValue.increment(1),
+        'requested_by': FieldValue.arrayUnion([B.user.id])
+      }, merge: true);
+      //print("No record found for isbn: $barcode");
+      showSnackBar(context, S.of(context).isbnNotFound);
+      logAnalyticsEvent(name: 'book_noisbn', parameters: <String, dynamic>{
+        'isbn': barcode,
+      });
+    }
+  } on PlatformException catch (e, stack) {
+    if (e.code == BarcodeScanner.CameraAccessDenied) {
+      //TODO: Inform user
+      print('The user did not grant the camera permission!');
+      FlutterCrashlytics().logException(e, stack);
+    } else {
+      print('Unknown platform error in scanIsbn: $e');
+      FlutterCrashlytics().logException(e, stack);
+    }
+  } on FormatException {
+    print(
+        'null (User returned using the "back"-button before scanning anything. Result)');
+  } catch (e, stack) {
+    FlutterCrashlytics().logException(e, stack);
+    print('Unknown error in scanIsbn: $e');
+  }
+
+  return barcode;
+}
 
 class AddBookWidget extends StatefulWidget {
   AddBookWidget({
@@ -34,9 +83,9 @@ class _AddBookWidgetState extends State<AddBookWidget> {
   @override
   void initState() {
     super.initState();
-    
+
     //refreshLocation(context);
-    
+
     textController = new TextEditingController();
   }
 
@@ -69,32 +118,80 @@ class _AddBookWidgetState extends State<AddBookWidget> {
                 //mainAxisSize: MainAxisSize.min,
                 children: <Widget>[
                   new Container(height: 42),
+                  // Add book from gallery photo
                   new Container(
                     padding: new EdgeInsets.all(10.0),
                     child: new Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: <Widget>[
-                        new Text(S.of(context).scanISBN,
-                            style: Theme.of(context).textTheme.title),
-                        RaisedButton(
-                          textColor: C.buttonText,
-                          color: C.button,
-                          child: assetIcon(barcode_scanner_100, size: 30),
-                          onPressed: () async {
-                            String barcode = await BarcodeScanner.scan();
-                            await scanIsbn(context, barcode);
-                            logAnalyticsEvent(
-                                name: 'book_add_attempt',
-                                parameters: <String, dynamic>{
-                                  'type': 'isbn',
-                                  'search_term': barcode,
-                                  'results': suggestions.length,
+                        Tooltip(
+                            message: S.of(context).recognizeFromGallery,
+                            child: RaisedButton(
+                              textColor: C.buttonText,
+                              color: C.button,
+                              child: assetIcon(image_gallery_100, size: 30),
+                              onPressed: () async {
+                                File image = await ImagePicker.pickImage(
+                                    source: ImageSource.gallery);
+                                await recognizeImage(context, image);
+                                logAnalyticsEvent(
+                                    name: 'book_recognize_attempt',
+                                    parameters: <String, dynamic>{
+                                      'type': 'gallery',
+                                      'results': suggestions.length,
+                                    });
+                              },
+                              shape: new RoundedRectangleBorder(
+                                  borderRadius: new BorderRadius.circular(15.0),
+                                  side: BorderSide(color: C.buttonBorder)),
+                            )),
+                        Tooltip(
+                            message: S.of(context).recognizeFromCamera,
+                            child: RaisedButton(
+                              textColor: C.buttonText,
+                              color: C.button,
+                              child: assetIcon(compact_camera_100, size: 30),
+                              onPressed: () async {
+                                File image = await ImagePicker.pickImage(
+                                    source: ImageSource.camera);
+                                await recognizeImage(context, image);
+                                logAnalyticsEvent(
+                                    name: 'book_recognize_attempt',
+                                    parameters: <String, dynamic>{
+                                      'type': 'camera',
+                                      'results': suggestions.length,
+                                    });
+                              },
+                              shape: new RoundedRectangleBorder(
+                                  borderRadius: new BorderRadius.circular(15.0),
+                                  side: BorderSide(color: C.buttonBorder)),
+                            )),
+                        Tooltip(
+                          message: S.of(context).scanISBN,
+                          child: RaisedButton(
+                            textColor: C.buttonText,
+                            color: C.button,
+                            child: assetIcon(barcode_scanner_100, size: 30),
+                            onPressed: () {
+                              scanIsbn(context, (book) {
+                                setState(() {
+                                  suggestions = <Book>[book];
                                 });
-                          },
-                          shape: new RoundedRectangleBorder(
-                              borderRadius: new BorderRadius.circular(15.0),
-                              side: BorderSide(color: C.buttonBorder)),
-                        ),
+                              }).then((barcode) {
+                                logAnalyticsEvent(
+                                    name: 'book_add_attempt',
+                                    parameters: <String, dynamic>{
+                                      'type': 'isbn',
+                                      'search_term': barcode,
+                                      'results': suggestions.length,
+                                    });
+                              });
+                            },
+                            shape: new RoundedRectangleBorder(
+                                borderRadius: new BorderRadius.circular(15.0),
+                                side: BorderSide(color: C.buttonBorder)),
+                          ),
+                        )
                       ],
                     ),
                   ),
@@ -126,19 +223,23 @@ class _AddBookWidgetState extends State<AddBookWidget> {
                               child: assetIcon(search_100, size: 30),
                               onPressed: () async {
                                 FocusScope.of(context).unfocus();
-                                await searchByTitleAuthor(textController.text);
-                                logAnalyticsEvent(
-                                    name: 'book_add_attempt',
-                                    parameters: <String, dynamic>{
-                                      'type': 'text',
-                                      'search_term': textController.text,
-                                      'results': suggestions.length,
-                                    });
+                                searchByTitleAuthor(textController.text)
+                                    .then((b) {
+                                  setState(() {
+                                    suggestions = b;
+                                  });
+                                  logAnalyticsEvent(
+                                      name: 'book_add_attempt',
+                                      parameters: <String, dynamic>{
+                                        'type': 'text',
+                                        'search_term': textController.text,
+                                        'results': b.length,
+                                      });
+                                });
                               },
                               shape: new RoundedRectangleBorder(
-                                  borderRadius:
-                                      new BorderRadius.circular(15.0),
-                                      side: BorderSide(color: C.buttonBorder)),
+                                  borderRadius: new BorderRadius.circular(15.0),
+                                  side: BorderSide(color: C.buttonBorder)),
                             )),
                       ],
                     ),
@@ -163,7 +264,7 @@ class _AddBookWidgetState extends State<AddBookWidget> {
                     //showSnackBar(context, S.of(context).bookAdded);
                   },
                   child: Row(children: <Widget>[
-                    bookImage(book, 50, padding: 5.0),
+                    bookImage(book, 50, padding: EdgeInsets.all(5.0)),
                     Expanded(
                         child: Container(
                             margin: EdgeInsets.only(left: 10.0),
@@ -181,118 +282,161 @@ class _AddBookWidgetState extends State<AddBookWidget> {
     ]);
   }
 
-  // TODO: resolve duplicate functions searchByTitleAuthor
-  Future searchByTitleAuthor(String text) async {
-    Map<String, Book> books = {};
-    Set<String> keys = getKeys(text);
-
-    List<Future> futures = <Future>[
-      searchByTitleAuthorBiblosphere(text).then((list) {
-        list.forEach((b) {
-          if (books[b.isbn] == null) {
-            books.addAll({b.isbn: b});
-          } else {
-            if (books[b.isbn].image == null) books[b.isbn].image = b.image;
-            if (books[b.isbn].copies == 0) books[b.isbn].copies = b.copies;
-            if (books[b.isbn].wishes == 0) books[b.isbn].wishes = b.wishes;
-          }
-        });
-      }),
-      searchByTitleAuthorGoogle(text).then((list) {
-        list.where((book) => book.keys.containsAll(keys)).forEach((b) {
-          if (books[b.isbn] == null) {
-            books.addAll({b.isbn: b});
-          } else {
-            if (books[b.isbn].image == null) books[b.isbn].image = b.image;
-            if (books[b.isbn].copies == 0) books[b.isbn].copies = b.copies;
-            if (books[b.isbn].wishes == 0) books[b.isbn].wishes = b.wishes;
-          }
-        });
-      }),
-      searchByTitleAuthorGoodreads(text).then((list) {
-        list.where((book) => book.keys.containsAll(keys)).forEach((b) {
-          if (books[b.isbn] == null) {
-            books.addAll({b.isbn: b});
-          } else {
-            if (books[b.isbn].image == null) books[b.isbn].image = b.image;
-            if (books[b.isbn].copies == 0) books[b.isbn].copies = b.copies;
-            if (books[b.isbn].wishes == 0) books[b.isbn].wishes = b.wishes;
-          }
-        });
-      })
-    ];
-
-    await Future.wait(futures);
-
-    setState(() {
-      suggestions = books.values.toList();
-    });
-  }
-
-  Future scanIsbn(BuildContext context, String barcode) async {
+  Future recognizeImage(BuildContext context, File image) async {
     try {
-      Book book = await searchByIsbn(barcode);
+      if (image == null) return;
 
-      if (book == null) {
-        book = await searchByIsbnGoodreads(barcode);
-      }
+      print('!!!DEBUG: Recognize image: ${image.path}');
 
-      if (book == null) {
-        if (barcode.startsWith('9785'))
-          book = await searchByIsbnRsl(barcode);
-        else
-          book = await searchByIsbnGoogle(barcode);
-      }
+      String name = getTimestamp() + ".jpg";
 
-      if (book != null) {
-        //Many books on goodreads does not have images. Enreach it from Google
-        //book = await enrichBookRecord(book);
-        setState(() {
-          suggestions = <Book>[book];
-        });
-      } else {
-        Firestore.instance.collection('noisbn').document(barcode).setData({
-          'count': FieldValue.increment(1),
-          'requested_by': FieldValue.arrayUnion([B.user.id])
-        }, merge: true);
-        //print("No record found for isbn: $barcode");
-        showSnackBar(context, S.of(context).isbnNotFound);
-        logAnalyticsEvent(name: 'book_noisbn', parameters: <String, dynamic>{
-          'isbn': barcode,
-        });
-      }
-    } on PlatformException catch (e, stack) {
-      if (e.code == BarcodeScanner.CameraAccessDenied) {
-        //TODO: Inform user
-        print('The user did not grant the camera permission!');
-        FlutterCrashlytics().logException(e, stack);
-      } else {
-        print('Unknown platform error in scanIsbn: $e');
-        FlutterCrashlytics().logException(e, stack);
-      }
-    } on FormatException {
-      print(
-          'null (User returned using the "back"-button before scanning anything. Result)');
-    } catch (e, stack) {
-        FlutterCrashlytics().logException(e, stack);
-      print('Unknown error in scanIsbn: $e');
+      // TODO: Show snackbar with information
+
+      final String storagePath = await uploadPicture(image, B.user.id, name);
+      //String storagePath = 'images/oyYUDByQGVdgP13T1nyArhyFkct1/1586749554453.jpg';
+
+      print('!!!DEBUG: Image cloud path: ${storagePath}');
+
+      GeoFirePoint location = await currentLocation();
+      FirebaseUser user = await FirebaseAuth.instance.currentUser();
+      IdTokenResult idtoken = await user.getIdToken();
+
+      String body = json.encode({
+        'uid': user.uid,
+        'uri': storagePath,
+        'location': {
+          'lat': location.geoPoint.latitude,
+          'lon': location.geoPoint.longitude,
+          'geohash': location.hash,
+        }
+      });
+      print('!!!DEBUG: JSON body = $body');
+
+      // Call Python service to recognize
+      Response res = await LibConnect.getCloudFunctionClient().post(
+          'https://biblosphere-api-ihj6i2l2aq-uc.a.run.app/add_user_books_from_image',
+          body: body,
+          headers: {
+            HttpHeaders.authorizationHeader: "Bearer ${idtoken.token}",
+            HttpHeaders.contentTypeHeader: "application/json"
+          });
+
+      print('!!!DEBUG: ${res.body}');
+      print('!!!DEBUG: Request for recognition queued');
+    } catch (ex, stack) {
+      print("Failed to recognize image: " + ex.toString() + stack.toString());
+      FlutterCrashlytics().logException(ex, stack);
     }
   }
 }
 
-class FindBookWidget extends StatefulWidget {
-  FindBookWidget({Key key, this.filter}) : super(key: key);
+Future<String> uploadPicture(File image, String user, String name) async {
+  final StorageReference ref =
+      FirebaseStorage.instance.ref().child('images').child(user).child(name);
+  final StorageUploadTask uploadTask = ref.putFile(
+    image,
+    new StorageMetadata(
+      contentType: 'image/jpeg',
+      // To enable Client-side caching you can set the Cache-Control headers here. Uncomment below.
+      cacheControl: 'public,max-age=3600',
+      customMetadata: <String, String>{'activity': 'test'},
+    ),
+  );
+  StorageTaskSnapshot storageTaskSnapshot = await uploadTask.onComplete;
+  // final String imageUrl = await storageTaskSnapshot.ref.getDownloadURL();
 
-  final String filter;
+  return ref.path;
+}
+
+// Class to progress with search of the book and stream updates what's found
+class BookSearchData {
+  String bookrecordId;
+  Book book;
+  List<Bookrecord> bookrecords;
+
+  // If data has records in Biblosphere
+  get hasRecords => bookrecords != null && bookrecords.length > 0;
+
+  // Get the closest record
+  get first => hasRecords ? bookrecords[0] : null;
+
+  BookSearchData({this.book, this.bookrecordId});
+
+  Stream<BookSearchData> snapshots() async* {
+    // Check if book available in Biblosphere
+    try {
+      // Search for particular bookrecord ()
+      if (bookrecordId != null && book == null) {
+        DocumentSnapshot doc = await Bookrecord.Ref(bookrecordId).get();
+
+        if (doc.exists) {
+          bookrecords = [Bookrecord.fromJson(doc.data)];
+          book = Book(
+              isbn: bookrecords.first.isbn,
+              authors: bookrecords.first.authors,
+              title: bookrecords.first.title,
+              image: bookrecords.first.image);
+          yield this;
+        }
+      } else if (book != null) {
+        // Return data with book only
+        yield this;
+
+        // Try to find bookrecords and return updated data
+        QuerySnapshot snap = await Firestore.instance
+            .collection('bookrecords')
+            .where('isbn', isEqualTo: book.isbn)
+            .where('wish', isEqualTo: false)
+            .getDocuments();
+
+        List<Bookrecord> list =
+            snap.documents.map((doc) => Bookrecord.fromJson(doc.data)).toList();
+        list.sort((b1, b2) => ((b1.distance - b2.distance) * 1000).round());
+
+        if (list.length > 0) {
+          bookrecords = list;
+          yield this;
+        }
+      }
+    } catch (e, stack) {
+      FlutterCrashlytics().logException(e, stack);
+      print('Unknown error in BookSearchData:snapshots: $e');
+    }
+
+    // TODO: Check if book available at stores Ozon/Amazon
+
+    // TODO: Check if book available in libraries
+  }
+}
+
+class FindBookWidget extends StatefulWidget {
+  FindBookWidget({Key key, this.query, this.isbn, this.id}) : super(key: key);
+
+  // Search filter by title/authors
+  final String query;
+
+  // Search filter by isbn
+  final String isbn;
+
+  // Search filter by bookrecord id
+  final String id;
 
   @override
   _FindBookWidgetState createState() =>
-      new _FindBookWidgetState(filter: filter);
+      new _FindBookWidgetState(query: query, isbn: isbn, id: id);
 }
 
 class _FindBookWidgetState extends State<FindBookWidget> {
-  String filter;
-  Map<String, dynamic> books = {};
+  // Search filter by title/authors
+  final String query;
+
+  // Search filter by isbn
+  final String isbn;
+
+  // Search filter by bookrecord id
+  final String id;
+
+  List<BookSearchData> books = [];
 
   TextEditingController textController;
 
@@ -304,9 +448,23 @@ class _FindBookWidgetState extends State<FindBookWidget> {
 
     textController = new TextEditingController();
 
-    if (filter != null) {
-      textController.text = filter;
-      searchByTitleAuthor(textController.text);
+    if (query != null) {
+      textController.text = query;
+      searchByTitleAuthor(query).then((b) {
+        setState(() {
+          books = b.map((x) => BookSearchData(book: x));
+        });
+      });
+    } else if (isbn != null) {
+      searchByIsbn(isbn).then((b) {
+        setState(() {
+          books = [BookSearchData(book: b)];
+        });
+      });
+    } else if (id != null) {
+      setState(() {
+        books = [BookSearchData(bookrecordId: id)];
+      });
     }
   }
 
@@ -316,7 +474,7 @@ class _FindBookWidgetState extends State<FindBookWidget> {
     super.dispose();
   }
 
-  _FindBookWidgetState({this.filter});
+  _FindBookWidgetState({this.query, this.isbn, this.id});
 
   @override
   Widget build(BuildContext context) {
@@ -367,21 +525,26 @@ class _FindBookWidgetState extends State<FindBookWidget> {
                               child: assetIcon(search_100, size: 30),
                               onPressed: () async {
                                 FocusScope.of(context).unfocus();
-                                await searchByTitleAuthor(textController.text);
-                                final List<dynamic> biblos = books.values
-                                    .where((t) => t is Bookrecord)
-                                    .toList();
-                                logAnalyticsEvent(
-                                    name: 'search',
-                                    parameters: <String, dynamic>{
-                                      'type': 'text',
-                                      'search_term': textController.text,
-                                      'results': books.length,
-                                      'in_biblosphere': biblos.length,
-                                    });
+                                searchByTitleAuthor(textController.text)
+                                    .then((b) {
+                                  setState(() {
+                                    books = List<BookSearchData>.from(
+                                        b.map((x) => BookSearchData(book: x)));
+                                  });
+                                  logAnalyticsEvent(
+                                      name: 'search',
+                                      parameters: <String, dynamic>{
+                                        'type': 'text',
+                                        'search_term': textController.text,
+                                        'results': b.length,
+                                      });
+                                });
 
+                                // TODO: Find the way to report percentage of queries which found available books
+                                /*
                                 if (biblos.length > 0) {
-                                  double distance = (biblos.first as Bookrecord).distance;
+                                  double distance =
+                                      (biblos.first as Bookrecord).distance;
                                   logAnalyticsEvent(
                                       name: 'book_found',
                                       parameters: <String, dynamic>{
@@ -391,13 +554,16 @@ class _FindBookWidgetState extends State<FindBookWidget> {
                                             (biblos.first as Bookrecord).isbn,
                                         'results': books.length,
                                         'in_biblosphere': biblos.length,
-                                        'distance': distance == double.infinity ? 50000.0 : distance,
+                                        'distance': distance == double.infinity
+                                            ? 50000.0
+                                            : distance,
                                       });
                                 }
+                                */
                               },
                               shape: new RoundedRectangleBorder(
                                   borderRadius: new BorderRadius.circular(15.0),
-                              side: BorderSide(color: C.buttonBorder)),
+                                  side: BorderSide(color: C.buttonBorder)),
                             )),
                       ],
                     ),
@@ -413,23 +579,28 @@ class _FindBookWidgetState extends State<FindBookWidget> {
                           textColor: Colors.white,
                           color: C.button,
                           child: assetIcon(barcode_scanner_100, size: 30),
-                          onPressed: () async {
-                            String barcode = await BarcodeScanner.scan();
-                            await scanIsbn(context, barcode);
-                            final List<dynamic> biblos = books.values
-                                .where((t) => t is Bookrecord)
-                                .toList();
-                            logAnalyticsEvent(
-                                name: 'search',
-                                parameters: <String, dynamic>{
-                                  'type': 'isbn',
-                                  'search_term': barcode,
-                                  'results': books.length,
-                                  'in_biblosphere': biblos.length,
-                                });
+                          onPressed: () {
+                            scanIsbn(context, (book) {
+                              setState(() {
+                                books = <BookSearchData>[
+                                  BookSearchData(book: book)
+                                ];
+                              });
+                            }).then((barcode) {
+                              logAnalyticsEvent(
+                                  name: 'search',
+                                  parameters: <String, dynamic>{
+                                    'type': 'isbn',
+                                    'search_term': barcode,
+                                    'results': books.length,
+                                  });
+                            });
 
+                            // TODO: Find the way to report if found book is available in Biblosphere
+                            /*
                             if (biblos.length > 0) {
-                              double distance = (biblos.first as Bookrecord).distance;
+                              double distance =
+                                  (biblos.first as Bookrecord).distance;
 
                               logAnalyticsEvent(
                                   name: 'book_found',
@@ -439,9 +610,12 @@ class _FindBookWidgetState extends State<FindBookWidget> {
                                     'isbn': (biblos.first as Bookrecord).isbn,
                                     'results': books.length,
                                     'in_biblosphere': biblos.length,
-                                    'distance': distance == double.infinity ? 50000.0 : distance,
+                                    'distance': distance == double.infinity
+                                        ? 50000.0
+                                        : distance,
                                   });
                             }
+                            */
                           },
                           shape: new RoundedRectangleBorder(
                               borderRadius: new BorderRadius.circular(15.0),
@@ -456,266 +630,220 @@ class _FindBookWidgetState extends State<FindBookWidget> {
       ),
       SliverList(
         delegate: SliverChildBuilderDelegate((context, index) {
-          var book = books.values.elementAt(index);
-          if (book is Book) {
-            return GestureDetector(
-                    onTap: () async {
-                      logAnalyticsEvent(
-                          name: 'search_elsewhere',
-                          parameters: <String, dynamic>{
-                            'user': B.user.id,
-                            'isbn': book.isbn,
-                          });
+          var book = books.elementAt(index);
+          return StreamBuilder(
+            stream: book.snapshots(),
+            builder: (context, snapshot) {
+              if (!snapshot.hasData) {
+                return Container();
+              } else {
+                BookSearchData data = snapshot.data;
 
-                      //book = await enrichBookRecord(book);
-                      Navigator.push(
-                          context,
-                          new MaterialPageRoute(
-                              builder: (context) => buildScaffold(
-                                  context, null, new GetBookWidget(book: book),
-                                  appbar: false)));
-                    },
+                // Choose icon based on conditions
+                Widget buttons;
+                if (!data.hasRecords) {
+                  // Book not found in Biblosphere (=> screen to Stores/Libs)
+                  buttons = Row(children: <Widget>[
+                  Tooltip(
+                      // TODO: Correct text search in stores/libraries
+                      message: S.of(context).findBook,
+                      child: RaisedButton(
+                        textColor: C.buttonText,
+                        color: C.cardBackground,
+                        child: Text(S.of(context).buttonSearchThirdParty,
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .body2
+                                  .apply(color: C.titleText)
+                        ),
+                        onPressed: () async {
+                          Navigator.push(
+                              context,
+                              new MaterialPageRoute(
+                                  builder: (context) => buildScaffold(context,
+                                      null, new GetBookWidget(book: book.book),
+                                      appbar: false)));
+
+                          logAnalyticsEvent(
+                              name: 'search_elsewhere',
+                              parameters: <String, dynamic>{
+                                'user': B.user.id,
+                                'isbn': book.book.isbn,
+                              });
+                        },
+                        shape: new RoundedRectangleBorder(
+                            borderRadius: new BorderRadius.circular(15.0),
+                            side: BorderSide(color: C.cardBackground)),
+                      )),
+                    Tooltip(
+                        message: S.of(context).hintAddToWishlist,
+                        child: IconButton(
+                          color: C.cardBackground,
+                          icon: assetIcon(heart_100, size: 30, padding: 0.0),
+                          onPressed: () async {
+                            // Add book into user's wishlist
+                            await addBookrecord(
+                                context, book.book, B.user, true, await currentLocation(),
+                                snackbar: true);
+
+                            logAnalyticsEvent(
+                                name: 'book_received',
+                                parameters: <String, dynamic>{
+                                  'user': B.user.id,
+                                  'isbn': book.book.isbn,
+                                });
+
+                          },
+                        ))
+                  ]);
+                } else if (data.first.holderId == B.user.id) {
+                  // Book found in user's own catalog (=> MyBooks)
+                  buttons = Tooltip(
+                      message: S.of(context).hintManageBook,
+                      child: RaisedButton(
+                        textColor: C.buttonText,
+                        color: C.cardBackground,
+                        child: Row(children: <Widget>[
+                          Text(S.of(context).buttonManageBook,
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .body2
+                                  .apply(color: C.titleText))
+                        ]),
+                        onPressed: () async {
+                          logAnalyticsEvent(
+                              name: 'find_my_book',
+                              parameters: <String, dynamic>{
+                                'user': B.user.id,
+                                'isbn': book.book.isbn,
+                              });
+
+                          Navigator.pop(context);
+                          Navigator.push(
+                              context,
+                              new MaterialPageRoute(
+                                  builder: (context) => buildScaffold(
+                                      context,
+                                      null,
+                                      ShowBooksWidget(filter: data.book.isbn),
+                                      appbar: false)));
+                        },
+                        shape: new RoundedRectangleBorder(
+                            borderRadius: new BorderRadius.circular(15.0),
+                            side: BorderSide(color: C.cardBackground)),
+                      ));
+                } else {
+                  // Book found in Biblosphere (=> Get book and Chat)
+                  buttons = Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: <Widget>[
+                    Tooltip(
+                      message: S.of(context).hintConfirmHandover,
+                      child: RaisedButton(
+                        textColor: C.buttonText,
+                        color: C.cardBackground,
+                        child: Text(S.of(context).buttonConfirmBooks,
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .body2
+                                  .apply(color: C.titleText)),
+                        onPressed: () async {
+                          // TODO: Change book holder to current user
+                          // Do we need a confirmation dialog?
+
+                          logAnalyticsEvent(
+                              name: 'book_received',
+                              parameters: <String, dynamic>{
+                                'user': B.user.id,
+                                'isbn': book.book.isbn,
+                              });
+                        },
+                        shape: new RoundedRectangleBorder(
+                            borderRadius: new BorderRadius.circular(15.0),
+                            side: BorderSide(color: C.cardBackground)),
+                      )),
+                    Tooltip(
+                        message: S.of(context).hintHolderChatOpen,
+                        child: IconButton(
+                          color: C.cardBackground,
+                          icon: assetIcon(communication_100, size: 30, padding: 0.0),
+                          onPressed: () async {
+                            Chat.runChatWithBookRequest(context, data.first);
+
+                            logAnalyticsEvent(
+                                name: 'book_received',
+                                parameters: <String, dynamic>{
+                                  'user': B.user.id,
+                                  'isbn': book.book.isbn,
+                                });
+                          },
+                        ))]);
+                }
+
+                return GestureDetector(
+                    onTap: () async {},
                     child: Container(
-                      color: C.cardBackground,
-                margin: EdgeInsets.all(3.0),
-                child: Row(children: <Widget>[
-                      bookImage(book, 60, padding: 5.0),
-                      Expanded(
-                          child: Container(
-                              margin: EdgeInsets.only(left: 10.0),
-                              child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: <Widget>[
-                                    Text(book.authors[0],
-                                        overflow: TextOverflow.ellipsis,
-                                        style:
-                                            Theme.of(context)
-                                                .textTheme
-                                                .caption),
-                                    Text(book.title,
-                                        overflow: TextOverflow.ellipsis,
-                                        style:
-                                            Theme.of(context)
-                                                .textTheme
-                                                .subtitle),
-                                  ]))),
-                      Container(child: assetIcon(search_100, size: 40, padding: 5.0))
-                    ])));
-          } else if (book is Bookrecord) {
-            Bookrecord rec = book;
-            return GestureDetector(
-                    onTap: () async {
-                      if (rec.holderId == B.user.id) {
-                        // For user own books open in My Book screen
-                        Navigator.pop(context);
-
-                        Navigator.push(
-                            context,
-                            new MaterialPageRoute(
-                                builder: (context) => buildScaffold(context,
-                                    null, ShowBooksWidget(filter: rec.isbn),
-                                    appbar: false)));
-                      } else {
-                        // For other users books open chat and transit
-                        Messages chat =
-                            new Messages(from: rec.holder, to: B.user);
-
-                        // Open chat widget
-                        Chat.runChat(context, null,
-                            chat: chat,
-                            transit: rec.id,
-                            message: S.of(context).requestBook(rec.title));
-                      }
-                    },
-                    child: Container(
-                      color: C.cardBackground,
-                margin: EdgeInsets.all(3.0),
-                child: Row(children: <Widget>[
-                      bookImage(rec, 60, padding: 5.0),
-                      Expanded(
-                          child: Container(
-                              margin: EdgeInsets.only(left: 10.0),
-                              child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: <Widget>[
-                                    Text(rec.authors[0],
-                                        overflow: TextOverflow.ellipsis,
-                                        style:
-                                            Theme.of(context)
-                                                .textTheme
-                                                .caption),
-                                    Text(rec.title,
-                                        overflow: TextOverflow.ellipsis,
-                                        style:
-                                            Theme.of(context)
-                                                .textTheme
-                                                .subtitle),
-                                    Text(rec.distance.isFinite ?
-                                        S.of(context).distanceLine(distance(rec.distance)) :
-                                        S.of(context).distanceUnknown,
-                                        style:
-                                            Theme.of(context).textTheme.body1),
-                                    B.user.id != rec.ownerId && !rec.wish ? Text(
-                                            S.of(context).bookRent(money(monthly(
-                                                    rec.getPrice()))),
+                        color: C.cardBackground,
+                        margin: EdgeInsets.all(3.0),
+                        child: Row(children: <Widget>[
+                          bookImage(data.book, 80,
+                              padding: EdgeInsets.all(5.0)),
+                          Expanded(
+                              child: Container(
+                                  margin: EdgeInsets.only(left: 10.0),
+                                  child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: <Widget>[
+                                        Text(data.book.authors[0],
                                             overflow: TextOverflow.ellipsis,
                                             style: Theme.of(context)
                                                 .textTheme
-                                                .body1) : Container(),
-                                    Text(
-                                        (rec.holderId == B.user.id)
-                                            ? S.of(context).youHaveThisBook
-                                            : S
-                                                .of(context)
-                                                .bookWith(rec.holderName),
-                                        style:
-                                            Theme.of(context).textTheme.body1)
-                                  ]))),
-                      Container(
-                          child: (rec.holderId == B.user.id)
-                              ? assetIcon(books_100, size: 40, padding: 5.0)
-                              : assetIcon(shopping_cart_100, size: 40, padding: 5.0))
-                    ])));
-          }
+                                                .caption),
+                                        Text(data.book.title,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .subtitle),
+                                        data.hasRecords
+                                            ? Text(
+                                                data.first.distance.isFinite
+                                                    ? S
+                                                        .of(context)
+                                                        .distanceLine(distance(
+                                                            data.first
+                                                                .distance))
+                                                    : S
+                                                        .of(context)
+                                                        .distanceUnknown,
+                                                style: Theme.of(context)
+                                                    .textTheme
+                                                    .body1)
+                                            : Container(),
+                                        data.hasRecords
+                                            ? Text(
+                                                (data.first.holderId ==
+                                                        B.user.id)
+                                                    ? S
+                                                        .of(context)
+                                                        .youHaveThisBook
+                                                    : S.of(context).bookWith(
+                                                        data.first.holderName),
+                                                style: Theme.of(context)
+                                                    .textTheme
+                                                    .body1)
+                                            : Container(),
+                                        // Buttons for book: Search, MyBooks, Chat
+                                        buttons
+                                      ]))),
+                        ])));
+              }
+            },
+          );
           return Container();
-        }, childCount: books != null ? books.values.length : 0),
+        }, childCount: books != null ? books.length : 0),
       )
     ]);
-  }
-
-  int compare(dynamic b1, dynamic b2) {
-    if (b1 is Bookrecord && b2 is Bookrecord)
-      return b1.distance.compareTo(b2.distance);
-    else if (b1 is Bookrecord && b2 is Book)
-      return -1;
-    else if (b1 is Book && b2 is Bookrecord)
-      return 1;
-    else if (b1 is Book && b2 is Book)
-      return b1.title.compareTo(b2.title);
-    else
-      return 0;
-  }
-
-  Map<String, dynamic> mergeBooks(books, list) {
-    list.forEach((b) {
-      if (books[b.isbn] == null) {
-        books.addAll(<String, dynamic>{b.isbn: b});
-      } else {
-        if (books[b.isbn] is Book && b is Bookrecord ||
-            books[b.isbn] is Bookrecord &&
-                b is Bookrecord &&
-                b.distance < books[b.isbn].distance) {
-          books[b.isbn] = b;
-        } else if (books[b.isbn] is Book) {
-          if (books[b.isbn].image == null) books[b.isbn].image = b.image;
-          if (books[b.isbn].copies == 0) books[b.isbn].copies = b.copies;
-          if (books[b.isbn].wishes == 0) books[b.isbn].wishes = b.wishes;
-        } else if (books[b.isbn] is Bookrecord) {
-          if (books[b.isbn].image == null) books[b.isbn].image = b.image;
-        }
-      }
-    });
-
-    var sortedKeys = books.keys.toList(growable: false)
-      ..sort((k1, k2) => compare(books[k1], books[k2]));
-
-    LinkedHashMap sortedMap = new LinkedHashMap.fromIterable(sortedKeys,
-        key: (k) => k, value: (k) => books[k]);
-
-    return sortedMap.cast<String, dynamic>();
-  }
-
-  Future searchByTitleAuthor(String text) async {
-    Set<String> keys = getKeys(text);
-    books = <String, dynamic>{};
-
-    List<Future> futures = <Future>[
-      // Search in Bookrecords
-      searchByTitleAuthorBiblosphere(text, actual: true).then((list) {
-        books = mergeBooks(books, list);
-        setState(() {});
-      }),
-
-      // Search in Books
-      searchByTitleAuthorBiblosphere(text).then((list) {
-        books = mergeBooks(books, list);
-        setState(() {});
-      }),
-
-      searchByTitleAuthorGoogle(text).then((list) {
-        list = list.where((book) => book.keys.containsAll(keys)).toList();
-        books = mergeBooks(books, list);
-        setState(() {});
-      }),
-
-      searchByTitleAuthorGoodreads(text).then((list) {
-        list = list.where((book) => book.keys.containsAll(keys)).toList();
-        books = mergeBooks(books, list);
-        setState(() {});
-      }),
-    ];
-
-    await Future.wait(futures);
-  }
-
-  //TODO: Same code reuse function with AddBookWidget
-  Future scanIsbn(BuildContext context, String barcode) async {
-    try {
-      books = <String, dynamic>{};
-
-      // TODO: Avoid unnecessary search if book found in Biblosphere
-
-      List<Future> futures = <Future>[
-        // Search in Bookrecords
-        searchByIsbnBookrecords(barcode).then((list) {
-          books = mergeBooks(books, list);
-          setState(() {});
-        }),
-
-        // Search in Books
-        searchByIsbn(barcode).then((list) {
-          books = mergeBooks(books, [list]);
-          setState(() {});
-        }),
-
-        searchByIsbnGoodreads(barcode).then((list) {
-          books = mergeBooks(books, [list]);
-          setState(() {});
-        }),
-
-        barcode.startsWith('9785')
-            ? searchByIsbnRsl(barcode).then((list) {
-                books = mergeBooks(books, [list]);
-                setState(() {});
-              })
-            : searchByIsbnGoogle(barcode).then((list) {
-                books = mergeBooks(books, [list]);
-                setState(() {});
-              }),
-      ];
-
-      await Future.wait(futures);
-
-      if (books.values.length == 0) {
-        Firestore.instance.collection('noisbn').add({'isbn': barcode});
-        //print("No record found for isbn: $barcode");
-        showSnackBar(context, S.of(context).isbnNotFound);
-      }
-    } on PlatformException catch (e, stack) {
-      if (e.code == BarcodeScanner.CameraAccessDenied) {
-        FlutterCrashlytics().logException(e, stack);
-        print('The user did not grant the camera permission!');
-      } else {
-        FlutterCrashlytics().logException(e, stack);
-        print('Unknown platform error in scanIsbn: $e');
-      }
-    } on FormatException {
-      print(
-          'null (User returned using the "back"-button before scanning anything. Result)');
-    } catch (e, stack) {
-      FlutterCrashlytics().logException(e, stack);
-      print('Unknown error in scanIsbn: $e');
-    }
   }
 }
 
@@ -787,7 +915,7 @@ class _GetBookWidgetState extends State<GetBookWidget> {
                 source: 'googlebooks');
           },
           child: Row(children: <Widget>[
-            bookImage(widget.book, 50.0, padding: 10.0),
+            bookImage(widget.book, 50.0, padding: EdgeInsets.all(10.0)),
             Expanded(
                 child: Container(
               padding: new EdgeInsets.all(10.0),
@@ -823,8 +951,8 @@ class _GetBookWidgetState extends State<GetBookWidget> {
                 child: new Card(
                   child: Row(children: <Widget>[
                     bookImage(widget.book, 50.0,
-                        padding:
-                            10.0), //child: new Icon(MyIcons.library, size: 50)),
+                        padding: EdgeInsets.all(
+                            10.0)), //child: new Icon(MyIcons.library, size: 50)),
                     Expanded(
                         child: Container(
                       padding: new EdgeInsets.all(10.0),
@@ -876,7 +1004,7 @@ class _GetBookWidgetState extends State<GetBookWidget> {
                 },
                 child: new Card(
                   child: Row(children: <Widget>[
-                    bookImage(widget.book, 50.0, padding: 10.0),
+                    bookImage(widget.book, 50.0, padding: EdgeInsets.all(10.0)),
                     Expanded(
                         child: Container(
                       padding: new EdgeInsets.all(10.0),
@@ -928,29 +1056,29 @@ class _GetBookWidgetState extends State<GetBookWidget> {
   Future<Map<String, String>> searchLibraries(Book book) async {
     Provider provider;
     if (B.position != null) {
-    List<Placemark> placemarks = await Geolocator()
-        .placemarkFromCoordinates(B.position.latitude, B.position.longitude);
+      List<Placemark> placemarks = await Geolocator()
+          .placemarkFromCoordinates(B.position.latitude, B.position.longitude);
 
-    // Sankt-Peterburg  (59.9343, 30.3351, localeIdentifier: 'en')
-    // Ekaterinburg  (56.8389, 60.6057, localeIdentifier: 'en')
-    //List<Placemark> placemarks = await Geolocator()
-    //    .placemarkFromCoordinates(59.9343, 30.3351, localeIdentifier: 'en');
+      // Sankt-Peterburg  (59.9343, 30.3351, localeIdentifier: 'en')
+      // Ekaterinburg  (56.8389, 60.6057, localeIdentifier: 'en')
+      //List<Placemark> placemarks = await Geolocator()
+      //    .placemarkFromCoordinates(59.9343, 30.3351, localeIdentifier: 'en');
 
-    String country, area;
+      String country, area;
 
-    placemarks.forEach((p) {
-      if (p.isoCountryCode != null) country = p.isoCountryCode;
-      if (p.administrativeArea != null) area = p.subAdministrativeArea;
-      if (area == null || area.isEmpty) area = p.administrativeArea;
-    });
+      placemarks.forEach((p) {
+        if (p.isoCountryCode != null) country = p.isoCountryCode;
+        if (p.administrativeArea != null) area = p.subAdministrativeArea;
+        if (area == null || area.isEmpty) area = p.administrativeArea;
+      });
 
-    List<Provider> providers = libraryServers
-        .where((p) => p.country == country && p.area == area)
-        .toList();
+      List<Provider> providers = libraryServers
+          .where((p) => p.country == country && p.area == area)
+          .toList();
 
-    if (providers != null && providers.isNotEmpty) {
-      provider = providers.first;
-    }
+      if (providers != null && providers.isNotEmpty) {
+        provider = providers.first;
+      }
     }
 
     if (provider == null) {

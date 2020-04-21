@@ -22,9 +22,11 @@ dependencies:
 
   cloud_firestore: ^0.12.9+5
 
-  #firebase_storage: ^3.0.6
+  firebase_storage: ^3.1.1
 
-  firebase_auth: ^0.15.0+1
+  #cloud_functions: ^0.4.2+2
+
+  firebase_auth: ^0.15.5+3
   google_sign_in: ^4.0.14
   flutter_facebook_login: ^3.0.0
   flutter_signin_button: ^1.0.0
@@ -45,7 +47,7 @@ dependencies:
 
   intl: ^0.16.0
 
-  #image_picker: ^0.6.0+2
+  image_picker: ^0.6.3+4
 
   share: ^0.5.3
 
@@ -73,7 +75,7 @@ dependencies:
 
   shared_preferences: ^0.4.0
 
-  in_app_purchase: ^0.2.2+2
+  purchases_flutter: ^1.1.0
 
   xml: ^3.3.1
 
@@ -82,7 +84,7 @@ dependencies:
   #Registration with Goodreads
   oauth1: ^1.0.4
 
-  flushbar: ^1.9.1
+  flushbar: 1.9.1
 
   app_settings: ^3.0.1
 
@@ -152,6 +154,10 @@ flutter:
     - images/icons/icons8-clear-filters-100.png
     - images/icons/icons8-account-100.png
     - images/icons/icons8-paper-plane-100.png
+    - images/icons/icons8-image-gallery-100.png
+    - images/icons/icons8-compact-camera-100.png
+    - images/icons/icons8-attach-90.png
+    - images/icons/icons8-heart-100.png
 
     # credentials for DialogFlow
     - assets/dialogflow.json

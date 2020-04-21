@@ -7,12 +7,12 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl/intl.dart';
 //import 'package:flutter_crashlytics/flutter_crashlytics.dart';
-import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:flutter_dialogflow/dialogflow_v2.dart';
 
 import 'package:biblosphere/l10n.dart';
 import 'package:biblosphere/const.dart';
 import 'package:biblosphere/helpers.dart';
+import 'package:biblosphere/books.dart';
 import 'package:biblosphere/payments.dart';
 import 'package:biblosphere/lifecycle.dart';
 
@@ -202,7 +202,10 @@ class _ChatCardState extends State<ChatCard> {
                                           .textTheme
                                           .subtitle)), // Description
                               Text(chat.message ?? '',
-                                  style: Theme.of(context).textTheme.body1.apply(color: Colors.grey[400]))
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .body1
+                                      .apply(color: Colors.grey[400]))
                             ]))),
                 Container(
                     margin: EdgeInsets.all(5.0),
@@ -263,12 +266,63 @@ class _ChatCardState extends State<ChatCard> {
 }
 
 class Chat extends StatefulWidget {
+  static runChatWithBookRequest(BuildContext context, Bookrecord record,
+      {message = null}) async {
+    // Book only can be requested from other user
+    assert(record != null && record.holderId != B.user.id);
+
+    // If book belong to current user do nothing
+    if (record.holderId == B.user.id) return null;
+
+    // Chat record has to be enriched with user info
+    assert(record.holder != null);
+
+    Messages chat = Messages(from: record.holder, to: B.user);
+
+    // Get chat by Id
+    DocumentSnapshot chatSnap = await chat.ref.get();
+
+    // Create chat if not found and refresh data if found
+    if (!chatSnap.exists) {
+      await chat.ref.setData(chat.toJson());
+    } else {
+      chat = new Messages.fromJson(chatSnap.data, chatSnap);
+    }
+
+    // Get user information about counterparty
+    String partnerId = chat.partnerId;
+    DocumentSnapshot snap = await User.Ref(partnerId).get();
+    if (!snap.exists)
+      throw "Partner user [${partnerId}] does not exist for chat [${chat.id}]";
+    User partner = User.fromJson(snap.data);
+
+    if (message == null) message = S.of(context).requestBook(record.title);
+
+    pushSingle(
+        context,
+        new MaterialPageRoute(
+            builder: (context) => new Chat(
+                partner: partner,
+                chat: chat,
+                message: message,
+                attachment: record,
+                send: false)),
+        'chat');
+
+    // Log book request ad return events
+    logAnalyticsEvent(name: 'book_requested', parameters: <String, dynamic>{
+      'isbn': record.isbn,
+      'type': (B.user.id == record.ownerId) ? 'return' : 'request',
+      'from': chat.partnerId,
+      'to': B.user.id,
+      'distance':
+          record.distance == double.infinity ? 50000.0 : record.distance,
+    });
+  }
+
   static runChatById(BuildContext context, User partner,
-      {String chatId,
-      String message,
-      bool send = false,
-      String transit}) async {
-    DocumentSnapshot chatSnap = await Messages.Ref(chatId).get();
+      {String chatId, String message, bool send = false}) async {
+    DocumentSnapshot chatSnap = await Messages.Ref(partner.id, B.user.id).get();
     if (!chatSnap.exists) throw 'Chat does not exist: ${chatId}';
 
     Messages chat = new Messages.fromJson(chatSnap.data, chatSnap);
@@ -281,81 +335,67 @@ class Chat extends StatefulWidget {
       partner = User.fromJson(snap.data);
     }
 
-    Navigator.push(
+    pushSingle(
         context,
         new MaterialPageRoute(
             builder: (context) => new Chat(
-                partner: partner,
-                chat: chat,
-                message: message,
-                send: send,
-                transit: transit)));
+                partner: partner, chat: chat, message: message, send: send)),
+        'chat');
   }
 
   static runChat(BuildContext context, User partner,
-      {Messages chat,
-      String message,
-      bool send = false,
-      String transit}) async {
+      {Messages chat, String message, bool send = false}) async {
     if (!chat.system && partner == null)
       partner = User(
           id: chat.partnerId, name: chat.partnerName, photo: chat.partnerImage);
 
-    Navigator.push(
+    pushSingle(
         context,
         new MaterialPageRoute(
             builder: (context) => new Chat(
-                partner: partner,
-                chat: chat,
-                message: message,
-                send: send,
-                transit: transit)));
+                partner: partner, chat: chat, message: message, send: send)),
+        'chat');
   }
 
   Chat(
       {Key key,
       @required this.partner,
       this.message,
+      this.attachment,
       this.chat,
-      this.send,
-      this.transit})
+      this.send})
       : super(key: key);
 
   final Messages chat;
   final User partner;
+  // Message to be sent
   final String message;
+  // Attachment (bookrecord id) to be sent
+  final dynamic attachment;
   final bool send;
-  final String transit;
 
   @override
   _ChatState createState() => new _ChatState(
       partner: partner,
       message: message,
+      attachment: attachment,
       chat: chat,
-      send: send,
-      transit: transit);
+      send: send);
 }
 
 class _ChatState extends State<Chat> {
   final User partner;
-  String transit;
-  String message;
+  final String message;
+  // Attachment (bookrecord id) to be sent
+  final dynamic attachment;
   bool send;
   Messages chat;
-  String phase;
-  bool showCart = false;
-  String status;
-
-  // Conditions for the agreement
-  double amountToPay = 0.0;
 
   // List of books in the agreement
   StreamSubscription<QuerySnapshot> streamBooks;
   List<Bookrecord> books = [];
 
   StreamSubscription<Messages> _listener;
-  StreamSubscription<DocumentSnapshot> streamPartnerWallet;
-  double partnerBalance = 0.0;
 
   // Text field controller for the search bar
   TextEditingController textController;
@@ -372,201 +412,15 @@ class _ChatState extends State<Chat> {
 
     textController = new TextEditingController();
 
-    // Initialize chat queries
-    status = null;
-    refreshChat();
-
     // Listem chat updates
     _listener = chat.snapshots().listen((chat) {
       if (mounted) setState(() {});
-    }, onDone: () async {
-      if (transit != null) {
-        Messages chatT = await doTransit(
-            context: context, chat: chat, bookrecordId: transit);
-        chat.status = chatT.status;
-        chat.books = chatT.books;
-        transit = null;
-      }
-      refreshChat();
-    } );
-
-    if (!chat.system) {
-      // Get current balance of the peer
-      Firestore.instance
-          .collection('wallets')
-          .document(partner.id)
-          .get()
-          .then((snap) {
-        if (snap.exists) {
-          Wallet wallet = new Wallet.fromJson(snap.data);
-          setState(() {
-            partnerBalance = wallet.getAvailable();
-          });
-        }
-      });
-
-      // Update balance of the peer in real-time to reflect changes to the screen
-      streamPartnerWallet = Firestore.instance
-          .collection('wallets')
-          .document(partner.id)
-          .snapshots()
-          .listen((snap) {
-        if (snap.exists) {
-          Wallet wallet = new Wallet.fromJson(snap.data);
-          if (partnerBalance != wallet.getAvailable()) {
-            setState(() {
-              partnerBalance = wallet.getAvailable();
-            });
-          }
-        }
-      });
-    }
-  }
-
-  void refreshChat() async {
-    // Skip if status not changed
-    if (chat.status == status)
-      return;
-
-    status = chat.status;
-    books = [];
-
-    if (streamBooks != null) streamBooks.cancel();
-
-    if (chat.toMe && chat.status == Messages.Initial) {
-      phase = 'initialToMe';
-
-      streamBooks = Firestore.instance
-          .collection('bookrecords')
-          .where("holderId", isEqualTo: partner.id)
-          .where("transit", isEqualTo: true)
-          .where("confirmed", isEqualTo: false)
-          .where("transitId", isEqualTo: B.user.id)
-          .where("wish", isEqualTo: false)
-          .snapshots()
-          .listen((snap) {
-        books =
-            snap.documents.map((doc) => Bookrecord.fromJson(doc.data)).toList();
-
-        // Calculate total amount to pay for transferred books
-        amountToPay = 0.0;
-        for (Bookrecord b in books) {
-          if (b.transitId == B.user.id && b.ownerId != B.user.id)
-            amountToPay += b.getPrice();
-        }
-
-        if (mounted) setState(() {});
-      });
-    } else if (chat.fromMe && chat.status == Messages.Initial) {
-      phase = 'initialFromMe';
-
-      streamBooks = Firestore.instance
-          .collection('bookrecords')
-          .where("holderId", isEqualTo: B.user.id)
-          .where("transit", isEqualTo: true)
-          .where("confirmed", isEqualTo: false)
-          .where("transitId", isEqualTo: partner.id)
-          .where("wish", isEqualTo: false)
-          .snapshots()
-          .listen((snap) {
-        books =
-            snap.documents.map((doc) => Bookrecord.fromJson(doc.data)).toList();
-
-        // Nothing to pay on giving the books
-        amountToPay = 0.0;
-        for (Bookrecord b in books) {
-          if (b.transitId == partner.id && b.ownerId != partner.id)
-            amountToPay += b.getPrice();
-        }
-
-        if (mounted) setState(() {});
-      });
-    } else if (chat.toMe && chat.status == Messages.Handover) {
-      phase = 'handoverToMe';
-
-      streamBooks = Firestore.instance
-          .collection('bookrecords')
-          .where("holderId", isEqualTo: partner.id)
-          .where("transit", isEqualTo: true)
-          .where("confirmed", isEqualTo: true)
-          .where("transitId", isEqualTo: B.user.id)
-          .where("wish", isEqualTo: false)
-          .snapshots()
-          .listen((snap) {
-        books =
-            snap.documents.map((doc) => Bookrecord.fromJson(doc.data)).toList();
-
-        // Calculate total amount to pay for transferred books
-        amountToPay = 0.0;
-        for (Bookrecord b in books) {
-          if (b.transitId == B.user.id && b.ownerId != B.user.id)
-            amountToPay += b.getPrice();
-        }
-
-        if (mounted) setState(() {});
-      });
-    } else if (chat.fromMe && chat.status == Messages.Handover) {
-      phase = 'handoverFromMe';
-
-      streamBooks = Firestore.instance
-          .collection('bookrecords')
-          .where("holderId", isEqualTo: B.user.id)
-          .where("transit", isEqualTo: true)
-          .where("confirmed", isEqualTo: true)
-          .where("transitId", isEqualTo: partner.id)
-          .where("wish", isEqualTo: false)
-          .snapshots()
-          .listen((snap) {
-        books =
-            snap.documents.map((doc) => Bookrecord.fromJson(doc.data)).toList();
-
-        // Nothing to pay on giving the books
-        amountToPay = 0.0;
-        for (Bookrecord b in books) {
-          if (b.transitId == partner.id && b.ownerId != partner.id)
-            amountToPay += b.getPrice();
-        }
-
-        if (mounted) setState(() {});
-      });
-    } else if (chat.toMe && chat.status == Messages.Complete) {
-      phase = 'completeToMe';
-
-      streamBooks = null;
-      books = [];
-      await Future.forEach(chat.books, (id) async {
-        DocumentSnapshot snap = await Bookrecord.Ref(id).get();
-        if (snap.exists) books.add(Bookrecord.fromJson(snap.data));
-        // TODO: Deal with books which are not found
-      });
-
-      amountToPay = chat.amount;
-
-      if (mounted) setState(() {});
-    } else if (chat.fromMe && chat.status == Messages.Complete) {
-      phase = 'completeFromMe';
-
-      streamBooks = null;
-      books = [];
-      await Future.forEach(chat.books, (id) async {
-        DocumentSnapshot snap = await Bookrecord.Ref(id).get();
-        if (snap.exists) books.add(Bookrecord.fromJson(snap.data));
-        // TODO: Deal with books which are not found
-      });
-
-      amountToPay = chat.amount;
-
-      if (mounted) setState(() {});
-    }
+    });
   }
 
   @override
   void dispose() {
-    if (streamBooks != null) streamBooks.cancel();
-
     if (_listener != null) _listener.cancel();
-
-    if (streamPartnerWallet != null) streamPartnerWallet.cancel();
 
     super.dispose();
   }
@@ -575,26 +429,16 @@ class _ChatState extends State<Chat> {
       {Key key,
       @required this.partner,
       this.message = '',
+      this.attachment,
       this.chat,
-      this.send,
-      this.transit});
+      this.send});
 
   @override
   Widget build(BuildContext context) {
     return new Scaffold(
       appBar: new AppBar(
           title: GestureDetector(
-              onTap: () {
-                // TODO: Design user profile screen and uncomment
-                /*
-                Navigator.push(
-                    context,
-                    new MaterialPageRoute(
-                        builder: (context) => new UserProfileWidget(
-                              user: partner,
-                            )));
-                */
-              },
+              onTap: () {},
               child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: <Widget>[
@@ -607,526 +451,24 @@ class _ChatState extends State<Chat> {
                         child: Container(
                             margin: EdgeInsets.only(left: 5.0),
                             child: Text(
-                              chat.system ? S.of(context).titleSupport : partner.name,
+                              chat.system
+                                  ? S.of(context).titleSupport
+                                  : partner.name,
                               style: Theme.of(context)
                                   .textTheme
                                   .title
                                   .apply(color: C.titleText),
                             ))),
                   ])),
-          bottom: showCart
-              ? PreferredSize(
-                  child: GestureDetector(
-                      onVerticalDragUpdate: (details) {
-                        if (details.delta.distance > 1.0 &&
-                            details.delta.direction < 0.0) {
-                          setState(() {
-                            showCart = false;
-                          });
-                        }
-                      },
-                      child: Container(child: phaseBody())),
-                  preferredSize: Size.fromHeight(185.0))
-              : null,
-          centerTitle: false,
-          actions: <Widget>[
-            !chat.system
-                ? IconButton(
-                    onPressed: () {
-                      if (!showCart) FocusScope.of(context).unfocus();
-
-                      setState(() {
-                        showCart = !showCart;
-                      });
-                    },
-                    tooltip: S.of(context).cart,
-                    icon: Stack(children: <Widget>[
-                      new Container(
-                          padding: EdgeInsets.only(right: 5.0),
-                          child: assetIcon(shopping_cart_100, size: 30)),
-                      books.length > 0
-                          ? Positioned.fill(
-                              child: Container(
-                                  alignment: Alignment.topRight,
-                                  child: ClipOval(
-                                    child: Container(
-                                        color: C.button,
-                                        height: 12.0, // height of the button
-                                        width: 12.0, // width of the button
-                                        child: Center(
-                                            child: Text(books.length.toString(),
-                                                style: TextStyle(
-                                                    fontSize: 10.0,
-                                                    color: C.buttonText)))),
-                                  )))
-                          : Container()
-                    ]),
-                  )
-                : Container(width: 0.0, height: 0.0)
-          ]),
+          centerTitle: false),
       body: ChatScreen(
           myId: B.user.id,
           partner: partner,
           message: message,
+          attachment: attachment,
           send: send,
-          chat: chat,
-          onKeyboard: () {
-            setState(() {
-              showCart = false;
-            });
-          }),
+          chat: chat),
     );
-  }
-
-  Widget phaseBody() {
-    return Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: <Widget>[
-          // Short hint text
-          getBookBar(),
-          getFinance(),
-          // Long text hint
-          Container(
-              margin: EdgeInsets.fromLTRB(3.0, 8.0, 3.0, 10.0),
-              child: Text(
-                getLongText(),
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.body1,
-              ))
-        ]);
-  }
-
-  Widget getBookBar() {
-    if (chat.toMe) {
-      return Container(
-          height: 110.0,
-          child: ListView(
-              scrollDirection: Axis.horizontal,
-              children: books.map<Widget>((rec) {
-                return BookrecordWidget(
-                    bookrecord: rec,
-                    builder: (context, rec) {
-                      return Stack(children: <Widget>[
-                        Container(
-                            margin: EdgeInsets.all(5.0),
-                            child: bookImage(rec, 100.0, sameHeight: true)),
-                        chat.status == Messages.Initial
-                            ? Positioned.fill(
-                                child: Container(
-                                    alignment: Alignment.topRight,
-                                    child: GestureDetector(
-                                        onTap: () {
-                                          // Exclude book from list
-                                          rec.ref.updateData({
-                                            'transit': false,
-                                            'confirmed': false,
-                                            'transitId': null,
-                                            'users': [rec.holderId, rec.ownerId]
-                                          });
-                                          chat.ref.updateData({
-                                            'books':
-                                                FieldValue.arrayRemove([rec.id])
-                                          });
-
-                                          logAnalyticsEvent(
-                                              name: 'remove_from_cart',
-                                              parameters: <String, dynamic>{
-                                                'isbn': rec.isbn,
-                                                'user': B.user.id,
-                                                'type': (chat.toId == rec.owner)
-                                                    ? 'return'
-                                                    : 'request',
-                                                'by':
-                                                    (B.user.id == rec.holderId)
-                                                        ? 'holder'
-                                                        : 'peer',
-                                                'from': chat.fromId,
-                                                'to': chat.toId,
-                                                'distance': rec.distance == double.infinity ? 50000.0 : rec.distance
-                                              });
-                                        },
-                                        child: ClipOval(
-                                          child: Container(
-                                            color: C.button,
-                                            height:
-                                                20.0, // height of the button
-                                            width: 20.0, // width of the button
-                                            child: Center(
-                                                child: assetIcon(cancel_100,
-                                                    size: 20)),
-                                          ),
-                                        ))))
-                            : Container(width: 0.0, height: 0.0)
-                      ]);
-                    });
-              }).toList()
-                ..add(chat.status == Messages.Initial
-                    ? GestureDetector(
-                        onTap: () {
-                          // Run screen to chose more books from user
-                          Navigator.push(
-                              context,
-                              new MaterialPageRoute(
-                                  builder: (context) => buildScaffold(
-                                      context,
-                                      '',
-                                      new UserBooksWidget(
-                                        user: partner,
-                                        onSelected: (context, rec) async {
-                                          // Add book to a chat
-                                          // TODO: Use record instead of id
-                                          Messages chatT = await doTransit(
-                                              context: context,
-                                              chat: chat,
-                                              bookrecordId: rec.id);
-                                          setState(() {
-                                            chat = chatT;
-                                          });
-                                        },
-                                      ),
-                                      appbar: false)));
-                        },
-                        child: Container(
-                            height: 100.0,
-                            width: 60.0,
-                            child: Center(
-                              child: ClipOval(
-                                child: Container(
-                                    height: 35.0, // height of the button
-                                    width: 35.0, // width of the button
-                                    color: C.button,
-                                    child: assetIcon(add_100, size: 35)),
-                              ),
-                            )))
-                    : Container(width: 0.0, height: 0.0))));
-    } else {
-      return Container(
-          height: 110.0,
-          child: ListView(
-              scrollDirection: Axis.horizontal,
-              children: books.map<Widget>((rec) {
-                return BookrecordWidget(
-                    bookrecord: rec,
-                    builder: (context, rec) {
-                      return Stack(children: <Widget>[
-                        Container(
-                            margin: EdgeInsets.all(5.0),
-                            child: bookImage(rec, 100.0, sameHeight: true)),
-                        chat.status == Messages.Initial
-                            ? Positioned.fill(
-                                child: Container(
-                                    alignment: Alignment.topRight,
-                                    child: GestureDetector(
-                                        onTap: () {
-                                          // Exclude book from list
-                                          rec.ref.updateData({
-                                            'transit': false,
-                                            'confirmed': false,
-                                            'transitId': null,
-                                            'users': [rec.holderId, rec.ownerId]
-                                          });
-                                          chat.ref.updateData({
-                                            'books':
-                                                FieldValue.arrayRemove([rec.id])
-                                          });
-                                        },
-                                        child: ClipOval(
-                                          child: Container(
-                                            color: C.button,
-                                            height:
-                                                20.0, // height of the button
-                                            width: 20.0, // width of the button
-                                            child: Center(
-                                                child: assetIcon(cancel_100,
-                                                    size: 20)),
-                                          ),
-                                        ))))
-                            : Container(width: 0.0, height: 0.0)
-                      ]);
-                    });
-              }).toList()
-                ..add(chat.status == Messages.Initial
-                    ? GestureDetector(
-                        onTap: () {
-                          // Run screen to chose more books from user
-                          Navigator.push(
-                              context,
-                              new MaterialPageRoute(
-                                  builder: (context) => buildScaffold(
-                                      context,
-                                      '',
-                                      new MyBooksWidget(
-                                        user: partner,
-                                        onSelected: (context, rec) async {
-                                          // Add book to a chat
-                                          // TODO: Use record instead of id
-                                          Messages chatT = await doTransit(
-                                              context: context,
-                                              chat: chat,
-                                              bookrecordId: rec.id);
-                                          setState(() {
-                                            chat = chatT;
-                                          });
-                                        },
-                                      ),
-                                      appbar: false)));
-                        },
-                        child: Container(
-                            height: 100.0,
-                            width: 60.0,
-                            child: Center(
-                              child: ClipOval(
-                                child: Container(
-                                  height: 35.0, // height of the button
-                                  width: 35.0, // width of the button
-                                  color: C.button,
-                                  child: assetIcon(add_100, size: 35),
-                                ),
-                              ),
-                            )))
-                    : Container(width: 0.0, height: 0.0))));
-    }
-  }
-
-  Widget getFinance() {
-    if (chat.toMe)
-      return Container(
-          margin: EdgeInsets.only(left: 3.0, right: 3.0),
-          child: Row(children: <Widget>[
-            Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Container(
-                      child: Text(S.of(context).showDeposit( money(total(amountToPay)) ),
-                          overflow: TextOverflow.ellipsis,
-                          style: Theme.of(context).textTheme.body1)),
-                  Container(
-                      child: Text(S.of(context).showRent( money(monthly(amountToPay)) ),
-                          overflow: TextOverflow.ellipsis,
-                          style: Theme.of(context).textTheme.body1)),
-                ]),
-            Expanded(
-                child: Container(
-                    padding: EdgeInsets.only(left: 10.0), child: getButton()))
-          ]));
-    else
-      return Container(
-          margin: EdgeInsets.only(left: 3.0, right: 3.0),
-          child: Row(children: <Widget>[
-            Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Container(
-                      child: Text('Цена: ${money(amountToPay)}',
-                          overflow: TextOverflow.ellipsis,
-                          style: Theme.of(context).textTheme.body1)),
-                  Container(
-                      child: Text(
-                          'Доход в месяц: ${money(income(amountToPay))}',
-                          overflow: TextOverflow.ellipsis,
-                          style: Theme.of(context).textTheme.body1)),
-                ]),
-            Expanded(
-                child: Container(
-                    padding: EdgeInsets.only(left: 10.0), child: getButton()))
-          ]));
-  }
-
-  Widget getButton() {
-    if (chat.toMe &&
-        chat.status != Messages.Complete &&
-        total(amountToPay) >= B.wallet.getAvailable())
-      return RaisedButton(
-        textColor: C.buttonText,
-        color: C.button,
-        child: new Text(S.of(context).buttonPayin),
-        onPressed: () async {
-          final bool available =
-              await InAppPurchaseConnection.instance.isAvailable();
-          if (!available) {
-            // TODO: Process this more nicely
-            throw ('In-App store not available');
-          }
-          // Only show bigger amounts
-          Set<String> _kIds = {'50', '100', '200', '500', '1000', '2000'};
-          final ProductDetailsResponse response =
-              await InAppPurchaseConnection.instance.queryProductDetails(_kIds);
-
-          if (!response.notFoundIDs.isEmpty) {
-            // TODO: Process this more nicely
-            throw ('Ids of in-app products not available');
-          }
-
-          List<ProductDetails> products = response.productDetails;
-          int missing = ((total(amountToPay) - B.wallet.getAvailable()) * 1.05).ceil();
-          ProductDetails product;
-
-              if (Theme.of(context).platform == TargetPlatform.android) {
-      products.sort((p1, p2) =>
-          p1.skuDetail.priceAmountMicros - p2.skuDetail.priceAmountMicros);
-          product = products.firstWhere( (p) => missing < toXlm(p.skuDetail.priceAmountMicros / 1000000, currency: p.skuDetail.priceCurrencyCode), orElse: () => products.elementAt(products.length-1));
-    } else if (Theme.of(context).platform == TargetPlatform.iOS) {
-      products.sort((p1, p2) =>
-          (double.parse(p1.skProduct.price)*100).round() - (double.parse(p2.skProduct.price)*100).round());
-          product = products.firstWhere( (p) => missing < toXlm(double.parse(p.skProduct.price), currency: p.skProduct.priceLocale.currencyCode), orElse: () => products.elementAt(products.length-1));
-    }
-
-          final PurchaseParam purchaseParam = PurchaseParam(
-              productDetails: product, sandboxTesting: false);
-          bool res = await InAppPurchaseConnection.instance
-              .buyConsumable(purchaseParam: purchaseParam);
-          print('!!!DEBUG in-app purchase result: ${res}');    
-        },
-        shape: new RoundedRectangleBorder(
-            borderRadius: new BorderRadius.circular(15.0),
-                              side: BorderSide(color: C.buttonBorder)),
-      );
-    else if (chat.toMe &&
-        chat.status == Messages.Handover &&
-        books != null &&
-        books.length > 0)
-      return RaisedButton(
-        textColor: C.buttonText,
-        color: C.button,
-        child: new Text(S.of(context).buttonConfirmBooks,
-            style:
-                Theme.of(context).textTheme.body1.apply(color: Colors.white)),
-        onPressed: () async {
-          chat.amount = amountToPay;
-          await transferBooks(partner);
-        },
-        shape: new RoundedRectangleBorder(
-            borderRadius: new BorderRadius.circular(15.0),
-                              side: BorderSide(color: C.buttonBorder)),
-      );
-    else if (chat.fromMe &&
-        chat.status == Messages.Initial &&
-        total(amountToPay) < partnerBalance &&
-        books != null &&
-        books.length > 0)
-      return RaisedButton(
-        textColor: C.buttonText,
-        color: C.button,
-        child: new Text(S.of(context).buttonGivenBooks,
-            style:
-                Theme.of(context).textTheme.body1.apply(color: Colors.white)),
-        onPressed: () async {
-          await confirmBooks(partner);
-          refreshChat();
-        },
-        shape: new RoundedRectangleBorder(
-            borderRadius: new BorderRadius.circular(15.0),
-                              side: BorderSide(color: C.buttonBorder)),
-      );
-
-    return Container(width: 0.0, height: 0.0);
-  }
-
-  String getLongText() {
-    if (chat.status == Messages.Initial && chat.toMe) {
-      if (books == null || books.length == 0)
-        return S.of(context).cartAddBooks;
-      else if (B.wallet.getAvailable() < total(amountToPay))
-        return S.of(context).cartTopup( money(total(amountToPay) - B.wallet.getAvailable()) );
-      else
-        return S.of(context).cartMakeApointment;
-    } else if (chat.status == Messages.Initial && chat.fromMe) {
-      if (amountToPay > 0.0 && amountToPay > partnerBalance)
-        return S.of(context).cartRequesterHasToTopup;
-      else if (amountToPay > 0.0 && amountToPay <= partnerBalance)
-        // Some books to be rented (not returned)
-        return S.of(context).cartConfirmHandover;
-      else
-        // All books are returning (not rented)
-        return S.of(context).cartConfirmHandover;
-    } else if (chat.status == Messages.Handover && chat.toMe) {
-      return S.of(context).cartConfirmReceived;
-    } else if (chat.status == Messages.Handover && chat.fromMe) {
-      return S.of(context).cartRequesterHasToConfirm;
-    } else if (chat.status == Messages.Complete && chat.toMe) {
-      return S.of(context).cartBooksAccepted;
-    } else if (chat.status == Messages.Complete && chat.fromMe) {
-      return S.of(context).cartBooksGiven;
-    }
-    // TODO: Add other phases and directions
-    return '';
-  }
-
-  Future<void> confirmBooks(User partner) async {
-    QuerySnapshot snap = await Firestore.instance
-        .collection('bookrecords')
-        .where("holderId", isEqualTo: B.user.id)
-        .where("transit", isEqualTo: true)
-        //.where("confirmed", isEqualTo: false)
-        .where("transitId", isEqualTo: partner.id)
-        .where("wish", isEqualTo: false)
-        .getDocuments();
-
-    List<Bookrecord> books = snap.documents.map((doc) {
-      Bookrecord rec = new Bookrecord.fromJson(doc.data);
-      return rec;
-    }).toList();
-
-    for (Bookrecord b in books) {
-      b.ref.updateData({'confirmed': true});
-    }
-
-    chat.ref.updateData({
-      'status': Messages.Handover,
-      'books': books.map((b) => b.id).toList()
-    });
-    chat.status = Messages.Handover;
-    refreshChat();
-  }
-
-  Future<void> transferBooks(User partner) async {
-    QuerySnapshot snap = await Firestore.instance
-        .collection('bookrecords')
-        .where("holderId", isEqualTo: partner.id)
-        .where("transit", isEqualTo: true)
-        .where("confirmed", isEqualTo: true)
-        .where("transitId", isEqualTo: B.user.id)
-        .where("wish", isEqualTo: false)
-        .getDocuments();
-
-    List<Bookrecord> books = snap.documents.map((doc) {
-      Bookrecord rec = new Bookrecord.fromJson(doc.data);
-      return rec;
-    }).toList();
-
-    // Books taken from owner
-    List<Bookrecord> booksTaken =
-        books.where((rec) => rec.ownerId == partner.id).toList();
-
-    // Books taken from person other than owner
-    List<Bookrecord> booksPassed = books
-        .where((rec) => rec.ownerId != B.user.id && rec.ownerId != partner.id)
-        .toList();
-
-    // Books returned to owner
-    List<Bookrecord> booksReturned =
-        books.where((rec) => rec.ownerId == B.user.id).toList();
-
-    if (booksTaken.length > 0) {
-      await deposit(books: booksTaken, owner: partner, payer: B.user);
-    }
-
-    if (booksPassed.length > 0) {
-      await pass(books: booksPassed, holder: partner, payer: B.user);
-    }
-
-    if (booksReturned.length > 0) {
-      await complete(books: booksReturned, holder: partner, owner: B.user);
-    }
-
-    chat.ref.updateData({
-      'status': Messages.Complete,
-      'books': books.map((b) => b.id).toList(),
-      'amount': chat.amount
-    });
-    chat.status = Messages.Complete;
-    refreshChat();
   }
 }
 
@@ -1134,6 +476,7 @@ class ChatScreen extends StatefulWidget {
   final String myId;
   final User partner;
   final String message;
+  final dynamic attachment;
   final bool send;
   final Messages chat;
   final VoidCallback onKeyboard;
@@ -1143,6 +486,7 @@ class ChatScreen extends StatefulWidget {
       @required this.myId,
       @required this.partner,
       this.message = '',
+      this.attachment,
       this.send,
       this.chat,
       this.onKeyboard})
@@ -1153,6 +497,7 @@ class ChatScreen extends StatefulWidget {
       myId: myId,
       partner: partner,
       message: message,
+      attachment: attachment,
       send: send,
       chat: chat,
       onKeyboard: onKeyboard);
@@ -1164,6 +509,7 @@ class ChatScreenState extends State<ChatScreen> {
       @required this.myId,
       @required this.partner,
       this.message,
+      this.attachment,
       this.send,
       this.chat,
       this.onKeyboard});
@@ -1172,6 +518,7 @@ class ChatScreenState extends State<ChatScreen> {
   String myId;
   String peerId;
   String message;
+  dynamic attachment;
   bool send;
   Messages chat;
   VoidCallback onKeyboard;
@@ -1212,19 +559,27 @@ class ChatScreenState extends State<ChatScreen> {
           .limit(1)
           .getDocuments()
           .then((snap) {
-            if (snap.documents.length == 0)
-        injectChatbotMessage(
-            context, B.user.id, chat, S.of(context).chatbotWelcome);
+        if (snap.documents.length == 0)
+          injectChatbotMessage(
+              context, B.user.id, chat, S.of(context).chatbotWelcome);
       });
 
       AuthGoogle(fileJson: "assets/dialogflow.json").build().then((auth) {
         dialogflow =
             Dialogflow(authGoogle: auth, language: Intl.getCurrentLocale());
 
+        // Wait till authorization before sending messages to Chat bot
         if (message != null && send) {
-          onSendMessage(message, 0);
+          print('!!!DEBUG: Sending message');
+          onSendMessage(message, extra: attachment);
         }
       });
+    } else {
+      // Send message to chat automaticaly
+      if (message != null && send) {
+        print('!!!DEBUG: Sending message');
+        onSendMessage(message, extra: attachment);
+      }
     }
 
     updateUnread();
@@ -1258,11 +613,32 @@ class ChatScreenState extends State<ChatScreen> {
     });
   }
 
-  Future<void> onSendMessage(String content, int type) async {
+  Widget attachmentImage() {
+    if (attachment != null && attachment is Bookrecord) {
+      return bookImage(attachment, 28.0, padding: EdgeInsets.all(3.0));
+    } else {
+      return Container();
+    }
+  }
+
+  Future<void> onSendMessage(String content, {extra = null}) async {
     // type: 0 = text, 1 = image, 2 = sticker
+    print('!!!DEBUG: sending message: ${content}\n${extra}');
     if (content.trim() != '') {
       textEditingController.clear();
-      if (message != null) message = null;
+      if (message != null) {
+        setState(() {
+          message = null;
+          attachment = null;
+        });
+      }
+
+      // Reset attachment
+      if (attachment != null) {
+        setState(() {
+          attachment = null;
+        });
+      }
 
       //TODO: strange but now() at the same moment return different values in different timezones.
       //      to compensate it timeZoneOffset is added to have proper sequence of messages in the
@@ -1278,17 +654,24 @@ class ChatScreenState extends State<ChatScreen> {
           .collection(chat.id)
           .document(timestamp.toString());
 
+      Map<String, dynamic> data = {
+        'idFrom': myId,
+        'idTo': peerId,
+        'timestamp': timestamp.toString(),
+        'content': content,
+        'type': 0,
+      };
+
+      if (extra != null && extra is Bookrecord) {
+        data['attachment'] = extra.runtimeType.toString();
+        data['image'] = extra.image;
+        data['id'] = extra.id;
+
+        print('!!!DEBUG: Bookrecord attachment added: ${data}');
+      }
+
       Firestore.instance.runTransaction((transaction) async {
-        await transaction.set(
-          msgRef,
-          {
-            'idFrom': myId,
-            'idTo': peerId,
-            'timestamp': timestamp.toString(),
-            'content': content,
-            'type': type
-          },
-        );
+        await transaction.set(msgRef, data);
       });
 
       Firestore.instance.runTransaction((transaction) async {
@@ -1331,16 +714,19 @@ class ChatScreenState extends State<ChatScreen> {
     if (document['idFrom'] == myId) {
       // Right (my message)
       return Row(
+        mainAxisSize: MainAxisSize.min,
         children: <Widget>[
-          document['type'] == 0
-              // Text
+          document['type'] == 0 && (! document.data.containsKey('attachment') || document['attachment'] == 'None')
+              // No attachment
               ? Container(
                   child: Text(
                     document['content'],
                     style: TextStyle(color: C.chatMyText),
                   ),
-                  padding: EdgeInsets.fromLTRB(10.0, 10.0, 10.0, 10.0),
-                  width: width,
+                  padding: EdgeInsets.all(10.0),
+                  constraints: BoxConstraints(
+                    maxWidth: width,
+                  ),
                   decoration: BoxDecoration(
                       color: C.chatMy,
                       borderRadius: BorderRadius.circular(8.0)),
@@ -1348,18 +734,44 @@ class ChatScreenState extends State<ChatScreen> {
                       bottom: isLastMessageRight(index) ? 20.0 : 10.0,
                       right: 10.0),
                 )
-              : document['type'] == 1
-                  // Image
+              : document['type'] == 0 && (! document.data.containsKey('attachment') || document['attachment'] == 'Bookrecord')
+                  // Bookrecord attachment
                   ? Container(
-                      child: Material(
-                        child: CachedNetworkImage(
-                          imageUrl: document['content'],
-                          width: width,
-                          height: 200.0,
-                          fit: BoxFit.cover,
-                        ),
-                        borderRadius: BorderRadius.all(Radius.circular(8.0)),
+                      child: GestureDetector(
+                          onTap: () async {
+                            pushSingle(
+                                context,
+                                new MaterialPageRoute(
+                                    builder: (context) => buildScaffold(
+                                        context,
+                                        null,
+                                        new FindBookWidget(id: document['id']),
+                                        appbar: false)),
+                                'search');
+                          },
+                          child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: <Widget>[
+                                bookImage(document['image'], 50.0,
+                                    padding: EdgeInsets.all(10.0)),
+                                Flexible(
+                                    child: Container(
+                                  child: Text(
+                                    document['content'],
+                                    style: TextStyle(color: C.chatMyText),
+                                  ),
+                                  alignment: Alignment.topLeft,
+                                  padding:
+                                      EdgeInsets.only(top: 10.0, right: 10.0, bottom: 10.0),
+                                ))
+                              ])),
+                      constraints: BoxConstraints(
+                        maxWidth: width,
                       ),
+                      decoration: BoxDecoration(
+                          color: C.chatMy,
+                          borderRadius: BorderRadius.circular(8.0)),
                       margin: EdgeInsets.only(
                           bottom: isLastMessageRight(index) ? 20.0 : 10.0,
                           right: 10.0),
@@ -1385,46 +797,82 @@ class ChatScreenState extends State<ChatScreen> {
         child: Column(
           children: <Widget>[
             Row(
+              mainAxisSize: MainAxisSize.min,
               children: <Widget>[
-                document['type'] == 0
+                document['type'] == 0 && (! document.data.containsKey('attachment') || document['attachment'] == 'None')
+                // No attachment
                     ? Container(
-                        child: Text(
-                          document['content'],
-                          style: TextStyle(color: C.chatHisText),
-                        ),
-                        padding: EdgeInsets.fromLTRB(10.0, 10.0, 10.0, 10.0),
-                        width: width,
-                        decoration: BoxDecoration(
-                            color: C.chatHis,
-                            borderRadius: BorderRadius.circular(8.0)),
-                        margin: EdgeInsets.only(left: 10.0),
-                      )
-                    : document['type'] == 1
-                        ? Container(
-                            child: Material(
-                              child: CachedNetworkImage(
-                                imageUrl: document['content'],
-                                width: width,
-                                height: 200.0,
-                                fit: BoxFit.cover,
-                              ),
-                              borderRadius:
-                                  BorderRadius.all(Radius.circular(8.0)),
-                            ),
-                            margin: EdgeInsets.only(left: 10.0),
-                          )
-                        : Container(
-                            child: new Image.asset(
-                              'images/${document['content']}.gif',
-                              width: 100.0,
-                              height: 100.0,
-                              fit: BoxFit.cover,
-                            ),
-                            margin: EdgeInsets.only(
-                                bottom: isLastMessageRight(index) ? 20.0 : 10.0,
-                                right: 10.0),
-                          ),
+                  child: Text(
+                    document['content'],
+                    style: TextStyle(color: C.chatMyText),
+                  ),
+                  padding: EdgeInsets.all(10.0),
+                  constraints: BoxConstraints(
+                    maxWidth: width,
+                  ),
+                  decoration: BoxDecoration(
+                      color: C.chatHis,
+                      borderRadius: BorderRadius.circular(8.0)),
+                  margin: EdgeInsets.only(left: 10.0,
+                    //bottom: isLastMessageRight(index) ? 20.0 : 10.0,
+                    ),
+                )
+                    : document['type'] == 0 && (! document.data.containsKey('attachment') || document['attachment'] == 'Bookrecord')
+                // Bookrecord attachment
+                    ? Container(
+                  child: GestureDetector(
+                      onTap: () async {
+                        pushSingle(
+                            context,
+                            new MaterialPageRoute(
+                                builder: (context) => buildScaffold(
+                                    context,
+                                    null,
+                                    new FindBookWidget(id: document['id']),
+                                    appbar: false)),
+                            'search');
+                      },
+                      child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
+                            Flexible(
+                                child: Container(
+                                  child: Text(
+                                    document['content'],
+                                    style: TextStyle(color: C.chatMyText),
+                                  ),
+                                  alignment: Alignment.topLeft,
+                                  padding:
+                                  EdgeInsets.only(top: 10.0, left: 10.0, bottom: 10.0),
+                                )),
+                            bookImage(document['image'], 50.0,
+                                padding: EdgeInsets.all(10.0)),
+                          ])),
+                  constraints: BoxConstraints(
+                    maxWidth: width,
+                  ),
+                  decoration: BoxDecoration(
+                      color: C.chatMy,
+                      borderRadius: BorderRadius.circular(8.0)),
+                  margin: EdgeInsets.only(
+                      //bottom: isLastMessageRight(index) ? 20.0 : 10.0,
+                      right: 10.0),
+                )
+                // Sticker
+                    : Container(
+                  child: new Image.asset(
+                    'images/${document['content']}.gif',
+                    width: 100.0,
+                    height: 100.0,
+                    fit: BoxFit.cover,
+                  ),
+                  margin: EdgeInsets.only(
+                      bottom: isLastMessageRight(index) ? 20.0 : 10.0,
+                      right: 10.0),
+                ),
               ],
+              mainAxisAlignment: MainAxisAlignment.start,
             ),
 
             // Time
@@ -1518,19 +966,25 @@ class ChatScreenState extends State<ChatScreen> {
 
   Widget buildInput() {
     return Container(
-      child: Row(
+    child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[Row(
+      crossAxisAlignment: CrossAxisAlignment.end,
         children: <Widget>[
+          attachmentImage(),
           // Edit text
           Flexible(
             child: Container(
               margin: new EdgeInsets.only(left: 10.0, right: 1.0),
-              child: Theme(
+                child: Theme(
                   data: ThemeData(platform: TargetPlatform.android),
                   child: TextField(
-                    style: TextStyle(color: primaryColor, fontSize: 15.0),
+                    style: TextStyle(color: primaryColor, fontSize: 16.0),
                     controller: textEditingController,
                     keyboardType: TextInputType.multiline,
-                    maxLines: null,
+                    minLines: 1,
+                    maxLines: 5,
                     decoration: InputDecoration.collapsed(
                       hintText: S.of(context).typeMsg,
                       hintStyle: TextStyle(color: greyColor),
@@ -1540,22 +994,74 @@ class ChatScreenState extends State<ChatScreen> {
             ),
           ),
 
+          // Button attachment/delete
+          Material(
+            child: new Container(
+              margin: new EdgeInsets.only(left: 8.0, right: 0.0),
+              child: new IconButton(
+                icon: attachment == null
+                    ? assetIcon(attach_90, size: 20, padding: 0.0)
+                    : assetIcon(trash_100, size: 20, padding: 0.0),
+                onPressed: () {
+                  if (attachment != null)
+                    setState(() {
+                      attachment = null;
+                    });
+                  else
+                    Navigator.push(
+                        context,
+                        new MaterialPageRoute(
+                            builder: (context) => buildScaffold(
+                                context,
+                                S.of(context).chooseHoldedBookForChat,
+                                new MyBooksWidget(
+                                  user: partner,
+                                  onSelected: (context, book) {
+                                    print('!!!DEBUG: Attachment set');
+                                    attachment = book;
+                                    if (book.ownerId == B.user.id) {
+                                      // Offer My book
+                                      textEditingController.text =
+                                          S.of(context).offerBook(book.title);
+                                    } else {
+                                      // Return counterparty's book
+                                      textEditingController.text = S
+                                          .of(context)
+                                          .requestReturn(book.title);
+                                    }
+                                    if (mounted)
+                                      setState(() {
+                                        print('!!!DEBUG: setState executed');
+                                      });
+                                  },
+                                ),
+                                appbar: false)));
+                },
+                color: primaryColor,
+              ),
+            ),
+            color: Colors.white,
+          ),
           // Button send message
           Material(
             child: new Container(
-              margin: new EdgeInsets.symmetric(horizontal: 8.0),
+              margin: new EdgeInsets.only(right: 8.0, left: 0.0),
               child: new IconButton(
-                icon: assetIcon(sent_100, size: 30),
-                onPressed: () => onSendMessage(textEditingController.text, 0),
+                icon: assetIcon(sent_100, size: 30, padding: 0.0),
+                onPressed: () => onSendMessage(textEditingController.text,
+                    extra: attachment),
                 color: primaryColor,
               ),
             ),
             color: Colors.white,
           ),
         ],
-      ),
+      )]),
       width: double.infinity,
-      height: 50.0,
+      constraints: BoxConstraints(
+        maxHeight: 100.0,
+        minHeight: 50.0
+      ),
       decoration: new BoxDecoration(
           border:
               new Border(top: new BorderSide(color: greyColor2, width: 0.5)),
@@ -1602,215 +1108,7 @@ class ChatScreenState extends State<ChatScreen> {
 
 typedef void BookSelectedCallback(BuildContext context, Bookrecord book);
 
-// Class to show users books (to add into transit/chat)
-class UserBooksWidget extends StatefulWidget {
-  UserBooksWidget({Key key, @required this.user, @required this.onSelected})
-      : super(key: key);
-
-  final User user;
-  final BookSelectedCallback onSelected;
-
-  @override
-  _UserBooksWidgetState createState() =>
-      new _UserBooksWidgetState(user: user, onSelected: onSelected);
-}
-
-class _UserBooksWidgetState extends State<UserBooksWidget> {
-  User user;
-  BookSelectedCallback onSelected;
-
-  Set<String> keys = {};
-  List<Book> suggestions = [];
-  TextEditingController textController;
-  bool my = true, his = true;
-
-  StreamSubscription<QuerySnapshot> bookSubscription;
-  List<DocumentSnapshot> books = [];
-
-  @override
-  void initState() {
-    super.initState();
-
-    textController = new TextEditingController();
-
-    books = [];
-    bookSubscription = Firestore.instance
-        .collection('bookrecords')
-        .where("holderId", isEqualTo: user.id)
-        .where("transit", isEqualTo: false)
-        .snapshots()
-        .listen((snap) async {
-      // Update list of document snapshots
-      books = snap.documents;
-      if (mounted) setState(() {});
-    });
-  }
-
-  @override
-  void dispose() {
-    textController.dispose();
-    bookSubscription.cancel();
-    super.dispose();
-  }
-
-  _UserBooksWidgetState({this.user, this.onSelected});
-
-  @override
-  Widget build(BuildContext context) {
-    return CustomScrollView(slivers: <Widget>[
-      SliverAppBar(
-        // Provide a standard title.
-        title:
-            Row(mainAxisAlignment: MainAxisAlignment.start, children: <Widget>[
-          userPhoto(user, 40),
-          Expanded(
-              child: Container(
-                  margin: EdgeInsets.only(left: 5.0),
-                  child: Text(
-                    user.name,
-                    style: Theme.of(context)
-                        .textTheme
-                        .subtitle
-                        .apply(color: C.titleText),
-                  ))),
-        ]),
-        // Allows the user to reveal the app bar if they begin scrolling
-        // back up the list of items.
-        floating: true,
-        pinned: true,
-        snap: true,
-        // Display a placeholder widget to visualize the shrinking size.
-        flexibleSpace: FlexibleSpaceBar(
-            collapseMode: CollapseMode.parallax,
-            background: ListView(
-                //crossAxisAlignment: CrossAxisAlignment.start,
-                //mainAxisSize: MainAxisSize.min,
-                children: <Widget>[
-                  new Container(height: 42),
-                  new Container(
-                    //decoration: BoxDecoration(color: Colors.transparent),
-                    color: Colors.transparent,
-                    padding: new EdgeInsets.all(5.0),
-                    child: new Row(
-                      //mainAxisSize: MainAxisSize.min,
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: <Widget>[
-                        new Expanded(
-                          child: Theme(
-                              data: ThemeData(platform: TargetPlatform.android),
-                              child: TextField(
-                                maxLines: 1,
-                                controller: textController,
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .title
-                                    .apply(color: Colors.white),
-                                decoration: InputDecoration(
-                                  //border: InputBorder.none,
-                                  hintText: S.of(context).hintAuthorTitle,
-                                  hintStyle: C.hints.apply(color: C.inputHints),
-                                ),
-                              )),
-                        ),
-                        Container(
-                            padding: EdgeInsets.only(left: 0.0),
-                            child: IconButton(
-                              color: Colors.white,
-                              icon: assetIcon(search_100, size: 30),
-                              onPressed: () {
-                                FocusScope.of(context).unfocus();
-                                setState(() {
-                                  keys = getKeys(textController.text);
-                                });
-                              },
-                            )),
-                      ],
-                    ),
-                  ),
-                  new Container(
-                      color: Colors.transparent,
-                      padding: new EdgeInsets.only(left: 10.0, right: 10.0),
-                      child: Row(
-                          //mainAxisSize: MainAxisSize.min,
-                          //mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: <Widget>[
-                            new Expanded(
-                                child: new Wrap(
-                                    alignment: WrapAlignment.end,
-                                    spacing: 2.0,
-                                    runSpacing: 0.0,
-                                    children: <Widget>[
-                                  FilterChip(
-                                    //avatar: icon,
-                                    label:
-                                        Text(S.of(context).chipMyBooksWithHim),
-                                    selected: my,
-                                    onSelected: (bool s) {
-                                      setState(() {
-                                        my = s;
-                                      });
-                                    },
-                                  ),
-                                  FilterChip(
-                                    //avatar: icon,
-                                    label: Text(S.of(context).chipHisBooks),
-                                    selected: his,
-                                    onSelected: (bool s) {
-                                      setState(() {
-                                        his = s;
-                                      });
-                                    },
-                                  ),
-                                ]))
-                          ]))
-                ])),
-        // Make the initial height of the SliverAppBar larger than normal.
-        expandedHeight: 150,
-      ),
-      SliverList(
-        delegate: SliverChildBuilderDelegate((context, index) {
-          Bookrecord rec = new Bookrecord.fromJson(books[index].data);
-
-          if (my && rec.ownerId == B.user.id ||
-              his && rec.ownerId != B.user.id) {
-            return new BookrecordWidget(
-                bookrecord: rec,
-                builder: (context, rec) {
-                  // TODO: Add authors titles aand onTap
-                  return GestureDetector(
-                      onTap: () async {
-                        // Call book selection callback
-                        if (onSelected != null) onSelected(context, rec);
-                      },
-                      child: Row(children: <Widget>[
-                        bookImage(rec, 50, padding: 5.0),
-                        Expanded(
-                            child: Container(
-                                margin: EdgeInsets.only(left: 10.0),
-                                child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: <Widget>[
-                                      Text('${rec.authors[0]}',
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .body1),
-                                      Text('\"${rec.title}\"',
-                                          style:
-                                              Theme.of(context).textTheme.body1)
-                                    ])))
-                      ]));
-                });
-          } else {
-            return Container(height: 0.0, width: 0.0);
-          }
-        }, childCount: books.length),
-      )
-    ]);
-  }
-}
-
-// Class to show my books (own, wishlist and borrowed/lent)
+// Class to books (own, partner's and borrowed/lent)
 class MyBooksWidget extends StatefulWidget {
   MyBooksWidget({
     Key key,
@@ -1833,7 +1131,8 @@ class _MyBooksWidgetState extends State<MyBooksWidget> {
   Set<String> keys = {};
   List<Book> suggestions = [];
   TextEditingController textController;
-  bool my = true, his = true;
+
+  String filter = 'request'; // 'offer' 'return', 'remind', 'request'
 
   StreamSubscription<QuerySnapshot> bookSubscription;
   List<DocumentSnapshot> books = [];
@@ -1847,14 +1146,13 @@ class _MyBooksWidgetState extends State<MyBooksWidget> {
     books = [];
     bookSubscription = Firestore.instance
         .collection('bookrecords')
-        .where("holderId", isEqualTo: B.user.id)
-        .where("transit", isEqualTo: false)
+        .where("holderId", whereIn: [B.user.id, user.id])
         .snapshots()
         .listen((snap) async {
-      // Update list of document snapshots
-      books = snap.documents;
-      if (mounted) setState(() {});
-    });
+          // Update list of document snapshots
+          books = snap.documents;
+          if (mounted) setState(() {});
+        });
   }
 
   @override
@@ -1871,20 +1169,10 @@ class _MyBooksWidgetState extends State<MyBooksWidget> {
     return CustomScrollView(slivers: <Widget>[
       SliverAppBar(
         // Provide a standard title.
-        title:
-            Row(mainAxisAlignment: MainAxisAlignment.start, children: <Widget>[
-          userPhoto(user, 40),
-          Expanded(
-              child: Container(
-                  margin: EdgeInsets.only(left: 5.0),
-                  child: Text(
-                    user.name,
-                    style: Theme.of(context)
-                        .textTheme
-                        .subtitle
-                        .apply(color: C.titleText),
-                  ))),
-        ]),
+        title: Text(
+          S.of(context).chooseHoldedBookForChat,
+          style: Theme.of(context).textTheme.title.apply(color: C.titleText),
+        ),
         // Allows the user to reveal the app bar if they begin scrolling
         // back up the list of items.
         floating: true,
@@ -1943,32 +1231,54 @@ class _MyBooksWidgetState extends State<MyBooksWidget> {
                       padding: new EdgeInsets.only(left: 10.0, right: 10.0),
                       child: Row(
                           //mainAxisSize: MainAxisSize.min,
-                          //mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          //mainAxisAlignment: MainAxisAlignment.center,
                           children: <Widget>[
                             new Expanded(
                                 child: new Wrap(
-                                    alignment: WrapAlignment.end,
+                                    alignment: WrapAlignment.center,
                                     spacing: 2.0,
                                     runSpacing: 0.0,
                                     children: <Widget>[
-                                  FilterChip(
+                                  ChoiceChip(
                                     //avatar: icon,
                                     label:
-                                        Text(S.of(context).chipHisBooksWithMe),
-                                    selected: his,
+                                        Text(S.of(context).chipBooksToRequest),
+                                    selected: filter == 'request',
                                     onSelected: (bool s) {
                                       setState(() {
-                                        his = s;
+                                        filter = s ? 'request' : null;
                                       });
                                     },
                                   ),
-                                  FilterChip(
+                                      ChoiceChip(
                                     //avatar: icon,
-                                    label: Text(S.of(context).chipMyBooks),
-                                    selected: my,
+                                    label:
+                                        Text(S.of(context).chipBooksToReturn),
+                                    selected: filter == 'return',
                                     onSelected: (bool s) {
                                       setState(() {
-                                        my = s;
+                                        filter = s ? 'return' : null;
+                                      });
+                                    },
+                                  ),
+                                      ChoiceChip(
+                                    //avatar: icon,
+                                    label: Text(
+                                        S.of(context).chipBooksToAskForReturn),
+                                    selected: filter == 'remind',
+                                    onSelected: (bool s) {
+                                      setState(() {
+                                        filter = s ? 'remind' : null;
+                                      });
+                                    },
+                                  ),
+                                      ChoiceChip(
+                                    //avatar: icon,
+                                    label: Text(S.of(context).chipBooksToOffer),
+                                    selected: filter == 'offer',
+                                    onSelected: (bool s) {
+                                      setState(() {
+                                        filter = s ? 'offer' : null;
                                       });
                                     },
                                   ),
@@ -1982,17 +1292,36 @@ class _MyBooksWidgetState extends State<MyBooksWidget> {
         delegate: SliverChildBuilderDelegate((context, index) {
           Bookrecord rec = new Bookrecord.fromJson(books[index].data);
 
-          if (my && rec.ownerId != user.id || his && rec.ownerId == user.id) {
-            return new BookrecordWidget(
+          if (
+              // Books with me which does not belong to the user
+              filter == 'offer' && rec.holderId == B.user.id && rec.ownerId != user.id
+                  // Books with the user which does not belong to me
+                  ||
+                  filter == 'request' &&
+                      rec.holderId == user.id &&
+                      rec.ownerId != B.user.id
+                  // Books with me which belong to the user
+                  ||
+                  filter == 'return' &&
+                      rec.holderId == B.user.id &&
+                      rec.ownerId == user.id
+                  // Books with the user which belong to me
+                  ||
+                  filter == 'remind' &&
+                      rec.holderId == user.id &&
+                      rec.ownerId == B.user.id) {
+            return BookrecordWidget(
                 bookrecord: rec,
                 builder: (context, rec) {
-                  // TODO: Add authors titles aand onTap
+                  // TODO: Add authors titles and onTap
                   return GestureDetector(
                       onTap: () async {
                         if (onSelected != null) onSelected(context, rec);
+                        // Close window
+                        Navigator.pop(context);
                       },
                       child: Row(children: <Widget>[
-                        bookImage(rec, 50, padding: 5.0),
+                        bookImage(rec, 50, padding: EdgeInsets.all(5.0)),
                         Expanded(
                             child: Container(
                                 margin: EdgeInsets.only(left: 10.0),
@@ -2067,22 +1396,12 @@ class _UserProfileWidgetState extends State<UserProfileWidget> {
   StreamSubscription<QuerySnapshot> booksAvailableStream;
 
   Set<String> keys = {};
-  Wallet wallet;
 
   @override
   void initState() {
     super.initState();
 
     textController = new TextEditingController();
-
-    // Read user balance
-    wallet = Wallet(id: user.id);
-    wallet.ref.get().then((snap) {
-      if (snap.exists)
-        setState(() {
-          wallet = Wallet.fromJson(snap.data);
-        });
-    });
 
     booksBorrowed = [];
     booksBorrowedStream = Firestore.instance
@@ -2429,11 +1748,6 @@ class _UserProfileWidgetState extends State<UserProfileWidget> {
                       mainAxisAlignment: MainAxisAlignment.start,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: <Widget>[
-                        new Text(S.of(context).userBalance(money(wallet.getAvailable())),
-                            style: Theme.of(context)
-                                .textTheme
-                                .body1
-                                .apply(color: C.titleText)),
                         /*
                         new Text('Репутация: 10.0',
                             style: Theme.of(context)
