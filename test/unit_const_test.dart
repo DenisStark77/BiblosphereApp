@@ -1,11 +1,11 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:biblosphere/mock_firestore.dart';
-import 'package:biblosphere/const.dart';
 import 'package:geoflutterfire/geoflutterfire.dart';
+import 'package:cloud_firestore_mocks/cloud_firestore_mocks.dart';
+import 'package:biblosphere/const.dart';
 
 main() {
-  db = MockFirestore.instance;
+  db = MockFirestoreInstance();
 
   test("B singleton: Set and get", () async {
     B.country = 'RU';

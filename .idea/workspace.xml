@@ -16,8 +16,13 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="7a1cd496-664c-40e6-9b7d-52c49a6c15c5" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Dart_Packages.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Dart_Packages.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/mock_firestore.dart" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/pubspec.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/pubspec.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/test/unit_const_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/test/unit_const_test.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/test/unit_lifecycle_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/test/unit_lifecycle_test.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/test/unit_mock_firestore_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/test/unit_mock_firestore_test.dart" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -130,13 +135,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1534746472527</updated>
-    </task>
-    <task id="LOCAL-00044" summary="Add search by Isbn from Goodreads">
-      <created>1551502526131</created>
-      <option name="number" value="00044" />
-      <option name="presentableId" value="LOCAL-00044" />
-      <option name="project" value="LOCAL" />
-      <updated>1551502526131</updated>
     </task>
     <task id="LOCAL-00045" summary="Correct set to update for chat record. To solve 'blocked' issue.">
       <created>1551502718072</created>
@@ -474,7 +472,14 @@
       <option name="project" value="LOCAL" />
       <updated>1587647081098</updated>
     </task>
-    <option name="localTasksCounter" value="93" />
+    <task id="LOCAL-00093" summary="- Plugins dependencies corrected">
+      <created>1587648047438</created>
+      <option name="number" value="00093" />
+      <option name="presentableId" value="LOCAL-00093" />
+      <option name="project" value="LOCAL" />
+      <updated>1587648047438</updated>
+    </task>
+    <option name="localTasksCounter" value="94" />
     <servers />
   </component>
   <component name="UnknownFeatures">
@@ -497,7 +502,6 @@
     <ignored-roots>
       <path value="$PROJECT_DIR$/python/opencv_extra" />
     </ignored-roots>
-    <MESSAGE value="Change versionCode for auto-build" />
     <MESSAGE value="Python code to segment books" />
     <MESSAGE value="Correct bug with chat from books and person cards&#10;Correct bug with empty book image" />
     <MESSAGE value="Adjust for the new version" />
@@ -522,7 +526,8 @@
     <MESSAGE value="- Add FCM notifications&#10;- Add control counters for wishlist and taken books" />
     <MESSAGE value="- Tests corrected&#10;- Crashalytic added&#10;- Translations updated" />
     <MESSAGE value="- Tests updated&#10;- Bugs with handover corrected" />
-    <option name="LAST_COMMIT_MESSAGE" value="- Tests updated&#10;- Bugs with handover corrected" />
+    <MESSAGE value="- Plugins dependencies corrected" />
+    <option name="LAST_COMMIT_MESSAGE" value="- Plugins dependencies corrected" />
   </component>
   <component name="masterDetails">
     <states>

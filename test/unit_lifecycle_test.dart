@@ -1,14 +1,17 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:biblosphere/mock_firestore.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:cloud_firestore_mocks/cloud_firestore_mocks.dart';
+import 'package:mockito/mockito.dart';
 import 'package:biblosphere/const.dart';
 import 'package:biblosphere/lifecycle.dart';
 import 'package:geolocator/geolocator.dart';
 
 // TODO: Add bookrecord, Delete bookrecord, Handover books,
 
+class MockFirebaseAnalytics extends Mock implements FirebaseAnalytics {}
 
 main() {
-  db = MockFirestore.instance;
+  db = MockFirestoreInstance();
   analytics = MockFirebaseAnalytics();
   //when(analytics.logEvent(name: anyNamed('name'), parameters: anyNamed('parameters'))).thenAnswer((_) async {return;});
 

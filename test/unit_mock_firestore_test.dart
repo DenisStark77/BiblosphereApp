@@ -1,12 +1,10 @@
-// This test check that IntroPage is displayed and scroll
-// Test scroll from "Shoot" page through "Surf" page to "Meet" page
-// checking that SKIP and DONE buttons shows correctly.
+// This check that Firestore mock is working as expected fot Biblosphere tests
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:biblosphere/mock_firestore.dart';
+import 'package:cloud_firestore_mocks/cloud_firestore_mocks.dart';
 
-Firestore db = MockFirestore.instance;
+Firestore db = MockFirestoreInstance();
 
 main() {
   test("Mock Firestore: DocumentReference.documentID ", () async {
@@ -79,7 +77,8 @@ main() {
     expect(data, 1);
     expect(snap.data['data'], 2);
   });
-
+  // TODO: Compare to actual behaviour of Firestore (not needed for now)
+  /*
   test("Mock Firestore: Transaction read and not updated", () async {
     DocumentReference doc1 = db.collection('test1').document();
     DocumentReference doc2 = db.collection('test2').document();
@@ -92,4 +91,5 @@ main() {
       return;
     }), throwsA((String str) => str.startsWith('Records read but not updated:')));
   });
+  */
 }
