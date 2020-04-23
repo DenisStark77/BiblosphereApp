@@ -17,12 +17,7 @@
   <component name="ChangeListManager">
     <list default="true" id="7a1cd496-664c-40e6-9b7d-52c49a6c15c5" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/lifecycle.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/lifecycle.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test/unit_const_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/test/unit_const_test.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test/unit_lifecycle_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/test/unit_lifecycle_test.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test/widget_intro.01_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/test/widget_intro.01_test.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test/widget_intro.02_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/test/widget_intro.02_test.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test/widget_intro.03_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/test/widget_intro.03_test.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pubspec.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/pubspec.yaml" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -135,13 +130,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1534746472527</updated>
-    </task>
-    <task id="LOCAL-00043" summary="Add Goodreads integration&#10;Change design&#10;Add isbn bar code scanner&#10;Add wishlist and books&#10;Add triggers in node.js&#10;Add integration with Google Book API">
-      <created>1551501581988</created>
-      <option name="number" value="00043" />
-      <option name="presentableId" value="LOCAL-00043" />
-      <option name="project" value="LOCAL" />
-      <updated>1551501581988</updated>
     </task>
     <task id="LOCAL-00044" summary="Add search by Isbn from Goodreads">
       <created>1551502526131</created>
@@ -479,7 +467,14 @@
       <option name="project" value="LOCAL" />
       <updated>1587612196808</updated>
     </task>
-    <option name="localTasksCounter" value="92" />
+    <task id="LOCAL-00092" summary="- Tests updated&#10;- Bugs with handover corrected">
+      <created>1587647081097</created>
+      <option name="number" value="00092" />
+      <option name="presentableId" value="LOCAL-00092" />
+      <option name="project" value="LOCAL" />
+      <updated>1587647081098</updated>
+    </task>
+    <option name="localTasksCounter" value="93" />
     <servers />
   </component>
   <component name="UnknownFeatures">
@@ -502,7 +497,6 @@
     <ignored-roots>
       <path value="$PROJECT_DIR$/python/opencv_extra" />
     </ignored-roots>
-    <MESSAGE value="Workaround to fix defect on iOS paste to TextField" />
     <MESSAGE value="Change versionCode for auto-build" />
     <MESSAGE value="Python code to segment books" />
     <MESSAGE value="Correct bug with chat from books and person cards&#10;Correct bug with empty book image" />
@@ -527,7 +521,8 @@
     <MESSAGE value="- Add subscription screen&#10;- Add book recognition&#10;- Remove odd functionality" />
     <MESSAGE value="- Add FCM notifications&#10;- Add control counters for wishlist and taken books" />
     <MESSAGE value="- Tests corrected&#10;- Crashalytic added&#10;- Translations updated" />
-    <option name="LAST_COMMIT_MESSAGE" value="- Tests corrected&#10;- Crashalytic added&#10;- Translations updated" />
+    <MESSAGE value="- Tests updated&#10;- Bugs with handover corrected" />
+    <option name="LAST_COMMIT_MESSAGE" value="- Tests updated&#10;- Bugs with handover corrected" />
   </component>
   <component name="masterDetails">
     <states>

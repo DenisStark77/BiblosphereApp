@@ -20,7 +20,7 @@ dependencies:
   geoflutterfire: ^2.0.2
       #git: git://github.com/DarshanGowda0/GeoFlutterFire.git
 
-  cloud_firestore: ^0.12.9+5
+  cloud_firestore: ^0.13.5
 
   firebase_storage: ^3.1.1
 
@@ -99,8 +99,8 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   mockito: ^4.1.1
-  mock_cloud_firestore:
-    git: git://github.com/ozanturksever/mock_cloud_firestore.git
+  mock_cloud_firestore: ^0.0.20
+    #git: git://github.com/ozanturksever/mock_cloud_firestore.git
 
 # For information on the generic Dart part of this file, see the
 # following page: https://www.dartlang.org/tools/pub/pubspec
