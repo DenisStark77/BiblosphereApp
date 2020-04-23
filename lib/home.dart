@@ -45,10 +45,10 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
 
     FirebaseMessaging().configure(
       onMessage: (Map<String, dynamic> message) {
-        print('!!!DEBUG: Message received ${message['data']}');
-        print('!!!DEBUG: Message event ${message['data']['count']} $context');
+        //print('!!!DEBUG: Message received ${message['data']}');
+        //print('!!!DEBUG: Message event ${message['data']['count']} $context');
         if (message['data']['event'] == 'books_recognized')
-          print('!!!DEBUG: Snacbar to show ${message['data']['count']} $context');
+          //print('!!!DEBUG: Snacbar to show ${message['data']['count']} $context');
         showSnackBar(context, S.of(context).snackRecognitionDone(message['data']['count']));
         setState(() {
           unreadMessage = true;
@@ -763,16 +763,6 @@ class _MyBookWidgetState extends State<MyBook> {
   StreamSubscription<Bookrecord> _listener;
   Set<String> filter = {};
 
-  // Flag to show book settings controls
-  bool settings = false;
-
-  // Text editor Controllers for settings
-  TextEditingController _linkTextCtr;
-  String _linkError;
-
-  TextEditingController _priceTextCtr;
-  String _priceError;
-
   @override
   void initState() {
     _listener = bookrecord.snapshots().listen((rec) {
@@ -802,8 +792,6 @@ class _MyBookWidgetState extends State<MyBook> {
 
   @override
   void dispose() {
-    if (_linkTextCtr != null) _linkTextCtr.dispose();
-    if (_priceTextCtr != null) _priceTextCtr.dispose();
     if (_listener != null) _listener.cancel();
 
     super.dispose();
@@ -905,9 +893,6 @@ class _MyBookWidgetState extends State<MyBook> {
                         bookrecord.isBorrowed
                             ? new IconButton(
                                 onPressed: () async {
-                                  Messages chat = new Messages(
-                                      from: B.user, to: bookrecord.owner);
-
                                   // Open chat widget
                                   Chat.runChatWithBookRequest(
                                       context, bookrecord,
@@ -923,9 +908,6 @@ class _MyBookWidgetState extends State<MyBook> {
                         bookrecord.isLent
                             ? new IconButton(
                                 onPressed: () async {
-                                  Messages chat = new Messages(
-                                      from: bookrecord.holder, to: B.user);
-
                                   // Open chat widget
                                   Chat.runChatWithBookRequest(
                                       context, bookrecord,
@@ -1530,7 +1512,7 @@ class _SettingsWidgetState extends State<SettingsWidget> {
     try {
       Purchases.getOfferings().then((Offerings res) {
         if (res.current != null) {
-          print('!!!DEBUG: ${res}');
+          //print('!!!DEBUG: ${res}');
           setState(() {
             offerings = res;
           });
@@ -1538,15 +1520,15 @@ class _SettingsWidgetState extends State<SettingsWidget> {
       });
 
       Purchases.getPurchaserInfo().then((PurchaserInfo info) {
-        print('!!!DEBUG: PurchaserInfo ${info}');
+        //print('!!!DEBUG: PurchaserInfo ${info}');
         setState(() {
           purchaserInfo = info;
         });
       });
       // access latest purchaserInfo
     } on PlatformException catch (e, stack) {
-      print('!!!DEBUG: Exception on Purchases plug-in, $e, $stack');
-      // TODO: Process exception crashalityck
+      //print('!!!DEBUG: Exception on Purchases plug-in, $e, $stack');
+      FlutterCrashlytics().logException(e, stack);
     }
 
     Purchases.addPurchaserInfoUpdateListener((info) {
@@ -1732,7 +1714,7 @@ class _SettingsWidgetState extends State<SettingsWidget> {
                         //padding: EdgeInsets.only(bottom: 20.0),
                         child: OutlineButton(
                             // TODO: Translation
-                            child: Text('UPGRADE'),
+                            child: Text(S.of(context).buttonUpgrade),
                             onPressed: () async {
                               try {
                                 PurchaserInfo purchaserInfo =
@@ -1742,7 +1724,9 @@ class _SettingsWidgetState extends State<SettingsWidget> {
                                 if (purchaserInfo
                                     .entitlements.all["basic"].isActive) {
                                   // Unlock that great "pro" content
-                                  print('!!!DEBUG: Purchase completed');
+                                  //print('!!!DEBUG: Purchase completed');
+                                  setState(() {});
+                                  showSnackBar(context, S.of(context).snackPaidPlanActivated);
                                 }
                               } on PlatformException catch (e, stack) {
                                 var errorCode =
@@ -1751,9 +1735,8 @@ class _SettingsWidgetState extends State<SettingsWidget> {
                                     PurchasesErrorCode.purchaseCancelledError) {
                                   print('Purchase canceled');
                                 }
-                                // TODO: Crashalytic
-                                print(
-                                    '!!!DEBUG: purchse failed \n $e, \n $stack');
+                                FlutterCrashlytics().logException(e, stack);
+                                //print('!!!DEBUG: purchse failed \n $e, \n $stack');
                               }
                             },
                             shape: new RoundedRectangleBorder(

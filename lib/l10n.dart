@@ -504,7 +504,7 @@ class S {
   }
 
   String get buttonConfirmBooks{
-    return Intl.message('Нажмите при получении', name: 'buttonConfirmBook');
+    return Intl.message('Нажмите при получении', name: 'buttonConfirmBooks');
   }
 
   // Not translated beyond this line
@@ -892,7 +892,7 @@ class S {
 
   String get choosePartnerBookForChat {
     return Intl.message('ВЫБЕРИТЕ КНИГУ',
-        name: 'chooseHoldedBookForChat');
+        name: 'choosePartnerBookForChat');
   }
 
   String offerBook(book) {
@@ -968,6 +968,20 @@ class S {
 
   String get snackWishDeleted {
     return Intl.message('Book deleted from your wishlist', name: 'snackWishDeleted');
+  }
+
+  String get snackPaidPlanActivated {
+    return Intl.message('Your paid plan is activated', name: 'snackPaidPlanActivated');
+  }
+
+  String dialogWishLimit(price) {
+    return Intl.message('Trial plan only allows 10 books in the wish list. Upgrade for $price per month to have more.',
+        name: 'dialogWishLimit', args: [price]);
+  }
+
+  String dialogBookLimit(price) {
+    return Intl.message('Trial plan allows to keep only up to 2 books at a time. Upgrade for $price per month to have more.',
+        name: 'dialogBookLimit', args: [price]);
   }
 }
 

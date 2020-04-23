@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:geoflutterfire/geoflutterfire.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter_crashlytics/flutter_crashlytics.dart';
+//import 'package:flutter_crashlytics/flutter_crashlytics.dart';
 
 import 'package:biblosphere/const.dart';
 import 'package:biblosphere/helpers.dart';
@@ -64,4 +64,31 @@ Future addBookrecord(
           'isbn': b.isbn,
         });
   }
+}
+
+Future<void> handover(Bookrecord rec, User to) async {
+  await db.runTransaction((tx) async {
+    tx.update(rec.ref, {
+      'holderId': to.id,
+      'holderName': to.name,
+      'holderImage': to.photo,
+    });
+
+    // Hold an allowance of the receiver of the book
+    tx.update(to.ref, {
+      'balance': FieldValue.increment(-1)
+    });
+
+    // Increase an allowance of the giver of the book
+    tx.update(User.Ref(rec.holderId), {
+      'balance': FieldValue.increment(-1)
+    });
+  });
+
+  logAnalyticsEvent(
+      name: 'book_received',
+      parameters: <String, dynamic>{
+        'user': B.user.id,
+        'isbn': rec.isbn,
+      });
 }

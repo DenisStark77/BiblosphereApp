@@ -5,7 +5,6 @@ import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:barcode_scan/barcode_scan.dart';
 import 'package:geoflutterfire/geoflutterfire.dart';
-import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:flutter_crashlytics/flutter_crashlytics.dart';
@@ -284,17 +283,17 @@ class _AddBookWidgetState extends State<AddBookWidget> {
     try {
       if (image == null) return;
 
-      print('!!!DEBUG: Recognize image: ${image.path}');
+      //print('!!!DEBUG: Recognize image: ${image.path}');
 
       String name = getTimestamp() + ".jpg";
 
       showSnackBar(context, S.of(context).snackRecgnitionStarted, duration: 6);
 
+      final String storagePath = await uploadPicture(image, B.user.id, name);
       // !!!DEBUG
-      //final String storagePath = await uploadPicture(image, B.user.id, name);
-      String storagePath = 'images/oyYUDByQGVdgP13T1nyArhyFkct1/1586749554453.jpg';
+      //String storagePath = 'images/oyYUDByQGVdgP13T1nyArhyFkct1/1586749554453.jpg';
 
-      print('!!!DEBUG: Image cloud path: ${storagePath}');
+      //print('!!!DEBUG: Image cloud path: ${storagePath}');
 
       GeoFirePoint location = await currentLocation();
       FirebaseUser user = await FirebaseAuth.instance.currentUser();
@@ -309,7 +308,7 @@ class _AddBookWidgetState extends State<AddBookWidget> {
           'geohash': location.hash,
         }
       });
-      print('!!!DEBUG: JSON body = $body');
+      //print('!!!DEBUG: JSON body = $body');
 
       // Call Python service to recognize
       Response res = await LibConnect.getCloudFunctionClient().post(
@@ -320,10 +319,25 @@ class _AddBookWidgetState extends State<AddBookWidget> {
             HttpHeaders.contentTypeHeader: "application/json"
           });
 
-      print('!!!DEBUG: ${res.body}');
-      print('!!!DEBUG: Request for recognition queued');
+      if (res.statusCode != 200) {
+        print('!!!DEBUG: Recognition request failed');
+        logAnalyticsEvent(
+            name: 'recognition_failed',
+            parameters: <String, dynamic>{
+              'type': 'response',
+              'error': res.statusCode.toString(),
+            });
+      }
+      //print('!!!DEBUG: ${res.body}');
+      //print('!!!DEBUG: Request for recognition queued');
     } catch (ex, stack) {
       print("Failed to recognize image: " + ex.toString() + stack.toString());
+      logAnalyticsEvent(
+          name: 'recognition_failed',
+          parameters: <String, dynamic>{
+            'type': 'exception',
+            'error': ex.toString(),
+          });
       FlutterCrashlytics().logException(ex, stack);
     }
   }
@@ -341,7 +355,8 @@ Future<String> uploadPicture(File image, String user, String name) async {
       customMetadata: <String, String>{'activity': 'test'},
     ),
   );
-  StorageTaskSnapshot storageTaskSnapshot = await uploadTask.onComplete;
+  await uploadTask.onComplete;
+  //StorageTaskSnapshot storageTaskSnapshot = await uploadTask.onComplete;
   // final String imageUrl = await storageTaskSnapshot.ref.getDownloadURL();
 
   return ref.path;
@@ -684,8 +699,7 @@ class _FindBookWidgetState extends State<FindBookWidget> {
                           onPressed: () async {
                             if (B.user.wishCount >= await wishlistAllowance()) {
                               // TODO: Add translation & get a price for monthly plan
-                              showUpgradeDialog(context,
-                                  'Trial plan only allows 10 books in the wish list. Upgrade for ${await upgradePrice()} per month to have more.');
+                              showUpgradeDialog(context, S.of(context).dialogWishLimit(await upgradePrice()));
 
                               logAnalyticsEvent(
                                   name: 'limit_reached',
@@ -764,8 +778,7 @@ class _FindBookWidgetState extends State<FindBookWidget> {
                               onPressed: () async {
                                 if (B.user.balance <= -await booksAllowance()) {
                                   // TODO: Add translation & get a price for monthly plan
-                                  showUpgradeDialog(context,
-                                      'Trial plan allows to keep only up to 2 books at a time. Upgrade for ${await upgradePrice()} per month to have more.');
+                                  showUpgradeDialog(context, S.of(context).dialogBookLimit(await upgradePrice()));
 
                                   logAnalyticsEvent(
                                       name: 'limit_reached',
@@ -776,30 +789,7 @@ class _FindBookWidgetState extends State<FindBookWidget> {
                                       });
                                 } else {
                                   // Update holder of the book
-                                  db.runTransaction((tx) async {
-                                    tx.update(data.first.ref, {
-                                      'holderId': B.user.id,
-                                      'holderName': B.user.name,
-                                      'holderImage': B.user.photo,
-                                    });
-
-                                    // Hold an allowance of the receiver of the book
-                                    tx.update(B.user.ref, {
-                                      'allowance': FieldValue.increment(-1)
-                                    });
-
-                                    // Increase an allowance of the giver of the book
-                                    tx.update(User.Ref(data.first.holderId), {
-                                      'allowance': FieldValue.increment(-1)
-                                    });
-                                  });
-
-                                  logAnalyticsEvent(
-                                      name: 'book_received',
-                                      parameters: <String, dynamic>{
-                                        'user': B.user.id,
-                                        'isbn': book.book.isbn,
-                                      });
+                                  handover(book.first, B.user);
                                 }
                               },
                               shape: new RoundedRectangleBorder(
@@ -887,7 +877,6 @@ class _FindBookWidgetState extends State<FindBookWidget> {
               }
             },
           );
-          return Container();
         }, childCount: books != null ? books.length : 0),
       )
     ]);

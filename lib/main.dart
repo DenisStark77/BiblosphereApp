@@ -117,9 +117,9 @@ class _MyAppState extends State<MyApp> {
       if (firebaseUser != null) {
         firebaseUser.getIdToken(refresh: true);
         FirebaseAnalytics().setUserId(firebaseUser.uid);
-        Purchases.identify(firebaseUser.uid).then((PurchaserInfo purchaserInfo) {
-          print('!!!DEBUG: User\'s subscriptions: ${purchaserInfo.activeSubscriptions}');
-        });
+
+        // Identify user with Purchases for In-App subscriptions
+        Purchases.identify(firebaseUser.uid);
 
         // That's async function so need to refresh widget as soon as it completes
         _initUserRecord().then((_) {

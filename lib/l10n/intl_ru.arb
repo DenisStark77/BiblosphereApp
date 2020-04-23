@@ -1032,5 +1032,140 @@
   "@settingsTitleGeneral": {
     "type": "text",
     "placeholders": {}
-  }
+  },
+     "recognizeFromGallery": "Распознать книги с фотографии",
+     "@recognizeFromGallery": {
+       "type": "text",
+       "placeholders": {}
+     },
+     "recognizeFromCamera": "Сфотографировать полку",
+     "@recognizeFromCamera": {
+       "type": "text",
+       "placeholders": {}
+     },
+     "chooseHoldedBookForChat": "ВЫБЕРИТЕ КНИГУ",
+     "@chooseHoldedBookForChat": {
+       "type": "text",
+       "placeholders": {}
+     },
+     "choosePartnerBookForChat": "ВЫБЕРИТЕ КНИГУ",
+     "@choosePartnerBookForChat": {
+       "type": "text",
+       "placeholders": {}
+     },
+     "offerBook": "Рекомендую взять у меня \"{book}\"",
+     "@offerBook": {
+       "type": "text",
+       "placeholders": {
+         "book": {}
+       }
+     },
+     "chipBooksToRequest": "Взять",
+     "@chipBooksToRequest": {
+       "type": "text",
+       "placeholders": {}
+     },
+     "chipBooksToOffer": "Предложить",
+     "@chipBooksToOffer": {
+       "type": "text",
+       "placeholders": {}
+     },
+     "chipBooksToReturn": "Вернуть",
+     "@chipBooksToReturn": {
+       "type": "text",
+       "placeholders": {}
+     },
+     "chipBooksToAskForReturn": "Забрать",
+     "@chipBooksToAskForReturn": {
+       "type": "text",
+       "placeholders": {}
+     },
+     "buttonSearchThirdParty": "Найти в магазинах и библиотеках",
+     "@buttonSearchThirdParty": {
+       "type": "text",
+       "placeholders": {}
+     },
+     "hintAddToWishlist": "Добавить в список к прочтению",
+     "@hintAddToWishlist": {
+       "type": "text",
+       "placeholders": {}
+     },
+     "hintHolderChatOpen": "Открыть чат с держателем книги",
+     "@hintHolderChatOpen": {
+       "type": "text",
+       "placeholders": {}
+     },
+     "hintConfirmHandover": "Подтвердить, что Вы получили книгу",
+     "@hintConfirmHandover": {
+       "type": "text",
+       "placeholders": {}
+     },
+     "hintManageBook": "Показать эту книгу в экране МОИ КНИГИ",
+     "@hintManageBook": {
+       "type": "text",
+       "placeholders": {}
+     },
+     "buttonManageBook": "Открыть в МОИ КНИГИ",
+     "@buttonManageBook": {
+       "type": "text",
+       "placeholders": {}
+     },
+     "settingsPlan": "Текущая подписка: {name}",
+     "@settingsPlan": {
+       "type": "text",
+       "placeholders": {
+         "name": {}
+       }
+     },
+     "planTrial": "Пробная",
+     "@planTrial": {
+       "type": "text",
+       "placeholders": {}
+     },
+     "buttonUpgrade": "ОПЛАТИТЬ",
+     "@buttonUpgrade": {
+       "type": "text",
+       "placeholders": {}
+     },
+     "buttonSkip": "ОТМЕНИТЬ",
+     "@buttonSkip": {
+       "type": "text",
+       "placeholders": {}
+     },
+     "snackRecgnitionStarted": "Распознавание фото займёт до 2х минут. Можете загрузить следующий снимок.",
+     "@snackRecgnitionStarted": {
+       "type": "text",
+       "placeholders": {}
+     },
+     "snackRecognitionDone": "{count} книг было распознано и дабавлено в ваш каталог.",
+     "@snackRecognitionDone": {
+       "type": "text",
+       "placeholders": {
+         "count": {}
+       }
+     },
+     "snackWishDeleted": "Книга удалена из вашего списка к прочтению",
+     "@snackWishDeleted": {
+       "type": "text",
+       "placeholders": {}
+     },
+     "snackPaidPlanActivated": "Ваша платная подписка активирована",
+     "@snackPaidPlanActivated": {
+       "type": "text",
+       "placeholders": {}
+     },
+     "dialogWishLimit": "Пробная подписка допускает не более 10 книг в списке к прочтению. Оплачивайте {price} в месяц чтобы снять ограничение.",
+     "@dialogWishLimit": {
+       "type": "text",
+       "placeholders": {
+         "price": {}
+       }
+     },
+     "dialogBookLimit": "Пробная подписка допускает не более 2 книг на руках. Оплачивайте {price} в месяц чтобы снять ограничение.",
+     "@dialogBookLimit": {
+       "type": "text",
+       "placeholders": {
+         "price": {}
+       }
+     }
 }

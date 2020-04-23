@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -568,14 +567,14 @@ class ChatScreenState extends State<ChatScreen> {
 
         // Wait till authorization before sending messages to Chat bot
         if (message != null && send) {
-          print('!!!DEBUG: Sending message');
+          //print('!!!DEBUG: Sending message');
           onSendMessage(message, extra: attachment);
         }
       });
     } else {
       // Send message to chat automaticaly
       if (message != null && send) {
-        print('!!!DEBUG: Sending message');
+        //print('!!!DEBUG: Sending message');
         onSendMessage(message, extra: attachment);
       }
     }
@@ -621,7 +620,7 @@ class ChatScreenState extends State<ChatScreen> {
 
   Future<void> onSendMessage(String content, {extra = null}) async {
     // type: 0 = text, 1 = image, 2 = sticker
-    print('!!!DEBUG: sending message: ${content}\n${extra}');
+    //print('!!!DEBUG: sending message: ${content}\n${extra}');
     if (content.trim() != '') {
       textEditingController.clear();
       if (message != null) {
@@ -665,7 +664,7 @@ class ChatScreenState extends State<ChatScreen> {
         data['image'] = extra.image;
         data['id'] = extra.id;
 
-        print('!!!DEBUG: Bookrecord attachment added: ${data}');
+        //print('!!!DEBUG: Bookrecord attachment added: ${data}');
       }
 
       Firestore.instance.runTransaction((transaction) async {
@@ -1015,7 +1014,7 @@ class ChatScreenState extends State<ChatScreen> {
                                 new MyBooksWidget(
                                   user: partner,
                                   onSelected: (context, book) {
-                                    print('!!!DEBUG: Attachment set');
+                                    //print('!!!DEBUG: Attachment set');
                                     attachment = book;
                                     if (book.ownerId == B.user.id) {
                                       // Offer My book
@@ -1029,7 +1028,7 @@ class ChatScreenState extends State<ChatScreen> {
                                     }
                                     if (mounted)
                                       setState(() {
-                                        print('!!!DEBUG: setState executed');
+                                        //print('!!!DEBUG: setState executed');
                                       });
                                   },
                                 ),

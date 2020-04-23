@@ -35,43 +35,43 @@ class MessageLookup extends MessageLookupByLibrary {
 
   static m7(amount) => "Top-up balance ${amount}";
 
-  static m8(distance) => "Distance: ${distance} km";
+  static m10(distance) => "Distance: ${distance} km";
 
-  static m9(balance) => "MY BALANCE: ${balance}";
+  static m11(balance) => "MY BALANCE: ${balance}";
 
-  static m10(amount) => "Enter amount not more than ${amount}";
+  static m12(amount) => "Enter amount not more than ${amount}";
 
-  static m11(total, month) => "Deposit for books: ${total}, monthly payment ${month}";
+  static m13(total, month) => "Deposit for books: ${total}, monthly payment ${month}";
 
-  static m12(count) => "My books at this user (${count})";
+  static m14(count) => "My books at this user (${count})";
 
-  static m13(missing, total, month) => "Missing ${missing}. Deposit for books: ${total}, monthly payment ${month}";
+  static m15(missing, total, month) => "Missing ${missing}. Deposit for books: ${total}, monthly payment ${month}";
 
-  static m14(count) => "All his books (${count})";
+  static m17(count) => "All his books (${count})";
 
-  static m15(num) => "Receiving books (${num})";
+  static m18(num) => "Receiving books (${num})";
 
-  static m16(book) => "Can you give me \"${book}\"?";
+  static m19(book) => "Can you give me \"${book}\"?";
 
-  static m17(book) => "Can you send me \"${book}\"?";
+  static m20(book) => "Can you send me \"${book}\"?";
 
-  static m18(book) => "I\'d like to return \"${book}\"?";
+  static m21(book) => "I\'d like to return \"${book}\"?";
 
-  static m19(book) => "Please, return me \"${book}\"?";
+  static m22(book) => "Please, return me \"${book}\"?";
 
-  static m20(num) => "Handover books (${num})";
+  static m23(num) => "Handover books (${num})";
 
-  static m21(amount) => "Total shared: +${amount}";
+  static m25(amount) => "Total shared: +${amount}";
 
-  static m22(amount) => "Deposit: ${amount}";
+  static m26(amount) => "Deposit: ${amount}";
 
-  static m23(amount) => "Monthly pay: ${amount}";
+  static m27(amount) => "Monthly pay: ${amount}";
 
-  static m24(balance) => "Balance: ${balance}";
+  static m29(balance) => "Balance: ${balance}";
 
-  static m25(user) => "from ${user}";
+  static m30(user) => "from ${user}";
 
-  static m26(user) => "Book with ${user}";
+  static m31(user) => "Book with ${user}";
 
   final messages = _notInlinedMessages(_notInlinedMessages);
   static _notInlinedMessages(_) => <String, Function> {
@@ -136,19 +136,19 @@ class MessageLookup extends MessageLookupByLibrary {
     "chipWish" : MessageLookupByLibrary.simpleMessage("Wishes"),
     "confirmBlockUser" : MessageLookupByLibrary.simpleMessage("Do you want to block this user?"),
     "displayCurrency" : MessageLookupByLibrary.simpleMessage("Display currency:"),
-    "distanceLine" : m8,
+    "distanceLine" : m10,
     "distanceUnknown" : MessageLookupByLibrary.simpleMessage("Distance: unknown"),
     "emptyAmount" : MessageLookupByLibrary.simpleMessage("Empty amount not accepted"),
     "enterTitle" : MessageLookupByLibrary.simpleMessage("Enter title/author"),
     "exceedAmount" : MessageLookupByLibrary.simpleMessage("Amount exceed available balance"),
-    "financeTitle" : m9,
+    "financeTitle" : m11,
     "findBook" : MessageLookupByLibrary.simpleMessage("Find Book"),
     "findbookTitle" : MessageLookupByLibrary.simpleMessage("FIND BOOK"),
     "hintAuthorTitle" : MessageLookupByLibrary.simpleMessage("Author or title"),
     "hintBookDetails" : MessageLookupByLibrary.simpleMessage("Change book info"),
     "hintChatOpen" : MessageLookupByLibrary.simpleMessage("Start conversation"),
     "hintDeleteBook" : MessageLookupByLibrary.simpleMessage("Delete book"),
-    "hintNotMore" : m10,
+    "hintNotMore" : m12,
     "hintOutptAcount" : MessageLookupByLibrary.simpleMessage("Enter your Stellar account for pay out"),
     "hintOutputMemo" : MessageLookupByLibrary.simpleMessage("Memo for payout transaction"),
     "hintRequestReturn" : MessageLookupByLibrary.simpleMessage("Ask for return"),
@@ -170,7 +170,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "introSurfHint" : MessageLookupByLibrary.simpleMessage("App mostra librerie in 200 km intorno a te in ordine di distanza. Ottieni l\'accesso a un\'ampia varietà di libri."),
     "isbnNotFound" : MessageLookupByLibrary.simpleMessage("Book is not found by ISBN"),
     "km" : MessageLookupByLibrary.simpleMessage(" km"),
-    "leaseAgreement" : m11,
+    "leaseAgreement" : m13,
     "linkCopied" : MessageLookupByLibrary.simpleMessage("Link copied to clipboard"),
     "loading" : MessageLookupByLibrary.simpleMessage("Loading..."),
     "loginAgree1" : MessageLookupByLibrary.simpleMessage("Cliccando su Registrami confermi di accettare  \n le "),
@@ -185,14 +185,14 @@ class MessageLookup extends MessageLookupByLibrary {
     "menuSettings" : MessageLookupByLibrary.simpleMessage("Settings"),
     "menuSupport" : MessageLookupByLibrary.simpleMessage("Support"),
     "myBooks" : MessageLookupByLibrary.simpleMessage("My books"),
-    "myBooksWithUser" : m12,
+    "myBooksWithUser" : m14,
     "mybooksTitle" : MessageLookupByLibrary.simpleMessage("MY BOOKS"),
     "negativeAmount" : MessageLookupByLibrary.simpleMessage("Amount should be positive"),
     "no" : MessageLookupByLibrary.simpleMessage("No"),
     "noMessages" : MessageLookupByLibrary.simpleMessage("No messages"),
     "noOperations" : MessageLookupByLibrary.simpleMessage("No operations"),
     "noReferrals" : MessageLookupByLibrary.simpleMessage("No referrals"),
-    "notSufficientForAgreement" : m13,
+    "notSufficientForAgreement" : m15,
     "nothingToSend" : MessageLookupByLibrary.simpleMessage("Niente da inviare"),
     "ok" : MessageLookupByLibrary.simpleMessage("Ok"),
     "opInAppPurchase" : MessageLookupByLibrary.simpleMessage("Pay In (In-App)"),
@@ -204,28 +204,27 @@ class MessageLookup extends MessageLookupByLibrary {
     "outputStellarAccount" : MessageLookupByLibrary.simpleMessage("Stellar account for Pay Out:"),
     "outputStellarMemo" : MessageLookupByLibrary.simpleMessage("Memo for payout via Stellar:"),
     "paymentError" : MessageLookupByLibrary.simpleMessage("Something went wrong, contact administrator"),
-    "profileUserBooks" : m14,
-    "receiveBooks" : m15,
+    "profileUserBooks" : m17,
+    "receiveBooks" : m18,
     "referralLink" : MessageLookupByLibrary.simpleMessage("Your referral link:"),
     "referralTitle" : MessageLookupByLibrary.simpleMessage("MY REFERRALS"),
-    "requestBook" : m16,
-    "requestPost" : m17,
-    "requestReturn" : m18,
-    "requestReturnByOwner" : m19,
+    "requestBook" : m19,
+    "requestPost" : m20,
+    "requestReturn" : m21,
+    "requestReturnByOwner" : m22,
     "scanISBN" : MessageLookupByLibrary.simpleMessage("Scan ISBN"),
     "selectDisplayCurrency" : MessageLookupByLibrary.simpleMessage("Choose display currency:"),
-    "sendBooks" : m20,
+    "sendBooks" : m23,
     "settingsTitleGeneral" : MessageLookupByLibrary.simpleMessage("General settings"),
     "settingsTitleIn" : MessageLookupByLibrary.simpleMessage("Get balance"),
     "settingsTitleInStellar" : MessageLookupByLibrary.simpleMessage("Get balance via Stallar"),
     "settingsTitleOutStellar" : MessageLookupByLibrary.simpleMessage("Payout via Stallar"),
-    "sharedFeeLine" : m21,
+    "sharedFeeLine" : m25,
     "sharingMotto" : MessageLookupByLibrary.simpleMessage("Take books from people instead of buying"),
-    "showDeposit" : m22,
-    "showRent" : m23,
+    "showDeposit" : m26,
+    "showRent" : m27,
     "snackAllowLocation" : MessageLookupByLibrary.simpleMessage("Please allow access to location for searching and adding books"),
     "snackBookAddedToCart" : MessageLookupByLibrary.simpleMessage("Book was added to the cart"),
-    "snackBookAlreadyInTransit" : MessageLookupByLibrary.simpleMessage("Book is booked by another user. Choose another one."),
     "snackBookImageChanged" : MessageLookupByLibrary.simpleMessage("New cover image is set"),
     "snackBookNotConfirmed" : MessageLookupByLibrary.simpleMessage("Confirm other books before asking new ones"),
     "snackBookNotFound" : MessageLookupByLibrary.simpleMessage("Book not found. Add book manually to the cart."),
@@ -257,8 +256,8 @@ class MessageLookup extends MessageLookupByLibrary {
     "titleUserBooks" : MessageLookupByLibrary.simpleMessage("BOOK EXCHENGE"),
     "transitInitiated" : MessageLookupByLibrary.simpleMessage("Handover process initiated for the book"),
     "typeMsg" : MessageLookupByLibrary.simpleMessage("Scrivi il tuo messaggio..."),
-    "userBalance" : m24,
-    "userHave" : m25,
+    "userBalance" : m29,
+    "userHave" : m30,
     "welcome" : MessageLookupByLibrary.simpleMessage("WELCOME"),
     "wishAdded" : MessageLookupByLibrary.simpleMessage("Book has been added to your wishlist"),
     "wishAlreadyThere" : MessageLookupByLibrary.simpleMessage("This book is already in your wishlist"),
@@ -266,7 +265,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "wrongImageUrl" : MessageLookupByLibrary.simpleMessage("Wrong link"),
     "youBorrowThisBook" : MessageLookupByLibrary.simpleMessage("You borrowed this book"),
     "youHaveThisBook" : MessageLookupByLibrary.simpleMessage("You keep this book"),
-    "youLentThisBook" : m26,
+    "youLentThisBook" : m31,
     "youTransitThisBook" : MessageLookupByLibrary.simpleMessage("This book is in transit"),
     "youWishThisBook" : MessageLookupByLibrary.simpleMessage("This book in your wishlist")
   };

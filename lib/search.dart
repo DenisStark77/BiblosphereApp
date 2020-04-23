@@ -41,14 +41,14 @@ Future<Book> searchByIsbn(String isbn) async {
         'https://biblosphere-api-ihj6i2l2aq-uc.a.run.app/get?isbn=$isbn',
         headers: {HttpHeaders.authorizationHeader: "Bearer ${jwt.token}"});
 
-    print('!!!DEBUG: Response ${res.body}');
+    //print('!!!DEBUG: Response ${res.body}');
 
     final resJson = json.decode(res.body);
-    print('!!!DEBUG: Response JSON \n${res.body}');
+    //print('!!!DEBUG: Response JSON \n${res.body}');
 
     // TODO: Debug mapping from MySQL JSON to Books
     List<Book> books = resJson.map((Map<String, dynamic> obj) {
-      print('!!!DEBUG: Book object $obj');
+      //print('!!!DEBUG: Book object $obj');
       return new Book(title: obj['title'], authors: obj['authors'], isbn: obj['isbn'], image: obj['image']);
     });
     return books[0];

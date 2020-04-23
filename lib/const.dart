@@ -10,7 +10,6 @@ import 'package:geoflutterfire/geoflutterfire.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:googleapis/books/v1.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:xml/xml.dart' as xml;
 
 class B {
   static final B _singleton = B._internal();
@@ -30,7 +29,6 @@ class B {
   static set user (User user) {
     _currentUser = user;
   }
-
 
   static Position get position => _position;
   static set position(Position pos) => _position = pos;
@@ -444,8 +442,6 @@ class Bookrecord {
   String holderId;
   String holderName;
   String holderImage;
-  String rewardId;
-  String leasingId;
   // Both users owner and holder to use array-contains instead of OR
   Set<String> users;
   // Status of the book copy
@@ -475,13 +471,10 @@ class Bookrecord {
       this.holderId,
       this.holderName,
       this.holderImage,
-      this.rewardId,
-      this.leasingId,
       this.matched = false,
       this.matchedId,
       this.wish = false,
       this.lent = false,
-      this.confirmed = false,
       this.chatId,
       this.distance}) {
     fromDb = false;
@@ -517,8 +510,6 @@ class Bookrecord {
         //users = (json['users']?.map((dynamic s) => s.toString()))?.toSet(),
         users = (json['users'] as List).cast<String>().toSet(),
         isbn = json['isbn'],
-        rewardId = json['rewardId'],
-        leasingId = json['leasingId'],
         location = json['location'] != null
             ? Geoflutterfire().point(
                 latitude: json['location']['geopoint'].latitude,
@@ -554,8 +545,6 @@ class Bookrecord {
       'holderId': holderId,
       'holderName': holderName,
       'holderImage': holderImage,
-      'rewardId': rewardId,
-      'leasingId': leasingId,
       'users': <String>{ownerId, holderId}
           .where((s) => s != null)
           .toList(),
@@ -638,8 +627,6 @@ class Bookrecord {
     holderId = rec.holderId;
     holderName = rec.holderName;
     holderImage = rec.holderImage;
-    rewardId = rec.rewardId;
-    leasingId = rec.leasingId;
     users = rec.users;
     isbn = rec.isbn;
     location = rec.location;
@@ -668,8 +655,6 @@ class Bookrecord {
         holderId == rec.holderId &&
         holderName == rec.holderName &&
         holderImage == rec.holderImage &&
-        rewardId == rec.rewardId &&
-        leasingId == rec.leasingId &&
         users == rec.users &&
         isbn == rec.isbn &&
         location == rec.location &&
