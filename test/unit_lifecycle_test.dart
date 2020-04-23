@@ -101,28 +101,45 @@ main() {
     Bookrecord record = new Bookrecord(
       isbn: book.isbn,
       ownerId: userA.id,
-      holderId: userB.id,
+      holderId: userA.id,
       wish: false,
-      lent: true,
+      lent: false,
     );
     record.ref.setData(record.toJson());
 
-    // Run complete function
-    await handover(record, userA);
+    // Handover book
+    await handover(record, userB);
 
     Bookrecord resultRec = Bookrecord.fromJson((await record.ref.get()).data);
     User resultA = User.fromJson((await userA.ref.get()).data);
     User resultB = User.fromJson((await userB.ref.get()).data);
 
     expect(resultRec.transit, false);
-    expect(resultRec.lent, false);
+    expect(resultRec.lent, true);
     expect(resultA.id, userA.id);
     expect(resultB.id, userB.id);
-    expect(resultA.balance, 0);
-    expect(resultB.balance, 0);
+    expect(resultA.balance, 1);
+    expect(resultB.balance, -1);
     expect(resultRec.ownerId, userA.id);
-    expect(resultRec.holderId, userA.id);
-    expect(resultRec.users, {userA.id});
+    expect(resultRec.holderId, userB.id);
+    expect(resultRec.users, {userA.id, userB.id});
+
+    // Return book
+    await handover(resultRec, userA);
+
+    Bookrecord resultRec1 = Bookrecord.fromJson((await record.ref.get()).data);
+    User resultA1 = User.fromJson((await userA.ref.get()).data);
+    User resultB1 = User.fromJson((await userB.ref.get()).data);
+
+    expect(resultRec1.transit, false);
+    expect(resultRec1.lent, false);
+    expect(resultA1.id, userA.id);
+    expect(resultB1.id, userB.id);
+    expect(resultA1.balance, 0);
+    expect(resultB1.balance, 0);
+    expect(resultRec1.ownerId, userA.id);
+    expect(resultRec1.holderId, userA.id);
+    expect(resultRec1.users, {userA.id});
   });
 
   test("Handover function: pass book A to B, then to C", () async {
@@ -170,7 +187,7 @@ main() {
     );
     record.ref.setData(record.toJson());
 
-    // Run complete function
+    // Handover book
     await handover(record, userB);
 
     Bookrecord resultRec = Bookrecord.fromJson((await record.ref.get()).data);
@@ -197,7 +214,7 @@ main() {
     B.position = Position(latitude: 41.7510, longitude: 43.5292);
 
     // Run complete function
-    await handover(record, userC);
+    await handover(resultRec, userC);
 
     Bookrecord resultRec1 = Bookrecord.fromJson((await record.ref.get()).data);
     User resultA1 = User.fromJson((await userA.ref.get()).data);

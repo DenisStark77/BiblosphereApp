@@ -30,7 +30,7 @@ void main() {
 
     // Verify that SKIP is there and we are on the first intro page
     expect(find.text('SKIP'), findsOneWidget);
-    expect(find.text('Shoot'), findsWidgets);
+    expect(find.text('Add books'), findsWidgets);
     expect(find.text('Surf'), findsNothing);
     expect(find.text('Meet'), findsNothing);
     expect(find.text('DONE'), findsNothing);
@@ -42,7 +42,7 @@ void main() {
 
     // Verify that SKIP is there and we are on the second intro page
     expect(find.text('SKIP'), findsOneWidget);
-    expect(find.text('Shoot'), findsNothing);
+    expect(find.text('Add books'), findsNothing);
     expect(find.text('Surf'), findsWidgets);
     expect(find.text('Meet'), findsNothing);
     expect(find.text('DONE'), findsNothing);
@@ -54,7 +54,7 @@ void main() {
 
     // Verify that SKIP is there and we are on the second intro page
     expect(find.text('SKIP'), findsNothing);
-    expect(find.text('Shoot'), findsNothing);
+    expect(find.text('Add books'), findsNothing);
     expect(find.text('Surf'), findsNothing);
     expect(find.text('Meet'), findsWidgets);
     expect(find.text('DONE'), findsOneWidget);

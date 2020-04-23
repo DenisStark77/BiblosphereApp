@@ -106,7 +106,7 @@ main() {
     expect(result.matchedId, 'matchedId');
     expect(result.location,
         (GeoFirePoint point) => point.latitude == 30 && point.longitude == 20);
-    expect(result.users, {'transitId', 'ownerId', 'holderId'});
+    expect(result.users, {'ownerId', 'holderId'});
     expect(result.title, 'Title');
     expect(result.authors, ['Author1 Author2', 'Author3 Author4']);
     expect(result.image, 'http:\\image.com\1.jpg');
@@ -138,7 +138,7 @@ main() {
     expect(result.matched, false);
     expect(result.matchedId, 'matchedId');
     expect(result.location, null);
-    expect(result.users, {'transitId', 'ownerId', 'holderId'});
+    expect(result.users, {'ownerId', 'holderId'});
   });
 
   test("Bookrecord class: wish", () async {
@@ -215,19 +215,12 @@ main() {
     // Test for current User B
     B.user = User(id: 'User B', name: 'User B', photo: 'PhotoB');
     expect(record.isWish, false);
-    expect(record.isBorrowed, false);
+    expect(record.isBorrowed, true);
     expect(record.isLent, false);
-    expect(record.type, BookrecordType.transit);
+    expect(record.type, BookrecordType.borrowed);
 
     // Test for current User C
     B.user = User(id: 'User C', name: 'User C', photo: 'PhotoC');
-    expect(record.isWish, false);
-    expect(record.isBorrowed, false);
-    expect(record.isLent, false);
-    expect(record.type, BookrecordType.transit);
-
-    // Test for current User D
-    B.user = User(id: 'User D', name: 'User D', photo: 'PhotoD');
     expect(record.isWish, false);
     expect(record.isBorrowed, false);
     expect(record.isLent, false);

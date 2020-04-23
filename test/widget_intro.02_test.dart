@@ -29,7 +29,7 @@ void main() {
 
     // Verify that SKIP is there and we are on the first intro page
     expect(find.text('SKIP'), findsOneWidget);
-    expect(find.text('Shoot'), findsWidgets);
+    expect(find.text('Add books'), findsWidgets);
     expect(find.text('Surf'), findsNothing);
     expect(find.text('Meet'), findsNothing);
     expect(find.text('DONE'), findsNothing);

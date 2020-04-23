@@ -72,6 +72,8 @@ Future<void> handover(Bookrecord rec, User to) async {
       'holderId': to.id,
       'holderName': to.name,
       'holderImage': to.photo,
+      'users': [to.id, rec.ownerId],
+      'lent': rec.ownerId != to.id
     });
 
     // Hold an allowance of the receiver of the book
@@ -81,7 +83,7 @@ Future<void> handover(Bookrecord rec, User to) async {
 
     // Increase an allowance of the giver of the book
     tx.update(User.Ref(rec.holderId), {
-      'balance': FieldValue.increment(-1)
+      'balance': FieldValue.increment(1)
     });
   });
 

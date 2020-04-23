@@ -17,25 +17,12 @@
   <component name="ChangeListManager">
     <list default="true" id="7a1cd496-664c-40e6-9b7d-52c49a6c15c5" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/books.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/books.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/chat.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/chat.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/const.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/const.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/helpers.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/helpers.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/home.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/home.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/l10n.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/l10n.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/l10n/intl_en.arb" beforeDir="false" afterPath="$PROJECT_DIR$/lib/l10n/intl_en.arb" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/l10n/intl_messages.arb" beforeDir="false" afterPath="$PROJECT_DIR$/lib/l10n/intl_messages.arb" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/l10n/intl_ru.arb" beforeDir="false" afterPath="$PROJECT_DIR$/lib/l10n/intl_ru.arb" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/l10n/messages_all.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/l10n/messages_all.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/l10n/messages_en.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/l10n/messages_en.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/l10n/messages_it.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/l10n/messages_it.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/l10n/messages_messages.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/l10n/messages_messages.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/l10n/messages_ru.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/l10n/messages_ru.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/lifecycle.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/lifecycle.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/main.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/main.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/search.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/search.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/test/unit_const_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/test/unit_const_test.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/test/unit_lifecycle_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/test/unit_lifecycle_test.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/test/widget_intro.01_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/test/widget_intro.01_test.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/test/widget_intro.02_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/test/widget_intro.02_test.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/test/widget_intro.03_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/test/widget_intro.03_test.dart" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -43,6 +30,7 @@
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
+  <component name="ExecutionTargetManager" SELECTED_TARGET="Pixel_2_API_R" />
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
       <list>
@@ -147,13 +135,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1534746472527</updated>
-    </task>
-    <task id="LOCAL-00042" summary="Add Goodreads integration&#10;Change design&#10;Add isbn bar code scanner&#10;Add wishlist and books&#10;Add triggers in node.js&#10;Add integration with Google Book API">
-      <created>1551501537341</created>
-      <option name="number" value="00042" />
-      <option name="presentableId" value="LOCAL-00042" />
-      <option name="project" value="LOCAL" />
-      <updated>1551501537342</updated>
     </task>
     <task id="LOCAL-00043" summary="Add Goodreads integration&#10;Change design&#10;Add isbn bar code scanner&#10;Add wishlist and books&#10;Add triggers in node.js&#10;Add integration with Google Book API">
       <created>1551501581988</created>
@@ -491,7 +472,14 @@
       <option name="project" value="LOCAL" />
       <updated>1587604979523</updated>
     </task>
-    <option name="localTasksCounter" value="91" />
+    <task id="LOCAL-00091" summary="- Tests corrected&#10;- Crashalytic added&#10;- Translations updated">
+      <created>1587612196808</created>
+      <option name="number" value="00091" />
+      <option name="presentableId" value="LOCAL-00091" />
+      <option name="project" value="LOCAL" />
+      <updated>1587612196808</updated>
+    </task>
+    <option name="localTasksCounter" value="92" />
     <servers />
   </component>
   <component name="UnknownFeatures">
@@ -514,7 +502,6 @@
     <ignored-roots>
       <path value="$PROJECT_DIR$/python/opencv_extra" />
     </ignored-roots>
-    <MESSAGE value="Add shelf from gallery" />
     <MESSAGE value="Workaround to fix defect on iOS paste to TextField" />
     <MESSAGE value="Change versionCode for auto-build" />
     <MESSAGE value="Python code to segment books" />
@@ -539,7 +526,8 @@
     <MESSAGE value="Autogenerated file" />
     <MESSAGE value="- Add subscription screen&#10;- Add book recognition&#10;- Remove odd functionality" />
     <MESSAGE value="- Add FCM notifications&#10;- Add control counters for wishlist and taken books" />
-    <option name="LAST_COMMIT_MESSAGE" value="- Add FCM notifications&#10;- Add control counters for wishlist and taken books" />
+    <MESSAGE value="- Tests corrected&#10;- Crashalytic added&#10;- Translations updated" />
+    <option name="LAST_COMMIT_MESSAGE" value="- Tests corrected&#10;- Crashalytic added&#10;- Translations updated" />
   </component>
   <component name="masterDetails">
     <states>
