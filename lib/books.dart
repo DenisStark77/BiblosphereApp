@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:async';
 import 'dart:io';
-import 'dart:collection';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:barcode_scan/barcode_scan.dart';
 import 'package:geoflutterfire/geoflutterfire.dart';
+import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:flutter_crashlytics/flutter_crashlytics.dart';
@@ -13,14 +13,12 @@ import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:http/http.dart';
 import 'dart:convert';
-//import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 import 'package:biblosphere/const.dart';
 import 'package:biblosphere/helpers.dart';
 import 'package:biblosphere/search.dart';
 import 'package:biblosphere/lifecycle.dart';
-import 'package:biblosphere/payments.dart';
 import 'package:biblosphere/chat.dart';
 import 'package:biblosphere/home.dart';
 import 'package:biblosphere/l10n.dart';
@@ -290,10 +288,11 @@ class _AddBookWidgetState extends State<AddBookWidget> {
 
       String name = getTimestamp() + ".jpg";
 
-      // TODO: Show snackbar with information
+      showSnackBar(context, S.of(context).snackRecgnitionStarted, duration: 6);
 
-      final String storagePath = await uploadPicture(image, B.user.id, name);
-      //String storagePath = 'images/oyYUDByQGVdgP13T1nyArhyFkct1/1586749554453.jpg';
+      // !!!DEBUG
+      //final String storagePath = await uploadPicture(image, B.user.id, name);
+      String storagePath = 'images/oyYUDByQGVdgP13T1nyArhyFkct1/1586749554453.jpg';
 
       print('!!!DEBUG: Image cloud path: ${storagePath}');
 
@@ -355,10 +354,10 @@ class BookSearchData {
   List<Bookrecord> bookrecords;
 
   // If data has records in Biblosphere
-  get hasRecords => bookrecords != null && bookrecords.length > 0;
+  bool get hasRecords => bookrecords != null && bookrecords.length > 0;
 
   // Get the closest record
-  get first => hasRecords ? bookrecords[0] : null;
+  Bookrecord get first => hasRecords ? bookrecords[0] : null;
 
   BookSearchData({this.book, this.bookrecordId});
 
@@ -644,55 +643,70 @@ class _FindBookWidgetState extends State<FindBookWidget> {
                 if (!data.hasRecords) {
                   // Book not found in Biblosphere (=> screen to Stores/Libs)
                   buttons = Row(children: <Widget>[
-                  Tooltip(
-                      // TODO: Correct text search in stores/libraries
-                      message: S.of(context).findBook,
-                      child: RaisedButton(
-                        textColor: C.buttonText,
-                        color: C.cardBackground,
-                        child: Text(S.of(context).buttonSearchThirdParty,
+                    Tooltip(
+                        // TODO: Correct text search in stores/libraries
+                        message: S.of(context).findBook,
+                        child: RaisedButton(
+                          textColor: C.buttonText,
+                          color: C.cardBackground,
+                          child: Text(S.of(context).buttonSearchThirdParty,
                               style: Theme.of(context)
                                   .textTheme
                                   .body2
-                                  .apply(color: C.titleText)
-                        ),
-                        onPressed: () async {
-                          Navigator.push(
-                              context,
-                              new MaterialPageRoute(
-                                  builder: (context) => buildScaffold(context,
-                                      null, new GetBookWidget(book: book.book),
-                                      appbar: false)));
-
-                          logAnalyticsEvent(
-                              name: 'search_elsewhere',
-                              parameters: <String, dynamic>{
-                                'user': B.user.id,
-                                'isbn': book.book.isbn,
-                              });
-                        },
-                        shape: new RoundedRectangleBorder(
-                            borderRadius: new BorderRadius.circular(15.0),
-                            side: BorderSide(color: C.cardBackground)),
-                      )),
-                    Tooltip(
-                        message: S.of(context).hintAddToWishlist,
-                        child: IconButton(
-                          color: C.cardBackground,
-                          icon: assetIcon(heart_100, size: 30, padding: 0.0),
+                                  .apply(color: C.titleText)),
                           onPressed: () async {
-                            // Add book into user's wishlist
-                            await addBookrecord(
-                                context, book.book, B.user, true, await currentLocation(),
-                                snackbar: true);
+                            Navigator.push(
+                                context,
+                                new MaterialPageRoute(
+                                    builder: (context) => buildScaffold(
+                                        context,
+                                        null,
+                                        new GetBookWidget(book: book.book),
+                                        appbar: false)));
 
                             logAnalyticsEvent(
-                                name: 'book_received',
+                                name: 'search_elsewhere',
                                 parameters: <String, dynamic>{
                                   'user': B.user.id,
                                   'isbn': book.book.isbn,
                                 });
+                          },
+                          shape: new RoundedRectangleBorder(
+                              borderRadius: new BorderRadius.circular(15.0),
+                              side: BorderSide(color: C.cardBackground)),
+                        )),
+                    Tooltip(
+                        message: S.of(context).hintAddToWishlist,
+                        child: IconButton(
+                          color: C.cardBackground,
+                          // TODO: Makes icon filled if book already in wishlist
+                          icon: assetIcon(heart_100, size: 30, padding: 0.0),
+                          onPressed: () async {
+                            if (B.user.wishCount >= await wishlistAllowance()) {
+                              // TODO: Add translation & get a price for monthly plan
+                              showUpgradeDialog(context,
+                                  'Trial plan only allows 10 books in the wish list. Upgrade for ${await upgradePrice()} per month to have more.');
 
+                              logAnalyticsEvent(
+                                  name: 'limit_reached',
+                                  parameters: <String, dynamic>{
+                                    'limit': 'wishlist',
+                                    'user': B.user.id,
+                                    'isbn': book.book.isbn,
+                                  });
+                            } else {
+                              // Add book into user's wishlist
+                              await addBookrecord(context, book.book, B.user,
+                                  true, await currentLocation(),
+                                  snackbar: true);
+
+                              logAnalyticsEvent(
+                                  name: 'book_received',
+                                  parameters: <String, dynamic>{
+                                    'user': B.user.id,
+                                    'isbn': book.book.isbn,
+                                  });
+                            }
                           },
                         ))
                   ]);
@@ -735,49 +749,82 @@ class _FindBookWidgetState extends State<FindBookWidget> {
                 } else {
                   // Book found in Biblosphere (=> Get book and Chat)
                   buttons = Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: <Widget>[
-                    Tooltip(
-                      message: S.of(context).hintConfirmHandover,
-                      child: RaisedButton(
-                        textColor: C.buttonText,
-                        color: C.cardBackground,
-                        child: Text(S.of(context).buttonConfirmBooks,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .body2
-                                  .apply(color: C.titleText)),
-                        onPressed: () async {
-                          // TODO: Change book holder to current user
-                          // Do we need a confirmation dialog?
+                        Tooltip(
+                            message: S.of(context).hintConfirmHandover,
+                            child: RaisedButton(
+                              textColor: C.buttonText,
+                              color: C.cardBackground,
+                              child: Text(S.of(context).buttonConfirmBooks,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .body2
+                                      .apply(color: C.titleText)),
+                              onPressed: () async {
+                                if (B.user.balance <= -await booksAllowance()) {
+                                  // TODO: Add translation & get a price for monthly plan
+                                  showUpgradeDialog(context,
+                                      'Trial plan allows to keep only up to 2 books at a time. Upgrade for ${await upgradePrice()} per month to have more.');
 
-                          logAnalyticsEvent(
-                              name: 'book_received',
-                              parameters: <String, dynamic>{
-                                'user': B.user.id,
-                                'isbn': book.book.isbn,
-                              });
-                        },
-                        shape: new RoundedRectangleBorder(
-                            borderRadius: new BorderRadius.circular(15.0),
-                            side: BorderSide(color: C.cardBackground)),
-                      )),
-                    Tooltip(
-                        message: S.of(context).hintHolderChatOpen,
-                        child: IconButton(
-                          color: C.cardBackground,
-                          icon: assetIcon(communication_100, size: 30, padding: 0.0),
-                          onPressed: () async {
-                            Chat.runChatWithBookRequest(context, data.first);
+                                  logAnalyticsEvent(
+                                      name: 'limit_reached',
+                                      parameters: <String, dynamic>{
+                                        'limit': 'books',
+                                        'user': B.user.id,
+                                        'isbn': book.book.isbn,
+                                      });
+                                } else {
+                                  // Update holder of the book
+                                  db.runTransaction((tx) async {
+                                    tx.update(data.first.ref, {
+                                      'holderId': B.user.id,
+                                      'holderName': B.user.name,
+                                      'holderImage': B.user.photo,
+                                    });
 
-                            logAnalyticsEvent(
-                                name: 'book_received',
-                                parameters: <String, dynamic>{
-                                  'user': B.user.id,
-                                  'isbn': book.book.isbn,
-                                });
-                          },
-                        ))]);
+                                    // Hold an allowance of the receiver of the book
+                                    tx.update(B.user.ref, {
+                                      'allowance': FieldValue.increment(-1)
+                                    });
+
+                                    // Increase an allowance of the giver of the book
+                                    tx.update(User.Ref(data.first.holderId), {
+                                      'allowance': FieldValue.increment(-1)
+                                    });
+                                  });
+
+                                  logAnalyticsEvent(
+                                      name: 'book_received',
+                                      parameters: <String, dynamic>{
+                                        'user': B.user.id,
+                                        'isbn': book.book.isbn,
+                                      });
+                                }
+                              },
+                              shape: new RoundedRectangleBorder(
+                                  borderRadius: new BorderRadius.circular(15.0),
+                                  side: BorderSide(color: C.cardBackground)),
+                            )),
+                        Tooltip(
+                            message: S.of(context).hintHolderChatOpen,
+                            child: IconButton(
+                              color: C.cardBackground,
+                              icon: assetIcon(communication_100,
+                                  size: 30, padding: 0.0),
+                              onPressed: () async {
+                                Chat.runChatWithBookRequest(
+                                    context, data.first);
+
+                                logAnalyticsEvent(
+                                    name: 'book_received',
+                                    parameters: <String, dynamic>{
+                                      'user': B.user.id,
+                                      'isbn': book.book.isbn,
+                                    });
+                              },
+                            ))
+                      ]);
                 }
 
                 return GestureDetector(

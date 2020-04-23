@@ -9,6 +9,7 @@ import 'package:firebase_dynamic_links/firebase_dynamic_links.dart';
 import 'package:flushbar/flushbar.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:app_settings/app_settings.dart';
+import 'package:purchases_flutter/purchases_flutter.dart';
 
 import 'package:biblosphere/l10n.dart';
 import 'package:biblosphere/const.dart';
@@ -64,6 +65,7 @@ void showBbsDialog(BuildContext context, String text) {
     },
   );
 }
+
 
 String chatId(String user1, String user2) {
   if (user1.hashCode <= user2.hashCode) {
@@ -170,12 +172,12 @@ MaterialPageRoute cardListPage(
               })));
 }
 
-showSnackBar(BuildContext context, String text, {FlatButton button}) {
+showSnackBar(BuildContext context, String text, {FlatButton button, int duration=3}) {
   if (button != null)
     Flushbar(
       message: text,
       mainButton: button,
-      duration: Duration(seconds: 3),
+      duration: Duration(seconds: duration),
     )..show(context);
   else
     Flushbar(
@@ -643,3 +645,34 @@ int rentDuration() {
 double payout(amount) => amount * 0.8;
 
 double payoutFee(amount) => amount * 0.2;
+
+Future<int> wishlistAllowance() async {
+  try {
+    PurchaserInfo info = await Purchases.getPurchaserInfo();
+    return info.activeSubscriptions.contains('basic') ? 100 : 10;
+  } catch(e) {
+    // TODO: Add crashalytic
+    return 10;
+  }
+}
+
+Future<int> booksAllowance() async {
+  try {
+    PurchaserInfo info = await Purchases.getPurchaserInfo();
+    return info.activeSubscriptions.contains('basic') ? 5 : 2;
+  } catch(e) {
+    // TODO: Add crashalytic
+    return 2;
+  }
+}
+
+Future<String> upgradePrice() async {
+  try {
+
+    Offerings offerings = await Purchases.getOfferings();
+    return offerings.current.monthly.product.priceString;
+  } catch(e) {
+    // TODO: Add crashalytic
+    return 'USD 2.99';
+  }
+}

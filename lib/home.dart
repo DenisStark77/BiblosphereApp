@@ -1,11 +1,8 @@
 import 'package:biblosphere/search.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
-//import 'package:firebase_ui/flutter_firebase_ui.dart';
-//import 'package:firebase_ui/utils.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
-import 'package:intl/intl.dart';
 import 'package:firebase_dynamic_links/firebase_dynamic_links.dart';
 import 'package:flutter/rendering.dart';
 import 'dart:async';
@@ -14,11 +11,11 @@ import 'package:flutter_crashlytics/flutter_crashlytics.dart';
 import 'package:flutter/gestures.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 
 import 'package:biblosphere/const.dart';
 import 'package:biblosphere/helpers.dart';
 import 'package:biblosphere/lifecycle.dart';
-import 'package:biblosphere/payments.dart';
 import 'package:biblosphere/books.dart';
 import 'package:biblosphere/chat.dart';
 import 'package:biblosphere/l10n.dart';
@@ -33,6 +30,8 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
+  bool unreadMessage = false;
+
   _MyHomePageState({
     Key key,
   });
@@ -43,6 +42,36 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
 
     assert(B.user != null);
     initDynamicLinks();
+
+    FirebaseMessaging().configure(
+      onMessage: (Map<String, dynamic> message) {
+        print('!!!DEBUG: Message received ${message['data']}');
+        print('!!!DEBUG: Message event ${message['data']['count']} $context');
+        if (message['data']['event'] == 'books_recognized')
+          print('!!!DEBUG: Snacbar to show ${message['data']['count']} $context');
+        showSnackBar(context, S.of(context).snackRecognitionDone(message['data']['count']));
+        setState(() {
+          unreadMessage = true;
+        });
+        return;
+      },
+      onResume: (Map<String, dynamic> message) {
+        return new Future.delayed(Duration.zero, () {
+          // TODO: Change sender to chat id
+          Chat.runChatById(context, null, chatId: message['chat']);
+        });
+      },
+      onLaunch: (Map<String, dynamic> message) {
+        return new Future.delayed(Duration.zero, () {
+          // TODO: Change sender to chat id
+          Chat.runChatById(context, null, chatId: message['chat']);
+        });
+      },
+    );
+
+    FirebaseMessaging().requestNotificationPermissions(
+        const IosNotificationSettings(sound: true, badge: true, alert: true));
+
   }
 
   @override
@@ -112,7 +141,6 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
           // If no beneficiary for the current user add one from reference
           if (B.user.beneficiary1 == null) {
             B.user.beneficiary1 = ref.id;
-            B.user.feeShared = 0;
             B.user.beneficiary2 = ref.beneficiary1;
 
             // Update  beneficiary1, beneficiary2, feeShared
@@ -228,426 +256,6 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
               tooltip: S.of(context).hintChatOpen,
               icon: assetIcon(communication_100, size: 30),
             ),
-/*
-          Container(
-              margin: EdgeInsets.only(right: 10.0, left: 10.0),
-              child: FlatButton(
-                child: Row(children: <Widget>[
-                  new Container(
-                      margin: EdgeInsets.only(right: 5.0),
-                      child: assetIcon(coins_100, size: 25)),
-                  new Text(money(B.wallet.getAvailable()),
-                      style: Theme.of(context)
-                          .textTheme
-                          .body1
-                          .apply(color: C.titleText))
-                ]),
-                onPressed: () {
-                  Navigator.push(
-                      context,
-                      new MaterialPageRoute(
-                          builder: (context) => buildScaffold(
-                              context,
-                              S.of(context).financeTitle(
-                                  money(B.wallet.getAvailable())),
-                              new FinancialWidget(),
-                              appbar: false)));
-                },
-                padding: EdgeInsets.all(0.0),
-              )),
-*/
-/*
-            new IconButton(
-              onPressed: () async {
-              // Convert CHAT ids
-              QuerySnapshot snap = await Firestore.instance.collection('messages')
-                  //.where('toName', isEqualTo: 'Женя Старк')
-                  .getDocuments();
-              await Future.forEach(snap.documents, (DocumentSnapshot doc) async {
-                Messages chat = Messages.fromJson(doc.data, doc);
-
-                if( chat.fromId != null && chat.toId != null || chat.system && chat.fromId != null )
-                  return;
-
-                if( chat.ids == null || chat.ids[0] == null || chat.ids[1] == null)
-                  return;
-
-                chat.fromId = chat.ids[0];
-                chat.toId = chat.ids[1];
-
-                await doc.reference.updateData({'fromId': chat.fromId, 'toId': chat.toId,
-                'fromName': null, 'fromImage': null,
-                'toName': null, 'toImage': null
-                });
-              });
-                QuerySnapshot snap = await Firestore.instance
-                    .collection('noisbn')
-                    //.where('fromId', isEqualTo: 'oyYUDByQGVdgP13T1nyArhyFkct1')
-                    .getDocuments();
-                await Future.forEach(snap.documents,
-                    (DocumentSnapshot doc) async {
-                  String isbn = doc.data['isbn'];
-
-                  await Firestore.instance
-                      .collection('noisbn')
-                      .document(isbn)
-                      .setData({'isbn': isbn});
-
-                  await Firestore.instance
-                      .collection('noisbn')
-                      .document(doc.documentID)
-                      .delete();
-                });
-
-              QuerySnapshot snap = await Firestore.instance
-                  .collection('messages')
-                  //.where('fromId', isEqualTo: 'oyYUDByQGVdgP13T1nyArhyFkct1')
-                  .getDocuments();
-              await Future.forEach(snap.documents,
-                  (DocumentSnapshot doc) async {
-                Messages chat = Messages.fromJson(doc.data, doc);
-
-                // Skip already
-                if (chat.fromName != null) return;
-
-                String from, to;
-                if (chat.fromId != null)
-                  from = chat.fromId;
-                else
-                  from = chat.ids[0];
-
-                if (!chat.system) {
-                  if (chat.toId != null)
-                    to = chat.toId;
-                  else
-                    to = chat.ids[1];
-                }
-
-                Map<String, String> data = {};
-
-                if (from != null) {
-                  DocumentSnapshot snap = await User.Ref(from).get();
-                  if (snap.exists) {
-                    User user = new User.fromJson(snap.data);
-                    data.addAll(
-                        {'fromName': user.name, 'fromImage': user.photo});
-                  } else {
-                    print('!!!DEBUG: from user does not exist: ${from}');
-                  }
-                }
-
-                if (to != null) {
-                  DocumentSnapshot snap = await User.Ref(to).get();
-                  if (snap.exists) {
-                    User user = new User.fromJson(snap.data);
-                    data.addAll({'toName': user.name, 'toImage': user.photo});
-                  } else {
-                    print('!!!DEBUG: to user does not exist: ${to}');
-                  }
-                }
-
-                if (data.length > 0) await doc.reference.updateData(data);
-              });
-
-              // Convert CHAT ids
-              QuerySnapshot snap = await Firestore.instance.collection('messages')
-                  //.where('fromId', isEqualTo: 'oyYUDByQGVdgP13T1nyArhyFkct1')
-                  .getDocuments();
-              await Future.forEach(snap.documents, (DocumentSnapshot doc) async {
-                Messages chat = Messages.fromJson(doc.data);
-
-                // Skip old chats
-                if( ! (chat.system != null && chat.system && chat.fromId != null
-                    || (chat.system == null || !chat.system) && chat.fromId != null && chat.toId != null))
-                  return;
-
-                // Skip if already converted
-                if (doc.documentID == chat.ref.documentID)
-                  return;
-
-                await chat.ref.setData(chat.toJson());
-
-                await Firestore.instance.collection('messages').document(doc.documentID)
-                    .delete();
-
-                print('!!!DEBUG: chat converted ${doc.documentID} -> ${chat.ref.documentID}');
-              });
-              QuerySnapshot snap = await Firestore.instance.collection('bookrecords')
-              //.where('id', isEqualTo: 'b:0lCFhlFm4pUhMnaUfbB3bDjw1pW2:9785080057250')
-                  .getDocuments();
-              await Future.forEach(snap.documents, (DocumentSnapshot doc) async {
-                Bookrecord rec = Bookrecord.fromJson(doc.data);
-
-                String ownerId = rec.ownerId;
-                String holderId = rec.holderId;
-                String ownerName;
-                String holderName;
-
-                if (rec.ownerName != null && rec.holderName != null)
-                  return;
-
-                if (ownerId == null) {
-                  print('!!!DEBUG: Owner id is NULL: ${doc.documentID}');
-                  return;
-                }
-
-                if (holderId == null)
-                  holderId = ownerId;
-
-                if (ownerId != null) {
-                  DocumentSnapshot doc = await User.Ref(ownerId).get();
-                  if (doc.exists) {
-                    ownerName = doc.data['name'];
-                  } else {
-                    print('!!!DEBUG: Owner user record missing: ${ownerId}');
-                    return;
-                  }
-                }
-
-                if (holderId == ownerId) {
-                  holderName = ownerName;
-                } else {
-                  DocumentSnapshot doc = await User.Ref(holderId).get();
-                  if (doc.exists) {
-                    holderName = doc.data['name'];
-                  } else {
-                    print('!!!DEBUG: Holder user record missing: ${holderId}');
-                    return;
-                  }
-                }
-
-                rec.id = rec.ref.documentID;
-                await rec.ref.updateData({'ownerName': ownerName, 'holderName': holderName});
-              });
-      // Update ids to isbn for books
-      QuerySnapshot snap = await Firestore.instance.collection('bookrecords')
-          //.where('id', isEqualTo: '09tVTryOarysiwG4OZdc')
-          .getDocuments();
-      await Future.forEach(snap.documents, (DocumentSnapshot doc) async {
-        Bookrecord rec = Bookrecord.fromJson(doc.data);
-
-        // Skip books without isbn , owner, wish
-        if( doc.documentID.startsWith(r'w:') || doc.documentID.startsWith(r'b:') || rec.isbn == null || rec.isbn.isEmpty || rec.isbn == 'NA' || rec.ownerId == null || rec.wish == null)
-          return;
-
-        rec.id = rec.ref.documentID;
-        await rec.ref.setData(rec.toJson());
-
-        await Firestore.instance.collection('bookrecords').document(doc.documentID)
-            .delete();
-      });
-
-              // Update ids to isbn for books
-              int count = 0;
-
-              QuerySnapshot snap = await Firestore.instance.collection('books')
-                  .where('isbn', isEqualTo: '9785366006125')
-                  .getDocuments();
-              await Future.forEach(snap.documents, (DocumentSnapshot doc) async {
-                Book book = Book.fromJson(doc.data);
-
-                // Skip books without isbn and with price
-                if( doc.documentID.startsWith('9') || book.isbn == null || book.isbn.isEmpty || book.isbn == 'NA')
-                  return;
-
-                await Firestore.instance.collection('books').document(book.isbn)
-                    .setData(book.toJson());
-
-                await Firestore.instance.collection('books').document(doc.documentID)
-                    .delete();
-              });
-
-              // Update bookId to ISBN
-              snap = await Firestore.instance
-                  .collection('bookrecords')
-                  //.where('isbn', isEqualTo: '9781609942960')
-                  .getDocuments();
-
-              await Future.forEach(snap.documents, (DocumentSnapshot doc) async {
-                String isbn = doc.data['isbn'];
-
-                if (isbn == null) {
-                  print('!!!DEBUG: missing isbn: ${doc.documentID}');
-                }
-
-                await Firestore.instance
-                      .collection('bookrecords')
-                      .document(doc.documentID)
-                      .updateData({'bookId': isbn});
-              });
-
-              // Enrich bookrecords
-              QuerySnapshot snap = await Firestore.instance
-                  .collection('bookrecords')
-                  //.where('bookId', isEqualTo: '-LbY_2ANWs4BoZhPpdHa')
-                  .getDocuments();
-
-              await Future.forEach(snap.documents, (doc) async {
-                String bookId = doc.data['bookId'];
-
-                if (bookId == null) {
-                  print('!!!DEBUG: book missing: ${bookId}');
-                }
-
-                DocumentSnapshot bookSnap = await Firestore.instance
-                    .collection('books')
-                    .document(bookId)
-                    .get();
-
-                if (bookSnap.exists) {
-                  Book book = new Book.fromJson(bookSnap.data);
-
-                  await Firestore.instance
-                      .collection('bookrecords')
-                      .document(doc.documentID)
-                      .updateData({
-                    'isbn': book.isbn,
-                    'image': book.image,
-                    'title': book.title,
-                    'authors': book.authors,
-                    'keys': book.keys.toList(),
-                    'price': book.price,
-                  });
-                }
-              });
-
-              // Update price for books
-              int count = 0;
-              QuerySnapshot snap = await Firestore.instance.collection('books')
-                  //.where('isbn', isEqualTo: '9781609942960')
-                  .getDocuments();
-              for(DocumentSnapshot doc in snap.documents) {
-                Book book = Book.fromJson(doc.data);
-
-                // Skip books without isbn and with price
-                if( book.isbn == null || book.isbn.startsWith('9785') || book.isbn.isEmpty || book.isbn == 'NA' || book.price != null && book.price > 0)
-                  continue;
-
-                double price = await getPriceFromWeb(book);
-
-                await Firestore.instance.collection('books').document(
-                    doc.documentID).updateData({'price': price});
-
-                if (price != 0.0) {
-                  print('!!!DEBUG: ${book.title}: ${money(price)} ');
-                } else {
-                  print('!!!DEBUG: isbn:${book.isbn} \"${book.title}\": NOT FOUND ');
-                  count++;
-                }
-
-                await Future.delayed(Duration(seconds: 3));
-              }
-              print('!!!DEBUG: NOT FOUND count: ${count}');
-              // Books statistics
-              QuerySnapshot snap = await Firestore.instance.collection('books').where('isbn', isEqualTo: '9785699761784').getDocuments();
-              int books = 0, rus = 0, withprice = 0, noisbn = 0;
-              await Future.forEach(snap.documents, (doc) async {
-                Book book = Book.fromJson(doc.data);
-
-                books++;
-
-                if( book.isbn == null || book.isbn == 'NA' || book.isbn == '' || !book.isbn.startsWith('9'))
-                  noisbn++;
-                else if(book.isbn.startsWith('9785'))
-                  rus++;
-
-                if(book.price != null && book.price > 0.0)
-                  withprice++;
-              });
-              print('!!!DEBUG: statistics: books: ${books}, with price: ${withprice}, no isbn: ${noisbn}, russian: ${rus}');
-
-              // Code to fill ids for BOOKS
-              QuerySnapshot snap = await Firestore.instance
-                  .collection('bookrecords')
-                  .getDocuments();
-              snap.documents.forEach((doc) async {
-                // Skip books with counters
-                if (doc.data['confirmed'] != null) return;
-
-                await Firestore.instance
-                    .collection('bookrecords')
-                    .document(doc.documentID)
-                    .updateData({'confirmed': false});
-                print('!!!DEBUG: bookrecord updated ${doc.documentID}');
-              });
-              // Code to fill ids for BOOKS
-              QuerySnapshot snap = await Firestore.instance.collection('books').getDocuments();
-              snap.documents.forEach((doc) async {
-                // Skip books with counters
-                if( doc.data['id'] != null)
-                  return;
-
-                await Firestore.instance.collection('books').document(doc.documentID).updateData({'id': doc.documentID});
-                print('!!!DEBUG: book updated ${doc.documentID}');
-              });
-              // Code to fill counters for BOOKS
-              QuerySnapshot snap = await Firestore.instance.collection('books').getDocuments();
-              snap.documents.forEach((doc) async {
-                // Skip books with counters
-                QuerySnapshot records = await Firestore.instance.collection('bookrecords')
-                    .where('bookId', isEqualTo: doc.documentID)
-                    .where('wish', isEqualTo: false)
-                    .getDocuments();
-
-                int copies = records?.documents?.length ?? 0;
-
-                records = await Firestore.instance.collection('bookrecords')
-                    .where('bookId', isEqualTo: doc.documentID)
-                    .where('wish', isEqualTo: true)
-                    .getDocuments();
-
-                int wishes = records?.documents?.length ?? 0;
-
-                await Firestore.instance.collection('books').document(doc.documentID).updateData({'copies': copies, 'wishes': wishes});
-                print('!!!DEBUG: book updated ${doc.documentID} copies/wishes ${copies}/${wishes}');
-              });
-              // Code to migrate BOOKS
-              QuerySnapshot snap = await Firestore.instance.collection('books').getDocuments();
-              snap.documents.forEach((doc) async {
-                if(doc.data["migrated"] != null && doc.data["migrated"])
-                  return;
-
-                Book book = new Book.fromJson(doc.data["book"]);
-
-                await Firestore.instance.collection('books').document(doc.documentID).updateData(book.toJson()..addAll({'migrated': true}));
-                print('!!!DEBUG: book updated ${doc.documentID}');
-              });
-              // Code to migrate WISHES
-                  QuerySnapshot snap = await Firestore.instance.collection('wishes').getDocuments();
-                  snap.documents.forEach((doc) {
-                    if(doc.data["migrated"] != null && doc.data["migrated"])
-                      return;
-
-                    GeoPoint pt = doc.data['wisher']['position'] as GeoPoint;
-                    Bookrecord rec = new Bookrecord(ownerId: doc.data["book"]["id"],
-                        bookId: doc.data["wisher"]["id"],
-                        location: pt != null ? Geoflutterfire()
-                            .point(latitude: pt.latitude, longitude: pt.longitude) : null);
-                    rec.wish = true;
-                    Firestore.instance.collection('bookrecords').document(rec.id).setData(rec.toJson());
-                    Firestore.instance.collection('wishes').document(doc.documentID).updateData({'migrated': true});
-                    print('!!!DEBUG: wish added ${rec.id}');
-                  });
-                  // Code to migrate BOOKCOPIES
-                  QuerySnapshot snap = await Firestore.instance.collection('bookcopies').getDocuments();
-                  snap.documents.forEach((doc) {
-                    //if(doc.data["migrated"] != null && doc.data["migrated"])
-                    //  return;
-
-                    GeoPoint pt = doc.data['position'] as GeoPoint;
-                    Bookrecord rec = new Bookrecord(ownerId: doc.data["book"]["id"],
-                              bookId: doc.data["owner"]["id"],
-                        location: pt != null ? Geoflutterfire()
-                        .point(latitude: pt.latitude, longitude: pt.longitude) : null);
-                    Firestore.instance.collection('bookrecords').document(rec.id).setData(rec.toJson());
-                    Firestore.instance.collection('bookcopies').document(doc.documentID).updateData({'migrated': true});
-                    print('!!!DEBUG: bookrecord added ${rec.id}');
-                  });
-              },
-              tooltip: S.of(context).settings,
-              icon: assetIcon(settings_100, size: 30),
-            ),
- */
           ],
           title: new Text(S.of(context).title,
               style:
@@ -848,14 +456,13 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                   // ...
                   // Then close the drawer
                   Navigator.pop(context);
-                  Navigator.push(
-                      context,
-                      new MaterialPageRoute(
-                          //TODO: translation
-                          builder: (context) => buildScaffold(
-                              context,
-                              S.of(context).titleSettings,
-                              new SettingsWidget())));
+                  Navigator.of(context).pop();
+                  pushSingle(context, new MaterialPageRoute(
+                    //TODO: translation
+                      builder: (context) => buildScaffold(
+                          context,
+                          S.of(context).titleSettings,
+                          new SettingsWidget())), 'settings');
                 },
               ),
               // TODO: Convert FinancialWidget into HistoryWidget
@@ -1209,7 +816,14 @@ class _MyBookWidgetState extends State<MyBook> {
     try {
       //Delete book record in Firestore database
       bookrecord.ref.delete();
-      showSnackBar(context, S.of(context).bookDeleted);
+      if (bookrecord.wish) {
+        showSnackBar(context, S.of(context).snackWishDeleted);
+        B.user.ref.updateData({'wishCount': FieldValue.increment(-1)});
+      } else {
+        showSnackBar(context, S
+            .of(context)
+            .bookDeleted);
+      }
     } catch (ex, stack) {
       print('Bookrecord delete failed for [${bookrecord.id}, ${B.user.id}]: ' +
           ex.toString());
@@ -1903,25 +1517,15 @@ class SettingsWidget extends StatefulWidget {
 }
 
 class _SettingsWidgetState extends State<SettingsWidget> {
-  TextEditingController amountTextCtr;
-  TextEditingController payoutTextCtr;
-  TextEditingController payoutMemoCtr;
-  String _accountErrorText;
-  String _amountErrorText;
   Offerings offerings;
   PurchaserInfo purchaserInfo;
   PackageType upgradeChoice = PackageType.annual;
   int booksAllowance = 2;
-  int wishesAllowance = 5;
+  int wishesAllowance = 10;
 
   @override
   void initState() {
     super.initState();
-
-    payoutTextCtr = new TextEditingController();
-    if (B.user.payoutId != null) payoutTextCtr.text = B.user.payoutId;
-    payoutMemoCtr = new TextEditingController();
-    amountTextCtr = new TextEditingController();
 
     try {
       Purchases.getOfferings().then((Offerings res) {
@@ -1955,10 +1559,6 @@ class _SettingsWidgetState extends State<SettingsWidget> {
 
   @override
   void dispose() {
-    payoutTextCtr.dispose();
-    payoutMemoCtr.dispose();
-    amountTextCtr.dispose();
-
     super.dispose();
   }
 
@@ -2027,10 +1627,10 @@ class _SettingsWidgetState extends State<SettingsWidget> {
   Widget planInfoWidget(BuildContext context) {
     if (isTrial()) {
       booksAllowance = 2;
-      wishesAllowance = 5;
+      wishesAllowance = 10;
     } else {
       booksAllowance = 5;
-      wishesAllowance = 50;
+      wishesAllowance = 100;
     }
 
     return Container(
@@ -2170,7 +1770,7 @@ class _SettingsWidgetState extends State<SettingsWidget> {
     else if (upgradeChoice == PackageType.annual)
       optionText = 'Enjoy book sharing with your friends and neighbours for a whole year';
     else if (upgradeChoice == PackageType.custom)
-      optionText = 'Your generous contribution supports book sharing and makes this app better';
+      optionText = 'Your generous contribution makes this app better and helps to promote book sharing';
 
     return Container(
         child: Column(
@@ -2277,4 +1877,59 @@ class SupportWidget extends StatelessWidget {
               style: Theme.of(context).textTheme.body1)),
     ]));
   }
+}
+
+void showUpgradeDialog(BuildContext context, String text) {
+  showDialog<Null>(
+    context: context,
+    barrierDismissible: true,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        content: Container(
+          child: Row(children: <Widget>[
+            Material(
+              child: Image.asset(online_support_100,
+                width: 50.0,
+              ),
+              borderRadius: BorderRadius.all(Radius.circular(5.0)),
+            ),
+            new Flexible(
+              child: Container(
+                child: new Container(
+                  child: Text(
+                    text,
+                    style: Theme.of(context).textTheme.body1,
+                  ),
+                  alignment: Alignment.centerLeft,
+                  margin: new EdgeInsets.only(top: 5.0),
+                ),
+                margin: EdgeInsets.only(left: 5.0),
+              ),
+            ),
+          ]),
+          constraints: BoxConstraints(maxHeight: 100.0),
+        ),
+        actions: <Widget>[
+          FlatButton(
+            child: Text(S.of(context).buttonUpgrade),
+            onPressed: () {
+              Navigator.of(context).pop();
+              pushSingle(context, new MaterialPageRoute(
+                //TODO: translation
+                  builder: (context) => buildScaffold(
+                      context,
+                      S.of(context).titleSettings,
+                      new SettingsWidget())), 'settings');
+            },
+          ),
+          FlatButton(
+            child: Text(S.of(context).buttonSkip),
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+          ),
+        ],
+      );
+    },
+  );
 }

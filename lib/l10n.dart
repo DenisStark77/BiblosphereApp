@@ -948,6 +948,27 @@ class S {
   String get planTrial {
     return Intl.message('Trial', name: 'planTrial');
   }
+
+  String get buttonUpgrade {
+    return Intl.message('UPGRADE', name: 'buttonUpgrade');
+  }
+
+  String get buttonSkip {
+    return Intl.message('SKIP', name: 'buttonSkip');
+  }
+
+  String get snackRecgnitionStarted {
+    return Intl.message('Image recognition take up to 2 min. Meanwhile take a next photo.', name: 'snackRecgnitionStarted');
+  }
+
+  String snackRecognitionDone(count) {
+    return Intl.message("$count books have been recognized and added to your catalog.",
+        name: 'snackRecognitionDone', args: [count]);
+  }
+
+  String get snackWishDeleted {
+    return Intl.message('Book deleted from your wishlist', name: 'snackWishDeleted');
+  }
 }
 
 

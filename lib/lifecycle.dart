@@ -49,6 +49,11 @@ Future addBookrecord(
       showSnackBar(
           context, wish ? S.of(context).wishAdded : S.of(context).bookAdded);
 
+    // If wish - increment user wish count
+    if (wish) {
+      u.ref.updateData({'wishCount': FieldValue.increment(1)});
+    }
+
     // TODO: Run background process in MySQL to enrich book records
     //  and populate it to Firestore bookrecords
 

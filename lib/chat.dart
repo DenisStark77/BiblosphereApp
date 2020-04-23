@@ -13,8 +13,6 @@ import 'package:biblosphere/l10n.dart';
 import 'package:biblosphere/const.dart';
 import 'package:biblosphere/helpers.dart';
 import 'package:biblosphere/books.dart';
-import 'package:biblosphere/payments.dart';
-import 'package:biblosphere/lifecycle.dart';
 
 // Class to show list of chats
 class ChatListWidget extends StatefulWidget {

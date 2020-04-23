@@ -28,7 +28,6 @@ import 'package:flutter/rendering.dart';
 
 import 'package:biblosphere/const.dart';
 import 'package:biblosphere/helpers.dart';
-import 'package:biblosphere/payments.dart';
 import 'package:biblosphere/home.dart';
 import 'package:biblosphere/chat.dart';
 import 'package:biblosphere/l10n.dart';
@@ -95,14 +94,13 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  final FirebaseMessaging _firebaseMessaging = FirebaseMessaging();
+  //final FirebaseMessaging _firebaseMessaging = FirebaseMessaging();
   // Subscription for in-app purchases
   StreamSubscription<FirebaseUser> _listener;
   //StreamSubscription<stellar.OperationResponse> _stellar;
   // Subscription to changes for user balance
-  StreamSubscription<DocumentSnapshot> _walletSubscription;
+  StreamSubscription<DocumentSnapshot> _userSubscription;
   FirebaseUser firebaseUser;
-  bool unreadMessage = false;
   bool firstRun = true;
   bool skipIntro = false;
 
@@ -134,44 +132,16 @@ class _MyAppState extends State<MyApp> {
       }
     });
 
-    _firebaseMessaging.configure(
-      onMessage: (Map<String, dynamic> message) {
-        print('!!!DEBUG: Message received ${message['data']}');
-        setState(() {
-          unreadMessage = true;
-        });
-        return;
-      },
-      onResume: (Map<String, dynamic> message) {
-        return new Future.delayed(Duration.zero, () {
-          // TODO: Change sender to chat id
-          Chat.runChatById(context, null, chatId: message['chat']);
-        });
-      },
-      onLaunch: (Map<String, dynamic> message) {
-        return new Future.delayed(Duration.zero, () {
-          // TODO: Change sender to chat id
-          Chat.runChatById(context, null, chatId: message['chat']);
-        });
-      },
-    );
-
-    // TODO: Didn't work on WEB
-    if (!kIsWeb) {
-      _firebaseMessaging.requestNotificationPermissions(
-          const IosNotificationSettings(sound: true, badge: true, alert: true));
-
       // TODO: build function executed 3 times: after initState, after setState in
       //       _initUserRecord and after setState in _initLocationState.
       //       Better to minimize rebuilding. For example by providing currentUser
       //       as parameter on widget push (is it possible?).
-    }
   }
 
   @override
   void dispose() {
     _listener.cancel();
-    _walletSubscription.cancel();
+    _userSubscription.cancel();
     //_stellar.cancel();
     super.dispose();
   }
@@ -198,8 +168,6 @@ class _MyAppState extends State<MyApp> {
       if (firebaseUser == null)
         throw "CurrentUserId is null, login failed or not completed";
 
-      getPaymentContext();
-
       User user = new User(
           id: firebaseUser.uid,
           name: firebaseUser.displayName,
@@ -217,15 +185,18 @@ class _MyAppState extends State<MyApp> {
         await user.ref.setData(user.toJson());
       } else {
         // Update user fields from Firestore
-        user = User.fromJson(userSnap.data);
+        B.user = User.fromJson(userSnap.data);
       }
 
-      _firebaseMessaging.getToken().then((token) {
-        // Update FCM token for notifications
-        Firestore.instance
-            .collection('users')
-            .document(firebaseUser.uid)
-            .updateData({
+      // Listen on changes to user record in Firestore and update to B.user
+      _userSubscription = user.ref.snapshots().listen((doc) {
+        B.user = User.fromJson(doc.data);
+      });
+
+      // TODO: Listen on tokenRefresh to update token in Firestore
+      // Update FCM token for notifications
+      FirebaseMessaging().getToken().then((token) {
+        user.ref.updateData({
           'token': token,
         });
       });
@@ -233,13 +204,11 @@ class _MyAppState extends State<MyApp> {
       // If refferal program link is empty generate one
       if (user.link == null) {
         // TODO: Make this call async to minimize waiting time for login
-        user.link = await buildLink('chat?user=${user.id}');
+        String link = await buildLink('chat?user=${user.id}');
+        user.ref.updateData({
+          'link': link,
+        });
       }
-      
-      // Set global value to user
-      B.user = user;
-
-      user.ref.updateData(user.toJson());
     } catch (ex, stack) {
       print(ex);
       FlutterCrashlytics().logException(ex, stack);

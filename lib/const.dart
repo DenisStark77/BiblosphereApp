@@ -361,14 +361,12 @@ class User {
   // Fields for referral program. Referral Link and two persons to split fee to
   String link;
   String beneficiary1;
-  double feeShared;
   String beneficiary2;
   GeoPoint position;
   int wishCount = 0;
   int bookCount = 0;
   int shelfCount = 0;
-  String payoutId;
-  String cursor;
+  int balance = 0;
   double d;
 
   User(
@@ -382,7 +380,7 @@ class User {
       this.link,
       this.beneficiary1,
       this.beneficiary2,
-      this.payoutId}) {
+      this.balance}) {
     if (id == null) id = Ref().documentID;
   }
 
@@ -393,15 +391,11 @@ class User {
         link = json['link'],
         beneficiary1 = json['beneficiary1'],
         beneficiary2 = json['beneficiary2'],
-        feeShared = json['feeShared'] != null
-            ? (json['feeShared'] as num).toDouble()
-            : 0,
         position = json['position'] as GeoPoint,
         wishCount = json['wishCount'] ?? 0,
         bookCount = json['bookCount'] ?? 0,
         shelfCount = json['shelfCount'] ?? 0,
-        cursor = json['cursor'],
-        payoutId = json['payoutId'];
+        balance = json['balance'] ?? 0;
 
   Map<String, dynamic> toJson() {
     return {
@@ -415,7 +409,7 @@ class User {
       'wishCount': wishCount,
       'bookCount': bookCount,
       'shelfCount': shelfCount,
-      'payoutId': payoutId,
+      'balance': balance,
       // Not include balance, blocked, cursor and feeShared here. ONLY direct updates for these fields!!!
     };
   }

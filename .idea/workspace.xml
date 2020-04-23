@@ -16,38 +16,19 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="7a1cd496-664c-40e6-9b7d-52c49a6c15c5" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/.gitignore" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/BiblosphereApp.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.flutter-plugins-dependencies" beforeDir="false" afterPath="$PROJECT_DIR$/.flutter-plugins-dependencies" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/biblosphere.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/biblosphere.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/codeStyles/Project.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/codeStyles/Project.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Dart_Packages.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Dart_Packages.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Dart_SDK.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Dart_SDK.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Flutter_Plugins.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Flutter_Plugins.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ios/Flutter/flutter_export_environment.sh" beforeDir="false" afterPath="$PROJECT_DIR$/ios/Flutter/flutter_export_environment.sh" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/books.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/books.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/chat.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/chat.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/const.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/const.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/helpers.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/helpers.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/home.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/home.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/l10n.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/l10n.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/l10n/intl_en.arb" beforeDir="false" afterPath="$PROJECT_DIR$/lib/l10n/intl_en.arb" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/l10n/intl_it.arb" beforeDir="false" afterPath="$PROJECT_DIR$/lib/l10n/intl_it.arb" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/l10n/intl_messages.arb" beforeDir="false" afterPath="$PROJECT_DIR$/lib/l10n/intl_messages.arb" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/l10n/intl_ru.arb" beforeDir="false" afterPath="$PROJECT_DIR$/lib/l10n/intl_ru.arb" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/l10n/messages_all.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/l10n/messages_all.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/l10n/messages_en.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/l10n/messages_en.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/l10n/messages_it.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/l10n/messages_it.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/l10n/messages_messages.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/l10n/messages_messages.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/l10n/messages_ru.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/l10n/messages_ru.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/lifecycle.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/lifecycle.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/main.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/main.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/mock_firestore.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/mock_firestore.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/oauth1.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/oauth1.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/payments.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/payments.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/search.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/search.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pubspec.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/pubspec.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/oauth1.dart" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/payments.dart" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/nodejs/functions/index.js" beforeDir="false" afterPath="$PROJECT_DIR$/nodejs/functions/index.js" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -86,7 +67,7 @@
     <property name="project.structure.last.edited" value="SDKs" />
     <property name="project.structure.proportion" value="0.15" />
     <property name="project.structure.side.proportion" value="0.2" />
-    <property name="settings.editor.selected.configurable" value="dart.settings" />
+    <property name="settings.editor.selected.configurable" value="project.propVCSSupport.Mappings" />
     <property name="show.migrate.to.gradle.popup" value="false" />
   </component>
   <component name="RecentsManager">
@@ -159,13 +140,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1534746472527</updated>
-    </task>
-    <task id="LOCAL-00040" summary="Latest version">
-      <created>1549996647856</created>
-      <option name="number" value="00040" />
-      <option name="presentableId" value="LOCAL-00040" />
-      <option name="project" value="LOCAL" />
-      <updated>1549996647856</updated>
     </task>
     <task id="LOCAL-00041" summary="Add Goodreads integration&#10;Change design&#10;Add isbn bar code scanner&#10;Add wishlist and books&#10;Add triggers in node.js&#10;Add integration with Google Book API">
       <created>1551375393093</created>
@@ -503,7 +477,14 @@
       <option name="project" value="LOCAL" />
       <updated>1583097976547</updated>
     </task>
-    <option name="localTasksCounter" value="89" />
+    <task id="LOCAL-00089" summary="- Add subscription screen&#10;- Add book recognition&#10;- Remove odd functionality">
+      <created>1587481228915</created>
+      <option name="number" value="00089" />
+      <option name="presentableId" value="LOCAL-00089" />
+      <option name="project" value="LOCAL" />
+      <updated>1587481228916</updated>
+    </task>
+    <option name="localTasksCounter" value="90" />
     <servers />
   </component>
   <component name="UnknownFeatures">
@@ -523,7 +504,9 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Some minor defects corrected&#10;Store not resolved isbn in 'noisbn' collection&#10;Search both Google and Goodreads for ISBNs" />
+    <ignored-roots>
+      <path value="$PROJECT_DIR$/python/opencv_extra" />
+    </ignored-roots>
     <MESSAGE value="Increase version" />
     <MESSAGE value="Add shelf from gallery" />
     <MESSAGE value="Workaround to fix defect on iOS paste to TextField" />
@@ -548,7 +531,8 @@
     <MESSAGE value="Add search by ISBN from RSL (Russian State Library) for books started from 9785&#10;Add transit process and control on taken/given books (Cart/Outbox/Lent/Borrowed)&#10;Add points (community currency)" />
     <MESSAGE value="Add shrinkResources to build" />
     <MESSAGE value="Autogenerated file" />
-    <option name="LAST_COMMIT_MESSAGE" value="Autogenerated file" />
+    <MESSAGE value="- Add subscription screen&#10;- Add book recognition&#10;- Remove odd functionality" />
+    <option name="LAST_COMMIT_MESSAGE" value="- Add subscription screen&#10;- Add book recognition&#10;- Remove odd functionality" />
   </component>
   <component name="masterDetails">
     <states>
