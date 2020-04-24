@@ -1712,7 +1712,7 @@ class _SettingsWidgetState extends State<SettingsWidget> {
                       package.packageType == PackageType.annual &&
                               upgradeChoice == PackageType.annual
                           ? Container(
-                              child: Text(S.of(context).perMonth,
+                              child: Text(S.of(context).perYear,
                                   style: Theme.of(context).textTheme.body2))
                           : Container(),
                     ])),
