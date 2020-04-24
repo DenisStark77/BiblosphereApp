@@ -1110,7 +1110,7 @@
        "type": "text",
        "placeholders": {}
      },
-     "settingsPlan": "Current plan: {name}",
+     "settingsPlan": "Plan: {name}",
      "@settingsPlan": {
        "type": "text",
        "placeholders": {

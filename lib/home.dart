@@ -456,7 +456,6 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                   // ...
                   // Then close the drawer
                   Navigator.pop(context);
-                  Navigator.of(context).pop();
                   pushSingle(context, new MaterialPageRoute(
                     //TODO: translation
                       builder: (context) => buildScaffold(
@@ -1511,7 +1510,8 @@ class _SettingsWidgetState extends State<SettingsWidget> {
 
     try {
       Purchases.getOfferings().then((Offerings res) {
-        if (res.current != null) {
+        print('!!!DEBUG get offerings: $res');
+        if (res != null && res.current != null) {
           //print('!!!DEBUG: ${res}');
           setState(() {
             offerings = res;
@@ -1533,6 +1533,16 @@ class _SettingsWidgetState extends State<SettingsWidget> {
 
     Purchases.addPurchaserInfoUpdateListener((info) {
       // handle any changes to purchaserInfo
+      print('!!!DEBUG NEW PURCHASESER $info');
+      print('!!!DEBUG OLD PURCHASESER $purchaserInfo');
+      if (! purchaserInfo
+          .entitlements.all["basic"].isActive
+      && info.entitlements.all["basic"].isActive) {
+        // Unlock that great "pro" content
+        //print('!!!DEBUG: Purchase completed');
+        showSnackBar(context, S.of(context).snackPaidPlanActivated);
+      }
+
       setState(() {
         purchaserInfo = info;
       });
@@ -1552,7 +1562,7 @@ class _SettingsWidgetState extends State<SettingsWidget> {
     // TODO: Translate TRIAL
     return isTrial()
         ? S.of(context).planTrial
-        : purchaserInfo.activeSubscriptions[0];
+        : S.of(context).planPaid;
   }
 
   bool isTrial() {
@@ -1597,7 +1607,7 @@ class _SettingsWidgetState extends State<SettingsWidget> {
                                       ]))),
                             ])),
                     planInfoWidget(context),
-                    isTrial() ? upgradeWidget() : Container()
+                    isTrial() && offerings != null ? upgradeWidget() : Container()
                   ]),
             ),
           ),
@@ -1621,19 +1631,18 @@ class _SettingsWidgetState extends State<SettingsWidget> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
           // Row with three plan options to choose
-          Text('Limit on wish list: $wishesAllowance (upgrate to 100)',
+          Text(isTrial() ? S.of(context).wishLimitTrial(wishesAllowance, 100) : S.of(context).wishLimitPaid(wishesAllowance),
               style: Theme.of(context).textTheme.subtitle),
           Container(
               padding: EdgeInsets.only(bottom: 10.0),
-              child: Text(
-                  'You can keep up to $wishesAllowance books in your wish list. Upgrade to paid plan to increase to 100.',
+              child: Text(isTrial() ? S.of(context).wishLimitTrialDesc(wishesAllowance, 100) : S.of(context).wishLimitPaidDesc(wishesAllowance),
                   style: Theme.of(context).textTheme.body2)),
-          Text('Limit on taken books: $booksAllowance (upgrade to 5)',
+          Text(isTrial() ? S.of(context).wishLimitTrial(booksAllowance, 5) : S.of(context).wishLimitPaid(booksAllowance),
               style: Theme.of(context).textTheme.subtitle),
           Container(
               padding: EdgeInsets.only(bottom: 20.0),
               child: Text(
-                  'You can take up to $booksAllowance books at a time plus number of books you\'ve given to other people. To take more books you have to return books previously taken.',
+                  isTrial() ? S.of(context).bookLimitTrialDesc(booksAllowance) : S.of(context).bookLimitPaidDesc(booksAllowance),
                   style: Theme.of(context).textTheme.body2)),
         ]));
   }
@@ -1690,7 +1699,7 @@ class _SettingsWidgetState extends State<SettingsWidget> {
                       upgradeChoice != PackageType.annual ||
                               package.packageType != PackageType.annual
                           ? Container(
-                              child: Text('per month',
+                              child: Text(S.of(context).perMonth,
                                   style: Theme.of(context).textTheme.body2))
                           : Container(),
                       package.packageType == PackageType.annual &&
@@ -1703,7 +1712,7 @@ class _SettingsWidgetState extends State<SettingsWidget> {
                       package.packageType == PackageType.annual &&
                               upgradeChoice == PackageType.annual
                           ? Container(
-                              child: Text('per year',
+                              child: Text(S.of(context).perMonth,
                                   style: Theme.of(context).textTheme.body2))
                           : Container(),
                     ])),
@@ -1720,23 +1729,15 @@ class _SettingsWidgetState extends State<SettingsWidget> {
                                 PurchaserInfo purchaserInfo =
                                     await Purchases.purchasePackage(package);
                                 // print('!!!DEBUG: ${purchaserInfo}');
-
-                                if (purchaserInfo
-                                    .entitlements.all["basic"].isActive) {
-                                  // Unlock that great "pro" content
-                                  //print('!!!DEBUG: Purchase completed');
-                                  setState(() {});
-                                  showSnackBar(context, S.of(context).snackPaidPlanActivated);
-                                }
                               } on PlatformException catch (e, stack) {
                                 var errorCode =
                                     PurchasesErrorHelper.getErrorCode(e);
                                 if (errorCode !=
                                     PurchasesErrorCode.purchaseCancelledError) {
-                                  print('Purchase canceled');
+                                  print('!!!DEBUG Purchase canceled');
                                 }
                                 FlutterCrashlytics().logException(e, stack);
-                                //print('!!!DEBUG: purchse failed \n $e, \n $stack');
+                                //print('!!!DEBUG: purchase failed \n $e, \n $stack');
                               }
                             },
                             shape: new RoundedRectangleBorder(
@@ -1747,13 +1748,16 @@ class _SettingsWidgetState extends State<SettingsWidget> {
   }
 
   Widget upgradeWidget() {
+    if (offerings == null)
+      return Container();
+
     String optionText = '';
     if (upgradeChoice == PackageType.monthly)
-      optionText = 'Keep more books and enjoy extended wish list with Monthly paid plan';
+      optionText = S.of(context).monthlyDescription;
     else if (upgradeChoice == PackageType.annual)
-      optionText = 'Enjoy book sharing with your friends and neighbours for a whole year';
+      optionText = S.of(context).annualDescription;
     else if (upgradeChoice == PackageType.custom)
-      optionText = 'Your generous contribution makes this app better and helps to promote book sharing';
+      optionText = S.of(context).patronDescription;
 
     return Container(
         child: Column(
@@ -1777,8 +1781,7 @@ class _SettingsWidgetState extends State<SettingsWidget> {
           Text(optionText, style: Theme.of(context).textTheme.subtitle),
               //Text('\t\u{2022} Up to 5 books at a time', style: Theme.of(context).textTheme.subtitle),
               //Text('\t\u{2022} Up to 100 books in wish list', style: Theme.of(context).textTheme.subtitle),
-              Container(padding: EdgeInsets.only(top: 10.0),child: Text(
-              'Subscription will be charged to your ${Theme.of(context).platform == TargetPlatform.iOS ? 'iTunes' : 'Google Play'} account on confirmation. Subscriptions will automatically renew unless canceled within 24-hours before the end of the current period. You can cancel anytime with your ${Theme.of(context).platform == TargetPlatform.iOS ? 'iTunes' : 'Google Play'} account settings. Any unused portion of a free trial will be forfeited if you purchase a subscription.',
+              Container(padding: EdgeInsets.only(top: 10.0),child: Text(S.of(context).subscriptionDisclaimer(Theme.of(context).platform == TargetPlatform.iOS ? 'iTunes' : 'Google Play'),
               style: Theme.of(context).textTheme.body2)),
 // TODO: Add link to  ToS and PP: For more information, see our [link to ToS] and [link to Privacy Policy].
         ]));

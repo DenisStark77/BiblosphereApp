@@ -204,6 +204,7 @@ pushSingle(BuildContext context, Route route, String key) {
 
   // Remove key if Route completed in a normal way
   return Navigator.push(context, route).then((value) {
+    print('!!!DEBUG push completed: $value');
     singleRoutes[key] = null;
   });
 }
@@ -669,9 +670,8 @@ Future<int> booksAllowance() async {
 
 Future<String> upgradePrice() async {
   try {
-
     Offerings offerings = await Purchases.getOfferings();
-    return offerings.current.monthly.product.priceString;
+    return offerings != null ? offerings.current.monthly.product.priceString : 'USD 3.99';
   } catch(e, stack) {
     FlutterCrashlytics().logException(e, stack);
     return 'USD 2.99';

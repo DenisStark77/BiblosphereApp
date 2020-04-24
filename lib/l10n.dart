@@ -941,7 +941,7 @@ class S {
   }
 
   String settingsPlan(name) {
-    return Intl.message("Current plan: $name",
+    return Intl.message("Plan: $name",
         name: 'settingsPlan', args: [name]);
   }
 
@@ -982,6 +982,75 @@ class S {
   String dialogBookLimit(price) {
     return Intl.message('Trial plan allows to keep only up to 2 books at a time. Upgrade for $price per month to have more.',
         name: 'dialogBookLimit', args: [price]);
+  }
+
+  String wishLimitTrial(count, upgrade) {
+    return Intl.message('Limit on wish list: $count (upgrate to have $upgrade)',
+        name: 'wishLimitTrial', args: [count, upgrade]);
+  }
+
+  String wishLimitPaid(count) {
+    return Intl.message('Limit on wish list: $count',
+        name: 'wishLimitPaid', args: [count]);
+  }
+
+  String wishLimitTrialDesc(count, upgrade) {
+    return Intl.message('You can keep up to $count books in your wish list. Upgrade to paid plan to increase to $upgrade.',
+        name: 'wishLimitTrialDesc', args: [count, upgrade]);
+  }
+
+  String wishLimitPaidDesc(count) {
+    return Intl.message('You can keep up to $count books in your wish list.',
+        name: 'wishLimitPaidDesc', args: [count]);
+  }
+
+  String bookLimitTrial(count, upgrade) {
+    return Intl.message('Limit on taken books: $count (upgrade to $upgrade)',
+        name: 'bookLimitTrial', args: [count, upgrade]);
+  }
+
+  String bookLimitPaid(count) {
+    return Intl.message('Limit on taken books: $count',
+        name: 'bookLimitPaid', args: [count]);
+  }
+
+  String bookLimitTrialDesc(count) {
+    return Intl.message('You can take up to $count books at a time plus number of books you\'ve given to other people. To take more books upgrade to paid plan.',
+        name: 'bookLimitTrialDesc', args: [count]);
+  }
+
+  String bookLimitPaidDesc(count) {
+    return Intl.message('You can take up to $count books at a time plus number of books you\'ve given to other people. To take more books return books previously taken.',
+        name: 'bookLimitPaidDesc', args: [count]);
+  }
+
+  String get planPaid {
+    return Intl.message('Member', name: 'planPaid');
+  }
+
+  String get perMonth {
+    return Intl.message('per month', name: 'perMonth');
+  }
+
+  String get perYear {
+    return Intl.message('per year', name: 'perYear');
+  }
+
+  String get monthlyDescription {
+    return Intl.message('Keep more books and enjoy extended wish list with Monthly paid plan', name: 'monthlyDescription');
+  }
+
+  String get annualDescription {
+    return Intl.message('Enjoy book sharing with your friends and neighbours for a whole year', name: 'annualDescription');
+  }
+
+  String get patronDescription {
+    return Intl.message('Your generous contribution makes this app better and helps to promote book sharing', name: 'patronDescription');
+  }
+
+  String subscriptionDisclaimer(platform) {
+    return Intl.message('Subscription will be charged to your $platform account on confirmation. Subscriptions will automatically renew unless canceled within 24-hours before the end of the current period. You can cancel anytime with your $platform account settings. Any unused portion of a free trial will be forfeited if you purchase a subscription.',
+        name: 'subscriptionDisclaimer', args: [platform]);
   }
 }
 

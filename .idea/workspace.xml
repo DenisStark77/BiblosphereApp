@@ -16,11 +16,12 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="7a1cd496-664c-40e6-9b7d-52c49a6c15c5" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Dart_Packages.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Dart_Packages.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Flutter_Plugins.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Flutter_Plugins.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/const.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/const.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/main.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/main.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/helpers.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/helpers.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/home.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/home.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/l10n.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/l10n.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/l10n/intl_en.arb" beforeDir="false" afterPath="$PROJECT_DIR$/lib/l10n/intl_en.arb" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/l10n/intl_ru.arb" beforeDir="false" afterPath="$PROJECT_DIR$/lib/l10n/intl_ru.arb" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -133,13 +134,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1534746472527</updated>
-    </task>
-    <task id="LOCAL-00047" summary="Solved issues to compile with AndroidSdk 28 (without AndroidX).">
-      <created>1551538508489</created>
-      <option name="number" value="00047" />
-      <option name="presentableId" value="LOCAL-00047" />
-      <option name="project" value="LOCAL" />
-      <updated>1551538508489</updated>
     </task>
     <task id="LOCAL-00048" summary="Solved issues to compile with AndroidSdk 28 (without AndroidX).">
       <created>1551538546098</created>
@@ -477,7 +471,14 @@
       <option name="project" value="LOCAL" />
       <updated>1587656558403</updated>
     </task>
-    <option name="localTasksCounter" value="96" />
+    <task id="LOCAL-00096" summary="- Corrected defect with empty link">
+      <created>1587745218015</created>
+      <option name="number" value="00096" />
+      <option name="presentableId" value="LOCAL-00096" />
+      <option name="project" value="LOCAL" />
+      <updated>1587745218015</updated>
+    </task>
+    <option name="localTasksCounter" value="97" />
     <servers />
   </component>
   <component name="UnknownFeatures">
@@ -500,7 +501,6 @@
     <ignored-roots>
       <path value="$PROJECT_DIR$/python/opencv_extra" />
     </ignored-roots>
-    <MESSAGE value="Adjust for the new version" />
     <MESSAGE value="Remove depricated" />
     <MESSAGE value="Migrate to AndroidX (plugin versions updated)" />
     <MESSAGE value="Add good  segmenting" />
@@ -525,7 +525,8 @@
     <MESSAGE value="- Plugins dependencies corrected" />
     <MESSAGE value="- Update plugin versions&#10;- Replace own Firestore mock with plugin" />
     <MESSAGE value="- Add icons" />
-    <option name="LAST_COMMIT_MESSAGE" value="- Add icons" />
+    <MESSAGE value="- Corrected defect with empty link" />
+    <option name="LAST_COMMIT_MESSAGE" value="- Corrected defect with empty link" />
   </component>
   <component name="masterDetails">
     <states>
