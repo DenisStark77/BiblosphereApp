@@ -16,10 +16,11 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="7a1cd496-664c-40e6-9b7d-52c49a6c15c5" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/images/icons/icons8-attach-90.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/images/icons/icons8-compact-camera-100.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/images/icons/icons8-image-gallery-100.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Dart_Packages.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Dart_Packages.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Flutter_Plugins.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Flutter_Plugins.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/const.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/const.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/main.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/main.dart" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -132,13 +133,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1534746472527</updated>
-    </task>
-    <task id="LOCAL-00046" summary="Solved issues to compile with AndroidSdk 28 (without AndroidX).">
-      <created>1551538433273</created>
-      <option name="number" value="00046" />
-      <option name="presentableId" value="LOCAL-00046" />
-      <option name="project" value="LOCAL" />
-      <updated>1551538433273</updated>
     </task>
     <task id="LOCAL-00047" summary="Solved issues to compile with AndroidSdk 28 (without AndroidX).">
       <created>1551538508489</created>
@@ -476,7 +470,14 @@
       <option name="project" value="LOCAL" />
       <updated>1587655635352</updated>
     </task>
-    <option name="localTasksCounter" value="95" />
+    <task id="LOCAL-00095" summary="- Add icons">
+      <created>1587656558403</created>
+      <option name="number" value="00095" />
+      <option name="presentableId" value="LOCAL-00095" />
+      <option name="project" value="LOCAL" />
+      <updated>1587656558403</updated>
+    </task>
+    <option name="localTasksCounter" value="96" />
     <servers />
   </component>
   <component name="UnknownFeatures">
@@ -499,7 +500,6 @@
     <ignored-roots>
       <path value="$PROJECT_DIR$/python/opencv_extra" />
     </ignored-roots>
-    <MESSAGE value="Correct bug with chat from books and person cards&#10;Correct bug with empty book image" />
     <MESSAGE value="Adjust for the new version" />
     <MESSAGE value="Remove depricated" />
     <MESSAGE value="Migrate to AndroidX (plugin versions updated)" />
@@ -524,7 +524,8 @@
     <MESSAGE value="- Tests updated&#10;- Bugs with handover corrected" />
     <MESSAGE value="- Plugins dependencies corrected" />
     <MESSAGE value="- Update plugin versions&#10;- Replace own Firestore mock with plugin" />
-    <option name="LAST_COMMIT_MESSAGE" value="- Update plugin versions&#10;- Replace own Firestore mock with plugin" />
+    <MESSAGE value="- Add icons" />
+    <option name="LAST_COMMIT_MESSAGE" value="- Add icons" />
   </component>
   <component name="masterDetails">
     <states>

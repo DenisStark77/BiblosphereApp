@@ -189,7 +189,7 @@ class _MyAppState extends State<MyApp> {
       }
 
       // Listen on changes to user record in Firestore and update to B.user
-      _userSubscription = user.ref.snapshots().listen((doc) {
+      _userSubscription = user.ref.snapshots().listen((DocumentSnapshot doc) {
         B.user = User.fromJson(doc.data);
       });
 
@@ -203,10 +203,8 @@ class _MyAppState extends State<MyApp> {
 
       // If refferal program link is empty generate one
       if (B.user.link == null) {
-        print('!!!DEBUG: empty link');
         // TODO: Make this call async to minimize waiting time for login
         String link = await buildLink('chat?user=${user.id}');
-        print('!!!DEBUG: link generated');
         user.ref.updateData({
           'link': link,
         });

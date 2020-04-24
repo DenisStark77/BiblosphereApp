@@ -393,7 +393,7 @@ class User {
         wishCount = json['wishCount'] ?? 0,
         bookCount = json['bookCount'] ?? 0,
         shelfCount = json['shelfCount'] ?? 0,
-        balance = json['balance'] ?? 0;
+        balance = json['balance'] == null || json['balance'] is double ? 0 : json['balance'];
 
   Map<String, dynamic> toJson() {
     return {
