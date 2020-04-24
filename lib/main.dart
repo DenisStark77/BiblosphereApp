@@ -202,9 +202,11 @@ class _MyAppState extends State<MyApp> {
       });
 
       // If refferal program link is empty generate one
-      if (user.link == null) {
+      if (B.user.link == null) {
+        print('!!!DEBUG: empty link');
         // TODO: Make this call async to minimize waiting time for login
         String link = await buildLink('chat?user=${user.id}');
+        print('!!!DEBUG: link generated');
         user.ref.updateData({
           'link': link,
         });

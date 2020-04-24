@@ -26,25 +26,35 @@ Future<String> scanIsbn(BuildContext context, BookCallback onSuccess) async {
   String barcode = '';
 
   try {
-    barcode = await BarcodeScanner.scan();
+    ScanResult res = await BarcodeScanner.scan();
 
-    Book book = await searchByIsbn(barcode);
+    if (res.type == ResultType.Barcode) {
+      Book book = await searchByIsbn(res.rawContent);
 
-    if (book != null) {
-      onSuccess(book);
-    } else {
-      Firestore.instance.collection('noisbn').document(barcode).setData({
-        'count': FieldValue.increment(1),
-        'requested_by': FieldValue.arrayUnion([B.user.id])
-      }, merge: true);
-      //print("No record found for isbn: $barcode");
-      showSnackBar(context, S.of(context).isbnNotFound);
-      logAnalyticsEvent(name: 'book_noisbn', parameters: <String, dynamic>{
-        'isbn': barcode,
-      });
+      if (book != null) {
+        onSuccess(book);
+      } else {
+        Firestore.instance.collection('noisbn').document(res.rawContent).setData({
+          'count': FieldValue.increment(1),
+          'requested_by': FieldValue.arrayUnion([B.user.id])
+        }, merge: true);
+        //print("No record found for isbn: $barcode");
+        showSnackBar(context, S.of(context).isbnNotFound);
+        logAnalyticsEvent(name: 'book_noisbn', parameters: <String, dynamic>{
+          'isbn': res.rawContent,
+        });
+      }
+    } else if (res.type == ResultType.Error) {
+        logAnalyticsEvent(name: 'scan_error', parameters: <String, dynamic>{
+          'error': res.rawContent,
+        });
+    } else if (res.type == ResultType.Cancelled) {
+        logAnalyticsEvent(name: 'scan_canceled', parameters: <String, dynamic>{
+          'error': res.rawContent,
+        });
     }
   } on PlatformException catch (e, stack) {
-    if (e.code == BarcodeScanner.CameraAccessDenied) {
+    if (e.code == BarcodeScanner.cameraAccessDenied) {
       //TODO: Inform user
       print('The user did not grant the camera permission!');
       FlutterCrashlytics().logException(e, stack);
@@ -699,7 +709,11 @@ class _FindBookWidgetState extends State<FindBookWidget> {
                           onPressed: () async {
                             if (B.user.wishCount >= await wishlistAllowance()) {
                               // TODO: Add translation & get a price for monthly plan
-                              showUpgradeDialog(context, S.of(context).dialogWishLimit(await upgradePrice()));
+                              showUpgradeDialog(
+                                  context,
+                                  S
+                                      .of(context)
+                                      .dialogWishLimit(await upgradePrice()));
 
                               logAnalyticsEvent(
                                   name: 'limit_reached',
@@ -778,7 +792,10 @@ class _FindBookWidgetState extends State<FindBookWidget> {
                               onPressed: () async {
                                 if (B.user.balance <= -await booksAllowance()) {
                                   // TODO: Add translation & get a price for monthly plan
-                                  showUpgradeDialog(context, S.of(context).dialogBookLimit(await upgradePrice()));
+                                  showUpgradeDialog(
+                                      context,
+                                      S.of(context).dialogBookLimit(
+                                          await upgradePrice()));
 
                                   logAnalyticsEvent(
                                       name: 'limit_reached',

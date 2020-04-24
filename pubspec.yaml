@@ -1,5 +1,6 @@
 name: biblosphere
 description: App to share books
+version: 1.3.0+1
 
 dependencies:
   flutter:
@@ -27,19 +28,19 @@ dependencies:
 
   flutter_signin_button: ^1.0.0
 
-  permission_handler: ^3.0.1
+  permission_handler: ^4.4.0+hotfix.4
 
   url_launcher: ^5.2.2
 
   cached_network_image: ^2.0.0
 
-  fluttertoast: ^3.1.3
+  fluttertoast: ^4.0.1
 
   intl: ^0.16.0
 
   image_picker: ^0.6.3+4
 
-  share: ^0.5.3
+  share: ^0.6.4
 
   firebase_dynamic_links: ^0.5.0+1
 
@@ -53,7 +54,7 @@ dependencies:
 
   intro_views_flutter: ^2.3.0
 
-  barcode_scan: ^1.0.0
+  barcode_scan: ^3.0.0
 
   googleapis: ^0.53.0
 
@@ -69,7 +70,7 @@ dependencies:
 
   flushbar: 1.9.1
 
-  app_settings: ^3.0.1
+  app_settings: ^4.0.0
 
 # Run flutter pub pub run flutter_launcher_icons:main
 flutter_icons:

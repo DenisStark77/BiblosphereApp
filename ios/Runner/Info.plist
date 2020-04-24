@@ -42,6 +42,16 @@
 				<string>com.googleusercontent.apps.779249096383-40uarjp5ld5maihce55m5mq1i0vgk60o</string>
 			</array>
 		</dict>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>firebase</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.biblosphere.biblosphere</string>
+			</array>
+		</dict>
 	</array>
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
@@ -84,6 +94,11 @@
 	<string>This app requires access to the photo library.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
 	<string>This app requires access to speech recognition.</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>fetch</string>
+		<string>remote-notification</string>
+	</array>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>
@@ -91,6 +106,8 @@
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
 	<key>UISupportedInterfaceOrientations~ipad</key>
 	<array>
