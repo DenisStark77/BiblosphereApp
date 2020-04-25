@@ -17,11 +17,6 @@
   <component name="ChangeListManager">
     <list default="true" id="7a1cd496-664c-40e6-9b7d-52c49a6c15c5" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/helpers.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/helpers.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/home.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/home.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/l10n.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/l10n.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/l10n/intl_en.arb" beforeDir="false" afterPath="$PROJECT_DIR$/lib/l10n/intl_en.arb" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/l10n/intl_ru.arb" beforeDir="false" afterPath="$PROJECT_DIR$/lib/l10n/intl_ru.arb" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -134,13 +129,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1534746472527</updated>
-    </task>
-    <task id="LOCAL-00048" summary="Solved issues to compile with AndroidSdk 28 (without AndroidX).">
-      <created>1551538546098</created>
-      <option name="number" value="00048" />
-      <option name="presentableId" value="LOCAL-00048" />
-      <option name="project" value="LOCAL" />
-      <updated>1551538546098</updated>
     </task>
     <task id="LOCAL-00049" summary="Solved issues to compile with AndroidSdk 28 (without AndroidX).">
       <created>1551538618539</created>
@@ -478,7 +466,14 @@
       <option name="project" value="LOCAL" />
       <updated>1587745218015</updated>
     </task>
-    <option name="localTasksCounter" value="97" />
+    <task id="LOCAL-00097" summary="- Translation of settings">
+      <created>1587755894499</created>
+      <option name="number" value="00097" />
+      <option name="presentableId" value="LOCAL-00097" />
+      <option name="project" value="LOCAL" />
+      <updated>1587755894499</updated>
+    </task>
+    <option name="localTasksCounter" value="98" />
     <servers />
   </component>
   <component name="UnknownFeatures">
@@ -501,7 +496,6 @@
     <ignored-roots>
       <path value="$PROJECT_DIR$/python/opencv_extra" />
     </ignored-roots>
-    <MESSAGE value="Remove depricated" />
     <MESSAGE value="Migrate to AndroidX (plugin versions updated)" />
     <MESSAGE value="Add good  segmenting" />
     <MESSAGE value="Add integration to Stellar&#10;Add in-app purchases&#10;Change design" />
@@ -526,7 +520,8 @@
     <MESSAGE value="- Update plugin versions&#10;- Replace own Firestore mock with plugin" />
     <MESSAGE value="- Add icons" />
     <MESSAGE value="- Corrected defect with empty link" />
-    <option name="LAST_COMMIT_MESSAGE" value="- Corrected defect with empty link" />
+    <MESSAGE value="- Translation of settings" />
+    <option name="LAST_COMMIT_MESSAGE" value="- Translation of settings" />
   </component>
   <component name="masterDetails">
     <states>
