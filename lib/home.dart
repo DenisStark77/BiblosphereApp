@@ -1511,7 +1511,7 @@ class _SettingsWidgetState extends State<SettingsWidget> {
 
     try {
       Purchases.getOfferings().then((Offerings res) {
-        print('!!!DEBUG get offerings: $res');
+        //print('!!!DEBUG get offerings: $res');
         if (res != null && res.current != null) {
           //print('!!!DEBUG: ${res}');
           setState(() {
@@ -1534,8 +1534,8 @@ class _SettingsWidgetState extends State<SettingsWidget> {
 
     Purchases.addPurchaserInfoUpdateListener((info) {
       // handle any changes to purchaserInfo
-      print('!!!DEBUG NEW PURCHASESER $info');
-      print('!!!DEBUG OLD PURCHASESER $purchaserInfo');
+      //print('!!!DEBUG NEW PURCHASESER $info');
+      //print('!!!DEBUG OLD PURCHASESER $purchaserInfo');
       if (!purchaserInfo.entitlements.all["basic"].isActive &&
           info.entitlements.all["basic"].isActive) {
         // Unlock that great "pro" content

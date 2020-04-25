@@ -684,7 +684,7 @@ class S {
   }
 
   String get snackBookNotFound{
-    return Intl.message('Книга не найдена. Добавьте книги в корзину вручную.', name: 'snackBookNotFound');
+    return Intl.message('Книга не найдена. Попробуйте изменить строку поиска.', name: 'snackBookNotFound');
   }
 
   /*

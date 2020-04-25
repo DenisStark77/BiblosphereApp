@@ -34,24 +34,27 @@ Future<String> scanIsbn(BuildContext context, BookCallback onSuccess) async {
       if (book != null) {
         onSuccess(book);
       } else {
-        Firestore.instance.collection('noisbn').document(res.rawContent).setData({
+        showSnackBar(context, S.of(context).isbnNotFound);
+        Firestore.instance
+            .collection('noisbn')
+            .document(res.rawContent)
+            .setData({
           'count': FieldValue.increment(1),
           'requested_by': FieldValue.arrayUnion([B.user.id])
         }, merge: true);
         //print("No record found for isbn: $barcode");
-        showSnackBar(context, S.of(context).isbnNotFound);
         logAnalyticsEvent(name: 'book_noisbn', parameters: <String, dynamic>{
           'isbn': res.rawContent,
         });
       }
     } else if (res.type == ResultType.Error) {
-        logAnalyticsEvent(name: 'scan_error', parameters: <String, dynamic>{
-          'error': res.rawContent,
-        });
+      logAnalyticsEvent(name: 'scan_error', parameters: <String, dynamic>{
+        'error': res.rawContent,
+      });
     } else if (res.type == ResultType.Cancelled) {
-        logAnalyticsEvent(name: 'scan_canceled', parameters: <String, dynamic>{
-          'error': res.rawContent,
-        });
+      logAnalyticsEvent(name: 'scan_canceled', parameters: <String, dynamic>{
+        'error': res.rawContent,
+      });
     }
   } on PlatformException catch (e, stack) {
     if (e.code == BarcodeScanner.cameraAccessDenied) {
@@ -232,16 +235,30 @@ class _AddBookWidgetState extends State<AddBookWidget> {
                                 FocusScope.of(context).unfocus();
                                 searchByTitleAuthor(textController.text)
                                     .then((b) {
-                                  setState(() {
-                                    suggestions = b;
-                                  });
-                                  logAnalyticsEvent(
-                                      name: 'book_add_attempt',
-                                      parameters: <String, dynamic>{
-                                        'type': 'text',
-                                        'search_term': textController.text,
-                                        'results': b.length,
-                                      });
+                                  if (b == null || b.length == 0) {
+                                    setState(() {
+                                      suggestions = [];
+                                    });
+                                    showSnackBar(context,
+                                        S.of(context).snackBookNotFound);
+                                    logAnalyticsEvent(
+                                        name: 'search_not_found',
+                                        parameters: <String, dynamic>{
+                                          'type': 'text',
+                                          'search_term': textController.text,
+                                        });
+                                  } else {
+                                    setState(() {
+                                      suggestions = b;
+                                    });
+                                    logAnalyticsEvent(
+                                        name: 'book_add_attempt',
+                                        parameters: <String, dynamic>{
+                                          'type': 'text',
+                                          'search_term': textController.text,
+                                          'results': b.length,
+                                        });
+                                  }
                                 });
                               },
                               shape: new RoundedRectangleBorder(
@@ -475,15 +492,34 @@ class _FindBookWidgetState extends State<FindBookWidget> {
     if (query != null) {
       textController.text = query;
       searchByTitleAuthor(query).then((b) {
-        setState(() {
-          books = b.map((x) => BookSearchData(book: x));
-        });
+        if (b == null || b.length == 0) {
+          showSnackBar(context, S.of(context).snackBookNotFound);
+          setState(() {
+            books = [];
+          });
+        } else {
+          setState(() {
+            books = b.map((x) => BookSearchData(book: x));
+          });
+        }
       });
     } else if (isbn != null) {
       searchByIsbn(isbn).then((b) {
-        setState(() {
-          books = [BookSearchData(book: b)];
-        });
+        if (b == null) {
+          showSnackBar(context, S.of(context).isbnNotFound);
+          Firestore.instance.collection('noisbn').document(isbn).setData({
+            'count': FieldValue.increment(1),
+            'requested_by': FieldValue.arrayUnion([B.user.id])
+          }, merge: true);
+          //print("No record found for isbn: $barcode");
+          logAnalyticsEvent(name: 'book_noisbn', parameters: <String, dynamic>{
+            'isbn': isbn,
+          });
+        } else {
+          setState(() {
+            books = [BookSearchData(book: b)];
+          });
+        }
       });
     } else if (id != null) {
       setState(() {
@@ -551,17 +587,31 @@ class _FindBookWidgetState extends State<FindBookWidget> {
                                 FocusScope.of(context).unfocus();
                                 searchByTitleAuthor(textController.text)
                                     .then((b) {
-                                  setState(() {
-                                    books = List<BookSearchData>.from(
-                                        b.map((x) => BookSearchData(book: x)));
-                                  });
-                                  logAnalyticsEvent(
-                                      name: 'search',
-                                      parameters: <String, dynamic>{
-                                        'type': 'text',
-                                        'search_term': textController.text,
-                                        'results': b.length,
-                                      });
+                                  if (b == null || b.length == 0) {
+                                    setState(() {
+                                      books.clear();
+                                    });
+                                    showSnackBar(context,
+                                        S.of(context).snackBookNotFound);
+                                    logAnalyticsEvent(
+                                        name: 'search_not_found',
+                                        parameters: <String, dynamic>{
+                                          'type': 'text',
+                                          'search_term': textController.text,
+                                        });
+                                  } else {
+                                    setState(() {
+                                      books = List<BookSearchData>.from(b
+                                          .map((x) => BookSearchData(book: x)));
+                                    });
+                                    logAnalyticsEvent(
+                                        name: 'search',
+                                        parameters: <String, dynamic>{
+                                          'type': 'text',
+                                          'search_term': textController.text,
+                                          'results': b.length,
+                                        });
+                                  }
                                 });
 
                                 // TODO: Find the way to report percentage of queries which found available books
@@ -656,7 +706,7 @@ class _FindBookWidgetState extends State<FindBookWidget> {
         delegate: SliverChildBuilderDelegate((context, index) {
           var book = books.elementAt(index);
           return StreamBuilder(
-            stream: book.snapshots(),
+            stream: book.snapshots().asBroadcastStream(),
             builder: (context, snapshot) {
               if (!snapshot.hasData) {
                 return Container();
@@ -667,77 +717,80 @@ class _FindBookWidgetState extends State<FindBookWidget> {
                 Widget buttons;
                 if (!data.hasRecords) {
                   // Book not found in Biblosphere (=> screen to Stores/Libs)
-                  buttons = Row(children: <Widget>[
-                    Tooltip(
-                        // TODO: Correct text search in stores/libraries
-                        message: S.of(context).findBook,
-                        child: RaisedButton(
-                          textColor: C.buttonText,
-                          color: C.cardBackground,
-                          child: Text(S.of(context).buttonSearchThirdParty,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .body2
-                                  .apply(color: C.titleText)),
-                          onPressed: () async {
-                            Navigator.push(
-                                context,
-                                new MaterialPageRoute(
-                                    builder: (context) => buildScaffold(
-                                        context,
-                                        null,
-                                        new GetBookWidget(book: book.book),
-                                        appbar: false)));
+                  buttons = Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: <Widget>[
+                        Tooltip(
+                            // TODO: Correct text search in stores/libraries
+                            message: S.of(context).findBook,
+                            child: RaisedButton(
+                              textColor: C.buttonText,
+                              color: C.cardBackground,
+                              child: Text(S.of(context).buttonSearchThirdParty,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .body2
+                                      .apply(color: C.titleText)),
+                              onPressed: () async {
+                                Navigator.push(
+                                    context,
+                                    new MaterialPageRoute(
+                                        builder: (context) => buildScaffold(
+                                            context,
+                                            null,
+                                            new GetBookWidget(book: book.book),
+                                            appbar: false)));
 
-                            logAnalyticsEvent(
-                                name: 'search_elsewhere',
-                                parameters: <String, dynamic>{
-                                  'user': B.user.id,
-                                  'isbn': book.book.isbn,
-                                });
-                          },
-                          shape: new RoundedRectangleBorder(
-                              borderRadius: new BorderRadius.circular(15.0),
-                              side: BorderSide(color: C.cardBackground)),
-                        )),
-                    Tooltip(
-                        message: S.of(context).hintAddToWishlist,
-                        child: IconButton(
-                          color: C.cardBackground,
-                          // TODO: Makes icon filled if book already in wishlist
-                          icon: assetIcon(heart_100, size: 30, padding: 0.0),
-                          onPressed: () async {
-                            if (B.user.wishCount >= await wishlistAllowance()) {
-                              // TODO: Add translation & get a price for monthly plan
-                              showUpgradeDialog(
-                                  context,
-                                  S
-                                      .of(context)
-                                      .dialogWishLimit(await upgradePrice()));
+                                logAnalyticsEvent(
+                                    name: 'search_elsewhere',
+                                    parameters: <String, dynamic>{
+                                      'user': B.user.id,
+                                      'isbn': book.book.isbn,
+                                    });
+                              },
+                              shape: new RoundedRectangleBorder(
+                                  borderRadius: new BorderRadius.circular(15.0),
+                                  side: BorderSide(color: C.cardBackground)),
+                            )),
+                        Tooltip(
+                            message: S.of(context).hintAddToWishlist,
+                            child: IconButton(
+                              color: C.cardBackground,
+                              // TODO: Makes icon filled if book already in wishlist
+                              icon:
+                                  assetIcon(heart_100, size: 30, padding: 0.0),
+                              onPressed: () async {
+                                if (B.user.wishCount >=
+                                    await wishlistAllowance()) {
+                                  // TODO: Add translation & get a price for monthly plan
+                                  showUpgradeDialog(
+                                      context,
+                                      S.of(context).dialogWishLimit(
+                                          await upgradePrice()));
 
-                              logAnalyticsEvent(
-                                  name: 'limit_reached',
-                                  parameters: <String, dynamic>{
-                                    'limit': 'wishlist',
-                                    'user': B.user.id,
-                                    'isbn': book.book.isbn,
-                                  });
-                            } else {
-                              // Add book into user's wishlist
-                              await addBookrecord(context, book.book, B.user,
-                                  true, await currentLocation(),
-                                  snackbar: true);
+                                  logAnalyticsEvent(
+                                      name: 'limit_reached',
+                                      parameters: <String, dynamic>{
+                                        'limit': 'wishlist',
+                                        'user': B.user.id,
+                                        'isbn': book.book.isbn,
+                                      });
+                                } else {
+                                  // Add book into user's wishlist
+                                  await addBookrecord(context, book.book,
+                                      B.user, true, await currentLocation(),
+                                      snackbar: true);
 
-                              logAnalyticsEvent(
-                                  name: 'book_received',
-                                  parameters: <String, dynamic>{
-                                    'user': B.user.id,
-                                    'isbn': book.book.isbn,
-                                  });
-                            }
-                          },
-                        ))
-                  ]);
+                                  logAnalyticsEvent(
+                                      name: 'book_received',
+                                      parameters: <String, dynamic>{
+                                        'user': B.user.id,
+                                        'isbn': book.book.isbn,
+                                      });
+                                }
+                              },
+                            ))
+                      ]);
                 } else if (data.first.holderId == B.user.id) {
                   // Book found in user's own catalog (=> MyBooks)
                   buttons = Tooltip(

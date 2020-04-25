@@ -31,6 +31,7 @@ import 'package:biblosphere/helpers.dart';
 import 'package:biblosphere/home.dart';
 import 'package:biblosphere/chat.dart';
 import 'package:biblosphere/l10n.dart';
+import 'package:biblosphere/search.dart';
 
 //TODO: Credit page with link to author of icons:  Icon made by Freepik (http://www.freepik.com/) from www.flaticon.com
 
@@ -209,6 +210,9 @@ class _MyAppState extends State<MyApp> {
           'link': link,
         });
       }
+
+      // Search a book to warm Google serverless
+      searchByTitleAuthor('Not a book which exist');
     } catch (ex, stack) {
       print(ex);
       FlutterCrashlytics().logException(ex, stack);

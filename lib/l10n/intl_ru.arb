@@ -597,7 +597,7 @@
     "type": "text",
     "placeholders": {}
   },
-  "buttonConfirmBooks": "Книги получил ✓",
+  "buttonConfirmBooks": "Нажмите при получении",
   "@buttonConfirmBooks": {
     "type": "text",
     "placeholders": {}
@@ -824,7 +824,7 @@
     "type": "text",
     "placeholders": {}
   },
-  "snackBookNotFound": "Книга не найдена. Добавьте книги в корзину вручную.",
+  "snackBookNotFound": "Книга не найдена. Попробуйте изменить строку поиска.",
   "@snackBookNotFound": {
     "type": "text",
     "placeholders": {}
@@ -1080,7 +1080,7 @@
        "type": "text",
        "placeholders": {}
      },
-     "buttonSearchThirdParty": "Найти в магазинах и библиотеках",
+     "buttonSearchThirdParty": "Найти в магазинах",
      "@buttonSearchThirdParty": {
        "type": "text",
        "placeholders": {}
@@ -1243,7 +1243,7 @@
     "type": "text",
     "placeholders": {}
   },
-  "monthlyDescription": "Берите и читайте больше книг и храните большой список желаний с платной подпиской.",
+  "monthlyDescription": "Берите и читайте больше книг и храните большой список желаний для обмена книгами.",
   "@monthlyDescription": {
     "type": "text",
     "placeholders": {}
