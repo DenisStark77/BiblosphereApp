@@ -1739,7 +1739,7 @@ class _SettingsWidgetState extends State<SettingsWidget> {
                             child: Text(S.of(context).buttonUpgrade, /*style: Theme.of(context).textTheme.subtitle*/),
                             onPressed: () async {
                               try {
-                                PurchaserInfo purchaserInfo =
+                                //PurchaserInfo purchaserInfo =
                                     await Purchases.purchasePackage(package);
                                 // print('!!!DEBUG: ${purchaserInfo}');
                               } on PlatformException catch (e, stack) {
