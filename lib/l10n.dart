@@ -985,7 +985,8 @@ class S {
   }
 
   String wishLimitTrial(count, upgrade) {
-    return Intl.message('Limit on wish list: $count (upgrate to have $upgrade)',
+    //return Intl.message('Limit on wish list: $count (upgrate to have $upgrade)',
+    return Intl.message('Limit on wish list: $count',
         name: 'wishLimitTrial', args: [count, upgrade]);
   }
 
@@ -1005,7 +1006,8 @@ class S {
   }
 
   String bookLimitTrial(count, upgrade) {
-    return Intl.message('Limit on taken books: $count (upgrade to $upgrade)',
+    //return Intl.message('Limit on taken books: $count (upgrade to $upgrade)',
+    return Intl.message('Limit on taken books: $count',
         name: 'bookLimitTrial', args: [count, upgrade]);
   }
 
@@ -1014,9 +1016,9 @@ class S {
         name: 'bookLimitPaid', args: [count]);
   }
 
-  String bookLimitTrialDesc(count) {
-    return Intl.message('You can take up to $count books at a time plus number of books you\'ve given to other people. To take more books upgrade to paid plan.',
-        name: 'bookLimitTrialDesc', args: [count]);
+  String bookLimitTrialDesc(count, upgrade) {
+    return Intl.message('You can take up to $count books at a time plus number of books you\'ve given to other people. To keep up to $upgrade books upgrade to paid plan.',
+        name: 'bookLimitTrialDesc', args: [count, upgrade]);
   }
 
   String bookLimitPaidDesc(count) {
@@ -1051,6 +1053,14 @@ class S {
   String subscriptionDisclaimer(platform) {
     return Intl.message('Subscription will be charged to your $platform account on confirmation. Subscriptions will automatically renew unless canceled within 24-hours before the end of the current period. You can cancel anytime with your $platform account settings. Any unused portion of a free trial will be forfeited if you purchase a subscription.',
         name: 'subscriptionDisclaimer', args: [platform]);
+  }
+
+  String get privacyPolicy {
+    return Intl.message('Privacy Policy', name: 'privacyPolicy');
+  }
+
+  String get termsOfService {
+    return Intl.message('Terms of Service', name: 'termsOfService');
   }
 }
 

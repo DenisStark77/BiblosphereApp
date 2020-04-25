@@ -49,7 +49,8 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
         //print('!!!DEBUG: Message event ${message['data']['count']} $context');
         if (message['data']['event'] == 'books_recognized')
           //print('!!!DEBUG: Snacbar to show ${message['data']['count']} $context');
-        showSnackBar(context, S.of(context).snackRecognitionDone(message['data']['count']));
+          showSnackBar(context,
+              S.of(context).snackRecognitionDone(message['data']['count']));
         setState(() {
           unreadMessage = true;
         });
@@ -71,7 +72,6 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
 
     FirebaseMessaging().requestNotificationPermissions(
         const IosNotificationSettings(sound: true, badge: true, alert: true));
-
   }
 
   @override
@@ -456,12 +456,15 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                   // ...
                   // Then close the drawer
                   Navigator.pop(context);
-                  pushSingle(context, new MaterialPageRoute(
-                    //TODO: translation
-                      builder: (context) => buildScaffold(
-                          context,
-                          S.of(context).titleSettings,
-                          new SettingsWidget())), 'settings');
+                  pushSingle(
+                      context,
+                      new MaterialPageRoute(
+                          //TODO: translation
+                          builder: (context) => buildScaffold(
+                              context,
+                              S.of(context).titleSettings,
+                              new SettingsWidget())),
+                      'settings');
                 },
               ),
               // TODO: Convert FinancialWidget into HistoryWidget
@@ -807,9 +810,7 @@ class _MyBookWidgetState extends State<MyBook> {
         showSnackBar(context, S.of(context).snackWishDeleted);
         B.user.ref.updateData({'wishCount': FieldValue.increment(-1)});
       } else {
-        showSnackBar(context, S
-            .of(context)
-            .bookDeleted);
+        showSnackBar(context, S.of(context).bookDeleted);
       }
     } catch (ex, stack) {
       print('Bookrecord delete failed for [${bookrecord.id}, ${B.user.id}]: ' +
@@ -1535,9 +1536,8 @@ class _SettingsWidgetState extends State<SettingsWidget> {
       // handle any changes to purchaserInfo
       print('!!!DEBUG NEW PURCHASESER $info');
       print('!!!DEBUG OLD PURCHASESER $purchaserInfo');
-      if (! purchaserInfo
-          .entitlements.all["basic"].isActive
-      && info.entitlements.all["basic"].isActive) {
+      if (!purchaserInfo.entitlements.all["basic"].isActive &&
+          info.entitlements.all["basic"].isActive) {
         // Unlock that great "pro" content
         //print('!!!DEBUG: Purchase completed');
         showSnackBar(context, S.of(context).snackPaidPlanActivated);
@@ -1560,9 +1560,7 @@ class _SettingsWidgetState extends State<SettingsWidget> {
 
   String currentPlan(BuildContext context) {
     // TODO: Translate TRIAL
-    return isTrial()
-        ? S.of(context).planTrial
-        : S.of(context).planPaid;
+    return isTrial() ? S.of(context).planTrial : S.of(context).planPaid;
   }
 
   bool isTrial() {
@@ -1607,7 +1605,9 @@ class _SettingsWidgetState extends State<SettingsWidget> {
                                       ]))),
                             ])),
                     planInfoWidget(context),
-                    isTrial() && offerings != null ? upgradeWidget() : Container()
+                    isTrial() && offerings != null
+                        ? upgradeWidget()
+                        : Container()
                   ]),
             ),
           ),
@@ -1631,18 +1631,29 @@ class _SettingsWidgetState extends State<SettingsWidget> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
           // Row with three plan options to choose
-          Text(isTrial() ? S.of(context).wishLimitTrial(wishesAllowance, 100) : S.of(context).wishLimitPaid(wishesAllowance),
+          Text(
+              isTrial()
+                  ? S.of(context).wishLimitTrial(wishesAllowance, 100)
+                  : S.of(context).wishLimitPaid(wishesAllowance),
               style: Theme.of(context).textTheme.subtitle),
           Container(
               padding: EdgeInsets.only(bottom: 10.0),
-              child: Text(isTrial() ? S.of(context).wishLimitTrialDesc(wishesAllowance, 100) : S.of(context).wishLimitPaidDesc(wishesAllowance),
+              child: Text(
+                  isTrial()
+                      ? S.of(context).wishLimitTrialDesc(wishesAllowance, 100)
+                      : S.of(context).wishLimitPaidDesc(wishesAllowance),
                   style: Theme.of(context).textTheme.body2)),
-          Text(isTrial() ? S.of(context).wishLimitTrial(booksAllowance, 5) : S.of(context).wishLimitPaid(booksAllowance),
+          Text(
+              isTrial()
+                  ? S.of(context).bookLimitTrial(booksAllowance, 5)
+                  : S.of(context).bookLimitPaid(booksAllowance),
               style: Theme.of(context).textTheme.subtitle),
           Container(
               padding: EdgeInsets.only(bottom: 20.0),
               child: Text(
-                  isTrial() ? S.of(context).bookLimitTrialDesc(booksAllowance) : S.of(context).bookLimitPaidDesc(booksAllowance),
+                  isTrial()
+                      ? S.of(context).bookLimitTrialDesc(booksAllowance, 5)
+                      : S.of(context).bookLimitPaidDesc(booksAllowance),
                   style: Theme.of(context).textTheme.body2)),
         ]));
   }
@@ -1669,7 +1680,7 @@ class _SettingsWidgetState extends State<SettingsWidget> {
             },
             child: Container(
                 child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: <Widget>[
                 Container(
                     padding: EdgeInsets.only(top: 10.0, bottom: 10.0),
@@ -1712,18 +1723,20 @@ class _SettingsWidgetState extends State<SettingsWidget> {
                       package.packageType == PackageType.annual &&
                               upgradeChoice == PackageType.annual
                           ? Container(
-                              child: Text(S.of(context).perMonth,
+                              child: Text(S.of(context).perYear,
                                   style: Theme.of(context).textTheme.body2))
                           : Container(),
                     ])),
                 // SUBSCRIBE button
                 package.packageType == upgradeChoice
-                    ? Container(
-                        alignment: Alignment.center,
+                    ? Row(children: <Widget>[Expanded(
+                        //constraints: BoxConstraints.loose(s),
+                        //alignment: Alignment.center,
                         //padding: EdgeInsets.only(bottom: 20.0),
                         child: OutlineButton(
+                            padding: EdgeInsets.all(0.0),
                             // TODO: Translation
-                            child: Text(S.of(context).buttonUpgrade),
+                            child: Text(S.of(context).buttonUpgrade, /*style: Theme.of(context).textTheme.subtitle*/),
                             onPressed: () async {
                               try {
                                 PurchaserInfo purchaserInfo =
@@ -1741,15 +1754,14 @@ class _SettingsWidgetState extends State<SettingsWidget> {
                               }
                             },
                             shape: new RoundedRectangleBorder(
-                                borderRadius: new BorderRadius.circular(10.0))))
+                                borderRadius: new BorderRadius.circular(10.0))))])
                     : Container(),
               ],
             ))));
   }
 
   Widget upgradeWidget() {
-    if (offerings == null)
-      return Container();
+    if (offerings == null) return Container();
 
     String optionText = '';
     if (upgradeChoice == PackageType.monthly)
@@ -1779,11 +1791,48 @@ class _SettingsWidgetState extends State<SettingsWidget> {
           ),
           // Information about paid plan
           Text(optionText, style: Theme.of(context).textTheme.subtitle),
-              //Text('\t\u{2022} Up to 5 books at a time', style: Theme.of(context).textTheme.subtitle),
-              //Text('\t\u{2022} Up to 100 books in wish list', style: Theme.of(context).textTheme.subtitle),
-              Container(padding: EdgeInsets.only(top: 10.0),child: Text(S.of(context).subscriptionDisclaimer(Theme.of(context).platform == TargetPlatform.iOS ? 'iTunes' : 'Google Play'),
-              style: Theme.of(context).textTheme.body2)),
-// TODO: Add link to  ToS and PP: For more information, see our [link to ToS] and [link to Privacy Policy].
+          Container(
+              padding: EdgeInsets.only(top: 10.0),
+              child: Text(
+                  S.of(context).subscriptionDisclaimer(
+                      Theme.of(context).platform == TargetPlatform.iOS
+                          ? 'iTunes'
+                          : 'Google Play'),
+                  style: Theme.of(context).textTheme.body2)),
+          RichText(
+              text: TextSpan(children: [
+            new TextSpan(
+              text: S.of(context).privacyPolicy,
+              style: new TextStyle(
+                  color: Colors.blue, decoration: TextDecoration.underline),
+              recognizer: new TapGestureRecognizer()
+                ..onTap = () async {
+                  const url = 'https://biblosphere.org/pp.html';
+                  if (await canLaunch(url)) {
+                    await launch(url);
+                  } else {
+                    throw 'Could not launch url $url';
+                  }
+                },
+            ),
+            new TextSpan(
+              text: '  ',
+            ),
+            new TextSpan(
+              text: S.of(context).termsOfService,
+              style: new TextStyle(
+                  color: Colors.blue, decoration: TextDecoration.underline),
+              recognizer: new TapGestureRecognizer()
+                ..onTap = () async {
+                  const url = 'https://biblosphere.org/tos.html';
+                  if (await canLaunch(url)) {
+                    await launch(url);
+                  } else {
+                    throw 'Could not launch url $url';
+                  }
+                },
+            )
+          ]))
         ]));
   }
 }
@@ -1874,7 +1923,8 @@ void showUpgradeDialog(BuildContext context, String text) {
         content: Container(
           child: Row(children: <Widget>[
             Material(
-              child: Image.asset(online_support_100,
+              child: Image.asset(
+                online_support_100,
                 width: 50.0,
               ),
               borderRadius: BorderRadius.all(Radius.circular(5.0)),
@@ -1900,12 +1950,13 @@ void showUpgradeDialog(BuildContext context, String text) {
             child: Text(S.of(context).buttonUpgrade),
             onPressed: () {
               Navigator.of(context).pop();
-              pushSingle(context, new MaterialPageRoute(
-                //TODO: translation
-                  builder: (context) => buildScaffold(
-                      context,
-                      S.of(context).titleSettings,
-                      new SettingsWidget())), 'settings');
+              pushSingle(
+                  context,
+                  new MaterialPageRoute(
+                      //TODO: translation
+                      builder: (context) => buildScaffold(context,
+                          S.of(context).titleSettings, new SettingsWidget())),
+                  'settings');
             },
           ),
           FlatButton(

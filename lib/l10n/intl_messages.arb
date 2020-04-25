@@ -1,5 +1,5 @@
 {
-  "@@last_modified": "2020-04-22T19:52:21.470526",
+  "@@last_modified": "2020-04-24T19:11:05.462847",
   "title": "Biblosphere",
   "@title": {
     "description": "The application title",
@@ -1105,7 +1105,7 @@
     "type": "text",
     "placeholders": {}
   },
-  "settingsPlan": "Current plan: {name}",
+  "settingsPlan": "Plan: {name}",
   "@settingsPlan": {
     "type": "text",
     "placeholders": {
@@ -1163,139 +1163,111 @@
       "price": {}
     }
   },
-     "recognizeFromGallery": "Распознать книги с фотографии",
-     "@recognizeFromGallery": {
-       "type": "text",
-       "placeholders": {}
-     },
-     "recognizeFromCamera": "Сфотографировать полку",
-     "@recognizeFromCamera": {
-       "type": "text",
-       "placeholders": {}
-     },
-     "chooseHoldedBookForChat": "ВЫБЕРИТЕ КНИГУ",
-     "@chooseHoldedBookForChat": {
-       "type": "text",
-       "placeholders": {}
-     },
-     "choosePartnerBookForChat": "ВЫБЕРИТЕ КНИГУ",
-     "@choosePartnerBookForChat": {
-       "type": "text",
-       "placeholders": {}
-     },
-     "offerBook": "Рекомендую взять у меня \"{book}\"",
-     "@offerBook": {
-       "type": "text",
-       "placeholders": {
-         "book": {}
-       }
-     },
-     "chipBooksToRequest": "Взять",
-     "@chipBooksToRequest": {
-       "type": "text",
-       "placeholders": {}
-     },
-     "chipBooksToOffer": "Предложить",
-     "@chipBooksToOffer": {
-       "type": "text",
-       "placeholders": {}
-     },
-     "chipBooksToReturn": "Вернуть",
-     "@chipBooksToReturn": {
-       "type": "text",
-       "placeholders": {}
-     },
-     "chipBooksToAskForReturn": "Забрать",
-     "@chipBooksToAskForReturn": {
-       "type": "text",
-       "placeholders": {}
-     },
-     "buttonSearchThirdParty": "Search in Stores & Libraries",
-     "@buttonSearchThirdParty": {
-       "type": "text",
-       "placeholders": {}
-     },
-     "hintAddToWishlist": "Add to wishlist",
-     "@hintAddToWishlist": {
-       "type": "text",
-       "placeholders": {}
-     },
-     "hintHolderChatOpen": "Open chat with person who hold the book",
-     "@hintHolderChatOpen": {
-       "type": "text",
-       "placeholders": {}
-     },
-     "hintConfirmHandover": "Confirm that you've received this book",
-     "@hintConfirmHandover": {
-       "type": "text",
-       "placeholders": {}
-     },
-     "hintManageBook": "Open this book in MY BOOKS screen",
-     "@hintManageBook": {
-       "type": "text",
-       "placeholders": {}
-     },
-     "buttonManageBook": "Open in MY BOOKS",
-     "@buttonManageBook": {
-       "type": "text",
-       "placeholders": {}
-     },
-     "settingsPlan": "Current plan: {name}",
-     "@settingsPlan": {
-       "type": "text",
-       "placeholders": {
-         "name": {}
-       }
-     },
-     "planTrial": "Trial",
-     "@planTrial": {
-       "type": "text",
-       "placeholders": {}
-     },
-     "buttonUpgrade": "UPGRADE",
-     "@buttonUpgrade": {
-       "type": "text",
-       "placeholders": {}
-     },
-     "buttonSkip": "SKIP",
-     "@buttonSkip": {
-       "type": "text",
-       "placeholders": {}
-     },
-     "snackRecgnitionStarted": "Image recognition take up to 2 min. Meanwhile take a next photo.",
-     "@snackRecgnitionStarted": {
-       "type": "text",
-       "placeholders": {}
-     },
-     "snackRecognitionDone": "{count} books have been recognized and added to your catalog.",
-     "@snackRecognitionDone": {
-       "type": "text",
-       "placeholders": {
-         "count": {}
-       }
-     },
-     "snackWishDeleted": "Book deleted from your wishlist",
-     "@snackWishDeleted": {
-       "type": "text",
-       "placeholders": {}
-     },
-     "snackPaidPlanActivated": "Your paid plan is activated",
-     "@snackPaidPlanActivated": {
-       "type": "text",
-       "placeholders": {}
-     },
-     "dialogWishLimit": "Trial plan only allows 10 books in the wish list. Upgrade for {price} per month to have more.",
-     "@dialogWishLimit": {
-       "type": "text",
-       "placeholders": {
-         "price": {}
-       }
-     },
-     "dialogBookLimit": "Trial plan allows to keep only up to 2 books at a time. Upgrade for {price} per month to have more.",
-     "@dialogBookLimit": {
-       "type": "text",
-       "placeholders": {
-         "price": {}
-       }
-     }
+  "wishLimitTrial": "Limit on wish list: {count}",
+  "@wishLimitTrial": {
+    "type": "text",
+    "placeholders": {
+      "count": {},
+      "upgrade": {}
+    }
+  },
+  "wishLimitPaid": "Limit on wish list: {count}",
+  "@wishLimitPaid": {
+    "type": "text",
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "wishLimitTrialDesc": "You can keep up to {count} books in your wish list. Upgrade to paid plan to increase to {upgrade}.",
+  "@wishLimitTrialDesc": {
+    "type": "text",
+    "placeholders": {
+      "count": {},
+      "upgrade": {}
+    }
+  },
+  "wishLimitPaidDesc": "You can keep up to {count} books in your wish list.",
+  "@wishLimitPaidDesc": {
+    "type": "text",
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "bookLimitTrial": "Limit on taken books: {count}",
+  "@bookLimitTrial": {
+    "type": "text",
+    "placeholders": {
+      "count": {},
+      "upgrade": {}
+    }
+  },
+  "bookLimitPaid": "Limit on taken books: {count}",
+  "@bookLimitPaid": {
+    "type": "text",
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "bookLimitTrialDesc": "You can take up to {count} books at a time plus number of books you've given to other people. To keep up to {upgrade} books upgrade to paid plan.",
+  "@bookLimitTrialDesc": {
+    "type": "text",
+    "placeholders": {
+      "count": {},
+      "upgrade": {}
+    }
+  },
+  "bookLimitPaidDesc": "You can take up to {count} books at a time plus number of books you've given to other people. To take more books return books previously taken.",
+  "@bookLimitPaidDesc": {
+    "type": "text",
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "planPaid": "Member",
+  "@planPaid": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "perMonth": "per month",
+  "@perMonth": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "perYear": "per year",
+  "@perYear": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "monthlyDescription": "Keep more books and enjoy extended wish list with Monthly paid plan",
+  "@monthlyDescription": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "annualDescription": "Enjoy book sharing with your friends and neighbours for a whole year",
+  "@annualDescription": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "patronDescription": "Your generous contribution makes this app better and helps to promote book sharing",
+  "@patronDescription": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "subscriptionDisclaimer": "Subscription will be charged to your {platform} account on confirmation. Subscriptions will automatically renew unless canceled within 24-hours before the end of the current period. You can cancel anytime with your {platform} account settings. Any unused portion of a free trial will be forfeited if you purchase a subscription.",
+  "@subscriptionDisclaimer": {
+    "type": "text",
+    "placeholders": {
+      "platform": {}
+    }
+  },
+  "privacyPolicy": "Privacy Policy",
+  "@privacyPolicy": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "termsOfService": "Terms of Service",
+  "@termsOfService": {
+    "type": "text",
+    "placeholders": {}
+  }
 }

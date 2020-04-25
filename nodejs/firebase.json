@@ -15,9 +15,6 @@
     "appAssociation": "AUTO",
     "rewrites": [
       {
-        "source": "/exportUsers", "function": "exportUsers"
-      },
-      {
         "source": "/link/**",
         "dynamicLinks": true
       },

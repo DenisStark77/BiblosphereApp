@@ -1032,5 +1032,112 @@
   "@settingsTitleGeneral": {
     "type": "text",
     "placeholders": {}
+  },
+  "wishLimitTrial": "Limit on wish list: {count}",
+  "@wishLimitTrial": {
+    "type": "text",
+    "placeholders": {
+      "count": {},
+      "upgrade": {}
+    }
+  },
+  "wishLimitPaid": "Limit on wish list: {count}",
+  "@wishLimitPaid": {
+    "type": "text",
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "wishLimitTrialDesc": "You can keep up to {count} books in your wish list. Upgrade to paid plan to increase to {upgrade}.",
+  "@wishLimitTrialDesc": {
+    "type": "text",
+    "placeholders": {
+      "count": {},
+      "upgrade": {}
+    }
+  },
+  "wishLimitPaidDesc": "You can keep up to {count} books in your wish list.",
+  "@wishLimitPaidDesc": {
+    "type": "text",
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "bookLimitTrial": "Limit on taken books: {count}",
+  "@bookLimitTrial": {
+    "type": "text",
+    "placeholders": {
+      "count": {},
+      "upgrade": {}
+    }
+  },
+  "bookLimitPaid": "Limit on taken books: {count}",
+  "@bookLimitPaid": {
+    "type": "text",
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "bookLimitTrialDesc": "You can take up to {count} books at a time plus number of books you've given to other people. To keep up to {upgrade} books upgrade to paid plan.",
+  "@bookLimitTrialDesc": {
+    "type": "text",
+    "placeholders": {
+      "count": {},
+      "upgrade": {}
+    }
+  },
+  "bookLimitPaidDesc": "You can take up to {count} books at a time plus number of books you've given to other people. To take more books return books previously taken.",
+  "@bookLimitPaidDesc": {
+    "type": "text",
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "planPaid": "Member",
+  "@planPaid": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "perMonth": "per month",
+  "@perMonth": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "perYear": "per year",
+  "@perYear": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "monthlyDescription": "Keep more books and enjoy extended wish list with Monthly paid plan",
+  "@monthlyDescription": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "annualDescription": "Enjoy book sharing with your friends and neighbours for a whole year",
+  "@annualDescription": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "patronDescription": "Your generous contribution makes this app better and helps to promote book sharing",
+  "@patronDescription": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "subscriptionDisclaimer": "Subscription will be charged to your {platform} account on confirmation. Subscriptions will automatically renew unless canceled within 24-hours before the end of the current period. You can cancel anytime with your {platform} account settings. Any unused portion of a free trial will be forfeited if you purchase a subscription.",
+  "@subscriptionDisclaimer": {
+    "type": "text",
+    "placeholders": {
+      "platform": {}
+    }
+  },
+  "privacyPolicy": "Privacy Policy",
+  "@privacyPolicy": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "termsOfService": "Terms of Service",
+  "@termsOfService": {
+    "type": "text",
+    "placeholders": {}
   }
 }

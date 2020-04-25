@@ -1167,5 +1167,112 @@
        "placeholders": {
          "price": {}
        }
-     }
+     },
+  "wishLimitTrial": "Ограничение списка желаний: {count}",
+  "@wishLimitTrial": {
+    "type": "text",
+    "placeholders": {
+      "count": {},
+      "upgrade": {}
+    }
+  },
+  "wishLimitPaid": "Ограничение списка желаний: {count}",
+  "@wishLimitPaid": {
+    "type": "text",
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "wishLimitTrialDesc": "Вы можете сохранить до {count} книг в списке желаний. Оплатите, чтобы увеличить до {upgrade}.",
+  "@wishLimitTrialDesc": {
+    "type": "text",
+    "placeholders": {
+      "count": {},
+      "upgrade": {}
+    }
+  },
+  "wishLimitPaidDesc": "Вы можете сохранить до {count} книг в списке желаний.",
+  "@wishLimitPaidDesc": {
+    "type": "text",
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "bookLimitTrial": "Ограничение на взятые книги: {count}",
+  "@bookLimitTrial": {
+    "type": "text",
+    "placeholders": {
+      "count": {},
+      "upgrade": {}
+    }
+  },
+  "bookLimitPaid": "Ограничение на взятые книги: {count}",
+  "@bookLimitPaid": {
+    "type": "text",
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "bookLimitTrialDesc": "Вы можете одновременно читать {count} книги плюс столько, сколько вы дали другим людям. Чтобы брать до {upgrade} книг перейдите на платную версию.",
+  "@bookLimitTrialDesc": {
+    "type": "text",
+    "placeholders": {
+      "count": {},
+      "upgrade": {}
+    }
+  },
+  "bookLimitPaidDesc": "Вы можете одновременно читать {count} книг плюс столько, сколько вы дали другим людям. Чтобы взять новые книги, верните взятые ранее.",
+  "@bookLimitPaidDesc": {
+    "type": "text",
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "planPaid": "Участник",
+  "@planPaid": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "perMonth": "в месяц",
+  "@perMonth": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "perYear": "в год",
+  "@perYear": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "monthlyDescription": "Берите и читайте больше книг и храните большой список желаний с платной подпиской.",
+  "@monthlyDescription": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "annualDescription": "Подарите себе целый год удобного обмена книгами с друзьями и соседями.",
+  "@annualDescription": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "patronDescription": "Ваша щедрая поддержка проекта, поможет сделать это приложение лучше.",
+  "@patronDescription": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "subscriptionDisclaimer": "Подписка будет оплачена с вашего {platform} счёта после подтверждения. Подписка будет автоматически продлеваться за 24-часа до окончания текущего периода. Вы можете отменить подписку в настройках вашей записи {platform}.",
+  "@subscriptionDisclaimer": {
+    "type": "text",
+    "placeholders": {
+      "platform": {}
+    }
+  },
+  "privacyPolicy": "Политика конфиденциальности",
+  "@privacyPolicy": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "termsOfService": "Условия обслуживания",
+  "@termsOfService": {
+    "type": "text",
+    "placeholders": {}
+  }
 }
