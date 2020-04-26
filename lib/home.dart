@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:firebase_dynamic_links/firebase_dynamic_links.dart';
 import 'package:flutter/rendering.dart';
+import 'package:googleapis/dfareporting/v3_2.dart';
 import 'dart:async';
 import 'package:share/share.dart';
 import 'package:flutter_crashlytics/flutter_crashlytics.dart';
@@ -43,17 +44,29 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
     assert(B.user != null);
     initDynamicLinks();
 
+    //print('!!!DEBUG INIT Firebase Messaging');
     FirebaseMessaging().configure(
       onMessage: (Map<String, dynamic> message) {
-        //print('!!!DEBUG: Message received ${message['data']}');
+        Map<String, dynamic> payload;
+        // Android and iOS has different format of messages
+        if (Theme.of(context).platform == TargetPlatform.iOS) {
+           //print('!!!DEBUG: Message received (iOS) ${message}');
+           payload = message;
+        } else {
+           //print('!!!DEBUG: Message received (Android) ${message['data']}');
+           payload = message['data'];
+        }
+      
         //print('!!!DEBUG: Message event ${message['data']['count']} $context');
-        if (message['data']['event'] == 'books_recognized')
+        if (payload['event'] == 'books_recognized') {
           //print('!!!DEBUG: Snacbar to show ${message['data']['count']} $context');
           showSnackBar(context,
-              S.of(context).snackRecognitionDone(message['data']['count']));
+              S.of(context).snackRecognitionDone(payload['count']));
+        } else if (payload['event'] == 'new_message') {
         setState(() {
           unreadMessage = true;
         });
+        }
         return;
       },
       onResume: (Map<String, dynamic> message) {
@@ -243,8 +256,13 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
           // Here we take the value from the MyHomePage object that was created by
           // the App.build method, and use it to set our appbar title.
           actions: <Widget>[
-            new IconButton(
+
+                Stack(children: <Widget>[
+                  IconButton(
               onPressed: () {
+                setState((){
+                   unreadMessage = false;            
+                });
                 Navigator.push(
                     context,
                     new MaterialPageRoute(
@@ -256,6 +274,18 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
               tooltip: S.of(context).hintChatOpen,
               icon: assetIcon(communication_100, size: 30),
             ),
+                  Positioned.fill(
+                          child: Container(
+                              padding: EdgeInsets.all(7.0),
+                              alignment: Alignment.topRight,
+                                  child: ClipOval(
+                                    child: unreadMessage ? Container(
+                                      color: Colors.green,
+                                      height: 12.0, // height of the button
+                                      width: 12.0, // width of the button
+                                    ) : Container(),
+                                  )))
+                ])
           ],
           title: new Text(S.of(context).title,
               style:
@@ -438,6 +468,9 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                     size: 30),
                 onTap: () {
                   Navigator.pop(context);
+                setState((){
+                   unreadMessage = false;            
+                });
                   Navigator.push(
                       context,
                       new MaterialPageRoute(

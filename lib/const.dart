@@ -787,26 +787,19 @@ class Messages {
   DateTime timestamp;
   String message;
   Map<String, int> unread;
-  List<String> books;
-  // Amount to pay for books (keep for completed phase)
-  double amount;
-  String status;
   String fromId;
   String fromName;
   String fromImage;
   String toId;
   String toName;
   String toImage;
-  DateTime handover;
-
+ 
   bool fromDb;
 
   Messages(
       {@required User from,
       User to,
-      this.system = false,
-      this.status = Initial,
-      this.books}) {
+      this.system = false}) {
     assert(from != null && (system || !system && to != null));
 
     fromId = from.id;
@@ -826,10 +819,6 @@ class Messages {
     timestamp = DateTime.now();
     unread = {fromId: 0, 'system': 0};
 
-    if (books == null) books = <String>[];
-
-    amount = 0.0;
-
     fromDb = false;
   }
 
@@ -842,21 +831,12 @@ class Messages {
         unread = json['unread'] != null
             ? Map<String, int>.from(json['unread'])
             : null,
-        books = json['books'] != null
-            ? List<String>.from(json['books'] as List<dynamic>)
-            : List<String>.from([]),
-        amount =
-            json['amount'] != null ? (json['amount'] as num).toDouble() : 0.0,
-        status = json['status'],
         fromId = json['fromId'],
         fromName = json['fromName'],
         fromImage = json['fromImage'],
         toId = json['toId'],
         toName = json['toName'],
-        toImage = json['toImage'],
-        handover = json['handover'] != null
-            ? (json['handover'] as Timestamp).toDate()
-            : null {
+        toImage = json['toImage'] {
     if (unread == null) {
       unread = {for (var i in ids) i: 0};
     }
@@ -874,19 +854,16 @@ class Messages {
       'message': message,
       'timestamp': Timestamp.now().millisecondsSinceEpoch.toString(),
       'unread': unread,
-      'books': books,
-      'amount': amount,
-      'status': status,
       'fromId': fromId,
       'fromName': fromName,
       'fromImage': fromImage,
       'toId': toId,
       'toName': toName,
       'toImage': toImage,
-      'handover': handover != null ? Timestamp.fromDate(handover) : null
     };
   }
 
+  /*
   // Return userId of the counterparty
   bool get toMe {
     return toId == B.user.id;
@@ -895,6 +872,7 @@ class Messages {
   bool get fromMe {
     return fromId == B.user.id;
   }
+  */
 
   // Return userId of the counterparty
   String get partnerId {
@@ -908,6 +886,7 @@ class Messages {
     return null;
   }
 
+  /*
   User get to {
     return User(id: toId, name: toName, photo: toImage);
   }
@@ -915,6 +894,7 @@ class Messages {
   User get from {
     return User(id: fromId, name: fromName, photo: fromImage);
   }
+  */
 
   // Return name of the peer
   String get partnerName {
@@ -929,8 +909,6 @@ class Messages {
   }
 
   void reset() {
-    status = Messages.Initial;
-    books = <String>[];
     unread = {for (var i in ids) i: 0};
     timestamp = DateTime.now();
   }
@@ -949,7 +927,6 @@ class Messages {
     return system == rec.system &&
         message == rec.message &&
         timestamp == rec.timestamp &&
-        status == rec.status &&
         fromId == rec.fromId &&
         fromName == rec.fromName &&
         fromImage == rec.fromImage &&
@@ -962,17 +939,14 @@ class Messages {
     system = rec.system;
     message = rec.message;
     timestamp = rec.timestamp;
-    status = rec.status;
     fromId = rec.fromId;
     fromName = rec.fromName;
     fromImage = rec.fromImage;
     toId = rec.toId;
     toName = rec.toName;
     toImage = rec.toImage;
-    books = rec.books;
     ids = rec.ids;
     unread = rec.unread;
-    handover = rec.handover;
   }
 
   Stream<Messages> snapshots() async* {
