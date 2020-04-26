@@ -44,41 +44,59 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
     assert(B.user != null);
     initDynamicLinks();
 
-    //print('!!!DEBUG INIT Firebase Messaging');
+    print('!!!DEBUG INIT Firebase Messaging');
     FirebaseMessaging().configure(
       onMessage: (Map<String, dynamic> message) {
         Map<String, dynamic> payload;
         // Android and iOS has different format of messages
         if (Theme.of(context).platform == TargetPlatform.iOS) {
-           //print('!!!DEBUG: Message received (iOS) ${message}');
-           payload = message;
+          print('!!!DEBUG: Message received (iOS) ${message}');
+          payload = message;
         } else {
-           //print('!!!DEBUG: Message received (Android) ${message['data']}');
-           payload = message['data'];
+          payload = Map<String, dynamic>.from(message['data']);
         }
-      
-        //print('!!!DEBUG: Message event ${message['data']['count']} $context');
+
         if (payload['event'] == 'books_recognized') {
           //print('!!!DEBUG: Snacbar to show ${message['data']['count']} $context');
-          showSnackBar(context,
-              S.of(context).snackRecognitionDone(payload['count']));
+          showSnackBar(
+              context, S.of(context).snackRecognitionDone(payload['count']));
         } else if (payload['event'] == 'new_message') {
-        setState(() {
-          unreadMessage = true;
-        });
+          setState(() {
+            unreadMessage = true;
+          });
         }
         return;
       },
       onResume: (Map<String, dynamic> message) {
+        Map<String, dynamic> payload;
+        // Android and iOS has different format of messages
+        if (Theme.of(context).platform == TargetPlatform.iOS) {
+          print('!!!DEBUG: Message received (iOS) ${message}');
+          payload = message;
+        } else {
+          payload = Map<String, dynamic>.from(message['data']);
+        }
+        print('!!!DEBUG onResume $payload');
+
         return new Future.delayed(Duration.zero, () {
           // TODO: Change sender to chat id
-          Chat.runChatById(context, null, chatId: message['chat']);
+          Chat.runChatById(context, chatId: payload['chat']);
         });
       },
       onLaunch: (Map<String, dynamic> message) {
+        Map<String, dynamic> payload;
+        // Android and iOS has different format of messages
+        if (Theme.of(context).platform == TargetPlatform.iOS) {
+          print('!!!DEBUG: Message received (iOS) ${message}');
+          payload = message;
+        } else {
+          payload = Map<String, dynamic>.from(message['data']);
+        }
+        print('!!!DEBUG onLaunch $payload');
+
         return new Future.delayed(Duration.zero, () {
           // TODO: Change sender to chat id
-          Chat.runChatById(context, null, chatId: message['chat']);
+          Chat.runChatById(context, chatId: payload['chat']);
         });
       },
     );
@@ -93,6 +111,8 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   }
 
   Future<void> processDeepLink(Uri deepLink) async {
+    print('!!!DEBUG Running DeepLink');
+
     deepLink.queryParameters.forEach((k, v) => print('$k: $v'));
 
     if (deepLink.path == "/chat") {
@@ -233,8 +253,13 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
     final PendingDynamicLinkData data =
         await FirebaseDynamicLinks.instance.getInitialLink();
     final Uri deepLink = data?.link;
+    print('!!!DEBUG >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>');
+    print('!!!DEBUG Initial Link ${deepLink}');
 
-    if (deepLink != null) processDeepLink(deepLink);
+    if (deepLink != null) {
+      print('!!!DEBUG Running DeepLink');
+      processDeepLink(deepLink);
+    }
 
     // TODO: Do I need to cancel/unsubscribe from onLink listener?
     FirebaseDynamicLinks.instance.onLink(
@@ -256,36 +281,37 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
           // Here we take the value from the MyHomePage object that was created by
           // the App.build method, and use it to set our appbar title.
           actions: <Widget>[
-
-                Stack(children: <Widget>[
-                  IconButton(
-              onPressed: () {
-                setState((){
-                   unreadMessage = false;            
-                });
-                Navigator.push(
-                    context,
-                    new MaterialPageRoute(
-                        builder: (context) => buildScaffold(
-                            context,
-                            S.of(context).titleMessages,
-                            new ChatListWidget())));
-              },
-              tooltip: S.of(context).hintChatOpen,
-              icon: assetIcon(communication_100, size: 30),
-            ),
-                  Positioned.fill(
-                          child: Container(
-                              padding: EdgeInsets.all(7.0),
-                              alignment: Alignment.topRight,
-                                  child: ClipOval(
-                                    child: unreadMessage ? Container(
-                                      color: Colors.green,
-                                      height: 12.0, // height of the button
-                                      width: 12.0, // width of the button
-                                    ) : Container(),
-                                  )))
-                ])
+            Stack(children: <Widget>[
+              IconButton(
+                onPressed: () {
+                  setState(() {
+                    unreadMessage = false;
+                  });
+                  Navigator.push(
+                      context,
+                      new MaterialPageRoute(
+                          builder: (context) => buildScaffold(
+                              context,
+                              S.of(context).titleMessages,
+                              new ChatListWidget())));
+                },
+                tooltip: S.of(context).hintChatOpen,
+                icon: assetIcon(communication_100, size: 30),
+              ),
+              Positioned.fill(
+                  child: Container(
+                      padding: EdgeInsets.all(7.0),
+                      alignment: Alignment.topRight,
+                      child: ClipOval(
+                        child: unreadMessage
+                            ? Container(
+                                color: Colors.green,
+                                height: 12.0, // height of the button
+                                width: 12.0, // width of the button
+                              )
+                            : Container(),
+                      )))
+            ])
           ],
           title: new Text(S.of(context).title,
               style:
@@ -468,9 +494,9 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                     size: 30),
                 onTap: () {
                   Navigator.pop(context);
-                setState((){
-                   unreadMessage = false;            
-                });
+                  setState(() {
+                    unreadMessage = false;
+                  });
                   Navigator.push(
                       context,
                       new MaterialPageRoute(
@@ -1762,32 +1788,40 @@ class _SettingsWidgetState extends State<SettingsWidget> {
                     ])),
                 // SUBSCRIBE button
                 package.packageType == upgradeChoice
-                    ? Row(children: <Widget>[Expanded(
-                        //constraints: BoxConstraints.loose(s),
-                        //alignment: Alignment.center,
-                        //padding: EdgeInsets.only(bottom: 20.0),
-                        child: OutlineButton(
-                            padding: EdgeInsets.all(0.0),
-                            // TODO: Translation
-                            child: Text(S.of(context).buttonUpgrade, /*style: Theme.of(context).textTheme.subtitle*/),
-                            onPressed: () async {
-                              try {
-                                //PurchaserInfo purchaserInfo =
+                    ? Row(children: <Widget>[
+                        Expanded(
+                            //constraints: BoxConstraints.loose(s),
+                            //alignment: Alignment.center,
+                            //padding: EdgeInsets.only(bottom: 20.0),
+                            child: OutlineButton(
+                                padding: EdgeInsets.all(0.0),
+                                // TODO: Translation
+                                child: Text(
+                                  S
+                                      .of(context)
+                                      .buttonUpgrade, /*style: Theme.of(context).textTheme.subtitle*/
+                                ),
+                                onPressed: () async {
+                                  try {
+                                    //PurchaserInfo purchaserInfo =
                                     await Purchases.purchasePackage(package);
-                                // print('!!!DEBUG: ${purchaserInfo}');
-                              } on PlatformException catch (e, stack) {
-                                var errorCode =
-                                    PurchasesErrorHelper.getErrorCode(e);
-                                if (errorCode !=
-                                    PurchasesErrorCode.purchaseCancelledError) {
-                                  print('!!!DEBUG Purchase canceled');
-                                }
-                                FlutterCrashlytics().logException(e, stack);
-                                //print('!!!DEBUG: purchase failed \n $e, \n $stack');
-                              }
-                            },
-                            shape: new RoundedRectangleBorder(
-                                borderRadius: new BorderRadius.circular(10.0))))])
+                                    // print('!!!DEBUG: ${purchaserInfo}');
+                                  } on PlatformException catch (e, stack) {
+                                    var errorCode =
+                                        PurchasesErrorHelper.getErrorCode(e);
+                                    if (errorCode !=
+                                        PurchasesErrorCode
+                                            .purchaseCancelledError) {
+                                      print('!!!DEBUG Purchase canceled');
+                                    }
+                                    FlutterCrashlytics().logException(e, stack);
+                                    //print('!!!DEBUG: purchase failed \n $e, \n $stack');
+                                  }
+                                },
+                                shape: new RoundedRectangleBorder(
+                                    borderRadius:
+                                        new BorderRadius.circular(10.0))))
+                      ])
                     : Container(),
               ],
             ))));

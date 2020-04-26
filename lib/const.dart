@@ -1013,8 +1013,9 @@ class Messages {
           .document(system ? fromId : idFromTo(fromId, toId));
   }
 
-  static DocumentReference Ref(String from, String to) {
-    return db.collection('messages').document(idFromTo(from, to));
+  static DocumentReference Ref(String id) {
+    //return db.collection('messages').document(idFromTo(from, to));
+    return db.collection('messages').document(id);
   }
 
   // Build chat Id from to and from ids (any sequence)

@@ -292,14 +292,14 @@ class Chat extends StatefulWidget {
     });
   }
 
-  static runChatById(BuildContext context, User partner,
-      {String chatId, String message, bool send = false}) async {
-    DocumentSnapshot chatSnap = await Messages.Ref(partner.id, B.user.id).get();
+  static runChatById(BuildContext context, {String chatId, String message, bool send = false}) async {
+    DocumentSnapshot chatSnap = await Messages.Ref(chatId).get();
     if (!chatSnap.exists) throw 'Chat does not exist: ${chatId}';
 
     Messages chat = new Messages.fromJson(chatSnap.data, chatSnap);
+    User partner;
 
-    if (!chat.system && partner == null) {
+    if (!chat.system) {
       String partnerId = chat.partnerId;
       DocumentSnapshot snap = await User.Ref(partnerId).get();
       if (!snap.exists)
