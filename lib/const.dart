@@ -26,7 +26,7 @@ class B {
   static String _country;
 
   static User get user => _currentUser;
-  static set user (User user) {
+  static set user(User user) {
     _currentUser = user;
   }
 
@@ -146,8 +146,6 @@ const String image_gallery_100 = 'images/icons/icons8-image-gallery-100.png';
 const String compact_camera_100 = 'images/icons/icons8-compact-camera-100.png';
 const String attach_90 = 'images/icons/icons8-attach-90.png';
 const String heart_100 = 'images/icons/icons8-heart-100.png';
-
-
 
 Widget assetIcon(String asset, {double size, double padding = 0.0}) {
   if (size != null)
@@ -283,7 +281,6 @@ class Book {
     keys = getKeys(' ' + authors.join(' ') + ' ' + title + ' ' + isbn);
   }
 
-
   Book.fromJson(Map json)
       : title = json['title'],
         authors = (json['authors'] as List)?.cast<String>(),
@@ -393,7 +390,9 @@ class User {
         wishCount = json['wishCount'] ?? 0,
         bookCount = json['bookCount'] ?? 0,
         shelfCount = json['shelfCount'] ?? 0,
-        balance = json['balance'] == null || json['balance'] is double ? 0 : json['balance'];
+        balance = json['balance'] == null || json['balance'] is double
+            ? 0
+            : json['balance'];
 
   Map<String, dynamic> toJson() {
     return {
@@ -425,6 +424,8 @@ class User {
 }
 
 enum BookrecordType { none, own, wish, lent, borrowed, transit }
+
+enum BookIntent { None, Offer, Request, Return, Remind }
 
 class Bookrecord {
   String id;
@@ -545,9 +546,7 @@ class Bookrecord {
       'holderId': holderId,
       'holderName': holderName,
       'holderImage': holderImage,
-      'users': <String>{ownerId, holderId}
-          .where((s) => s != null)
-          .toList(),
+      'users': <String>{ownerId, holderId}.where((s) => s != null).toList(),
       'location': location?.data,
       'matched': matched,
       'matchedId': matchedId,
@@ -573,17 +572,11 @@ class Bookrecord {
   }
 
   bool get isLent {
-    return ownerId == B.user.id &&
-        ownerId != holderId &&
-        lent &&
-        !wish;
+    return ownerId == B.user.id && ownerId != holderId && lent && !wish;
   }
 
   bool get isBorrowed {
-    return holderId == B.user.id &&
-        ownerId != holderId &&
-        lent &&
-        !wish;
+    return holderId == B.user.id && ownerId != holderId && lent && !wish;
   }
 
   BookrecordType get type {
@@ -597,6 +590,23 @@ class Bookrecord {
       return BookrecordType.wish;
     else
       return BookrecordType.none;
+  }
+
+  BookIntent intent({@required String me, @required String him}) {
+    if (holderId == me && ownerId != him)
+      // Books with the user which does not belong to me
+      return BookIntent.Offer;
+    else if (holderId == him && ownerId != me)
+      // Books with me which belong to the user
+      return BookIntent.Request;
+    else if (holderId == me && ownerId == him)
+      // Books with the user which belong to me
+      return BookIntent.Return;
+    else if (holderId == him && ownerId == me)
+      // Books with him which belong to me
+      return BookIntent.Remind;
+    else
+      return BookIntent.None;
   }
 
   User get holder {
@@ -739,7 +749,6 @@ class Bookrecord {
   }
 }
 
-
 class Secret {
   String id;
   String secretSeed;
@@ -762,7 +771,6 @@ class Secret {
     return db.collection('secrets').document(userId);
   }
 }
-
 
 class Provider {
   String name;
@@ -793,13 +801,10 @@ class Messages {
   String toId;
   String toName;
   String toImage;
- 
+
   bool fromDb;
 
-  Messages(
-      {@required User from,
-      User to,
-      this.system = false}) {
+  Messages({@required User from, User to, this.system = false}) {
     assert(from != null && (system || !system && to != null));
 
     fromId = from.id;
@@ -1024,7 +1029,6 @@ class Messages {
   }
 }
 
-
 Set<String> getKeys(String s) {
   List<String> keys = s
       .toLowerCase()
@@ -1035,7 +1039,6 @@ Set<String> getKeys(String s) {
   if (keys == null) keys = <String>[];
   return keys.toSet();
 }
-
 
 Future<GeoPoint> currentPosition() async {
   try {
@@ -1058,7 +1061,7 @@ Future<GeoFirePoint> currentLocation() async {
     B.position = position;
     if (position != null)
       return Geoflutterfire()
-        .point(latitude: position.latitude, longitude: position.longitude);
+          .point(latitude: position.latitude, longitude: position.longitude);
     else
       return null;    
   } on PlatformException catch (e, stack) {
@@ -1081,7 +1084,6 @@ double distanceBetween(double lat1, double lon1, double lat2, double lon2) {
   double d = R * c;
   return d; // meters
 }
-
 
 //TODO: Not sure it's good idea to have it as global valiables. Need to find
 // better way. Hwever to have it in widget is not good idea either as it used
@@ -1110,7 +1112,6 @@ class LibConnect {
     return _goodreadsClient;
   }
 
-
   static BooksApi getGoogleBookApi() {
     if (_googleClient == null)
       _googleClient =
@@ -1121,4 +1122,3 @@ class LibConnect {
     return _booksApi;
   }
 }
-
