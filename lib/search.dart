@@ -1,4 +1,4 @@
-import 'package:flutter_crashlytics/flutter_crashlytics.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:http/http.dart';
 import 'dart:convert';
 import 'dart:io';
@@ -53,7 +53,7 @@ Future<Book> searchByIsbn(String isbn) async {
     });
     return books[0];
   } catch (e, stack) {
-    FlutterCrashlytics().logException(e, stack);
+      Crashlytics.instance.recordError(e, stack);
 
     print('Unknown error in searchByIsbn: $e');
     return null;

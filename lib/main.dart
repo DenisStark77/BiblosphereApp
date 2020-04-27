@@ -11,7 +11,7 @@ import 'package:flutter_signin_button/flutter_signin_button.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter_crashlytics/flutter_crashlytics.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:intro_views_flutter/Models/page_view_model.dart';
 import 'package:intro_views_flutter/intro_views_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -47,26 +47,18 @@ void main() async {
 
   await Firestore.instance.settings(persistenceEnabled: true);
 
-  FlutterError.onError = (FlutterErrorDetails details) {
-    if (isInDebugMode) {
-      // In development mode simply print to console.
-      FlutterError.dumpErrorToConsole(details);
-    } else {
-      // In production mode report to the application zone to report to
-      // Crashlytics.
-      Zone.current.handleUncaughtError(details.exception, details.stack);
-    }
-  };
+  // Set `enableInDevMode` to true to see reports while in debug mode
+  // This is only to be used for confirming that reports are being
+  // submitted as expected. It is not intended to be used for everyday
+  // development.
+  Crashlytics.instance.enableInDevMode = true;
+
+  // Pass all uncaught errors from the framework to Crashlytics.
+  FlutterError.onError = Crashlytics.instance.recordFlutterError;
 
   runZoned<Future<Null>>(() async {
     runApp(new MyApp());
-  }, onError: (error, stackTrace) async {
-    // Whenever an error occurs, call the `reportCrash` function. This will send
-    // Dart errors to our dev console or Crashlytics depending on the environment.
-    debugPrint(error.toString());
-    await FlutterCrashlytics()
-        .reportCrash(error, stackTrace, forceCrash: false);
-  });
+  }, onError: Crashlytics.instance.recordError);
 
   Purchases.setDebugLogsEnabled(true);
   // TODO: Keep API Key in security values in Firebase (Security)
@@ -210,7 +202,7 @@ class _MyAppState extends State<MyApp> {
       searchByTitleAuthor('Not a book which exist');
     } catch (ex, stack) {
       print(ex);
-      FlutterCrashlytics().logException(ex, stack);
+      Crashlytics.instance.recordError(ex, stack);
     }
   }
 
@@ -493,7 +485,7 @@ class _MyAppState extends State<MyApp> {
     } catch (e, stack) {
       print('Sign-in failed: ${e}');
       showSnackBar(context, 'Sign-in failed: ${e}');
-      FlutterCrashlytics().logException(e, stack);
+      Crashlytics.instance.recordError(e, stack);
     }
     return null;
   }
@@ -533,7 +525,7 @@ class _MyAppState extends State<MyApp> {
     } catch (e, stack) {
       print('Sign-in failed: ${e}');
       showSnackBar(context, 'Sign-in failed: ${e}');
-      FlutterCrashlytics().logException(e, stack);
+      Crashlytics.instance.recordError(e, stack);
     }
     return null;
   }

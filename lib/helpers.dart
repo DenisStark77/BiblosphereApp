@@ -6,7 +6,7 @@ import 'package:flutter/widgets.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_dynamic_links/firebase_dynamic_links.dart';
-import 'package:flutter_crashlytics/flutter_crashlytics.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flushbar/flushbar.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:app_settings/app_settings.dart';
@@ -196,7 +196,7 @@ pushSingle(BuildContext context, Route route, String key) {
       //print('!!!DEBUG: route removed');
     } catch (e, stack) {
       //print('!!!DEBUG: failed to removeRoute');
-      FlutterCrashlytics().logException(e, stack);
+      Crashlytics.instance.recordError(e, stack);
     }
 
   // Keep Route for the key
@@ -653,7 +653,7 @@ Future<int> wishlistAllowance() async {
     PurchaserInfo info = await Purchases.getPurchaserInfo();
     return info.activeSubscriptions.contains('basic') ? 100 : 10;
   } catch(e, stack) {
-    FlutterCrashlytics().logException(e, stack);
+      Crashlytics.instance.recordError(e, stack);
     return 10;
   }
 }
@@ -663,7 +663,7 @@ Future<int> booksAllowance() async {
     PurchaserInfo info = await Purchases.getPurchaserInfo();
     return info.activeSubscriptions.contains('basic') ? 5 : 2;
   } catch(e, stack) {
-    FlutterCrashlytics().logException(e, stack);
+      Crashlytics.instance.recordError(e, stack);
     return 2;
   }
 }
@@ -673,7 +673,7 @@ Future<String> upgradePrice() async {
     Offerings offerings = await Purchases.getOfferings();
     return offerings != null ? offerings.current.monthly.product.priceString : 'USD 3.99';
   } catch(e, stack) {
-    FlutterCrashlytics().logException(e, stack);
+      Crashlytics.instance.recordError(e, stack);
     return 'USD 2.99';
   }
 }

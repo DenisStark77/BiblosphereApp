@@ -1,5 +1,5 @@
 import 'package:firebase_analytics/firebase_analytics.dart';
-import 'package:flutter_crashlytics/flutter_crashlytics.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter/services.dart';
@@ -1045,9 +1045,9 @@ Future<GeoPoint> currentPosition() async {
       return new GeoPoint(position.latitude, position.longitude);
     else
       return null;  
-  } on PlatformException catch (ex, stack) {
-    FlutterCrashlytics().logException(ex, stack);
-    print("POSITION: GeoPisition failed ${ex} ${stack}");
+  } on PlatformException catch (e, stack) {
+      Crashlytics.instance.recordError(e, stack);
+    print("POSITION: GeoPisition failed ${e} ${stack}");
     return null;
   }
 }
@@ -1061,9 +1061,9 @@ Future<GeoFirePoint> currentLocation() async {
         .point(latitude: position.latitude, longitude: position.longitude);
     else
       return null;    
-  } on PlatformException catch (ex, stack) {
-    FlutterCrashlytics().logException(ex, stack);
-    print("POSITION: GeoPisition failed ${ex} ${stack}");
+  } on PlatformException catch (e, stack) {
+      Crashlytics.instance.recordError(e, stack);
+    print("POSITION: GeoPisition failed ${e} ${stack}");
     return null;
   }
 }

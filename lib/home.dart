@@ -7,7 +7,7 @@ import 'package:firebase_dynamic_links/firebase_dynamic_links.dart';
 import 'package:flutter/rendering.dart';
 import 'dart:async';
 import 'package:share/share.dart';
-import 'package:flutter_crashlytics/flutter_crashlytics.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/gestures.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
@@ -880,10 +880,10 @@ class _MyBookWidgetState extends State<MyBook> {
       } else {
         showSnackBar(context, S.of(context).bookDeleted);
       }
-    } catch (ex, stack) {
+    } catch (e, stack) {
       print('Bookrecord delete failed for [${bookrecord.id}, ${B.user.id}]: ' +
-          ex.toString());
-      FlutterCrashlytics().logException(ex, stack);
+          e.toString());
+      Crashlytics.instance.recordError(e, stack);
     }
   }
 
@@ -1597,7 +1597,7 @@ class _SettingsWidgetState extends State<SettingsWidget> {
       // access latest purchaserInfo
     } on PlatformException catch (e, stack) {
       //print('!!!DEBUG: Exception on Purchases plug-in, $e, $stack');
-      FlutterCrashlytics().logException(e, stack);
+      Crashlytics.instance.recordError(e, stack);
     }
 
     Purchases.addPurchaserInfoUpdateListener((info) {
@@ -1824,8 +1824,7 @@ class _SettingsWidgetState extends State<SettingsWidget> {
                                       // TODO: Add analytics        
                                       print('!!!DEBUG Purchase canceled');
                                     }
-                                    FlutterCrashlytics().logException(e, stack);
-                                    //print('!!!DEBUG: purchase failed \n $e, \n $stack');
+                                      Crashlytics.instance.recordError(e, stack);
                                   }
                                 },
                                 shape: new RoundedRectangleBorder(

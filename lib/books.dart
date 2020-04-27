@@ -7,7 +7,7 @@ import 'package:barcode_scan/barcode_scan.dart';
 import 'package:geoflutterfire/geoflutterfire.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:flutter_crashlytics/flutter_crashlytics.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:http/http.dart';
@@ -60,16 +60,16 @@ Future<String> scanIsbn(BuildContext context, BookCallback onSuccess) async {
     if (e.code == BarcodeScanner.cameraAccessDenied) {
       //TODO: Inform user
       print('The user did not grant the camera permission!');
-      FlutterCrashlytics().logException(e, stack);
+      Crashlytics.instance.recordError(e, stack);
     } else {
       print('Unknown platform error in scanIsbn: $e');
-      FlutterCrashlytics().logException(e, stack);
+      Crashlytics.instance.recordError(e, stack);
     }
   } on FormatException {
     print(
         'null (User returned using the "back"-button before scanning anything. Result)');
   } catch (e, stack) {
-    FlutterCrashlytics().logException(e, stack);
+    Crashlytics.instance.recordError(e, stack);
     print('Unknown error in scanIsbn: $e');
   }
 
@@ -357,15 +357,15 @@ class _AddBookWidgetState extends State<AddBookWidget> {
       }
       //print('!!!DEBUG: ${res.body}');
       //print('!!!DEBUG: Request for recognition queued');
-    } catch (ex, stack) {
-      print("Failed to recognize image: " + ex.toString() + stack.toString());
+    } catch (e, stack) {
+      print("Failed to recognize image: " + e.toString() + stack.toString());
       logAnalyticsEvent(
           name: 'recognition_failed',
           parameters: <String, dynamic>{
             'type': 'exception',
-            'error': ex.toString(),
+            'error': e.toString(),
           });
-      FlutterCrashlytics().logException(ex, stack);
+      Crashlytics.instance.recordError(e, stack);
     }
   }
 }
@@ -440,7 +440,7 @@ class BookSearchData {
         }
       }
     } catch (e, stack) {
-      FlutterCrashlytics().logException(e, stack);
+      Crashlytics.instance.recordError(e, stack);
       print('Unknown error in BookSearchData:snapshots: $e');
     }
 
