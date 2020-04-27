@@ -5,7 +5,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:firebase_dynamic_links/firebase_dynamic_links.dart';
 import 'package:flutter/rendering.dart';
-import 'package:googleapis/dfareporting/v3_2.dart';
 import 'dart:async';
 import 'package:share/share.dart';
 import 'package:flutter_crashlytics/flutter_crashlytics.dart';
@@ -20,6 +19,8 @@ import 'package:biblosphere/lifecycle.dart';
 import 'package:biblosphere/books.dart';
 import 'package:biblosphere/chat.dart';
 import 'package:biblosphere/l10n.dart';
+
+import 'helpers.dart';
 
 class MyHomePage extends StatefulWidget {
   MyHomePage({
@@ -44,13 +45,13 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
     assert(B.user != null);
     initDynamicLinks();
 
-    print('!!!DEBUG INIT Firebase Messaging');
+    //print('!!!DEBUG INIT Firebase Messaging');
     FirebaseMessaging().configure(
       onMessage: (Map<String, dynamic> message) {
         Map<String, dynamic> payload;
         // Android and iOS has different format of messages
         if (Theme.of(context).platform == TargetPlatform.iOS) {
-          print('!!!DEBUG: Message received (iOS) ${message}');
+          //print('!!!DEBUG: Message received (iOS) ${message}');
           payload = message;
         } else {
           payload = Map<String, dynamic>.from(message['data']);
@@ -68,33 +69,32 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
         return;
       },
       onResume: (Map<String, dynamic> message) {
+        return Future.delayed(Duration.zero, () {
         Map<String, dynamic> payload;
         // Android and iOS has different format of messages
         if (Theme.of(context).platform == TargetPlatform.iOS) {
-          print('!!!DEBUG: Message received (iOS) ${message}');
+          //print('!!!DEBUG: Message received (iOS) ${message}');
           payload = message;
         } else {
           payload = Map<String, dynamic>.from(message['data']);
         }
-        print('!!!DEBUG onResume $payload');
+        //print('!!!DEBUG onResume $payload');
 
-        return new Future.delayed(Duration.zero, () {
-          // TODO: Change sender to chat id
           Chat.runChatById(context, chatId: payload['chat']);
         });
       },
       onLaunch: (Map<String, dynamic> message) {
+        return new Future.delayed(Duration.zero, () {
         Map<String, dynamic> payload;
         // Android and iOS has different format of messages
         if (Theme.of(context).platform == TargetPlatform.iOS) {
-          print('!!!DEBUG: Message received (iOS) ${message}');
+          //print('!!!DEBUG: Message received (iOS) ${message}');
           payload = message;
         } else {
           payload = Map<String, dynamic>.from(message['data']);
         }
-        print('!!!DEBUG onLaunch $payload');
+        //print('!!!DEBUG onLaunch $payload');
 
-        return new Future.delayed(Duration.zero, () {
           // TODO: Change sender to chat id
           Chat.runChatById(context, chatId: payload['chat']);
         });
@@ -103,6 +103,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
 
     FirebaseMessaging().requestNotificationPermissions(
         const IosNotificationSettings(sound: true, badge: true, alert: true));
+    
   }
 
   @override
@@ -111,7 +112,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   }
 
   Future<void> processDeepLink(Uri deepLink) async {
-    print('!!!DEBUG Running DeepLink');
+    //print('!!!DEBUG Running DeepLink');
 
     deepLink.queryParameters.forEach((k, v) => print('$k: $v'));
 
@@ -247,30 +248,38 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
 
       Chat.runChat(context, null, chat: chat, message: message, send: true);
     }
+    // TODO: Add Deep Link '/main'
   }
 
   void initDynamicLinks() async {
     final PendingDynamicLinkData data =
         await FirebaseDynamicLinks.instance.getInitialLink();
     final Uri deepLink = data?.link;
-    print('!!!DEBUG >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>');
-    print('!!!DEBUG Initial Link ${deepLink}');
 
     if (deepLink != null) {
-      print('!!!DEBUG Running DeepLink');
       processDeepLink(deepLink);
     }
 
     // TODO: Do I need to cancel/unsubscribe from onLink listener?
     FirebaseDynamicLinks.instance.onLink(
-        onSuccess: (PendingDynamicLinkData dynamicLink) async {
+        onSuccess: (PendingDynamicLinkData dynamicLink) {
+      return Future.delayed(Duration.zero, () async {
       final Uri deepLink = dynamicLink?.link;
 
-      if (deepLink != null) processDeepLink(deepLink);
-    }, onError: (OnLinkErrorException e) async {
-      // TODO: Add to Crashalitics
+      if (deepLink != null) {
+        await processDeepLink(deepLink);
+        //showSnackBar(context, 'Deep link 2');      
+      } else {
+        //showSnackBar(context, 'Deep link 1'); 
+      }
+      });
+    }, onError: (OnLinkErrorException e) {
+      return Future.delayed(Duration.zero, () {
+        // TODO: Add to Crashalitics
+      //showSnackBar(context, 'onError: ${e.code} ${e.message} ${e.details}');
       print('onLinkError');
       print(e.message);
+      });
     });
   }
 
@@ -1812,6 +1821,7 @@ class _SettingsWidgetState extends State<SettingsWidget> {
                                     if (errorCode !=
                                         PurchasesErrorCode
                                             .purchaseCancelledError) {
+                                      // TODO: Add analytics        
                                       print('!!!DEBUG Purchase canceled');
                                     }
                                     FlutterCrashlytics().logException(e, stack);

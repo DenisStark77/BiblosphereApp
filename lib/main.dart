@@ -58,11 +58,6 @@ void main() async {
     }
   };
 
-  // TODO: Didn't work on WEB
-  if (!kIsWeb) {
-    await FlutterCrashlytics().initialize();
-  }
-
   runZoned<Future<Null>>(() async {
     runApp(new MyApp());
   }, onError: (error, stackTrace) async {

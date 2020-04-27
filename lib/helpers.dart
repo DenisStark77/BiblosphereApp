@@ -204,7 +204,7 @@ pushSingle(BuildContext context, Route route, String key) {
 
   // Remove key if Route completed in a normal way
   return Navigator.push(context, route).then((value) {
-    print('!!!DEBUG push completed: $value');
+    //print('!!!DEBUG push completed: $value');
     singleRoutes[key] = null;
   });
 }
@@ -457,7 +457,7 @@ Future<String> buildLink(String query,
         title: title, description: description, imageUrl: Uri.parse(image));
 
   final DynamicLinkParameters parameters = new DynamicLinkParameters(
-    uriPrefix: 'https://biblosphere.page.link',
+    uriPrefix: 'https://biblosphere.org/link',
     link: Uri.parse('https://biblosphere.org/${query}'),
     androidParameters: AndroidParameters(
       packageName: 'com.biblosphere.biblosphere',

@@ -46,7 +46,7 @@
 			<key>CFBundleTypeRole</key>
 			<string>Editor</string>
 			<key>CFBundleURLName</key>
-			<string>firebase</string>
+			<string>com.biblosphere.biblosphere</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>com.biblosphere.biblosphere</string>
@@ -59,6 +59,10 @@
 	<string>251029385697125</string>
 	<key>FacebookDisplayName</key>
 	<string>Biblosphere</string>
+	<key>FirebaseDynamicLinksCustomDomains</key>
+	<array>
+		<string>https://biblosphere.org/link</string>
+	</array>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<key>LSApplicationCategoryType</key>
