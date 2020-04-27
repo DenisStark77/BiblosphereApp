@@ -775,7 +775,7 @@ class ChatScreenState extends State<ChatScreen> {
                     ? Container(
                   child: Text(
                     document['content'],
-                    style: TextStyle(color: C.chatMyText),
+                    style: TextStyle(color: C.chatHisText),
                   ),
                   padding: EdgeInsets.all(10.0),
                   constraints: BoxConstraints(
@@ -811,7 +811,7 @@ class ChatScreenState extends State<ChatScreen> {
                                 child: Container(
                                   child: Text(
                                     document['content'],
-                                    style: TextStyle(color: C.chatMyText),
+                                    style: TextStyle(color: C.chatHisText),
                                   ),
                                   alignment: Alignment.topLeft,
                                   padding:
@@ -824,11 +824,11 @@ class ChatScreenState extends State<ChatScreen> {
                     maxWidth: width,
                   ),
                   decoration: BoxDecoration(
-                      color: C.chatMy,
+                      color: C.chatHis,
                       borderRadius: BorderRadius.circular(8.0)),
                   margin: EdgeInsets.only(
                       //bottom: isLastMessageRight(index) ? 20.0 : 10.0,
-                      right: 10.0),
+                      left: 10.0),
                 )
                 // Sticker
                     : Container(
@@ -990,15 +990,23 @@ class ChatScreenState extends State<ChatScreen> {
                                   onSelected: (context, book) {
                                     //print('!!!DEBUG: Attachment set');
                                     attachment = book;
-                                    if (book.ownerId == B.user.id) {
+                                    if (book.intent(me: B.user.id, him: partner.id) == BookIntent.Offer) {
                                       // Offer My book
                                       textEditingController.text =
                                           S.of(context).offerBook(book.title);
-                                    } else {
-                                      // Return counterparty's book
+                                    } else if (book.intent(me: B.user.id, him: partner.id) == BookIntent.Request) {
+                                      // Request his book
+                                      textEditingController.text =
+                                          S.of(context).requestBook(book.title);
+                                    } else if (book.intent(me: B.user.id, him: partner.id) == BookIntent.Return) {
+                                      // Return his book
+                                      textEditingController.text =
+                                          S.of(context).requestReturn(book.title);
+                                    } else if (book.intent(me: B.user.id, him: partner.id) == BookIntent.Remind) {
+                                      // Remind to return 
                                       textEditingController.text = S
                                           .of(context)
-                                          .requestReturn(book.title);
+                                          .requestReturnByOwner(book.title);
                                     }
                                     if (mounted)
                                       setState(() {
@@ -1063,7 +1071,7 @@ class ChatScreenState extends State<ChatScreen> {
                 } else {
                   listMessage = snapshot.data.documents;
                   return ListView.builder(
-                    padding: EdgeInsets.all(10.0),
+                    padding: EdgeInsets.all(0.0),
                     itemBuilder: (context, index) =>
                         buildItem(index, snapshot.data.documents[index]),
                     itemCount: snapshot.data.documents.length,
@@ -1103,7 +1111,7 @@ class _MyBooksWidgetState extends State<MyBooksWidget> {
   List<Book> suggestions = [];
   TextEditingController textController;
 
-  String filter = 'request'; // 'offer' 'return', 'remind', 'request'
+  BookIntent filter = BookIntent.Request;
 
   StreamSubscription<QuerySnapshot> bookSubscription;
   List<DocumentSnapshot> books = [];
@@ -1214,10 +1222,10 @@ class _MyBooksWidgetState extends State<MyBooksWidget> {
                                     //avatar: icon,
                                     label:
                                         Text(S.of(context).chipBooksToRequest),
-                                    selected: filter == 'request',
+                                    selected: filter == BookIntent.Request,
                                     onSelected: (bool s) {
                                       setState(() {
-                                        filter = s ? 'request' : null;
+                                        filter = s ? BookIntent.Request : null;
                                       });
                                     },
                                   ),
@@ -1225,10 +1233,10 @@ class _MyBooksWidgetState extends State<MyBooksWidget> {
                                     //avatar: icon,
                                     label:
                                         Text(S.of(context).chipBooksToReturn),
-                                    selected: filter == 'return',
+                                    selected: filter == BookIntent.Return,
                                     onSelected: (bool s) {
                                       setState(() {
-                                        filter = s ? 'return' : null;
+                                        filter = s ? BookIntent.Return : null;
                                       });
                                     },
                                   ),
@@ -1236,20 +1244,20 @@ class _MyBooksWidgetState extends State<MyBooksWidget> {
                                     //avatar: icon,
                                     label: Text(
                                         S.of(context).chipBooksToAskForReturn),
-                                    selected: filter == 'remind',
+                                    selected: filter == BookIntent.Remind,
                                     onSelected: (bool s) {
                                       setState(() {
-                                        filter = s ? 'remind' : null;
+                                        filter = s ? BookIntent.Remind : null;
                                       });
                                     },
                                   ),
                                       ChoiceChip(
                                     //avatar: icon,
                                     label: Text(S.of(context).chipBooksToOffer),
-                                    selected: filter == 'offer',
+                                    selected: filter == BookIntent.Offer,
                                     onSelected: (bool s) {
                                       setState(() {
-                                        filter = s ? 'offer' : null;
+                                        filter = s ? BookIntent.Offer : null;
                                       });
                                     },
                                   ),
@@ -1263,24 +1271,7 @@ class _MyBooksWidgetState extends State<MyBooksWidget> {
         delegate: SliverChildBuilderDelegate((context, index) {
           Bookrecord rec = new Bookrecord.fromJson(books[index].data);
 
-          if (
-              // Books with me which does not belong to the user
-              filter == 'offer' && rec.holderId == B.user.id && rec.ownerId != user.id
-                  // Books with the user which does not belong to me
-                  ||
-                  filter == 'request' &&
-                      rec.holderId == user.id &&
-                      rec.ownerId != B.user.id
-                  // Books with me which belong to the user
-                  ||
-                  filter == 'return' &&
-                      rec.holderId == B.user.id &&
-                      rec.ownerId == user.id
-                  // Books with the user which belong to me
-                  ||
-                  filter == 'remind' &&
-                      rec.holderId == user.id &&
-                      rec.ownerId == B.user.id) {
+          if (filter == rec.intent(me: B.user.id, him: user.id)) {
             return BookrecordWidget(
                 bookrecord: rec,
                 builder: (context, rec) {

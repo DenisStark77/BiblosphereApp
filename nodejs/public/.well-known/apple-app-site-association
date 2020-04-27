@@ -1,0 +1,11 @@
+{
+  "applinks": {
+      "apps": [],
+      "details": [
+           {
+             "appID": "G66S3CB89A.com.biblosphere.biblosphere",
+             "paths": [ "/link/*", "NOT /_/*" ]
+           }
+       ]
+   },
+}
