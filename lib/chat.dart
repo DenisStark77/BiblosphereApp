@@ -628,7 +628,7 @@ class ChatScreenState extends State<ChatScreen> {
       Map<String, dynamic> data = {
         'idFrom': myId,
         'idTo': peerId,
-        'timestamp': timestamp.toString(),
+        'timestamp': FieldValue.serverTimestamp(),
         'content': content,
         'type': 0,
       };
