@@ -801,7 +801,7 @@ class ChatScreenState extends State<ChatScreen> {
   }
 
   String messageDate(dynamic data) {
-    print('!!!DEBUG type: ${data.runtimeType}');
+    //print('!!!DEBUG type: ${data.runtimeType}');
     if (data is String) {
        return DateFormat('dd MMM kk:mm').format(
                           DateTime.fromMillisecondsSinceEpoch(
