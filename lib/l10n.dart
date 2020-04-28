@@ -1062,6 +1062,95 @@ class S {
   String get termsOfService {
     return Intl.message('Terms of Service', name: 'termsOfService');
   }
+
+  String get supportText {
+/*
+    return Intl.message("""
+## **Introduction**
+
+This app intended for people who love books and reading. App helps you to take books from your friends and neigbours instead of buying in the stores. It also helps you to find like minded people with similar reading taste around you.
+
+## **How to add your books**
+
+You can add you books in three ways:
+- By making photo of your bookshelf (App will recognize books from the image by the bookspines)
+- By scaning ISBN on a book
+- By searching book with author/title
+
+## **How to get books**
+
+App helps you to find your wished books around you. It's simple three step flow: 
+- Search book by author/title. 
+- Chat with owner of the book and meet for the handover.
+- Return the book
+
+Could not find the book in a proximate distance? Just add it to your wishlist and App will inform you as soon as book is available.
+
+## **Messaging**
+
+App has integrated messaging to support book sharing among users. Please note that it's not intended for general chatting (please use other messangers instead).
+Chats are not encrypted. Application bot is monitoring and participating in the chat by sending notifications (marked with #bot_message hashtag).
+
+You can attach book to the message. Click on the message with book cover to navigate there. 
+
+## **Paid subscription**
+
+The App available free of charge. However there are following expences:
+- cost of development
+- cost of hosting and APIs
+- design and marketing cost
+
+We will be happy if you join other paying users to support this project and spread book sharing.  
+
+## **Be our partner**
+
+We are looking for people and organizations to partner with. Our mission to spread book sharing and makes books available for reading. Please contact me on Telegram - [Denis Stark](https://t.me/DenisStark77)
+
+""", name: 'supportText');
+*/
+    return Intl.message("""
+## **Описание**
+
+Приложение предназначено для людей, которые любят читать. Оно помогает брать книги у друзей и соседей, вместо покупки в книжном магазине. Оно также помогает находить людей с похожими читательскими вкусами.
+
+## **Как добавить Ваши книги**
+
+Вы можете добавить книги тремя способами:
+- Сфотографировать книжную полку (Приложение определит книги по корешкам)
+- Сосканировав ISBN штрих-код
+- По названию и/или автору
+
+## **Как брать книги**
+
+Приложение поможет найти у друзей и соседей книги, которые Вы хотите прочитать. Три простых шага: 
+- Найдите книгу по названию или автору. 
+- Напишите хозяину книги, чтобы договориться о встрече и передаче книги.
+- Верните книгу после прочтения
+
+Не нашли книгу поблизости? Добавьте её в списох желаний и приложение сообщит Вам, когда книга будет доступна.
+
+## **Сообщения**
+
+В Приложении есть чат с другими пользователями для удобства обмена книгами. Обратите внимание, что этот чат не предназначен для приватного общения (используйте другие мессенджеры).
+Чаты не защищены шифрованием. Чат-бот анализирует сообщения и отправляет уведомления в Ваших чатах. Сообщения от бота отмечены тэгом **#bot_message**.
+
+Вы можете добавлять в сообщения ссылки на книги. Нажимайте на сообщения с книгами в чате, чтобы перейти на экран с книгой.
+
+## **Платная подписка**
+
+Вы можете пользоваться приложением без оплаты неограниченное время благодаря тем пользователям, которые перешли на платную подписку. Мы тратим деньги:
+- на разработку и доработку приложения
+- на хостинг и платные API
+- на работу дизайнера и продвижение
+
+Вы можете присоедениться к тем пользователям кто оплачивает подписку. Это поможет улучшению Приложения и распространению шэринга книг.  
+
+## **Стать партнёром**
+
+Мы открыты к партнёрству с людьми и организациями. Наша цель распространение шэринга книг и доступность чтения. Свяжитесь со мной в Телеграм - [Денис Старк](https://t.me/DenisStark77)
+
+""", name: 'supportText');
+  }
 }
 
 

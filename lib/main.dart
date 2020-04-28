@@ -40,7 +40,6 @@ final FacebookLogin _facebookLogin = FacebookLogin();
 final FirebaseAuth _auth = FirebaseAuth.instance;
 
 void main() async {
-  bool isInDebugMode = false;
   debugPaintSizeEnabled = false; //true;
 
   WidgetsFlutterBinding.ensureInitialized();

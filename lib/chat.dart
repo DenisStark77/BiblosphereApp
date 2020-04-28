@@ -4,8 +4,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl/intl.dart';
-//import 'package:flutter_crashlytics/flutter_crashlytics.dart';
-import 'package:flutter_dialogflow/dialogflow_v2.dart';
 
 import 'package:biblosphere/l10n.dart';
 import 'package:biblosphere/const.dart';
@@ -23,13 +21,9 @@ class ChatListWidget extends StatefulWidget {
 }
 
 class _ChatListWidgetState extends State<ChatListWidget> {
-  Messages chatWithBiblosphere;
-
   @override
   void initState() {
     super.initState();
-
-    chatWithBiblosphere = Messages(from: B.user, system: true);
   }
 
   @override
@@ -46,9 +40,6 @@ class _ChatListWidgetState extends State<ChatListWidget> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
-          chatWithBiblosphere != null
-              ? ChatCard(chat: chatWithBiblosphere)
-              : Container(),
           new Expanded(
               child: new StreamBuilder<QuerySnapshot>(
                   stream: Firestore.instance
@@ -146,19 +137,12 @@ class _ChatCardState extends State<ChatCard> {
           Chat.runChat(context, null, chat: chat);
         },
         child: Card(
-            child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-              Row(children: <Widget>[
+            child: Container(
+              margin: EdgeInsets.all(10.0), 
+              child: Row(children: <Widget>[
                 Stack(children: <Widget>[
-                  chat.system
-                      ? Container(
-                          margin: EdgeInsets.all(7.0),
-                          child: assetIcon(technical_support_100, size: 50.0))
-                      : userPhoto(chat.partnerImage, 60.0, padding: 5.0),
-                  chat.system
-                      ? Container()
-                      : Positioned.fill(
+                  userPhoto(chat.partnerImage, 60.0, padding: 5.0),
+                  Positioned.fill(
                           child: Container(
                               alignment: Alignment.topRight,
                               child: GestureDetector(
@@ -190,9 +174,7 @@ class _ChatCardState extends State<ChatCard> {
                             children: <Widget>[
                               Container(
                                   child: Text(
-                                      chat.system
-                                          ? S.of(context).supportChat
-                                          : chat.partnerName ?? '',
+                                      chat.partnerName ?? '',
                                       overflow: TextOverflow.ellipsis,
                                       style: Theme.of(context)
                                           .textTheme
@@ -226,7 +208,8 @@ class _ChatCardState extends State<ChatCard> {
                               : Container()
                         ])),
               ]),
-            ])));
+             )
+            ));
   }
 
   void blockUser(String blockingUser, String blockedUser) {
@@ -298,13 +281,11 @@ class Chat extends StatefulWidget {
     Messages chat = new Messages.fromJson(chatSnap.data, chatSnap);
     User partner;
 
-    if (!chat.system) {
       String partnerId = chat.partnerId;
       DocumentSnapshot snap = await User.Ref(partnerId).get();
       if (!snap.exists)
         throw "Partner user [${partnerId}] does not exist for chat [${chat.id}]";
       partner = User.fromJson(snap.data);
-    }
 
     pushSingle(
         context,
@@ -316,7 +297,7 @@ class Chat extends StatefulWidget {
 
   static runChat(BuildContext context, User partner,
       {Messages chat, String message, bool send = false}) async {
-    if (!chat.system && partner == null)
+    if (partner == null)
       partner = User(
           id: chat.partnerId, name: chat.partnerName, photo: chat.partnerImage);
 
@@ -413,18 +394,12 @@ class _ChatState extends State<Chat> {
               child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: <Widget>[
-                    chat.system
-                        ? Container(
-                            margin: EdgeInsets.all(2.0),
-                            child: assetIcon(technical_support_100, size: 30.0))
-                        : userPhoto(partner, 40),
+                    userPhoto(partner, 40),
                     Expanded(
                         child: Container(
                             margin: EdgeInsets.only(left: 5.0),
                             child: Text(
-                              chat.system
-                                  ? S.of(context).titleSupport
-                                  : partner.name,
+                              partner.name,
                               style: Theme.of(context)
                                   .textTheme
                                   .title
@@ -494,10 +469,7 @@ class ChatScreenState extends State<ChatScreen> {
   Messages chat;
   VoidCallback onKeyboard;
 
-  Dialogflow dialogflow;
-
   var listMessage;
-//  SharedPreferences prefs;
 
   File imageFile;
   bool isLoading;
@@ -515,43 +487,13 @@ class ChatScreenState extends State<ChatScreen> {
     isLoading = false;
     imageUrl = '';
 
-    if (chat.system)
-      peerId = 'system';
-    else
-      peerId = partner.id;
+    peerId = partner.id;
 
-    if (chat.system) {
-      // Check if system chat is empty add welcome message
-      Firestore.instance
-          .collection('messages')
-          .document(chat.id)
-          .collection(chat.id)
-          .orderBy('timestamp', descending: true)
-          .limit(1)
-          .getDocuments()
-          .then((snap) {
-        if (snap.documents.length == 0)
-          injectChatbotMessage(
-              context, B.user.id, chat, S.of(context).chatbotWelcome);
-      });
-
-      AuthGoogle(fileJson: "assets/dialogflow.json").build().then((auth) {
-        dialogflow =
-            Dialogflow(authGoogle: auth, language: Intl.getCurrentLocale());
-
-        // Wait till authorization before sending messages to Chat bot
-        if (message != null && send) {
-          //print('!!!DEBUG: Sending message');
-          onSendMessage(message, extra: attachment);
-        }
-      });
-    } else {
       // Send message to chat automaticaly
       if (message != null && send) {
         //print('!!!DEBUG: Sending message');
         onSendMessage(message, extra: attachment);
       }
-    }
 
     updateUnread();
 
@@ -663,14 +605,6 @@ class ChatScreenState extends State<ChatScreen> {
           );
         }
       });
-
-      // Inject message from Biblosphere chat-bot
-      if (chat.system) {
-        AIResponse response = await dialogflow.detectIntent(content);
-        content = response.getMessage();
-
-        await injectChatbotMessage(context, myId, chat, content);
-      }
 
       listScrollController.animateTo(0.0,
           duration: Duration(milliseconds: 300), curve: Curves.easeOut);
@@ -849,11 +783,7 @@ class ChatScreenState extends State<ChatScreen> {
             // Time
             isLastMessageLeft(index)
                 ? Container(
-                    child: Text(
-                      DateFormat('dd MMM kk:mm').format(
-                          DateTime.fromMillisecondsSinceEpoch(
-                                  int.parse(document['timestamp']))
-                              .subtract(DateTime.now().timeZoneOffset)),
+                    child: Text(messageDate(document['timestamp']),
                       style: TextStyle(
                           color: greyColor,
                           fontSize: 12.0,
@@ -867,6 +797,20 @@ class ChatScreenState extends State<ChatScreen> {
         ),
         margin: EdgeInsets.only(bottom: 10.0),
       );
+    }
+  }
+
+  String messageDate(dynamic data) {
+    print('!!!DEBUG type: ${data.runtimeType}');
+    if (data is String) {
+       return DateFormat('dd MMM kk:mm').format(
+                          DateTime.fromMillisecondsSinceEpoch(
+                                  int.parse(data))
+                              .subtract(DateTime.now().timeZoneOffset));
+    } else if (data is Timestamp) {
+      return DateFormat('dd MMM kk:mm').format(data.toDate());
+    } else {
+      return '';
     }
   }
 

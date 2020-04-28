@@ -790,7 +790,6 @@ class Messages {
   static const String Complete = 'complete';
 
   String id;
-  bool system = false;
   List<String> ids;
   DateTime timestamp;
   String message;
@@ -804,8 +803,8 @@ class Messages {
 
   bool fromDb;
 
-  Messages({@required User from, User to, this.system = false}) {
-    assert(from != null && (system || !system && to != null));
+  Messages({@required User from, User to}) {
+    assert(from != null && to != null);
 
     fromId = from.id;
     fromName = from.name;
@@ -817,8 +816,7 @@ class Messages {
       toImage = to.photo;
     }
 
-    if (!system) ids = <String>[fromId, toId];
-
+    ids = <String>[fromId, toId];
     id = this.ref.documentID;
 
     timestamp = DateTime.now();
@@ -828,8 +826,7 @@ class Messages {
   }
 
   Messages.fromJson(Map json, DocumentSnapshot doc)
-      : system = json['system'] != null ? json['system'] : false,
-        ids = json['ids']?.cast<String>(),
+      : ids = json['ids']?.cast<String>(),
         message = json['message'],
         timestamp = new DateTime.fromMillisecondsSinceEpoch(
             int.parse(json['timestamp'])),
@@ -854,8 +851,7 @@ class Messages {
 
   Map<String, dynamic> toJson() {
     return {
-      'system': system,
-      'ids': !system ? [fromId, toId] : null,
+      'ids': [fromId, toId],
       'message': message,
       'timestamp': Timestamp.now().millisecondsSinceEpoch.toString(),
       'unread': unread,
@@ -882,13 +878,7 @@ class Messages {
   // Return userId of the counterparty
   String get partnerId {
     assert(B.user.id == fromId || B.user.id == toId);
-    if (!system)
-      return B.user.id == ids[0] ? ids[1] : ids[0];
-    else if (partnerId == B.user.id)
-      return 'system';
-    else if (partnerId == 'system') return fromId;
-
-    return null;
+    return B.user.id == ids[0] ? ids[1] : ids[0];
   }
 
   /*
@@ -929,8 +919,7 @@ class Messages {
   bool equalsTo(Messages rec) {
     // books, unread and ids excluded from comparison (no simple way to compare lists)
     // handover excluded as it's not used
-    return system == rec.system &&
-        message == rec.message &&
+    return message == rec.message &&
         timestamp == rec.timestamp &&
         fromId == rec.fromId &&
         fromName == rec.fromName &&
@@ -941,7 +930,6 @@ class Messages {
   }
 
   void copyFrom(Messages rec) {
-    system = rec.system;
     message = rec.message;
     timestamp = rec.timestamp;
     fromId = rec.fromId;
@@ -971,7 +959,7 @@ class Messages {
       }
     }
 
-    assert(fromId != null && (system || toId != null));
+    assert(fromId != null && toId != null);
     bool changed = false;
 
     // FROM user data is not complete need to read original record
@@ -989,7 +977,7 @@ class Messages {
     }
 
     // TO user data is not complete need to read original record
-    if (!system && (toName == null || toImage == null)) {
+    if (toName == null || toImage == null) {
       final DocumentSnapshot snap = await User.Ref(toId).get();
       if (snap.exists) {
         User rec = User.fromJson(snap.data);
@@ -1015,7 +1003,7 @@ class Messages {
     else
       return db
           .collection('messages')
-          .document(system ? fromId : idFromTo(fromId, toId));
+          .document(idFromTo(fromId, toId));
   }
 
   static DocumentReference Ref(String id) {

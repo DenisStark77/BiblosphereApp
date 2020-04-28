@@ -481,49 +481,6 @@ Future<String> buildLink(String query,
   return shortLink.shortUrl.toString();
 }
 
-Future<void> injectChatbotMessage(
-    BuildContext context, String myId, Messages chat, String content) async {
-  DateTime time = DateTime.now();
-  time = time.add(time.timeZoneOffset);
-  // ToAdd 1 to avoid same id for chatbot response
-  int timestamp = time.millisecondsSinceEpoch + 1;
-
-  // Add message
-  var msgRef = Firestore.instance
-      .collection('messages')
-      .document(chat.id)
-      .collection(chat.id)
-      .document(timestamp.toString());
-
-  Firestore.instance.runTransaction((transaction) async {
-    await transaction.set(msgRef, {
-      'idTo': myId,
-      'idFrom': 'system',
-      'timestamp': timestamp.toString(),
-      'content': content,
-      'type': 0
-    });
-  });
-
-  Firestore.instance.runTransaction((transaction) async {
-    DocumentSnapshot snap = await chat.ref.get();
-    if (snap.exists) {
-      await transaction.update(
-        chat.ref,
-        {
-          'message': content.length < 20
-              ? content
-              : content.substring(0, 20) + '\u{2026}',
-          'timestamp': timestamp.toString(),
-          'unread': {myId: chat.unread[myId] + 1, 'system': 0}
-        },
-      );
-    }
-  });
-
-  return;
-}
-
 final GoogleSignIn _googleSignIn = GoogleSignIn();
 final FacebookLogin _facebookLogin = FacebookLogin();
 

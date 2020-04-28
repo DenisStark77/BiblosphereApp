@@ -12,6 +12,7 @@ import 'package:flutter/gestures.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
 
 import 'package:biblosphere/const.dart';
 import 'package:biblosphere/helpers.dart';
@@ -70,30 +71,30 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
       },
       onResume: (Map<String, dynamic> message) {
         return Future.delayed(Duration.zero, () {
-        Map<String, dynamic> payload;
-        // Android and iOS has different format of messages
-        if (Theme.of(context).platform == TargetPlatform.iOS) {
-          //print('!!!DEBUG: Message received (iOS) ${message}');
-          payload = message;
-        } else {
-          payload = Map<String, dynamic>.from(message['data']);
-        }
-        //print('!!!DEBUG onResume $payload');
+          Map<String, dynamic> payload;
+          // Android and iOS has different format of messages
+          if (Theme.of(context).platform == TargetPlatform.iOS) {
+            //print('!!!DEBUG: Message received (iOS) ${message}');
+            payload = message;
+          } else {
+            payload = Map<String, dynamic>.from(message['data']);
+          }
+          //print('!!!DEBUG onResume $payload');
 
           Chat.runChatById(context, chatId: payload['chat']);
         });
       },
       onLaunch: (Map<String, dynamic> message) {
         return new Future.delayed(Duration.zero, () {
-        Map<String, dynamic> payload;
-        // Android and iOS has different format of messages
-        if (Theme.of(context).platform == TargetPlatform.iOS) {
-          //print('!!!DEBUG: Message received (iOS) ${message}');
-          payload = message;
-        } else {
-          payload = Map<String, dynamic>.from(message['data']);
-        }
-        //print('!!!DEBUG onLaunch $payload');
+          Map<String, dynamic> payload;
+          // Android and iOS has different format of messages
+          if (Theme.of(context).platform == TargetPlatform.iOS) {
+            //print('!!!DEBUG: Message received (iOS) ${message}');
+            payload = message;
+          } else {
+            payload = Map<String, dynamic>.from(message['data']);
+          }
+          //print('!!!DEBUG onLaunch $payload');
 
           // TODO: Change sender to chat id
           Chat.runChatById(context, chatId: payload['chat']);
@@ -103,7 +104,6 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
 
     FirebaseMessaging().requestNotificationPermissions(
         const IosNotificationSettings(sound: true, badge: true, alert: true));
-    
   }
 
   @override
@@ -242,11 +242,6 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
       } else {
         // TODO: report broken link: bookId is null
       }
-    } else if (deepLink.path == "/support") {
-      String message = deepLink.queryParameters['msg'];
-      Messages chat = Messages(from: B.user, system: true);
-
-      Chat.runChat(context, null, chat: chat, message: message, send: true);
     }
     // TODO: Add Deep Link '/main'
   }
@@ -264,21 +259,21 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
     FirebaseDynamicLinks.instance.onLink(
         onSuccess: (PendingDynamicLinkData dynamicLink) {
       return Future.delayed(Duration.zero, () async {
-      final Uri deepLink = dynamicLink?.link;
+        final Uri deepLink = dynamicLink?.link;
 
-      if (deepLink != null) {
-        await processDeepLink(deepLink);
-        //showSnackBar(context, 'Deep link 2');      
-      } else {
-        //showSnackBar(context, 'Deep link 1'); 
-      }
+        if (deepLink != null) {
+          await processDeepLink(deepLink);
+          //showSnackBar(context, 'Deep link 2');
+        } else {
+          //showSnackBar(context, 'Deep link 1');
+        }
       });
     }, onError: (OnLinkErrorException e) {
       return Future.delayed(Duration.zero, () {
         // TODO: Add to Crashalitics
-      //showSnackBar(context, 'onError: ${e.code} ${e.message} ${e.details}');
-      print('onLinkError');
-      print(e.message);
+        //showSnackBar(context, 'onError: ${e.code} ${e.message} ${e.details}');
+        print('onLinkError');
+        print(e.message);
       });
     });
   }
@@ -1821,10 +1816,10 @@ class _SettingsWidgetState extends State<SettingsWidget> {
                                     if (errorCode !=
                                         PurchasesErrorCode
                                             .purchaseCancelledError) {
-                                      // TODO: Add analytics        
+                                      // TODO: Add analytics
                                       print('!!!DEBUG Purchase canceled');
                                     }
-                                      Crashlytics.instance.recordError(e, stack);
+                                    Crashlytics.instance.recordError(e, stack);
                                   }
                                 },
                                 shape: new RoundedRectangleBorder(
@@ -1920,73 +1915,16 @@ class SupportWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return new Container(
-        child: ListView(children: <Widget>[
-      Container(
-          margin: EdgeInsets.all(8.0),
-          child: Text(S.of(context).supportTitleGetBooks,
-              style: Theme.of(context).textTheme.subtitle)),
-      Container(
-          margin: EdgeInsets.all(8.0),
-          child: Text(S.of(context).supportGetBooks,
-              style: Theme.of(context).textTheme.body1)),
-      Container(
-          margin: EdgeInsets.all(8.0),
-          child: Text(S.of(context).supportTitleGetBalance,
-              style: Theme.of(context).textTheme.subtitle)),
-      Container(
-          margin: EdgeInsets.all(8.0),
-          child: Text(S.of(context).supportGetBalance,
-              style: Theme.of(context).textTheme.body1)),
-      Container(
-          margin: EdgeInsets.all(8.0),
-          child: Text(S.of(context).supportTitleReferrals,
-              style: Theme.of(context).textTheme.subtitle)),
-      Container(
-          margin: EdgeInsets.all(8.0),
-          child: Text(S.of(context).supportReferrals,
-              style: Theme.of(context).textTheme.body1)),
-      Container(
-          margin: EdgeInsets.all(8.0),
-          child: Text(S.of(context).supportTitlePayout,
-              style: Theme.of(context).textTheme.subtitle)),
-      Container(
-          margin: EdgeInsets.all(8.0),
-          child: Text(S.of(context).supportPayout,
-              style: Theme.of(context).textTheme.body1)),
-      Container(
-          margin: EdgeInsets.all(8.0),
-          child: Text(S.of(context).supportTitleChatbot,
-              style: Theme.of(context).textTheme.subtitle)),
-      Container(
-          margin: EdgeInsets.all(8.0),
-          child: RichText(
-            text: TextSpan(
-                text: S.of(context).supportChatbot,
-                style: Theme.of(context).textTheme.body1,
-                children: [
-                  TextSpan(
-                      text: '+995599002198',
-                      style: Theme.of(context).textTheme.body1.apply(
-                          color: Colors.blue,
-                          decoration: TextDecoration.underline),
-                      recognizer: TapGestureRecognizer()
-                        ..onTap = () async {
-                          const url = 'https://t.me/DenisStark77';
-                          if (await canLaunch(url)) {
-                            await launch(url);
-                          } else {
-                            throw 'Could not launch url $url';
-                          }
-                        })
-                ]),
-          )),
-      Container(
-          margin: EdgeInsets.fromLTRB(8.0, 8.0, 30.0, 8.0),
-          alignment: Alignment.topRight,
-          child: Text(S.of(context).supportSignature,
-              style: Theme.of(context).textTheme.body1)),
-    ]));
+    return Markdown(
+      data: S.of(context).supportText,
+      onTapLink: (url) async {
+        if (await canLaunch(url)) {
+          await launch(url);
+        } else {
+          throw 'Could not launch url $url';
+        }
+      },
+    );
   }
 }
 
