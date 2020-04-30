@@ -87,6 +87,9 @@ class AddBookWidget extends StatefulWidget {
 
 class _AddBookWidgetState extends State<AddBookWidget> {
   List<Book> suggestions = [];
+  List<Shelf> shelves = [];
+
+  bool recognition = false;
 
   TextEditingController textController;
 
@@ -141,9 +144,8 @@ class _AddBookWidgetState extends State<AddBookWidget> {
                               color: C.button,
                               child: assetIcon(image_gallery_100, size: 30),
                               onPressed: () async {
-                                File image = await ImagePicker.pickImage(
+                                await recognizeImage(context,
                                     source: ImageSource.gallery);
-                                await recognizeImage(context, image);
                                 logAnalyticsEvent(
                                     name: 'book_recognize_attempt',
                                     parameters: <String, dynamic>{
@@ -162,9 +164,8 @@ class _AddBookWidgetState extends State<AddBookWidget> {
                               color: C.button,
                               child: assetIcon(compact_camera_100, size: 30),
                               onPressed: () async {
-                                File image = await ImagePicker.pickImage(
+                                await recognizeImage(context,
                                     source: ImageSource.camera);
-                                await recognizeImage(context, image);
                                 logAnalyticsEvent(
                                     name: 'book_recognize_attempt',
                                     parameters: <String, dynamic>{
@@ -185,6 +186,7 @@ class _AddBookWidgetState extends State<AddBookWidget> {
                             onPressed: () {
                               scanIsbn(context, (book) {
                                 setState(() {
+                                  recognition = false;
                                   suggestions = <Book>[book];
                                 });
                               }).then((barcode) {
@@ -237,6 +239,7 @@ class _AddBookWidgetState extends State<AddBookWidget> {
                                     .then((b) {
                                   if (b == null || b.length == 0) {
                                     setState(() {
+                                      recognition = false;
                                       suggestions = [];
                                     });
                                     showSnackBar(context,
@@ -249,6 +252,7 @@ class _AddBookWidgetState extends State<AddBookWidget> {
                                         });
                                   } else {
                                     setState(() {
+                                      recognition = false;
                                       suggestions = b;
                                     });
                                     logAnalyticsEvent(
@@ -273,54 +277,166 @@ class _AddBookWidgetState extends State<AddBookWidget> {
         expandedHeight: 180,
       ),
       SliverList(
-        delegate: SliverChildBuilderDelegate((context, index) {
-          Book book = suggestions[index];
-          return Container(
-              margin: EdgeInsets.all(3.0),
-              child: GestureDetector(
-                  onTap: () async {
-                    setState(() {
-                      suggestions.clear();
+        delegate: recognition
+            ? SliverChildBuilderDelegate((context, index) {
+                return ShelfWidget(
+                    shelf: shelves[index],
+                    builder: (context, shelf, value) {
+                      return Container(
+                          child: Row(
+                        children: <Widget>[
+                          // Image
+                          shelfImage(shelf, 100.0),
+                          // Text and progress indicator
+                          Expanded(
+                              child: Column(
+                            children: <Widget>[
+                              Container(
+                                  child: Text(
+                                      S.of(context).recognitionProgressTitle,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .subtitle)),
+                              Container(
+                                  child: Text(progressText(shelf),
+                                      style:
+                                          Theme.of(context).textTheme.body1)),
+                              Container(
+                                  padding: EdgeInsets.only(
+                                      top: 10.0, left: 10.0, right: 10.0),
+                                  child: shelf.status ==
+                                          RecognitionStatus.Completed
+                                      ? Text(
+                                          S
+                                              .of(context)
+                                              .recognitionProgressBooks(
+                                                  shelf.total,
+                                                  shelf.recognized),
+                                          style:
+                                              Theme.of(context).textTheme.body2)
+                                      : shelf.status !=
+                                                  RecognitionStatus.None &&
+                                              shelf.status !=
+                                                  RecognitionStatus.Failed
+                                          ? LinearProgressIndicator(
+                                              value: value)
+                                          : Container()),
+                            ],
+                          ))
+                        ],
+                      ));
                     });
-                    addBookrecord(
-                        context, book, B.user, false, await currentLocation(),
-                        source: 'googlebooks');
-                    //showSnackBar(context, S.of(context).bookAdded);
-                  },
-                  child: Row(children: <Widget>[
-                    bookImage(book, 50, padding: EdgeInsets.all(5.0)),
-                    Expanded(
-                        child: Container(
-                            margin: EdgeInsets.only(left: 10.0),
-                            child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: <Widget>[
-                                  Text('${book.authors[0]}',
-                                      style: Theme.of(context).textTheme.body1),
-                                  Text('\"${book.title}\"',
-                                      style: Theme.of(context).textTheme.body1)
-                                ])))
-                  ])));
-        }, childCount: suggestions != null ? suggestions.length : 0),
+              }, childCount: shelves.length)
+
+            // List of books from Author/Title and ISBN search
+            : SliverChildBuilderDelegate((context, index) {
+                Book book = suggestions[index];
+                return Container(
+                    margin: EdgeInsets.all(3.0),
+                    child: GestureDetector(
+                        onTap: () async {
+                          setState(() {
+                            suggestions.clear();
+                          });
+                          addBookrecord(context, book, B.user, false,
+                              await currentLocation(),
+                              source: 'googlebooks');
+                          //showSnackBar(context, S.of(context).bookAdded);
+                        },
+                        child: Row(children: <Widget>[
+                          bookImage(book, 50, padding: EdgeInsets.all(5.0)),
+                          Expanded(
+                              child: Container(
+                                  margin: EdgeInsets.only(left: 10.0),
+                                  child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: <Widget>[
+                                        Text('${book.authors[0]}',
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .body1),
+                                        Text('\"${book.title}\"',
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .body1)
+                                      ])))
+                        ])));
+              }, childCount: suggestions != null ? suggestions.length : 0),
       )
     ]);
   }
 
-  Future recognizeImage(BuildContext context, File image) async {
-    try {
-      if (image == null) return;
+  String progressText(Shelf shelf) {
+    RecognitionStatus status = shelf.status;
+    switch (status) {
+      case RecognitionStatus.None:
+        return S.of(context).recognitionProgressNone;
+        break;
+      case RecognitionStatus.Upload:
+        return S.of(context).recognitionProgressUpload;
+        break;
+      case RecognitionStatus.Scan:
+        return S.of(context).recognitionProgressScan;
+        break;
+      case RecognitionStatus.Outline:
+        return S.of(context).recognitionProgressOutline;
+        break;
+      case RecognitionStatus.CatalogsLookup:
+        return S.of(context).recognitionProgressCatalogsLookup;
+        break;
+      case RecognitionStatus.Rescan:
+        return S.of(context).recognitionProgressRescan;
+        break;
+      case RecognitionStatus.Store:
+        return S.of(context).recognitionProgressStore;
+        break;
+      case RecognitionStatus.Completed:
+        return S.of(context).recognitionProgressCompleted;
+        break;
+      case RecognitionStatus.Failed:
+        return S.of(context).recognitionProgressFailed;
+        break;
+    }
+    return '';
+  }
 
+  Future recognizeImage(BuildContext context,
+      {ImageSource source = ImageSource.camera}) async {
+    try {
+      File image = await ImagePicker.pickImage(source: source);
       //print('!!!DEBUG: Recognize image: ${image.path}');
 
-      String name = getTimestamp() + ".jpg";
+      if (image == null) return;
 
-      showSnackBar(context, S.of(context).snackRecgnitionStarted, duration: 6);
+      String id = getTimestamp();
+      String name = id + ".jpg";
+
+      Shelf shelf = Shelf(
+          id: id,
+          localImage: image.path,
+          userId: B.user.id,
+          status: RecognitionStatus.Upload);
+
+      await shelf.ref.setData(shelf.toJson());
+
+      // Add shelf to the list and refresh
+      setState(() {
+        recognition = true;
+        shelves.add(shelf);
+      });
+
+      Future.delayed(Duration(seconds: 7), () {
+        showSnackBar(context, S.of(context).snackRecgnitionStarted,
+            duration: 6);
+      });
 
       final String storagePath = await uploadPicture(image, B.user.id, name);
       // !!!DEBUG
       //String storagePath = 'images/oyYUDByQGVdgP13T1nyArhyFkct1/1586749554453.jpg';
 
       //print('!!!DEBUG: Image cloud path: ${storagePath}');
+      shelf.ref.updateData({'status': RecognitionStatus.Scan.index});
 
       GeoFirePoint location = await currentLocation();
       FirebaseUser user = await FirebaseAuth.instance.currentUser();
@@ -329,6 +445,7 @@ class _AddBookWidgetState extends State<AddBookWidget> {
       String body = json.encode({
         'uid': user.uid,
         'uri': storagePath,
+        'shelf': shelf.id,
         'location': {
           'lat': location.geoPoint.latitude,
           'lon': location.geoPoint.longitude,
@@ -348,6 +465,7 @@ class _AddBookWidgetState extends State<AddBookWidget> {
 
       if (res.statusCode != 200) {
         print('!!!DEBUG: Recognition request failed');
+        shelf.ref.updateData({'status': RecognitionStatus.Failed.index});
         logAnalyticsEvent(
             name: 'recognition_failed',
             parameters: <String, dynamic>{

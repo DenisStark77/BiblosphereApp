@@ -59,37 +59,37 @@ class MessageLookup extends MessageLookupByLibrary {
 
   static m22(num) => "Receiving books (${num})";
 
-  static m23(book) => "Can you give me \"${book}\"?";
+  static m24(book) => "Can you give me \"${book}\"?";
 
-  static m24(book) => "Can you send me \"${book}\"?";
+  static m25(book) => "Can you send me \"${book}\"?";
 
-  static m25(book) => "I\'d like to return \"${book}\"?";
+  static m26(book) => "I\'d like to return \"${book}\"?";
 
-  static m26(book) => "Please, return me \"${book}\"?";
+  static m27(book) => "Please, return me \"${book}\"?";
 
-  static m27(num) => "Handover books (${num})";
+  static m28(num) => "Handover books (${num})";
 
-  static m29(amount) => "Total shared: +${amount}";
+  static m30(amount) => "Total shared: +${amount}";
 
-  static m30(amount) => "Deposit: ${amount}";
+  static m31(amount) => "Deposit: ${amount}";
 
-  static m31(amount) => "Monthly pay: ${amount}";
+  static m32(amount) => "Monthly pay: ${amount}";
 
-  static m33(platform) => "Subscription will be charged to your ${platform} account on confirmation. Subscriptions will automatically renew unless canceled within 24-hours before the end of the current period. You can cancel anytime with your ${platform} account settings. Any unused portion of a free trial will be forfeited if you purchase a subscription.";
+  static m34(platform) => "Subscription will be charged to your ${platform} account on confirmation. Subscriptions will automatically renew unless canceled within 24-hours before the end of the current period. You can cancel anytime with your ${platform} account settings. Any unused portion of a free trial will be forfeited if you purchase a subscription.";
 
-  static m34(balance) => "Balance: ${balance}";
+  static m35(balance) => "Balance: ${balance}";
 
-  static m35(user) => "from ${user}";
+  static m36(user) => "from ${user}";
 
-  static m36(count) => "Limit on wish list: ${count}";
+  static m37(count) => "Limit on wish list: ${count}";
 
-  static m37(count) => "You can keep up to ${count} books in your wish list.";
+  static m38(count) => "You can keep up to ${count} books in your wish list.";
 
-  static m38(count, upgrade) => "Limit on wish list: ${count}";
+  static m39(count, upgrade) => "Limit on wish list: ${count}";
 
-  static m39(count, upgrade) => "You can keep up to ${count} books in your wish list. Upgrade to paid plan to increase to ${upgrade}.";
+  static m40(count, upgrade) => "You can keep up to ${count} books in your wish list. Upgrade to paid plan to increase to ${upgrade}.";
 
-  static m40(user) => "Book with ${user}";
+  static m41(user) => "Book with ${user}";
 
   final messages = _notInlinedMessages(_notInlinedMessages);
   static _notInlinedMessages(_) => <String, Function> {
@@ -237,21 +237,21 @@ class MessageLookup extends MessageLookupByLibrary {
     "receiveBooks" : m22,
     "referralLink" : MessageLookupByLibrary.simpleMessage("Your referral link:"),
     "referralTitle" : MessageLookupByLibrary.simpleMessage("MY REFERRALS"),
-    "requestBook" : m23,
-    "requestPost" : m24,
-    "requestReturn" : m25,
-    "requestReturnByOwner" : m26,
+    "requestBook" : m24,
+    "requestPost" : m25,
+    "requestReturn" : m26,
+    "requestReturnByOwner" : m27,
     "scanISBN" : MessageLookupByLibrary.simpleMessage("Scan ISBN"),
     "selectDisplayCurrency" : MessageLookupByLibrary.simpleMessage("Choose display currency:"),
-    "sendBooks" : m27,
+    "sendBooks" : m28,
     "settingsTitleGeneral" : MessageLookupByLibrary.simpleMessage("General settings"),
     "settingsTitleIn" : MessageLookupByLibrary.simpleMessage("Get balance"),
     "settingsTitleInStellar" : MessageLookupByLibrary.simpleMessage("Get balance via Stallar"),
     "settingsTitleOutStellar" : MessageLookupByLibrary.simpleMessage("Payout via Stallar"),
-    "sharedFeeLine" : m29,
+    "sharedFeeLine" : m30,
     "sharingMotto" : MessageLookupByLibrary.simpleMessage("Take books from people instead of buying"),
-    "showDeposit" : m30,
-    "showRent" : m31,
+    "showDeposit" : m31,
+    "showRent" : m32,
     "snackAllowLocation" : MessageLookupByLibrary.simpleMessage("Please allow access to location for searching and adding books"),
     "snackBookAddedToCart" : MessageLookupByLibrary.simpleMessage("Book was added to the cart"),
     "snackBookImageChanged" : MessageLookupByLibrary.simpleMessage("New cover image is set"),
@@ -260,7 +260,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "snackBookPending" : MessageLookupByLibrary.simpleMessage("Previous book handover not confirmed. Please ask your peer to confirm."),
     "snackBookPriceChanged" : MessageLookupByLibrary.simpleMessage("Price is saved"),
     "stellarOutput" : MessageLookupByLibrary.simpleMessage("Pay out to Stellar account:"),
-    "subscriptionDisclaimer" : m33,
+    "subscriptionDisclaimer" : m34,
     "successfulPayment" : MessageLookupByLibrary.simpleMessage("Successful payment"),
     "supportChat" : MessageLookupByLibrary.simpleMessage("Support chat"),
     "supportChatbot" : MessageLookupByLibrary.simpleMessage("There are chat with support chatbot in the message screen. (S)he can answer any questions about Biblosphere application. Or contact me directly in Telegram "),
@@ -288,20 +288,20 @@ class MessageLookup extends MessageLookupByLibrary {
     "titleUserBooks" : MessageLookupByLibrary.simpleMessage("BOOK EXCHENGE"),
     "transitInitiated" : MessageLookupByLibrary.simpleMessage("Handover process initiated for the book"),
     "typeMsg" : MessageLookupByLibrary.simpleMessage("Scrivi il tuo messaggio..."),
-    "userBalance" : m34,
-    "userHave" : m35,
+    "userBalance" : m35,
+    "userHave" : m36,
     "welcome" : MessageLookupByLibrary.simpleMessage("WELCOME"),
     "wishAdded" : MessageLookupByLibrary.simpleMessage("Book has been added to your wishlist"),
     "wishAlreadyThere" : MessageLookupByLibrary.simpleMessage("This book is already in your wishlist"),
-    "wishLimitPaid" : m36,
-    "wishLimitPaidDesc" : m37,
-    "wishLimitTrial" : m38,
-    "wishLimitTrialDesc" : m39,
+    "wishLimitPaid" : m37,
+    "wishLimitPaidDesc" : m38,
+    "wishLimitTrial" : m39,
+    "wishLimitTrialDesc" : m40,
     "wrongAccount" : MessageLookupByLibrary.simpleMessage("Wrong account"),
     "wrongImageUrl" : MessageLookupByLibrary.simpleMessage("Wrong link"),
     "youBorrowThisBook" : MessageLookupByLibrary.simpleMessage("You borrowed this book"),
     "youHaveThisBook" : MessageLookupByLibrary.simpleMessage("You keep this book"),
-    "youLentThisBook" : m40,
+    "youLentThisBook" : m41,
     "youTransitThisBook" : MessageLookupByLibrary.simpleMessage("This book is in transit"),
     "youWishThisBook" : MessageLookupByLibrary.simpleMessage("This book in your wishlist")
   };

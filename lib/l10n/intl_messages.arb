@@ -1,5 +1,5 @@
 {
-  "@@last_modified": "2020-04-27T22:05:48.830393",
+  "@@last_modified": "2020-04-30T16:32:34.743050",
   "title": "Biblosphere",
   "@title": {
     "description": "The application title",
@@ -1127,7 +1127,7 @@
     "type": "text",
     "placeholders": {}
   },
-  "snackRecgnitionStarted": "Image recognition take up to 2 min. Meanwhile take a next photo.",
+  "snackRecgnitionStarted": "Add more bookshelves while image processing.",
   "@snackRecgnitionStarted": {
     "type": "text",
     "placeholders": {}
@@ -1274,5 +1274,63 @@
   "@supportText": {
     "type": "text",
     "placeholders": {}
+  },
+  "recognitionProgressTitle": "Recognition progress",
+  "@recognitionProgressTitle": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "recognitionProgressNone": "Some problem with recofnition. Try again.",
+  "@recognitionProgressNone": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "recognitionProgressUpload": "Uploading image to cloud storage",
+  "@recognitionProgressUpload": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "recognitionProgressScan": "Computer vision scans the image",
+  "@recognitionProgressScan": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "recognitionProgressOutline": "Recognising books outlines",
+  "@recognitionProgressOutline": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "recognitionProgressCatalogsLookup": "Searching books in catalogues",
+  "@recognitionProgressCatalogsLookup": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "recognitionProgressRescan": "Rescaning fragments of the image",
+  "@recognitionProgressRescan": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "recognitionProgressCompleted": "Successfuly completed",
+  "@recognitionProgressCompleted": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "recognitionProgressFailed": "We encountered some difficulties with image recognition. Please try later.",
+  "@recognitionProgressFailed": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "recognitionProgressStore": "Storing book records.",
+  "@recognitionProgressStore": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "recognitionProgressBooks": "{recognized} books out of {total} were recognized",
+  "@recognitionProgressBooks": {
+    "type": "text",
+    "placeholders": {
+      "total": {},
+      "recognized": {}
+    }
   }
 }

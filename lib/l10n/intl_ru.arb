@@ -1132,7 +1132,7 @@
        "type": "text",
        "placeholders": {}
      },
-     "snackRecgnitionStarted": "Распознавание фото займёт до 2х минут. Можете загрузить следующий снимок.",
+     "snackRecgnitionStarted": "Это займёт 2 минуты. Можете пока добавлять следующие полки.",
      "@snackRecgnitionStarted": {
        "type": "text",
        "placeholders": {}
@@ -1279,5 +1279,63 @@
   "@supportText": {
     "type": "text",
     "placeholders": {}
+  },
+  "recognitionProgressTitle": "Обработка изображения",
+  "@recognitionProgressTitle": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "recognitionProgressNone": "Не удалось распознать книги, попробуйте позже.",
+  "@recognitionProgressNone": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "recognitionProgressUpload": "Загружаем в облачное хранилище",
+  "@recognitionProgressUpload": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "recognitionProgressScan": "Распознаём текст с помощью AI",
+  "@recognitionProgressScan": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "recognitionProgressOutline": "Определяем контуры книг",
+  "@recognitionProgressOutline": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "recognitionProgressCatalogsLookup": "Ищем книги в каталогах",
+  "@recognitionProgressCatalogsLookup": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "recognitionProgressRescan": "Обрабатываем нераспознанные участки",
+  "@recognitionProgressRescan": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "recognitionProgressCompleted": "Всё готово!",
+  "@recognitionProgressCompleted": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "recognitionProgressFailed": "Произошла ошибка. Пожалуйста, попробуйте позже.",
+  "@recognitionProgressFailed": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "recognitionProgressStore": "Сохраняем книги в ваш каталог",
+  "@recognitionProgressStore": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "recognitionProgressBooks": "{recognized} книг из {total} разпознаны",
+  "@recognitionProgressBooks": {
+    "type": "text",
+    "placeholders": {
+      "total": {},
+      "recognized": {}
+    }
   }
 }

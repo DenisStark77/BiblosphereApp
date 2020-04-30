@@ -349,6 +349,76 @@ class Book {
   }
 }
 
+enum RecognitionStatus { None, Upload, Scan, Outline, CatalogsLookup, Rescan, Completed, Failed, Store }
+
+class Shelf {
+  String id;
+  String image;
+  int total = 0;
+  int recognized = 0;
+  RecognitionStatus status = RecognitionStatus.None;
+  String userId;
+  String userName;
+  DateTime started;
+  DateTime finished;
+  String localImage;
+  GeoFirePoint location;
+
+  Shelf({
+    @required this.id,
+    @required this.userId,
+    this.image,
+    this.localImage,
+    this.userName,
+    this.status,
+    this.location,
+  });
+
+  Shelf.fromJson(Map json)
+      : id = json['id'],
+        image = json['image'],
+        total = json['total'] ?? 0,
+        recognized = json['recognized'] ?? 0,
+        status = json['status'] is int
+            ? RecognitionStatus.values.elementAt(json['status'] ?? 0)
+            : RecognitionStatus.None,
+        userName = json['userName'],
+        userId = json['userId'],
+        started = json['started']?.toDate(),
+        finished = json['finished']?.toDate(),
+        //localImage = json['localImage'],
+        location = json['location'] != null
+            ? Geoflutterfire().point(
+                latitude: json['location']['geopoint'] != null ? json['location']['geopoint'].latitude : json['location'].latitude,
+                longitude: json['location']['geopoint'] != null ? json['location']['geopoint'].longitude : json['location'].longitude)
+            : null;
+
+  Map<String, dynamic> toJson({bool bookOnly = false}) {
+    return {
+      'id': id,
+      'image': image,
+      'total': total,
+      'recognized': recognized,
+      'status': status?.index,
+      'userName': userName,
+      'userId': userId,
+      'started': started != null ? Timestamp.fromDate(started) : FieldValue.serverTimestamp(),
+      'location': location?.data
+    };
+  }
+
+  DocumentReference get ref {
+    return db.collection('shelves').document(id);
+  }
+
+  static DocumentReference Ref([String id = null]) {
+    if (id != null)
+      return db.collection('shelves').document(id);
+    else
+      return db.collection('shelves').document();
+  }
+}
+
 class User {
   String id;
   String name;

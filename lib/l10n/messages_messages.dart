@@ -65,41 +65,43 @@ class MessageLookup extends MessageLookupByLibrary {
 
   static m22(num) => "Взять книги (${num})";
 
-  static m23(book) => "Можно взять у вас \"${book}\"?";
+  static m23(total, recognized) => "${recognized} books out of ${total} were recognized";
 
-  static m24(book) => "Можете прислать мне \"${book}\"?";
+  static m24(book) => "Можно взять у вас \"${book}\"?";
 
-  static m25(book) => "Хочу вернуть вам \"${book}\"?";
+  static m25(book) => "Можете прислать мне \"${book}\"?";
 
-  static m26(book) => "Пожалуйста, верните книгу \"${book}\"?";
+  static m26(book) => "Хочу вернуть вам \"${book}\"?";
 
-  static m27(num) => "Отдаю книги (${num})";
+  static m27(book) => "Пожалуйста, верните книгу \"${book}\"?";
 
-  static m28(name) => "Plan: ${name}";
+  static m28(num) => "Отдаю книги (${num})";
 
-  static m29(amount) => "Общий доход: +${amount}";
+  static m29(name) => "Plan: ${name}";
 
-  static m30(amount) => "Залог: ${amount}";
+  static m30(amount) => "Общий доход: +${amount}";
 
-  static m31(amount) => "Оплата в месяц: ${amount}";
+  static m31(amount) => "Залог: ${amount}";
 
-  static m32(count) => "${count} books have been recognized and added to your catalog.";
+  static m32(amount) => "Оплата в месяц: ${amount}";
 
-  static m33(platform) => "Subscription will be charged to your ${platform} account on confirmation. Subscriptions will automatically renew unless canceled within 24-hours before the end of the current period. You can cancel anytime with your ${platform} account settings. Any unused portion of a free trial will be forfeited if you purchase a subscription.";
+  static m33(count) => "${count} books have been recognized and added to your catalog.";
 
-  static m34(balance) => "Balance: ${balance}";
+  static m34(platform) => "Subscription will be charged to your ${platform} account on confirmation. Subscriptions will automatically renew unless canceled within 24-hours before the end of the current period. You can cancel anytime with your ${platform} account settings. Any unused portion of a free trial will be forfeited if you purchase a subscription.";
 
-  static m35(user) => "У пользователя ${user}";
+  static m35(balance) => "Balance: ${balance}";
 
-  static m36(count) => "Limit on wish list: ${count}";
+  static m36(user) => "У пользователя ${user}";
 
-  static m37(count) => "You can keep up to ${count} books in your wish list.";
+  static m37(count) => "Limit on wish list: ${count}";
 
-  static m38(count, upgrade) => "Limit on wish list: ${count}";
+  static m38(count) => "You can keep up to ${count} books in your wish list.";
 
-  static m39(count, upgrade) => "You can keep up to ${count} books in your wish list. Upgrade to paid plan to increase to ${upgrade}.";
+  static m39(count, upgrade) => "Limit on wish list: ${count}";
 
-  static m40(user) => "Книга у ${user}";
+  static m40(count, upgrade) => "You can keep up to ${count} books in your wish list. Upgrade to paid plan to increase to ${upgrade}.";
+
+  static m41(user) => "Книга у ${user}";
 
   final messages = _notInlinedMessages(_notInlinedMessages);
   static _notInlinedMessages(_) => <String, Function> {
@@ -263,26 +265,37 @@ class MessageLookup extends MessageLookupByLibrary {
     "privacyPolicy" : MessageLookupByLibrary.simpleMessage("Privacy Policy"),
     "profileUserBooks" : m21,
     "receiveBooks" : m22,
+    "recognitionProgressBooks" : m23,
+    "recognitionProgressCatalogsLookup" : MessageLookupByLibrary.simpleMessage("Searching books in catalogues"),
+    "recognitionProgressCompleted" : MessageLookupByLibrary.simpleMessage("Successfuly completed"),
+    "recognitionProgressFailed" : MessageLookupByLibrary.simpleMessage("We encountered some difficulties with image recognition. Please try later."),
+    "recognitionProgressNone" : MessageLookupByLibrary.simpleMessage("Some problem with recofnition. Try again."),
+    "recognitionProgressOutline" : MessageLookupByLibrary.simpleMessage("Recognising books outlines"),
+    "recognitionProgressRescan" : MessageLookupByLibrary.simpleMessage("Rescaning fragments of the image"),
+    "recognitionProgressScan" : MessageLookupByLibrary.simpleMessage("Computer vision scans the image"),
+    "recognitionProgressStore" : MessageLookupByLibrary.simpleMessage("Storing book records."),
+    "recognitionProgressTitle" : MessageLookupByLibrary.simpleMessage("Recognition progress"),
+    "recognitionProgressUpload" : MessageLookupByLibrary.simpleMessage("Uploading image to cloud storage"),
     "recognizeFromCamera" : MessageLookupByLibrary.simpleMessage("Сфотографировать полку"),
     "recognizeFromGallery" : MessageLookupByLibrary.simpleMessage("Распознать книги с фотографии"),
     "referralLink" : MessageLookupByLibrary.simpleMessage("Ваша партнёрская ссылка:"),
     "referralTitle" : MessageLookupByLibrary.simpleMessage("МОИ РЕФЕРАЛЫ"),
-    "requestBook" : m23,
-    "requestPost" : m24,
-    "requestReturn" : m25,
-    "requestReturnByOwner" : m26,
+    "requestBook" : m24,
+    "requestPost" : m25,
+    "requestReturn" : m26,
+    "requestReturnByOwner" : m27,
     "scanISBN" : MessageLookupByLibrary.simpleMessage("Scan ISBN code"),
     "selectDisplayCurrency" : MessageLookupByLibrary.simpleMessage("Выберите валюту отображения:"),
-    "sendBooks" : m27,
-    "settingsPlan" : m28,
+    "sendBooks" : m28,
+    "settingsPlan" : m29,
     "settingsTitleGeneral" : MessageLookupByLibrary.simpleMessage("Общие настройки"),
     "settingsTitleIn" : MessageLookupByLibrary.simpleMessage("Пополнение баланса"),
     "settingsTitleInStellar" : MessageLookupByLibrary.simpleMessage("Пополнение через Stallar"),
     "settingsTitleOutStellar" : MessageLookupByLibrary.simpleMessage("Выплаты через Stallar"),
-    "sharedFeeLine" : m29,
+    "sharedFeeLine" : m30,
     "sharingMotto" : MessageLookupByLibrary.simpleMessage("Бери книги у людей вместо покупки в магазинах"),
-    "showDeposit" : m30,
-    "showRent" : m31,
+    "showDeposit" : m31,
+    "showRent" : m32,
     "snackAllowLocation" : MessageLookupByLibrary.simpleMessage("Дайте разрешение на использование текущей позиции для поиска и добавления книг"),
     "snackBookAddedToCart" : MessageLookupByLibrary.simpleMessage("Книга добавлена в корзину"),
     "snackBookImageChanged" : MessageLookupByLibrary.simpleMessage("Новая обложка книги установлена."),
@@ -291,11 +304,11 @@ class MessageLookup extends MessageLookupByLibrary {
     "snackBookPending" : MessageLookupByLibrary.simpleMessage("Прошлая передача книг не завершена и вы не можете добавлять книги"),
     "snackBookPriceChanged" : MessageLookupByLibrary.simpleMessage("Цена книги установлена."),
     "snackPaidPlanActivated" : MessageLookupByLibrary.simpleMessage("Your paid plan is activated"),
-    "snackRecgnitionStarted" : MessageLookupByLibrary.simpleMessage("Image recognition take up to 2 min. Meanwhile take a next photo."),
-    "snackRecognitionDone" : m32,
+    "snackRecgnitionStarted" : MessageLookupByLibrary.simpleMessage("Add more bookshelves while image processing."),
+    "snackRecognitionDone" : m33,
     "snackWishDeleted" : MessageLookupByLibrary.simpleMessage("Book deleted from your wishlist"),
     "stellarOutput" : MessageLookupByLibrary.simpleMessage("Вывод средств на Stellar счёт:"),
-    "subscriptionDisclaimer" : m33,
+    "subscriptionDisclaimer" : m34,
     "successfulPayment" : MessageLookupByLibrary.simpleMessage("Платёж добавлен в очередь на исполнение"),
     "supportChat" : MessageLookupByLibrary.simpleMessage("Чат с поддержкой"),
     "supportChatbot" : MessageLookupByLibrary.simpleMessage("Во вкладке Сообщения есть чат с ботом Библосферы, он может ответить на любые вопросы о приложении. Если понадобится связаться напрямую со мной, пишите в telegram "),
@@ -323,21 +336,21 @@ class MessageLookup extends MessageLookupByLibrary {
     "titleUserBooks" : MessageLookupByLibrary.simpleMessage("ОБМЕН КНИГАМИ"),
     "transitInitiated" : MessageLookupByLibrary.simpleMessage("Handover process initiated for the book"),
     "typeMsg" : MessageLookupByLibrary.simpleMessage("Type your message..."),
-    "userBalance" : m34,
-    "userHave" : m35,
+    "userBalance" : m35,
+    "userHave" : m36,
     "welcome" : MessageLookupByLibrary.simpleMessage("WELCOME"),
     "wishAdded" : MessageLookupByLibrary.simpleMessage("Book has been added to your wishlist"),
     "wishAlreadyThere" : MessageLookupByLibrary.simpleMessage("Эта книга уже есть в вашем списке желаний"),
-    "wishLimitPaid" : m36,
-    "wishLimitPaidDesc" : m37,
-    "wishLimitTrial" : m38,
-    "wishLimitTrialDesc" : m39,
+    "wishLimitPaid" : m37,
+    "wishLimitPaidDesc" : m38,
+    "wishLimitTrial" : m39,
+    "wishLimitTrialDesc" : m40,
     "wrongAccount" : MessageLookupByLibrary.simpleMessage("Неверный счёт"),
     "wrongImageUrl" : MessageLookupByLibrary.simpleMessage("Неверная ссылка"),
     "yes" : MessageLookupByLibrary.simpleMessage("Yes"),
     "youBorrowThisBook" : MessageLookupByLibrary.simpleMessage("Вы взяли эту книгу"),
     "youHaveThisBook" : MessageLookupByLibrary.simpleMessage("Книга у вас"),
-    "youLentThisBook" : m40,
+    "youLentThisBook" : m41,
     "youTransitThisBook" : MessageLookupByLibrary.simpleMessage("По этой книге не завершён процесс передачи"),
     "youWishThisBook" : MessageLookupByLibrary.simpleMessage("Эту книгу вы хотите почитать")
   };

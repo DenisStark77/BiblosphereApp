@@ -958,7 +958,7 @@ class S {
   }
 
   String get snackRecgnitionStarted {
-    return Intl.message('Image recognition take up to 2 min. Meanwhile take a next photo.', name: 'snackRecgnitionStarted');
+    return Intl.message('Add more bookshelves while image processing.', name: 'snackRecgnitionStarted');
   }
 
   String snackRecognitionDone(count) {
@@ -1150,6 +1150,53 @@ We are looking for people and organizations to partner with. Our mission to spre
 Мы открыты к партнёрству с людьми и организациями. Наша цель распространение шэринга книг и доступность чтения. Свяжитесь со мной в Телеграм - [Денис Старк](https://t.me/DenisStark77)
 
 """, name: 'supportText');
+  }
+
+  String get recognitionProgressTitle {
+    return Intl.message('Recognition progress', name: 'recognitionProgressTitle');
+  }
+
+  String get recognitionProgressNone {
+    return Intl.message('Some problem with recofnition. Try again.', name: 'recognitionProgressNone');
+  }
+
+  String get recognitionProgressUpload {
+    return Intl.message('Uploading image to cloud storage', name: 'recognitionProgressUpload');
+  }
+
+  String get recognitionProgressScan {
+    return Intl.message('Computer vision scans the image', name: 'recognitionProgressScan');
+  }
+
+  String get recognitionProgressOutline {
+    return Intl.message('Recognising books outlines', name: 'recognitionProgressOutline');
+  }
+
+  String get recognitionProgressCatalogsLookup {
+    return Intl.message('Searching books in catalogues', name: 'recognitionProgressCatalogsLookup');
+  }
+
+  String get recognitionProgressRescan {
+    return Intl.message('Rescaning fragments of the image', name: 'recognitionProgressRescan');
+  }
+
+  String get recognitionProgressCompleted {
+    return Intl.message('Successfuly completed',
+        name: 'recognitionProgressCompleted');
+  }
+
+  String get recognitionProgressFailed {
+    return Intl.message('We encountered some difficulties with image recognition. Please try later.', name: 'recognitionProgressFailed');
+  }
+
+  String get recognitionProgressStore {
+    return Intl.message('Storing book records.', name: 'recognitionProgressStore');
+  }
+
+  
+  String recognitionProgressBooks(total, recognized) {
+    return Intl.message('$recognized books out of $total were recognized',
+        name: 'recognitionProgressBooks', args: [total, recognized]);
   }
 }
 

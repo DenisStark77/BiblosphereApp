@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:ui';
+import 'dart:io';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
@@ -263,6 +264,22 @@ Widget bookImage(dynamic book, double size,
                 fit: BoxFit.cover)));
 }
 
+Widget shelfImage(Shelf shelf, double size,
+    {padding = const EdgeInsets.all(3.0)}) {
+  String image;
+
+  return new Container(
+        margin: padding,
+            child: Image(
+                image: shelf.localImage != null ? FileImage(File(shelf.localImage))
+                   :  new CachedNetworkImageProvider(
+                    (image != null && image.isNotEmpty && image != '')
+                        ? image
+                        : nocoverUrl),
+                width: size,
+                fit: BoxFit.cover));
+}
+
 Widget userPhoto(dynamic user, double size, {double padding = 0.0}) {
   ImageProvider provider;
 
@@ -399,6 +416,124 @@ class _UserWidgetState extends State<UserWidget> {
     }
   }
 }
+
+typedef ShelfWidgetBuilder = Widget Function(
+    BuildContext context, Shelf bookrecord, double value);
+
+class ShelfWidget extends StatefulWidget {
+  ShelfWidget(
+      {Key key,
+      @required this.shelf,
+      @required this.builder})
+      : super(key: key);
+
+  final Shelf shelf;
+  final ShelfWidgetBuilder builder;
+
+  @override
+  _ShelfWidgetState createState() =>
+      new _ShelfWidgetState(shelf: shelf, builder: builder);
+}
+
+class _ShelfWidgetState extends State<ShelfWidget> {
+  Shelf shelf;
+  final ShelfWidgetBuilder builder;
+  StreamSubscription<DocumentSnapshot> _listener;
+  Timer timer;
+  double value = 0.0;
+
+  Map<RecognitionStatus, double> limits = {
+    RecognitionStatus.None: 0.0, 
+    RecognitionStatus.Upload: 0.3,
+    RecognitionStatus.Scan: 0.5, 
+    RecognitionStatus.Outline: 0.62,
+    RecognitionStatus.CatalogsLookup: 0.75, 
+    RecognitionStatus.Rescan: 0.95, 
+    RecognitionStatus.Store: 1.0,
+    RecognitionStatus.Completed: 1.0, 
+    RecognitionStatus.Failed: 1.0, 
+  };
+
+  Map<RecognitionStatus, double> initial = {
+    RecognitionStatus.None: 0.0, 
+    RecognitionStatus.Upload: 0.0,
+    RecognitionStatus.Scan: 0.3, 
+    RecognitionStatus.Outline: 0.5,
+    RecognitionStatus.CatalogsLookup: 0.62, 
+    RecognitionStatus.Rescan: 0.75, 
+    RecognitionStatus.Store: 0.95,
+    RecognitionStatus.Completed: 1.0, 
+    RecognitionStatus.Failed: 1.0, 
+  };
+
+  @override
+  void initState() {
+    super.initState();
+
+    initListener();
+
+    timer = Timer.periodic(Duration(seconds: 3), (time) {
+      value += 0.025;
+      if (value > limits[shelf.status])
+         value = limits[shelf.status]; 
+      //print('!!!DEBUG ticker value: ${value} with ${shelf.status}');
+      setState(() {});
+    });
+  }
+
+  void initListener() {
+    if (_listener != null) _listener.cancel();
+
+    // Listen updated on bookrecord and refresh Widget
+    _listener = shelf.ref.snapshots().listen((doc) {
+      if (doc.data['status'] != null && doc.data['status'] is int) {
+        shelf.status = RecognitionStatus.values.elementAt(doc.data['status']);
+        value = initial[shelf.status];
+        if (shelf.status == RecognitionStatus.Failed || shelf.status == RecognitionStatus.Completed || shelf.status == RecognitionStatus.None )
+           timer.cancel();
+      }
+      shelf.total = doc.data['total'] ?? 0;
+      shelf.recognized = doc.data['recognized'] ?? 0;
+      setState(() {});
+    });
+  }
+
+
+  _ShelfWidgetState({
+    Key key,
+    @required this.shelf,
+    @required this.builder,
+  });
+
+  @override
+  void dispose() {
+    if (_listener != null) _listener.cancel();
+    if(timer.isActive) 
+        timer.cancel();
+    super.dispose();
+  }
+
+  @override
+  void didUpdateWidget(ShelfWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (oldWidget.shelf.id != widget.shelf.id) {
+      shelf = widget.shelf;
+      initListener();
+      if (mounted) setState(() {});
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (shelf == null) {
+      return Container(width: 0.0, height: 0.0);
+    } else {
+      return builder(context, shelf, value);
+    }
+  }
+}
+
 
 double dp(double val, int places) {
   double mod = math.pow(10.0, places);
