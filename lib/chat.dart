@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:googleapis/firebasedynamiclinks/v1.dart';
 import 'package:intl/intl.dart';
 
 import 'package:biblosphere/l10n.dart';
@@ -138,78 +139,75 @@ class _ChatCardState extends State<ChatCard> {
         },
         child: Card(
             child: Container(
-              margin: EdgeInsets.all(10.0), 
-              child: Row(children: <Widget>[
-                Stack(children: <Widget>[
-                  userPhoto(chat.partnerImage, 60.0, padding: 5.0),
-                  Positioned.fill(
-                          child: Container(
-                              alignment: Alignment.topRight,
-                              child: GestureDetector(
-                                  onTap: () {
-                                    showBbsConfirmation(context,
-                                            S.of(context).confirmBlockUser)
-                                        .then((confirmed) {
-                                      if (confirmed) {
-                                        blockUser(B.user.id, chat.partnerId);
-                                      }
-                                    });
-                                  },
-                                  child: ClipOval(
-                                    child: Container(
-                                      color: C.button,
-                                      height: 20.0, // height of the button
-                                      width: 20.0, // width of the button
-                                      child: Center(
-                                          child:
-                                              assetIcon(cancel_100, size: 20)),
-                                    ),
-                                  ))))
-                ]),
-                Expanded(
-                    child: Container(
-                        margin: EdgeInsets.all(5.0),
-                        child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: <Widget>[
-                              Container(
-                                  child: Text(
-                                      chat.partnerName ?? '',
-                                      overflow: TextOverflow.ellipsis,
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .subtitle)), // Description
-                              Text(chat.message ?? '',
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .body1
-                                      .apply(color: Colors.grey[400]))
-                            ]))),
-                Container(
+          margin: EdgeInsets.all(10.0),
+          child: Row(children: <Widget>[
+            Stack(children: <Widget>[
+              userPhoto(chat.partnerImage, 60.0, padding: 5.0),
+              Positioned.fill(
+                  child: Container(
+                      alignment: Alignment.topRight,
+                      child: GestureDetector(
+                          onTap: () {
+                            showBbsConfirmation(
+                                    context, S.of(context).confirmBlockUser)
+                                .then((confirmed) {
+                              if (confirmed) {
+                                blockUser(B.user.id, chat.partnerId);
+                              }
+                            });
+                          },
+                          child: ClipOval(
+                            child: Container(
+                              color: C.button,
+                              height: 20.0, // height of the button
+                              width: 20.0, // width of the button
+                              child: Center(
+                                  child: assetIcon(cancel_100, size: 20)),
+                            ),
+                          ))))
+            ]),
+            Expanded(
+                child: Container(
                     margin: EdgeInsets.all(5.0),
                     child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: <Widget>[
-                          Text(DateFormat('H:m MMMd').format(chat.timestamp),
-                              style: Theme.of(context).textTheme.body1),
-                          chat.unread != null &&
-                                  chat.unread[B.user.id] != null &&
-                                  chat.unread[B.user.id] > 0
-                              ? ClipOval(
-                                  child: Container(
-                                    color: Colors.green,
-                                    height: 25.0, // height of the button
-                                    width: 25.0, // width of the button
-                                    child: Center(
-                                        child: Text(
-                                            chat.unread[B.user.id].toString())),
-                                  ),
-                                )
-                              : Container()
-                        ])),
-              ]),
-             )
-            ));
+                          Container(
+                              child: Text(chat.partnerName ?? '',
+                                  overflow: TextOverflow.ellipsis,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .subtitle)), // Description
+                          Text(chat.message ?? '',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .body1
+                                  .apply(color: Colors.grey[400]))
+                        ]))),
+            Container(
+                margin: EdgeInsets.all(5.0),
+                child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: <Widget>[
+                      Text(DateFormat('H:m MMMd').format(chat.timestamp),
+                          style: Theme.of(context).textTheme.body1),
+                      chat.unread != null &&
+                              chat.unread[B.user.id] != null &&
+                              chat.unread[B.user.id] > 0
+                          ? ClipOval(
+                              child: Container(
+                                color: Colors.green,
+                                height: 25.0, // height of the button
+                                width: 25.0, // width of the button
+                                child: Center(
+                                    child: Text(
+                                        chat.unread[B.user.id].toString())),
+                              ),
+                            )
+                          : Container()
+                    ])),
+          ]),
+        )));
   }
 
   void blockUser(String blockingUser, String blockedUser) {
@@ -274,18 +272,19 @@ class Chat extends StatefulWidget {
     });
   }
 
-  static runChatById(BuildContext context, {String chatId, String message, bool send = false}) async {
+  static runChatById(BuildContext context,
+      {String chatId, String message, bool send = false}) async {
     DocumentSnapshot chatSnap = await Messages.Ref(chatId).get();
     if (!chatSnap.exists) throw 'Chat does not exist: ${chatId}';
 
     Messages chat = new Messages.fromJson(chatSnap.data, chatSnap);
     User partner;
 
-      String partnerId = chat.partnerId;
-      DocumentSnapshot snap = await User.Ref(partnerId).get();
-      if (!snap.exists)
-        throw "Partner user [${partnerId}] does not exist for chat [${chat.id}]";
-      partner = User.fromJson(snap.data);
+    String partnerId = chat.partnerId;
+    DocumentSnapshot snap = await User.Ref(partnerId).get();
+    if (!snap.exists)
+      throw "Partner user [${partnerId}] does not exist for chat [${chat.id}]";
+    partner = User.fromJson(snap.data);
 
     pushSingle(
         context,
@@ -342,10 +341,6 @@ class _ChatState extends State<Chat> {
   final dynamic attachment;
   bool send;
   Messages chat;
-
-  // List of books in the agreement
-  StreamSubscription<QuerySnapshot> streamBooks;
-  List<Bookrecord> books = [];
 
   StreamSubscription<Messages> _listener;
 
@@ -479,6 +474,9 @@ class ChatScreenState extends State<ChatScreen> {
   final ScrollController listScrollController = new ScrollController();
   final FocusNode focusNode = new FocusNode();
 
+  StreamSubscription<QuerySnapshot> messagesSubscription;
+  List<DocumentSnapshot> messages = [];
+
   @override
   void initState() {
     super.initState();
@@ -489,11 +487,11 @@ class ChatScreenState extends State<ChatScreen> {
 
     peerId = partner.id;
 
-      // Send message to chat automaticaly
-      if (message != null && send) {
-        //print('!!!DEBUG: Sending message');
-        onSendMessage(message, extra: attachment);
-      }
+    // Send message to chat automaticaly
+    if (message != null && send) {
+      //print('!!!DEBUG: Sending message');
+      onSendMessage(message, extra: attachment);
+    }
 
     updateUnread();
 
@@ -501,11 +499,78 @@ class ChatScreenState extends State<ChatScreen> {
       focusNode.addListener(() {
         if (focusNode.hasFocus) onKeyboard();
       });
+
+    messages = [];
+    messagesSubscription = Firestore.instance
+        .collection('messages')
+        .document(chat.id)
+        .collection(chat.id)
+        .orderBy('timestamp', descending: true)
+        .limit(20)
+        .snapshots()
+        .listen((snap) async {
+      messages = snap.documents;
+      if (mounted) setState(() {});
+
+      // TODO: Check message locale and if it's diferent with my locale initiate translation
+      snap.documentChanges.forEach((doc) {
+        Map<String, dynamic> data = doc.document.data;
+        String lang = deviceLang(context);
+
+        // Only check translation for newly added items, and only items to me
+        if (doc.type == DocumentChangeType.added && data['idTo'] == B.user.id) {
+          // Only run translation if my language is not available and his language is unknown or different
+          if (data[lang] == null &&
+              (data['language'] == null ||
+                  data['language'] != deviceLang(context))) {
+            // TODO: Skip text in quots (book titles)
+            List<String> literals = [];
+            int i = -1;
+            final template =
+                data['content'].replaceAllMapped(RegExp(r'"(.*?)"'), (match) {
+              literals.add(match.group(0));
+              i += 1;
+              return '{$i}';
+            });
+
+            // Run translation of the message
+            translateGoogle(template, lang).then((res) {
+              if (res != null) {
+                // Only add translation if it different from original
+                // If same language update it in the message
+                if (res['detectedSourceLanguage'] == lang) {
+                  doc.document.reference
+                      .updateData({'language': res['detectedSourceLanguage']});
+                } else {
+                  // TODO: Restore text in quots
+                  String regex = r'{(.*?)}';
+
+                  final translation = res['translatedText']
+                      .replaceAllMapped(RegExp(regex), (match) {
+                    String index =
+                        match.group(0).substring(1, match.group(0).length - 1);
+                    int i = int.parse(index);
+                    return literals[i];
+                  });
+                  // Update message translation and source language
+                  doc.document.reference.updateData({
+                    lang: translation,
+                    'language': res['detectedSourceLanguage']
+                  });
+                }
+              }
+              // TODO: Handle failure with translation to avoid multiple re-tries
+            });
+          }
+        }
+      });
+    });
   }
 
   @override
   void dispose() {
     focusNode.dispose();
+    if (messagesSubscription != null) messagesSubscription.cancel();
 
     super.dispose();
   }
@@ -573,6 +638,7 @@ class ChatScreenState extends State<ChatScreen> {
         'timestamp': FieldValue.serverTimestamp(),
         'content': content,
         'type': 0,
+        'language': deviceLang(context)
       };
 
       if (extra != null && extra is Bookrecord) {
@@ -615,19 +681,41 @@ class ChatScreenState extends State<ChatScreen> {
 
   Widget buildItem(int index, DocumentSnapshot document) {
     double width = MediaQuery.of(context).size.width * 0.80;
+    String lang = deviceLang(context);
+    String text = document[lang] != null ? document[lang] : document['content'];
+    bool byBot = document['bot'] != null ? document['bot'] : false;
+    String clause = byBot
+        ? S.of(context).autoGenerated
+        : document[lang] != null ? S.of(context).autoTranslated : null;
 
     if (document['idFrom'] == myId) {
       // Right (my message)
       return Row(
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
-          document['type'] == 0 && (! document.data.containsKey('attachment') || document['attachment'] == 'None')
+          document['type'] == 0 &&
+                  (!document.data.containsKey('attachment') ||
+                      document['attachment'] == 'None')
               // No attachment
               ? Container(
-                  child: Text(
-                    document['content'],
-                    style: TextStyle(color: C.chatMyText),
-                  ),
+                  child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Text(
+                          document['content'],
+                          style: TextStyle(color: C.chatMyText),
+                        ),
+                        byBot
+                            ? Text(S.of(context).autoGenerated,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .body2
+                                    .copyWith(fontStyle: FontStyle.italic)
+                                    .apply(
+                                        fontSizeFactor: 0.7,
+                                        color: C.chatHisText))
+                            : Container()
+                      ]),
                   padding: EdgeInsets.all(10.0),
                   constraints: BoxConstraints(
                     maxWidth: width,
@@ -639,7 +727,9 @@ class ChatScreenState extends State<ChatScreen> {
                       bottom: isLastMessageRight(index) ? 20.0 : 10.0,
                       right: 10.0),
                 )
-              : document['type'] == 0 && (! document.data.containsKey('attachment') || document['attachment'] == 'Bookrecord')
+              : document['type'] == 0 &&
+                      (!document.data.containsKey('attachment') ||
+                          document['attachment'] == 'Bookrecord')
                   // Bookrecord attachment
                   ? Container(
                       child: GestureDetector(
@@ -662,13 +752,30 @@ class ChatScreenState extends State<ChatScreen> {
                                     padding: EdgeInsets.all(10.0)),
                                 Flexible(
                                     child: Container(
-                                  child: Text(
-                                    document['content'],
-                                    style: TextStyle(color: C.chatMyText),
-                                  ),
+                                  child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: <Widget>[
+                                        Text(
+                                          document['content'],
+                                          style: TextStyle(color: C.chatMyText),
+                                        ),
+                                        byBot
+                                            ? Text(S.of(context).autoGenerated,
+                                                style: Theme.of(context)
+                                                    .textTheme
+                                                    .body2
+                                                    .copyWith(
+                                                        fontStyle:
+                                                            FontStyle.italic)
+                                                    .apply(
+                                                        fontSizeFactor: 0.7,
+                                                        color: C.chatHisText))
+                                            : Container()
+                                      ]),
                                   alignment: Alignment.topLeft,
-                                  padding:
-                                      EdgeInsets.only(top: 10.0, right: 10.0, bottom: 10.0),
+                                  padding: EdgeInsets.only(
+                                      top: 10.0, right: 10.0, bottom: 10.0),
                                 ))
                               ])),
                       constraints: BoxConstraints(
@@ -704,78 +811,122 @@ class ChatScreenState extends State<ChatScreen> {
             Row(
               mainAxisSize: MainAxisSize.min,
               children: <Widget>[
-                document['type'] == 0 && (! document.data.containsKey('attachment') || document['attachment'] == 'None')
-                // No attachment
+                document['type'] == 0 &&
+                        (!document.data.containsKey('attachment') ||
+                            document['attachment'] == 'None')
+                    // No attachment
                     ? Container(
-                  child: Text(
-                    document['content'],
-                    style: TextStyle(color: C.chatHisText),
-                  ),
-                  padding: EdgeInsets.all(10.0),
-                  constraints: BoxConstraints(
-                    maxWidth: width,
-                  ),
-                  decoration: BoxDecoration(
-                      color: C.chatHis,
-                      borderRadius: BorderRadius.circular(8.0)),
-                  margin: EdgeInsets.only(left: 10.0,
-                    //bottom: isLastMessageRight(index) ? 20.0 : 10.0,
-                    ),
-                )
-                    : document['type'] == 0 && (! document.data.containsKey('attachment') || document['attachment'] == 'Bookrecord')
-                // Bookrecord attachment
-                    ? Container(
-                  child: GestureDetector(
-                      onTap: () async {
-                        pushSingle(
-                            context,
-                            new MaterialPageRoute(
-                                builder: (context) => buildScaffold(
-                                    context,
-                                    null,
-                                    new FindBookWidget(id: document['id']),
-                                    appbar: false)),
-                            'search');
-                      },
-                      child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: <Widget>[
-                            Flexible(
-                                child: Container(
-                                  child: Text(
-                                    document['content'],
-                                    style: TextStyle(color: C.chatHisText),
-                                  ),
-                                  alignment: Alignment.topLeft,
-                                  padding:
-                                  EdgeInsets.only(top: 10.0, left: 10.0, bottom: 10.0),
-                                )),
-                            bookImage(document['image'], 50.0,
-                                padding: EdgeInsets.all(10.0)),
-                          ])),
-                  constraints: BoxConstraints(
-                    maxWidth: width,
-                  ),
-                  decoration: BoxDecoration(
-                      color: C.chatHis,
-                      borderRadius: BorderRadius.circular(8.0)),
-                  margin: EdgeInsets.only(
-                      //bottom: isLastMessageRight(index) ? 20.0 : 10.0,
-                      left: 10.0),
-                )
-                // Sticker
-                    : Container(
-                  child: new Image.asset(
-                    'images/${document['content']}.gif',
-                    width: 100.0,
-                    height: 100.0,
-                    fit: BoxFit.cover,
-                  ),
-                  margin: EdgeInsets.only(
-                      bottom: isLastMessageRight(index) ? 20.0 : 10.0,
-                      right: 10.0),
-                ),
+                        child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: <Widget>[
+                              Text(
+                                text,
+                                style: TextStyle(color: C.chatHisText),
+                              ),
+                              clause != null
+                                  ? Text(clause,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .body2
+                                          .copyWith(fontStyle: FontStyle.italic)
+                                          .apply(
+                                              fontSizeFactor: 0.7,
+                                              color: C.chatHisText))
+                                  : Container(),
+                            ]),
+                        padding: EdgeInsets.all(10.0),
+                        constraints: BoxConstraints(
+                          maxWidth: width,
+                        ),
+                        decoration: BoxDecoration(
+                            color: C.chatHis,
+                            borderRadius: BorderRadius.circular(8.0)),
+                        margin: EdgeInsets.only(
+                          left: 10.0,
+                          //bottom: isLastMessageRight(index) ? 20.0 : 10.0,
+                        ),
+                      )
+                    : document['type'] == 0 &&
+                            (!document.data.containsKey('attachment') ||
+                                document['attachment'] == 'Bookrecord')
+                        // Bookrecord attachment
+                        ? Container(
+                            child: GestureDetector(
+                                onTap: () async {
+                                  pushSingle(
+                                      context,
+                                      new MaterialPageRoute(
+                                          builder: (context) => buildScaffold(
+                                              context,
+                                              null,
+                                              new FindBookWidget(
+                                                  id: document['id']),
+                                              appbar: false)),
+                                      'search');
+                                },
+                                child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: <Widget>[
+                                      Flexible(
+                                          child: Container(
+                                        child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: <Widget>[
+                                              Text(
+                                                text,
+                                                style: TextStyle(
+                                                    color: C.chatHisText),
+                                              ),
+                                              clause != null
+                                                  ? Text(clause,
+                                                      style: Theme.of(context)
+                                                          .textTheme
+                                                          .body2
+                                                          .copyWith(
+                                                              fontStyle:
+                                                                  FontStyle
+                                                                      .italic)
+                                                          .apply(
+                                                              fontSizeFactor:
+                                                                  0.7,
+                                                              color: C
+                                                                  .chatHisText))
+                                                  : Container(),
+                                            ]),
+                                        alignment: Alignment.topLeft,
+                                        padding: EdgeInsets.only(
+                                            top: 10.0,
+                                            left: 10.0,
+                                            bottom: 10.0),
+                                      )),
+                                      bookImage(document['image'], 50.0,
+                                          padding: EdgeInsets.all(10.0)),
+                                    ])),
+                            constraints: BoxConstraints(
+                              maxWidth: width,
+                            ),
+                            decoration: BoxDecoration(
+                                color: C.chatHis,
+                                borderRadius: BorderRadius.circular(8.0)),
+                            margin: EdgeInsets.only(
+                                //bottom: isLastMessageRight(index) ? 20.0 : 10.0,
+                                left: 10.0),
+                          )
+                        // Sticker
+                        : Container(
+                            child: new Image.asset(
+                              'images/${document['content']}.gif',
+                              width: 100.0,
+                              height: 100.0,
+                              fit: BoxFit.cover,
+                            ),
+                            margin: EdgeInsets.only(
+                                bottom: isLastMessageRight(index) ? 20.0 : 10.0,
+                                right: 10.0),
+                          ),
               ],
               mainAxisAlignment: MainAxisAlignment.start,
             ),
@@ -783,7 +934,8 @@ class ChatScreenState extends State<ChatScreen> {
             // Time
             isLastMessageLeft(index)
                 ? Container(
-                    child: Text(messageDate(document['timestamp']),
+                    child: Text(
+                      messageDate(document['timestamp']),
                       style: TextStyle(
                           color: greyColor,
                           fontSize: 12.0,
@@ -803,10 +955,9 @@ class ChatScreenState extends State<ChatScreen> {
   String messageDate(dynamic data) {
     //print('!!!DEBUG type: ${data.runtimeType}');
     if (data is String) {
-       return DateFormat('dd MMM kk:mm').format(
-                          DateTime.fromMillisecondsSinceEpoch(
-                                  int.parse(data))
-                              .subtract(DateTime.now().timeZoneOffset));
+      return DateFormat('dd MMM kk:mm').format(
+          DateTime.fromMillisecondsSinceEpoch(int.parse(data))
+              .subtract(DateTime.now().timeZoneOffset));
     } else if (data is Timestamp) {
       return DateFormat('dd MMM kk:mm').format(data.toDate());
     } else {
@@ -881,110 +1032,125 @@ class ChatScreenState extends State<ChatScreen> {
 
   Widget buildInput() {
     return Container(
-    child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: <Widget>[Row(
-      crossAxisAlignment: CrossAxisAlignment.end,
-        children: <Widget>[
-          attachmentImage(),
-          // Edit text
-          Flexible(
-            child: Container(
-              margin: new EdgeInsets.only(left: 10.0, right: 1.0),
-                child: Theme(
-                  data: ThemeData(platform: TargetPlatform.android),
-                  child: TextField(
-                    style: TextStyle(color: primaryColor, fontSize: 16.0),
-                    controller: textEditingController,
-                    keyboardType: TextInputType.multiline,
-                    minLines: 1,
-                    maxLines: 5,
-                    decoration: InputDecoration.collapsed(
-                      hintText: S.of(context).typeMsg,
-                      hintStyle: TextStyle(color: greyColor),
-                    ),
-                    focusNode: focusNode,
-                  )),
-            ),
-          ),
+      child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: <Widget>[
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: <Widget>[
+                attachmentImage(),
+                // Edit text
+                Flexible(
+                  child: Container(
+                    margin: new EdgeInsets.only(left: 10.0, right: 1.0),
+                    child: Theme(
+                        data: ThemeData(platform: TargetPlatform.android),
+                        child: TextField(
+                          style: TextStyle(color: primaryColor, fontSize: 16.0),
+                          controller: textEditingController,
+                          keyboardType: TextInputType.multiline,
+                          minLines: 1,
+                          maxLines: 5,
+                          decoration: InputDecoration.collapsed(
+                            hintText: S.of(context).typeMsg,
+                            hintStyle: TextStyle(color: greyColor),
+                          ),
+                          focusNode: focusNode,
+                        )),
+                  ),
+                ),
 
-          // Button attachment/delete
-          Material(
-            child: new Container(
-              margin: new EdgeInsets.only(left: 8.0, right: 0.0),
-              child: new IconButton(
-                icon: attachment == null
-                    ? assetIcon(attach_90, size: 20, padding: 0.0)
-                    : assetIcon(trash_100, size: 20, padding: 0.0),
-                onPressed: () {
-                  if (attachment != null)
-                    setState(() {
-                      attachment = null;
-                    });
-                  else
-                    Navigator.push(
-                        context,
-                        new MaterialPageRoute(
-                            builder: (context) => buildScaffold(
-                                context,
-                                S.of(context).chooseHoldedBookForChat,
-                                new MyBooksWidget(
-                                  user: partner,
-                                  onSelected: (context, book) {
-                                    //print('!!!DEBUG: Attachment set');
-                                    attachment = book;
-                                    if (book.intent(me: B.user.id, him: partner.id) == BookIntent.Offer) {
-                                      // Offer My book
-                                      textEditingController.text =
-                                          S.of(context).offerBook(book.title);
-                                    } else if (book.intent(me: B.user.id, him: partner.id) == BookIntent.Request) {
-                                      // Request his book
-                                      textEditingController.text =
-                                          S.of(context).requestBook(book.title);
-                                    } else if (book.intent(me: B.user.id, him: partner.id) == BookIntent.Return) {
-                                      // Return his book
-                                      textEditingController.text =
-                                          S.of(context).requestReturn(book.title);
-                                    } else if (book.intent(me: B.user.id, him: partner.id) == BookIntent.Remind) {
-                                      // Remind to return 
-                                      textEditingController.text = S
-                                          .of(context)
-                                          .requestReturnByOwner(book.title);
-                                    }
-                                    if (mounted)
-                                      setState(() {
-                                        //print('!!!DEBUG: setState executed');
-                                      });
-                                  },
-                                ),
-                                appbar: false)));
-                },
-                color: primaryColor,
-              ),
-            ),
-            color: Colors.white,
-          ),
-          // Button send message
-          Material(
-            child: new Container(
-              margin: new EdgeInsets.only(right: 8.0, left: 0.0),
-              child: new IconButton(
-                icon: assetIcon(sent_100, size: 30, padding: 0.0),
-                onPressed: () => onSendMessage(textEditingController.text,
-                    extra: attachment),
-                color: primaryColor,
-              ),
-            ),
-            color: Colors.white,
-          ),
-        ],
-      )]),
+                // Button attachment/delete
+                Material(
+                  child: new Container(
+                    margin: new EdgeInsets.only(left: 8.0, right: 0.0),
+                    child: new IconButton(
+                      icon: attachment == null
+                          ? assetIcon(attach_90, size: 20, padding: 0.0)
+                          : assetIcon(trash_100, size: 20, padding: 0.0),
+                      onPressed: () {
+                        if (attachment != null)
+                          setState(() {
+                            attachment = null;
+                          });
+                        else
+                          Navigator.push(
+                              context,
+                              new MaterialPageRoute(
+                                  builder: (context) => buildScaffold(
+                                      context,
+                                      S.of(context).chooseHoldedBookForChat,
+                                      new MyBooksWidget(
+                                        user: partner,
+                                        onSelected: (context, book) {
+                                          //print('!!!DEBUG: Attachment set');
+                                          attachment = book;
+                                          if (book.intent(
+                                                  me: B.user.id,
+                                                  him: partner.id) ==
+                                              BookIntent.Offer) {
+                                            // Offer My book
+                                            textEditingController.text = S
+                                                .of(context)
+                                                .offerBook(book.title);
+                                          } else if (book.intent(
+                                                  me: B.user.id,
+                                                  him: partner.id) ==
+                                              BookIntent.Request) {
+                                            // Request his book
+                                            textEditingController.text = S
+                                                .of(context)
+                                                .requestBook(book.title);
+                                          } else if (book.intent(
+                                                  me: B.user.id,
+                                                  him: partner.id) ==
+                                              BookIntent.Return) {
+                                            // Return his book
+                                            textEditingController.text = S
+                                                .of(context)
+                                                .requestReturn(book.title);
+                                          } else if (book.intent(
+                                                  me: B.user.id,
+                                                  him: partner.id) ==
+                                              BookIntent.Remind) {
+                                            // Remind to return
+                                            textEditingController.text = S
+                                                .of(context)
+                                                .requestReturnByOwner(
+                                                    book.title);
+                                          }
+                                          if (mounted)
+                                            setState(() {
+                                              //print('!!!DEBUG: setState executed');
+                                            });
+                                        },
+                                      ),
+                                      appbar: false)));
+                      },
+                      color: primaryColor,
+                    ),
+                  ),
+                  color: Colors.white,
+                ),
+                // Button send message
+                Material(
+                  child: new Container(
+                    margin: new EdgeInsets.only(right: 8.0, left: 0.0),
+                    child: new IconButton(
+                      icon: assetIcon(sent_100, size: 30, padding: 0.0),
+                      onPressed: () => onSendMessage(textEditingController.text,
+                          extra: attachment),
+                      color: primaryColor,
+                    ),
+                  ),
+                  color: Colors.white,
+                ),
+              ],
+            )
+          ]),
       width: double.infinity,
-      constraints: BoxConstraints(
-        maxHeight: 100.0,
-        minHeight: 50.0
-      ),
+      constraints: BoxConstraints(maxHeight: 100.0, minHeight: 50.0),
       decoration: new BoxDecoration(
           border:
               new Border(top: new BorderSide(color: greyColor2, width: 0.5)),
@@ -994,38 +1160,18 @@ class ChatScreenState extends State<ChatScreen> {
 
   Widget buildListMessage() {
     return Flexible(
-      child: chat.id == ''
-          ? Center(
-              child: CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(themeColor)))
-          : StreamBuilder(
-              stream: Firestore.instance
-                  .collection('messages')
-                  .document(chat.id)
-                  .collection(chat.id)
-                  .orderBy('timestamp', descending: true)
-                  .limit(20)
-                  .snapshots(),
-              builder: (context, snapshot) {
-                if (!snapshot.hasData) {
-                  return Center(
-                      child: CircularProgressIndicator(
-                          valueColor:
-                              AlwaysStoppedAnimation<Color>(themeColor)));
-                } else {
-                  listMessage = snapshot.data.documents;
-                  return ListView.builder(
-                    padding: EdgeInsets.all(0.0),
-                    itemBuilder: (context, index) =>
-                        buildItem(index, snapshot.data.documents[index]),
-                    itemCount: snapshot.data.documents.length,
-                    reverse: true,
-                    controller: listScrollController,
-                  );
-                }
-              },
-            ),
-    );
+        child: chat.id == ''
+            ? Center(
+                child: CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(themeColor)))
+            : ListView.builder(
+                padding: EdgeInsets.all(0.0),
+                itemBuilder: (context, index) =>
+                    buildItem(index, messages[index]),
+                itemCount: messages.length,
+                reverse: true,
+                controller: listScrollController,
+              ));
   }
 }
 
@@ -1173,7 +1319,7 @@ class _MyBooksWidgetState extends State<MyBooksWidget> {
                                       });
                                     },
                                   ),
-                                      ChoiceChip(
+                                  ChoiceChip(
                                     //avatar: icon,
                                     label:
                                         Text(S.of(context).chipBooksToReturn),
@@ -1184,7 +1330,7 @@ class _MyBooksWidgetState extends State<MyBooksWidget> {
                                       });
                                     },
                                   ),
-                                      ChoiceChip(
+                                  ChoiceChip(
                                     //avatar: icon,
                                     label: Text(
                                         S.of(context).chipBooksToAskForReturn),
@@ -1195,7 +1341,7 @@ class _MyBooksWidgetState extends State<MyBooksWidget> {
                                       });
                                     },
                                   ),
-                                      ChoiceChip(
+                                  ChoiceChip(
                                     //avatar: icon,
                                     label: Text(S.of(context).chipBooksToOffer),
                                     selected: filter == BookIntent.Offer,

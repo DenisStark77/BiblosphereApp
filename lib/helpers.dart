@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:ui';
 import 'dart:io';
 import 'dart:math' as math;
+import 'dart:convert';
+import 'package:http/http.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -768,4 +770,44 @@ Future<String> upgradePrice() async {
       Crashlytics.instance.recordError(e, stack);
     return 'USD 2.99';
   }
+}
+
+String deviceLang(BuildContext context) {
+  return Localizations.localeOf(context).languageCode;
+}
+
+Future<Map<String, dynamic>> translateGoogle(String text, String lang) async {
+  // TODO: Keep in secrets
+  String apiKey = 'AIzaSyAvOO1D5rRxNW4JI8gzUMBUbBxjeUFEijs';
+
+  Uri uri = Uri.https(
+          'translation.googleapis.com',  
+          '/language/translate/v2', 
+          {
+            'target': lang,
+            'key': apiKey,
+            'q': text,
+            'format': 'text'
+          });
+
+  Response res = await LibConnect.getClient().get(uri);
+
+  if (res.statusCode == 200) {
+    //print('!!!DEBUG message translated: ${json.decode(res.body)}');
+    return json.decode(res.body)['data']['translations'][0];
+  } else  {
+    // TODO: Log to crashalityc
+    print('!!!DEBUG request for translation failed ${res.statusCode}');
+    return null;
+  }  
+
+  //{
+  //"data": {
+  //  "translations": [
+  //    {
+  //      "translatedText": "TRANSLATED TEXT",
+  //      "detectedSourceLanguage": "DETECTED SOURCE LANGUAGE"
+  //    }
+  // ]
+  //}
 }

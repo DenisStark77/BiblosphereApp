@@ -57,7 +57,11 @@ void main() async {
 
   runZoned<Future<Null>>(() async {
     runApp(new MyApp());
-  }, onError: Crashlytics.instance.recordError);
+  }, onError: (e, stack) {
+     print('Exception: $e');
+     print(stack);
+     Crashlytics.instance.recordError(e, stack);
+  });
 
   Purchases.setDebugLogsEnabled(true);
   // TODO: Keep API Key in security values in Firebase (Security)

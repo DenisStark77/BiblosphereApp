@@ -1150,8 +1150,6 @@ double distanceBetween(double lat1, double lon1, double lat2, double lon2) {
 class LibConnect {
   static Client _googleClient;
   static BooksApi _booksApi;
-  static String goodreadsApiKey = 'SXMWtbHvcnbTgRTLT7isA';
-  static Client _goodreadsClient;
   static Client _commonClient;
   static Client _cloudFunctionClient;
 
@@ -1163,11 +1161,6 @@ class LibConnect {
   static Client getCloudFunctionClient() {
     if (_cloudFunctionClient == null) _cloudFunctionClient = new Client();
     return _cloudFunctionClient;
-  }
-
-  static Client getGoodreadClient() {
-    if (_goodreadsClient == null) _goodreadsClient = new Client();
-    return _goodreadsClient;
   }
 
   static BooksApi getGoogleBookApi() {
