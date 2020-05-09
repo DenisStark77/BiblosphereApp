@@ -166,7 +166,7 @@ Widget drawerMenuItem(BuildContext context, String text, String icon,
     assetIcon(icon, size: size),
     Container(
         margin: EdgeInsets.only(left: 10.0),
-        child: Text(text, style: Theme.of(context).textTheme.body1)),
+        child: Text(text, style: Theme.of(context).textTheme.bodyText2)),
   ]);
 }
 

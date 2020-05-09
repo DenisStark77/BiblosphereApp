@@ -132,7 +132,7 @@ class _AddBookWidgetState extends State<AddBookWidget> {
       SliverAppBar(
         // Provide a standard title.
         title: Text(S.of(context).addbookTitle,
-            style: Theme.of(context).textTheme.title.apply(color: C.titleText)),
+            style: Theme.of(context).textTheme.headline6.apply(color: C.titleText)),
         // Allows the user to reveal the app bar if they begin scrolling
         // back up the list of items.
         centerTitle: true,
@@ -241,7 +241,7 @@ class _AddBookWidgetState extends State<AddBookWidget> {
                               child: TextField(
                                 maxLines: 1,
                                 controller: textController,
-                                style: Theme.of(context).textTheme.title,
+                                style: Theme.of(context).textTheme.headline6,
                                 decoration: InputDecoration(
                                     //border: InputBorder.none,
                                     hintStyle:
@@ -333,11 +333,11 @@ class _AddBookWidgetState extends State<AddBookWidget> {
                                       S.of(context).recognitionProgressTitle,
                                       style: Theme.of(context)
                                           .textTheme
-                                          .subtitle)),
+                                          .subtitle2)),
                               Container(
                                   child: Text(progressText(shelf),
                                       style:
-                                          Theme.of(context).textTheme.body1)),
+                                          Theme.of(context).textTheme.bodyText2)),
                               Container(
                                   padding: EdgeInsets.only(
                                       top: 10.0, left: 10.0, right: 10.0),
@@ -350,7 +350,7 @@ class _AddBookWidgetState extends State<AddBookWidget> {
                                                   shelf.total,
                                                   shelf.recognized),
                                           style:
-                                              Theme.of(context).textTheme.body2)
+                                              Theme.of(context).textTheme.bodyText1)
                                       : shelf.status !=
                                                   RecognitionStatus.None &&
                                               shelf.status !=
@@ -392,11 +392,11 @@ class _AddBookWidgetState extends State<AddBookWidget> {
                                         Text('${book.authors[0]}',
                                             style: Theme.of(context)
                                                 .textTheme
-                                                .body1),
+                                                .bodyText2),
                                         Text('\"${book.title}\"',
                                             style: Theme.of(context)
                                                 .textTheme
-                                                .body1)
+                                                .bodyText2)
                                       ])))
                         ])));
               }, childCount: suggestions != null ? suggestions.length : 0),
@@ -830,7 +830,7 @@ class _FindBookWidgetState extends State<FindBookWidget> {
       SliverAppBar(
         // Provide a standard title.
         title: Text(S.of(context).findbookTitle,
-            style: Theme.of(context).textTheme.title.apply(color: C.titleText)),
+            style: Theme.of(context).textTheme.headline6.apply(color: C.titleText)),
         centerTitle: true,
         // Allows the user to reveal the app bar if they begin scrolling
         // back up the list of items.
@@ -857,7 +857,7 @@ class _FindBookWidgetState extends State<FindBookWidget> {
                               child: TextField(
                                 maxLines: 1,
                                 controller: textController,
-                                style: Theme.of(context).textTheme.title,
+                                style: Theme.of(context).textTheme.headline6,
                                 decoration: InputDecoration(
                                     //border: InputBorder.none,
                                     hintStyle:
@@ -943,7 +943,7 @@ class _FindBookWidgetState extends State<FindBookWidget> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: <Widget>[
                         new Text(S.of(context).scanISBN,
-                            style: Theme.of(context).textTheme.title),
+                            style: Theme.of(context).textTheme.headline6),
                         RaisedButton(
                           textColor: Colors.white,
                           color: C.button,
@@ -1008,7 +1008,7 @@ class _FindBookWidgetState extends State<FindBookWidget> {
                               S.of(context).booksAvailableForSearch(
                                   availableBooks,
                                   Scale.text(context, scales[scaleIndex])),
-                              style: Theme.of(context).textTheme.body1))
+                              style: Theme.of(context).textTheme.bodyText2))
                       : Container(width: 0.0, height: 0.0),
                   progressBar
                       ? Container(
@@ -1049,7 +1049,7 @@ class _FindBookWidgetState extends State<FindBookWidget> {
                               child: Text(S.of(context).buttonSearchThirdParty,
                                   style: Theme.of(context)
                                       .textTheme
-                                      .body2
+                                      .bodyText1
                                       .apply(color: C.titleText)),
                               onPressed: () async {
                                 Navigator.push(
@@ -1122,7 +1122,7 @@ class _FindBookWidgetState extends State<FindBookWidget> {
                           Text(S.of(context).buttonManageBook,
                               style: Theme.of(context)
                                   .textTheme
-                                  .body2
+                                  .bodyText1
                                   .apply(color: C.titleText))
                         ]),
                         onPressed: () async {
@@ -1160,7 +1160,7 @@ class _FindBookWidgetState extends State<FindBookWidget> {
                               child: Text(S.of(context).buttonConfirmBooks,
                                   style: Theme.of(context)
                                       .textTheme
-                                      .body2
+                                      .bodyText1
                                       .apply(color: C.titleText)),
                               onPressed: () async {
                                 if (B.user.balance <= -await booksAllowance()) {
@@ -1231,7 +1231,7 @@ class _FindBookWidgetState extends State<FindBookWidget> {
                                             overflow: TextOverflow.ellipsis,
                                             style: Theme.of(context)
                                                 .textTheme
-                                                .subtitle),
+                                                .subtitle2),
                                         book.hasRecords
                                             ? Text(
                                                 book.first.distance.isFinite
@@ -1245,7 +1245,7 @@ class _FindBookWidgetState extends State<FindBookWidget> {
                                                         .distanceUnknown,
                                                 style: Theme.of(context)
                                                     .textTheme
-                                                    .body1)
+                                                    .bodyText2)
                                             : Container(),
                                         book.hasRecords
                                             ? Text(
@@ -1258,7 +1258,7 @@ class _FindBookWidgetState extends State<FindBookWidget> {
                                                         book.first.holderName),
                                                 style: Theme.of(context)
                                                     .textTheme
-                                                    .body1)
+                                                    .bodyText2)
                                             : Container(),
                                         // Buttons for book: Search, MyBooks, Chat
                                         buttons
@@ -1316,7 +1316,7 @@ class _GetBookWidgetState extends State<GetBookWidget> {
       SliverAppBar(
         // Provide a standard title.
         title: Text(S.of(context).titleGetBook,
-            style: Theme.of(context).textTheme.title.apply(color: C.titleText)),
+            style: Theme.of(context).textTheme.headline6.apply(color: C.titleText)),
         // Allows the user to reveal the app bar if they begin scrolling
         // back up the list of items.
         floating: true,
@@ -1351,7 +1351,7 @@ class _GetBookWidgetState extends State<GetBookWidget> {
                 children: <Widget>[
                   new Container(
                       child: Text(S.of(context).addToWishlist,
-                          style: Theme.of(context).textTheme.body1)),
+                          style: Theme.of(context).textTheme.bodyText2)),
                 ],
               ),
             )),
@@ -1387,11 +1387,11 @@ class _GetBookWidgetState extends State<GetBookWidget> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: <Widget>[
                           new Text(S.of(context).bookInLibrary,
-                              style: Theme.of(context).textTheme.body1),
+                              style: Theme.of(context).textTheme.bodyText2),
                           new Text(libraryService,
-                              style: Theme.of(context).textTheme.body1),
+                              style: Theme.of(context).textTheme.bodyText2),
                           new Text('',
-                              style: Theme.of(context).textTheme.body1),
+                              style: Theme.of(context).textTheme.bodyText2),
                         ],
                       ),
                     )),
@@ -1439,14 +1439,14 @@ class _GetBookWidgetState extends State<GetBookWidget> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: <Widget>[
                           new Text(S.of(context).buyBook,
-                              style: Theme.of(context).textTheme.body1),
+                              style: Theme.of(context).textTheme.bodyText2),
                           new Text(
                               widget.book.isbn.startsWith('9785')
                                   ? 'www.ozon.ru'
                                   : 'www.amazon.com',
-                              style: Theme.of(context).textTheme.body1),
+                              style: Theme.of(context).textTheme.bodyText2),
                           new Text('',
-                              style: Theme.of(context).textTheme.body1),
+                              style: Theme.of(context).textTheme.bodyText2),
                         ],
                       ),
                     )),

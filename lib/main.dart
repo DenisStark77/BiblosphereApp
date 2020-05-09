@@ -55,12 +55,12 @@ void main() async {
   // Pass all uncaught errors from the framework to Crashlytics.
   FlutterError.onError = Crashlytics.instance.recordFlutterError;
 
-  runZoned<Future<Null>>(() async {
+  runZonedGuarded<Future<Null>>(() async {
     runApp(new MyApp());
-  }, onError: (e, stack) {
-     print('Exception: $e');
-     print(stack);
-     Crashlytics.instance.recordError(e, stack);
+  }, (e, stack) {
+    print('Exception: $e');
+    print(stack);
+    Crashlytics.instance.recordError(e, stack);
   });
 
   Purchases.setDebugLogsEnabled(true);
@@ -123,10 +123,10 @@ class _MyAppState extends State<MyApp> {
       }
     });
 
-      // TODO: build function executed 3 times: after initState, after setState in
-      //       _initUserRecord and after setState in _initLocationState.
-      //       Better to minimize rebuilding. For example by providing currentUser
-      //       as parameter on widget push (is it possible?).
+    // TODO: build function executed 3 times: after initState, after setState in
+    //       _initUserRecord and after setState in _initLocationState.
+    //       Better to minimize rebuilding. For example by providing currentUser
+    //       as parameter on widget push (is it possible?).
   }
 
   @override
@@ -136,7 +136,6 @@ class _MyAppState extends State<MyApp> {
     //_stellar.cancel();
     super.dispose();
   }
-
 
   void _checkInitialState() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -255,12 +254,12 @@ class _MyAppState extends State<MyApp> {
                 fontSize: 14.0, fontWeight: FontWeight.w300, color: C.chipText),
             brightness: Brightness.light),
         textTheme: TextTheme(
-          headline: TextStyle(fontSize: 48.0, fontWeight: FontWeight.w200),
-          subhead: TextStyle(fontSize: 32.0, fontWeight: FontWeight.w200),
-          title: TextStyle(fontSize: 20.0, fontWeight: FontWeight.w300),
-          subtitle: TextStyle(fontSize: 18.0, fontWeight: FontWeight.w400),
-          body1: TextStyle(fontSize: 16.0, fontWeight: FontWeight.w300),
-          body2: TextStyle(fontSize: 14.0, fontWeight: FontWeight.w200),
+          headline5: TextStyle(fontSize: 48.0, fontWeight: FontWeight.w200),
+          subtitle1: TextStyle(fontSize: 32.0, fontWeight: FontWeight.w200),
+          headline6: TextStyle(fontSize: 20.0, fontWeight: FontWeight.w300),
+          subtitle2: TextStyle(fontSize: 18.0, fontWeight: FontWeight.w400),
+          bodyText2: TextStyle(fontSize: 16.0, fontWeight: FontWeight.w300),
+          bodyText1: TextStyle(fontSize: 14.0, fontWeight: FontWeight.w200),
           button: TextStyle(fontSize: 16.0, fontWeight: FontWeight.w300),
         ),
         colorScheme: ColorScheme(
@@ -300,7 +299,7 @@ class _MyAppState extends State<MyApp> {
           return new Scaffold(
               appBar: AppBar(
                   title: Text(S.of(context).welcome,
-                      style: Theme.of(context).textTheme.title),
+                      style: Theme.of(context).textTheme.headline6),
                   centerTitle: true),
               body: Center(
                   child: Column(children: <Widget>[
@@ -309,7 +308,7 @@ class _MyAppState extends State<MyApp> {
                     child: RichText(
                       textAlign: TextAlign.center,
                       text: new TextSpan(
-                        style: Theme.of(context).textTheme.body1,
+                        style: Theme.of(context).textTheme.bodyText2,
                         children: [
                           new TextSpan(
                             text: S.of(context).loginAgree1,
@@ -388,7 +387,7 @@ class _MyAppState extends State<MyApp> {
                   child: RichText(
                     textAlign: TextAlign.center,
                     text: new TextSpan(
-                      style: Theme.of(context).textTheme.body1,
+                      style: Theme.of(context).textTheme.bodyText2,
                       children: [
                         new TextSpan(
                           text: S.of(context).loginAgree1,
@@ -459,20 +458,22 @@ class _MyAppState extends State<MyApp> {
 
   Future<FirebaseUser> _handleGoogleSignIn(BuildContext context) async {
     try {
-    // If connected to Firebase sign out
-    if (await _auth.currentUser() != null) {
-      await signOutProviders();
-    }
+      // If connected to Firebase sign out
+      if (await _auth.currentUser() != null) {
+        await signOutProviders();
+      }
 
-    // If not connected to Firebase but signed in to Google then sign out
-    if (await _auth.currentUser() == null && await _googleSignIn.isSignedIn()) {
-      await _googleSignIn.signOut();
-    }
+      // If not connected to Firebase but signed in to Google then sign out
+      if (await _auth.currentUser() == null &&
+          await _googleSignIn.isSignedIn()) {
+        await _googleSignIn.signOut();
+      }
 
-    // If Google current user is not null but not signed-in then sign out (warkaround)
-    if (_googleSignIn.currentUser != null && ! await _googleSignIn.isSignedIn()) {
-      await _googleSignIn.signOut();
-    }
+      // If Google current user is not null but not signed-in then sign out (warkaround)
+      if (_googleSignIn.currentUser != null &&
+          !await _googleSignIn.isSignedIn()) {
+        await _googleSignIn.signOut();
+      }
 
       GoogleSignInAccount googleSignInAccount = await _googleSignIn.signIn();
       if (googleSignInAccount != null) {
@@ -496,15 +497,16 @@ class _MyAppState extends State<MyApp> {
 
   Future<FirebaseUser> _handleFBSignIn(BuildContext context) async {
     try {
-    // If connected to Firebase sign out
-    if (await _auth.currentUser() != null) {
-      await signOutProviders();
-    }
-    // Logout from FB if not signed in to Firebase
-    // (to ensure that previous incomplete login is canceled)
-    if (await _auth.currentUser() == null && await _facebookLogin.isLoggedIn) {
-      await _facebookLogin.logOut();
-    }
+      // If connected to Firebase sign out
+      if (await _auth.currentUser() != null) {
+        await signOutProviders();
+      }
+      // Logout from FB if not signed in to Firebase
+      // (to ensure that previous incomplete login is canceled)
+      if (await _auth.currentUser() == null &&
+          await _facebookLogin.isLoggedIn) {
+        await _facebookLogin.logOut();
+      }
 
       FacebookLoginResult facebookLoginResult =
           await _facebookLogin.logIn(['email']);
@@ -512,7 +514,8 @@ class _MyAppState extends State<MyApp> {
         case FacebookLoginStatus.cancelledByUser:
           break;
         case FacebookLoginStatus.error:
-          showSnackBar(context, 'Sign-in error: ${facebookLoginResult.errorMessage}');
+          showSnackBar(
+              context, 'Sign-in error: ${facebookLoginResult.errorMessage}');
           break;
         case FacebookLoginStatus.loggedIn:
           break;
@@ -577,8 +580,16 @@ class IntroPage extends StatelessWidget {
           iconImageAssetPath: 'images/home.png',
           iconColor: null,
           bubbleBackgroundColor: const Color(0x88FFFFFF),
-          body: Text(S.of(context).introShootHint, style: Theme.of(context).textTheme.body1.apply(color: Colors.white)),
-          title: Text(S.of(context).introShoot, style: Theme.of(context).textTheme.subhead.apply(color: Colors.white)),
+          body: Text(S.of(context).introShootHint,
+              style: Theme.of(context)
+                  .textTheme
+                  .bodyText2
+                  .apply(color: Colors.white)),
+          title: Text(S.of(context).introShoot,
+              style: Theme.of(context)
+                  .textTheme
+                  .subtitle1
+                  .apply(color: Colors.white)),
           textStyle: TextStyle(color: Colors.white),
           mainImage: Image.asset(
             'images/shoot.png',
@@ -591,8 +602,16 @@ class IntroPage extends StatelessWidget {
         iconImageAssetPath: 'images/local_library.png',
         iconColor: null,
         bubbleBackgroundColor: Color(0x88FFFFFF),
-        body: Text(S.of(context).introSurfHint, style: Theme.of(context).textTheme.body1.apply(color: Colors.white)),
-        title: Text(S.of(context).introSurf, style: Theme.of(context).textTheme.subhead.apply(color: Colors.white)),
+        body: Text(S.of(context).introSurfHint,
+            style: Theme.of(context)
+                .textTheme
+                .bodyText2
+                .apply(color: Colors.white)),
+        title: Text(S.of(context).introSurf,
+            style: Theme.of(context)
+                .textTheme
+                .subtitle1
+                .apply(color: Colors.white)),
         mainImage: Image.asset(
           'images/surf.png',
 //        height: 285.0,
@@ -606,8 +625,16 @@ class IntroPage extends StatelessWidget {
         iconImageAssetPath: 'images/message.png',
         iconColor: null,
         bubbleBackgroundColor: Color(0x88FFFFFF),
-        body: Text(S.of(context).introMeetHint, style: Theme.of(context).textTheme.body1.apply(color: Colors.white)),
-        title: Text(S.of(context).introMeet, style: Theme.of(context).textTheme.subhead.apply(color: Colors.white)),
+        body: Text(S.of(context).introMeetHint,
+            style: Theme.of(context)
+                .textTheme
+                .bodyText2
+                .apply(color: Colors.white)),
+        title: Text(S.of(context).introMeet,
+            style: Theme.of(context)
+                .textTheme
+                .subtitle1
+                .apply(color: Colors.white)),
         mainImage: Image.asset(
           'images/meet.png',
 //        height: 285.0,

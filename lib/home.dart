@@ -319,7 +319,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
           ],
           title: new Text(S.of(context).title,
               style:
-                  Theme.of(context).textTheme.title.apply(color: C.titleText)),
+                  Theme.of(context).textTheme.headline6.apply(color: C.titleText)),
           centerTitle: true,
         ),
         body: new Container(child: new OrientationBuilder(
@@ -355,7 +355,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                                           child: Image.asset(add_book_100)),
                                       new Text(S.of(context).addBook,
                                           style:
-                                              Theme.of(context).textTheme.title)
+                                              Theme.of(context).textTheme.headline6)
                                     ]))))),
                 new Expanded(
                   child: new InkWell(
@@ -380,7 +380,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                             Container(
                                 width: 60, child: Image.asset(search_100)),
                             new Text(S.of(context).findBook,
-                                style: Theme.of(context).textTheme.title)
+                                style: Theme.of(context).textTheme.headline6)
                           ],
                         ),
                       ),
@@ -407,7 +407,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                           children: <Widget>[
                             Container(width: 60, child: Image.asset(books_100)),
                             new Text(S.of(context).myBooks,
-                                style: Theme.of(context).textTheme.title)
+                                style: Theme.of(context).textTheme.headline6)
                           ],
                         ),
                       ),
@@ -444,7 +444,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                                                       TextOverflow.ellipsis,
                                                   style: Theme.of(context)
                                                       .textTheme
-                                                      .title
+                                                      .headline6
                                                       .apply(
                                                           color: C.titleText))),
                                         ]))),
@@ -454,7 +454,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                           child: Text(S.of(context).referralLink,
                               style: Theme.of(context)
                                   .textTheme
-                                  .body1
+                                  .bodyText2
                                   .apply(color: C.titleText))),
                       Container(
                           padding: EdgeInsets.all(0.0),
@@ -481,7 +481,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                                 child: Text(B.user.link,
                                     style: Theme.of(context)
                                         .textTheme
-                                        .body1
+                                        .bodyText2
                                         .apply(
                                             color: C.titleText,
                                             decoration:
@@ -661,7 +661,7 @@ class _ShowBooksWidgetState extends State<ShowBooksWidget> {
       SliverAppBar(
         // Provide a standard title.
         title: Text(S.of(context).mybooksTitle,
-            style: Theme.of(context).textTheme.title.apply(color: C.titleText)),
+            style: Theme.of(context).textTheme.headline6.apply(color: C.titleText)),
         centerTitle: true,
         // Allows the user to reveal the app bar if they begin scrolling
         // back up the list of items.
@@ -702,7 +702,7 @@ class _ShowBooksWidgetState extends State<ShowBooksWidget> {
                                 },
                                 maxLines: 1,
                                 controller: textController,
-                                style: Theme.of(context).textTheme.title,
+                                style: Theme.of(context).textTheme.headline6,
                                 decoration: InputDecoration(
                                   //border: InputBorder.none,
                                   hintText: S.of(context).hintAuthorTitle,
@@ -916,7 +916,7 @@ class _MyBookWidgetState extends State<MyBook> {
                                             overflow: TextOverflow.ellipsis,
                                             style: Theme.of(context)
                                                 .textTheme
-                                                .subtitle)),
+                                                .subtitle2)),
                                     B.user.id != bookrecord.ownerId
                                         ? Container(
                                             child: Text(
@@ -925,7 +925,7 @@ class _MyBookWidgetState extends State<MyBook> {
                                                 overflow: TextOverflow.ellipsis,
                                                 style: Theme.of(context)
                                                     .textTheme
-                                                    .body1))
+                                                    .bodyText2))
                                         : Container(width: 0.0, height: 0.0),
                                     Container(
                                         margin: EdgeInsets.only(top: 10.0),
@@ -1042,19 +1042,19 @@ class _MyBookWidgetState extends State<MyBook> {
       case BookrecordType.own:
         return Text(S.of(context).youHaveThisBook,
             overflow: TextOverflow.ellipsis,
-            style: Theme.of(context).textTheme.body1);
+            style: Theme.of(context).textTheme.bodyText2);
       case BookrecordType.wish:
         return Text(S.of(context).youWishThisBook,
             overflow: TextOverflow.ellipsis,
-            style: Theme.of(context).textTheme.body1);
+            style: Theme.of(context).textTheme.bodyText2);
       case BookrecordType.lent:
         return Text(S.of(context).youLentThisBook(bookrecord.holderName),
             overflow: TextOverflow.ellipsis,
-            style: Theme.of(context).textTheme.body1);
+            style: Theme.of(context).textTheme.bodyText2);
       case BookrecordType.borrowed:
         return Text(S.of(context).youBorrowThisBook,
             overflow: TextOverflow.ellipsis,
-            style: Theme.of(context).textTheme.body1);
+            style: Theme.of(context).textTheme.bodyText2);
       case BookrecordType.none:
       default:
         return Container();
@@ -1117,7 +1117,7 @@ class _FinancialWidgetState extends State<FinancialWidget> {
       SliverAppBar(
         // Provide a standard title.
         title: Text(S.of(context).financeTitle(money(B.wallet.getAvailable())),
-            style: Theme.of(context).textTheme.title.apply(color: C.titleText)),
+            style: Theme.of(context).textTheme.headline6.apply(color: C.titleText)),
         // Allows the user to reveal the app bar if they begin scrolling
         // back up the list of items.
         floating: true,
@@ -1458,7 +1458,7 @@ class _ReferralWidgetState extends State<ReferralWidget> {
                   children: <Widget>[
                     Container(
                         child: Text(S.of(context).referralLink,
-                            style: Theme.of(context).textTheme.title)),
+                            style: Theme.of(context).textTheme.headline6)),
                     Container(
                         child: InkWell(
                             onTap: () {
@@ -1476,7 +1476,7 @@ class _ReferralWidgetState extends State<ReferralWidget> {
                                   });
                             },
                             child: Text(B.user.link,
-                                style: Theme.of(context).textTheme.body1.apply(
+                                style: Theme.of(context).textTheme.bodyText2.apply(
                                     decoration: TextDecoration.underline))))
                   ]),
             ),
@@ -1503,7 +1503,7 @@ class _ReferralWidgetState extends State<ReferralWidget> {
                               padding: EdgeInsets.all(10),
                               child: Text(
                                 S.of(context).noReferrals,
-                                style: Theme.of(context).textTheme.body1,
+                                style: Theme.of(context).textTheme.bodyText2,
                               ));
                         }
                         return new ListView(
@@ -1658,13 +1658,13 @@ class _SettingsWidgetState extends State<SettingsWidget> {
                                         Text(B.user.name,
                                             style: Theme.of(context)
                                                 .textTheme
-                                                .title),
+                                                .headline6),
                                         Text(
                                             S.of(context).settingsPlan(
                                                 currentPlan(context)),
                                             style: Theme.of(context)
                                                 .textTheme
-                                                .body1),
+                                                .bodyText2),
                                       ]))),
                             ])),
                     planInfoWidget(context),
@@ -1698,26 +1698,26 @@ class _SettingsWidgetState extends State<SettingsWidget> {
               isTrial()
                   ? S.of(context).wishLimitTrial(wishesAllowance, 100)
                   : S.of(context).wishLimitPaid(wishesAllowance),
-              style: Theme.of(context).textTheme.subtitle),
+              style: Theme.of(context).textTheme.subtitle2),
           Container(
               padding: EdgeInsets.only(bottom: 10.0),
               child: Text(
                   isTrial()
                       ? S.of(context).wishLimitTrialDesc(wishesAllowance, 100)
                       : S.of(context).wishLimitPaidDesc(wishesAllowance),
-                  style: Theme.of(context).textTheme.body2)),
+                  style: Theme.of(context).textTheme.bodyText1)),
           Text(
               isTrial()
                   ? S.of(context).bookLimitTrial(booksAllowance, 5)
                   : S.of(context).bookLimitPaid(booksAllowance),
-              style: Theme.of(context).textTheme.subtitle),
+              style: Theme.of(context).textTheme.subtitle2),
           Container(
               padding: EdgeInsets.only(bottom: 20.0),
               child: Text(
                   isTrial()
                       ? S.of(context).bookLimitTrialDesc(booksAllowance, 5)
                       : S.of(context).bookLimitPaidDesc(booksAllowance),
-                  style: Theme.of(context).textTheme.body2)),
+                  style: Theme.of(context).textTheme.bodyText1)),
         ]));
   }
 
@@ -1761,33 +1761,33 @@ class _SettingsWidgetState extends State<SettingsWidget> {
                       //Container(child: Text(package.packageType.toString())),
                       Container(
                           child: Text(title,
-                              style: Theme.of(context).textTheme.title)),
+                              style: Theme.of(context).textTheme.headline6)),
                       // Show per month price uness it's annual plan and it's choosen
                       upgradeChoice != PackageType.annual ||
                               package.packageType != PackageType.annual
                           ? Container(
                               padding: EdgeInsets.only(top: 5.0),
                               child: Text(monthlyPrice,
-                                  style: Theme.of(context).textTheme.body1))
+                                  style: Theme.of(context).textTheme.bodyText2))
                           : Container(),
                       upgradeChoice != PackageType.annual ||
                               package.packageType != PackageType.annual
                           ? Container(
                               child: Text(S.of(context).perMonth,
-                                  style: Theme.of(context).textTheme.body2))
+                                  style: Theme.of(context).textTheme.bodyText1))
                           : Container(),
                       package.packageType == PackageType.annual &&
                               upgradeChoice == PackageType.annual
                           ? Container(
                               padding: EdgeInsets.only(top: 5.0),
                               child: Text(package.product.priceString,
-                                  style: Theme.of(context).textTheme.body1))
+                                  style: Theme.of(context).textTheme.bodyText2))
                           : Container(),
                       package.packageType == PackageType.annual &&
                               upgradeChoice == PackageType.annual
                           ? Container(
                               child: Text(S.of(context).perYear,
-                                  style: Theme.of(context).textTheme.body2))
+                                  style: Theme.of(context).textTheme.bodyText1))
                           : Container(),
                     ])),
                 // SUBSCRIBE button
@@ -1803,7 +1803,7 @@ class _SettingsWidgetState extends State<SettingsWidget> {
                                 child: Text(
                                   S
                                       .of(context)
-                                      .buttonUpgrade, /*style: Theme.of(context).textTheme.subtitle*/
+                                      .buttonUpgrade, /*style: Theme.of(context).textTheme.subtitle2*/
                                 ),
                                 onPressed: () async {
                                   try {
@@ -1861,7 +1861,7 @@ class _SettingsWidgetState extends State<SettingsWidget> {
             ],
           ),
           // Information about paid plan
-          Text(optionText, style: Theme.of(context).textTheme.subtitle),
+          Text(optionText, style: Theme.of(context).textTheme.subtitle2),
           Container(
               padding: EdgeInsets.only(top: 10.0),
               child: Text(
@@ -1869,7 +1869,7 @@ class _SettingsWidgetState extends State<SettingsWidget> {
                       Theme.of(context).platform == TargetPlatform.iOS
                           ? 'iTunes'
                           : 'Google Play'),
-                  style: Theme.of(context).textTheme.body2)),
+                  style: Theme.of(context).textTheme.bodyText1)),
           RichText(
               text: TextSpan(children: [
             new TextSpan(
@@ -1948,7 +1948,7 @@ void showUpgradeDialog(BuildContext context, String text) {
                 child: new Container(
                   child: Text(
                     text,
-                    style: Theme.of(context).textTheme.body1,
+                    style: Theme.of(context).textTheme.bodyText2,
                   ),
                   alignment: Alignment.centerLeft,
                   margin: new EdgeInsets.only(top: 5.0),

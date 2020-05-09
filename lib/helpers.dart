@@ -143,7 +143,7 @@ MaterialPageRoute cardListPage(
             title: new Text(
               title,
               style:
-                  Theme.of(context).textTheme.title.apply(color: Colors.white),
+                  Theme.of(context).textTheme.headline6.apply(color: Colors.white),
             ),
             centerTitle: true,
           ),
@@ -163,7 +163,7 @@ MaterialPageRoute cardListPage(
                           padding: EdgeInsets.all(10),
                           child: Text(
                             empty,
-                            style: Theme.of(context).textTheme.body1,
+                            style: Theme.of(context).textTheme.bodyText2,
                           ));
                     }
                     return new ListView(
@@ -220,7 +220,7 @@ Scaffold buildScaffold(BuildContext context, String title, Widget body,
         appBar: new AppBar(
           title: new Text(
             title,
-            style: Theme.of(context).textTheme.title.apply(color: C.titleText),
+            style: Theme.of(context).textTheme.headline6.apply(color: C.titleText),
           ),
           centerTitle: true,
         ),
@@ -652,7 +652,7 @@ Future<void> refreshLocation(BuildContext context) {
               child: Text('OK',
                   style: Theme.of(context)
                       .textTheme
-                      .body1
+                      .bodyText2
                       .apply(color: Colors.white)),
               onPressed: AppSettings.openAppSettings));
 
