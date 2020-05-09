@@ -26,27 +26,36 @@ Future<String> scanIsbn(BuildContext context, BookCallback onSuccess) async {
   String barcode = '';
 
   try {
-    ScanResult res = await BarcodeScanner.scan();
+    //print('!!!DEBUG Barcode scanner before');
 
-    if (res.type == ResultType.Barcode) {
-      Book book = await searchByIsbn(res.rawContent);
+    //ScanResult res = await BarcodeScanner.scan();
+    String res = await BarcodeScanner.scan();
+
+    //print('!!!DEBUG Barcode scanned: $res');
+
+    //print('!!!DEBUG Barcode scanned: ${res.type}, ${res.rawContent}');
+
+    //if (res.type == ResultType.Barcode) {
+    if (res != null && res.isNotEmpty) {
+      //barcode = res.rawContent;
+      barcode = res;
+      Book book = await searchByIsbn(barcode);
 
       if (book != null) {
         onSuccess(book);
       } else {
+        //print("!!!DEBUG No record found for isbn: $barcode");
+
         showSnackBar(context, S.of(context).isbnNotFound);
-        Firestore.instance
-            .collection('noisbn')
-            .document(res.rawContent)
-            .setData({
+        Firestore.instance.collection('noisbn').document(barcode).setData({
           'count': FieldValue.increment(1),
           'requested_by': FieldValue.arrayUnion([B.user.id])
         }, merge: true);
-        //print("No record found for isbn: $barcode");
         logAnalyticsEvent(name: 'book_noisbn', parameters: <String, dynamic>{
-          'isbn': res.rawContent,
+          'isbn': barcode,
         });
       }
+      /*  
     } else if (res.type == ResultType.Error) {
       logAnalyticsEvent(name: 'scan_error', parameters: <String, dynamic>{
         'error': res.rawContent,
@@ -55,13 +64,17 @@ Future<String> scanIsbn(BuildContext context, BookCallback onSuccess) async {
       logAnalyticsEvent(name: 'scan_canceled', parameters: <String, dynamic>{
         'error': res.rawContent,
       });
+    */
     }
   } on PlatformException catch (e, stack) {
+    /*
     if (e.code == BarcodeScanner.cameraAccessDenied) {
       //TODO: Inform user
       print('The user did not grant the camera permission!');
       Crashlytics.instance.recordError(e, stack);
-    } else {
+    } else 
+    */
+    {
       print('Unknown platform error in scanIsbn: $e');
       Crashlytics.instance.recordError(e, stack);
     }
@@ -69,9 +82,11 @@ Future<String> scanIsbn(BuildContext context, BookCallback onSuccess) async {
     print(
         'null (User returned using the "back"-button before scanning anything. Result)');
   } catch (e, stack) {
-    Crashlytics.instance.recordError(e, stack);
     print('Unknown error in scanIsbn: $e');
+    Crashlytics.instance.recordError(e, stack);
   }
+
+  //print('!!!DEBUG BarCode scan finished');
 
   return barcode;
 }
@@ -90,6 +105,7 @@ class _AddBookWidgetState extends State<AddBookWidget> {
   List<Shelf> shelves = [];
 
   bool recognition = false;
+  bool progressBar = false;
 
   TextEditingController textController;
 
@@ -184,8 +200,14 @@ class _AddBookWidgetState extends State<AddBookWidget> {
                             color: C.button,
                             child: assetIcon(barcode_scanner_100, size: 30),
                             onPressed: () {
+                              setState(() {
+                                progressBar = true;
+                              });
+
                               scanIsbn(context, (book) {
                                 setState(() {
+                                  progressBar = false;
+                                  //print('!!!DEBUG barcode scanned, book found');
                                   recognition = false;
                                   suggestions = <Book>[book];
                                 });
@@ -235,10 +257,14 @@ class _AddBookWidgetState extends State<AddBookWidget> {
                               child: assetIcon(search_100, size: 30),
                               onPressed: () async {
                                 FocusScope.of(context).unfocus();
+                                setState(() {
+                                  progressBar = true;
+                                });
                                 searchByTitleAuthor(textController.text)
                                     .then((b) {
                                   if (b == null || b.length == 0) {
                                     setState(() {
+                                      progressBar = false;
                                       recognition = false;
                                       suggestions = [];
                                     });
@@ -252,6 +278,7 @@ class _AddBookWidgetState extends State<AddBookWidget> {
                                         });
                                   } else {
                                     setState(() {
+                                      progressBar = false;
                                       recognition = false;
                                       suggestions = b;
                                     });
@@ -272,9 +299,19 @@ class _AddBookWidgetState extends State<AddBookWidget> {
                       ],
                     ),
                   ),
+                  progressBar
+                      ? Container(
+                          margin: EdgeInsets.only(left: 10.0, right: 10.0),
+                          child: SizedBox(
+                              height: 2.0,
+                              child: LinearProgressIndicator(
+                                  backgroundColor: C.titleBackground,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                      C.buttonBorder))))
+                      : Container(),
                 ])),
         // Make the initial height of the SliverAppBar larger than normal.
-        expandedHeight: 180,
+        expandedHeight: 185,
       ),
       SliverList(
         delegate: recognition
@@ -519,13 +556,26 @@ class BookSearchData {
   // Get the closest record
   Bookrecord get first => hasRecords ? bookrecords[0] : null;
 
-  BookSearchData({this.book, this.bookrecordId});
+  BookSearchData({this.book, this.bookrecordId, Bookrecord bookrecord}) {
+    if (bookrecord != null) {
+      bookrecords = [bookrecord];
+      bookrecordId = bookrecord.id;
+      book = Book(
+          isbn: bookrecord.isbn,
+          authors: bookrecord.authors,
+          title: bookrecord.title,
+          image: bookrecord.image);
+    }
+  }
 
   Stream<BookSearchData> snapshots() async* {
     // Check if book available in Biblosphere
     try {
-      // Search for particular bookrecord ()
-      if (bookrecordId != null && book == null) {
+      if (bookrecords != null && bookrecords.length > 0) {
+        // If bookrecords are there yield it
+        yield this;
+      } else if (bookrecordId != null && book == null) {
+        // Search for particular bookrecord ()
         DocumentSnapshot doc = await Bookrecord.Ref(bookrecordId).get();
 
         if (doc.exists) {
@@ -568,6 +618,28 @@ class BookSearchData {
   }
 }
 
+class Scale {
+  static const int Neighborhod = 3;
+  static const int City = 50;
+  static const int Country = 1000;
+  static const int Continent = 10000;
+
+  static String text(BuildContext context, int scale) {
+    if (scale == Neighborhod)
+      return S.of(context).inNeighborhod;
+    else if (scale == City)
+      return S.of(context).inCity;
+    else if (scale == Country)
+      return S.of(context).inCountry;
+    else if (scale == Continent)
+      return S.of(context).onContinent;
+    else
+      return '';
+  }
+}
+
+enum FindWidgetMode { All, Search }
+
 class FindBookWidget extends StatefulWidget {
   FindBookWidget({Key key, this.query, this.isbn, this.id}) : super(key: key);
 
@@ -595,9 +667,23 @@ class _FindBookWidgetState extends State<FindBookWidget> {
   // Search filter by bookrecord id
   final String id;
 
+  List<int> scales = [
+    Scale.Neighborhod,
+    Scale.City,
+    Scale.Country,
+    Scale.Continent
+  ];
+  int scaleIndex = 1;
+  int availableBooks = 0;
+
+  FindWidgetMode mode = FindWidgetMode.All;
+  int rescaleLimit = 3;
+  StreamSubscription<List<DocumentSnapshot>> areaSubscription;
+
   List<BookSearchData> books = [];
 
   TextEditingController textController;
+  bool progressBar = false;
 
   @override
   void initState() {
@@ -608,6 +694,7 @@ class _FindBookWidgetState extends State<FindBookWidget> {
     textController = new TextEditingController();
 
     if (query != null) {
+      // Show book by query
       textController.text = query;
       searchByTitleAuthor(query).then((b) {
         if (b == null || b.length == 0) {
@@ -617,11 +704,13 @@ class _FindBookWidgetState extends State<FindBookWidget> {
           });
         } else {
           setState(() {
+            mode = FindWidgetMode.Search;
             books = b.map((x) => BookSearchData(book: x));
           });
         }
       });
     } else if (isbn != null) {
+      // Show book by ISBN
       searchByIsbn(isbn).then((b) {
         if (b == null) {
           showSnackBar(context, S.of(context).isbnNotFound);
@@ -635,24 +724,105 @@ class _FindBookWidgetState extends State<FindBookWidget> {
           });
         } else {
           setState(() {
+            mode = FindWidgetMode.Search;
             books = [BookSearchData(book: b)];
           });
         }
       });
     } else if (id != null) {
+      // Show book by id
       setState(() {
+        mode = FindWidgetMode.Search;
         books = [BookSearchData(bookrecordId: id)];
       });
+    } else {
+      // Show books close to location
+      mode = FindWidgetMode.All;
+      displayNearBooks();
     }
   }
 
   @override
   void dispose() {
     textController.dispose();
+    if (areaSubscription != null) areaSubscription.cancel();
     super.dispose();
   }
 
   _FindBookWidgetState({this.query, this.isbn, this.id});
+
+  Future<void> displayNearBooks() async {
+    // Skip function if no geo-location
+    if (B.position == null) {
+      return;
+    }
+
+    // Query books with given scale
+    CollectionReference ref = db
+        .collection('bookrecords')
+        .where('wish', isEqualTo: false)
+        .reference();
+
+    Stream<List<DocumentSnapshot>> stream = Geoflutterfire()
+        .collection(collectionRef: ref)
+        .within(
+            center: GeoFirePoint(B.position.latitude, B.position.longitude),
+            radius: scales[scaleIndex].toDouble(),
+            field: 'location');
+
+    if (areaSubscription != null) areaSubscription.cancel();
+
+    areaSubscription = stream.listen((List<DocumentSnapshot> list) {
+      // Exclude books belong to me (not possible to do on server side as Firestore doesn't support != conditions)
+      list = list.where((rec) => rec.data['ownerId'] != B.user.id).toList();
+
+      availableBooks = list.length;
+
+      // Sort by distance and display first 100 books
+      if (mode == FindWidgetMode.All && list.isNotEmpty) {
+        // Map JSON to Bookrecords
+        List<Bookrecord> results =
+            list.map((doc) => Bookrecord.fromJson(doc.data)).toList();
+
+        // TODO: What if bookrecords has null location? Should not be as it wont returned by geohash
+        results.sort((a, b) => a.distance.compareTo(b.distance));
+
+        books = results
+            .take(100)
+            .map((rec) => BookSearchData(bookrecord: rec))
+            .toList();
+
+        setState(() {});
+
+        // If too many books reduce scale
+        if (list.length > 200 && scaleIndex > 0) {
+          // First 25 items are within smaller scale range
+          if (results[20].distance < scales[scaleIndex - 1].toDouble() &&
+              rescaleLimit > 0) {
+            // Reduce scale
+            scaleIndex -= 1;
+            // Reduce left attempts to rescale
+            rescaleLimit -= 1;
+            // Run search for the near books again
+            displayNearBooks();
+
+            //TODO: Report to Analytic reduce of the scale
+          }
+        } else if (list.length < 10 && scaleIndex < scales.length - 1) {
+          // If too few books increase scale
+          // First 25 items are within smaller scale range
+          if (rescaleLimit > 0) {
+            // Increase scale
+            scaleIndex += 1;
+            // Reduce left attempts to rescale
+            rescaleLimit -= 1;
+            // Run search for the near books again
+            displayNearBooks();
+          }
+        }
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -703,8 +873,15 @@ class _FindBookWidgetState extends State<FindBookWidget> {
                               child: assetIcon(search_100, size: 30),
                               onPressed: () async {
                                 FocusScope.of(context).unfocus();
+                                mode = FindWidgetMode.Search;
+                                setState(() {
+                                  progressBar = true;
+                                });
                                 searchByTitleAuthor(textController.text)
                                     .then((b) {
+                                  setState(() {
+                                    progressBar = false;
+                                  });
                                   if (b == null || b.length == 0) {
                                     setState(() {
                                       books.clear();
@@ -772,8 +949,14 @@ class _FindBookWidgetState extends State<FindBookWidget> {
                           color: C.button,
                           child: assetIcon(barcode_scanner_100, size: 30),
                           onPressed: () {
+                            setState(() {
+                              progressBar = true;
+                            });
+
                             scanIsbn(context, (book) {
                               setState(() {
+                                progressBar = false;
+                                mode = FindWidgetMode.Search;
                                 books = <BookSearchData>[
                                   BookSearchData(book: book)
                                 ];
@@ -816,9 +999,30 @@ class _FindBookWidgetState extends State<FindBookWidget> {
                       ],
                     ),
                   ),
+                  ! progressBar && mode == FindWidgetMode.All && availableBooks > 0
+                      ? Container(
+                          padding: new EdgeInsets.only(
+                              bottom: 10.0, left: 10.0, right: 10.0),
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                              S.of(context).booksAvailableForSearch(
+                                  availableBooks,
+                                  Scale.text(context, scales[scaleIndex])),
+                              style: Theme.of(context).textTheme.body1))
+                      : Container(width: 0.0, height: 0.0),
+                  progressBar
+                      ? Container(
+                          margin: EdgeInsets.only(left: 10.0, right: 10.0),
+                          child: SizedBox(
+                              height: 2.0,
+                              child: LinearProgressIndicator(
+                                  backgroundColor: C.titleBackground,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                      C.buttonBorder))))
+                      : Container(),
                 ])),
         // Make the initial height of the SliverAppBar larger than normal.
-        expandedHeight: 180,
+        expandedHeight: !progressBar && mode == FindWidgetMode.All && availableBooks > 0 ? 200 : 185,
       ),
       SliverList(
         delegate: SliverChildBuilderDelegate((context, index) {
@@ -826,14 +1030,14 @@ class _FindBookWidgetState extends State<FindBookWidget> {
           return StreamBuilder(
             stream: book.snapshots().asBroadcastStream(),
             builder: (context, snapshot) {
-              if (!snapshot.hasData) {
+              if (!snapshot.hasData && book.book == null) {
                 return Container();
               } else {
                 BookSearchData data = snapshot.data;
 
                 // Choose icon based on conditions
                 Widget buttons;
-                if (!data.hasRecords) {
+                if (!book.hasRecords) {
                   // Book not found in Biblosphere (=> screen to Stores/Libs)
                   buttons = Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -909,7 +1113,7 @@ class _FindBookWidgetState extends State<FindBookWidget> {
                               },
                             ))
                       ]);
-                } else if (data.first.holderId == B.user.id) {
+                } else if (book.first.holderId == B.user.id) {
                   // Book found in user's own catalog (=> MyBooks)
                   buttons = Tooltip(
                       message: S.of(context).hintManageBook,
@@ -938,7 +1142,7 @@ class _FindBookWidgetState extends State<FindBookWidget> {
                                   builder: (context) => buildScaffold(
                                       context,
                                       null,
-                                      ShowBooksWidget(filter: data.book.isbn),
+                                      ShowBooksWidget(filter: book.book.isbn),
                                       appbar: false)));
                         },
                         shape: new RoundedRectangleBorder(
@@ -992,7 +1196,7 @@ class _FindBookWidgetState extends State<FindBookWidget> {
                                   size: 30, padding: 0.0),
                               onPressed: () async {
                                 Chat.runChatWithBookRequest(
-                                    context, data.first);
+                                    context, book.first);
 
                                 logAnalyticsEvent(
                                     name: 'book_received',
@@ -1011,7 +1215,7 @@ class _FindBookWidgetState extends State<FindBookWidget> {
                         color: C.cardBackground,
                         margin: EdgeInsets.all(3.0),
                         child: Row(children: <Widget>[
-                          bookImage(data.book, 80,
+                          bookImage(book.book, 80,
                               padding: EdgeInsets.all(5.0)),
                           Expanded(
                               child: Container(
@@ -1020,23 +1224,23 @@ class _FindBookWidgetState extends State<FindBookWidget> {
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
                                       children: <Widget>[
-                                        Text(data.book.authors[0],
+                                        Text(book.book.authors[0],
                                             overflow: TextOverflow.ellipsis,
                                             style: Theme.of(context)
                                                 .textTheme
                                                 .caption),
-                                        Text(data.book.title,
+                                        Text(book.book.title,
                                             overflow: TextOverflow.ellipsis,
                                             style: Theme.of(context)
                                                 .textTheme
                                                 .subtitle),
-                                        data.hasRecords
+                                        book.hasRecords
                                             ? Text(
-                                                data.first.distance.isFinite
+                                                book.first.distance.isFinite
                                                     ? S
                                                         .of(context)
                                                         .distanceLine(distance(
-                                                            data.first
+                                                            book.first
                                                                 .distance))
                                                     : S
                                                         .of(context)
@@ -1045,15 +1249,15 @@ class _FindBookWidgetState extends State<FindBookWidget> {
                                                     .textTheme
                                                     .body1)
                                             : Container(),
-                                        data.hasRecords
+                                        book.hasRecords
                                             ? Text(
-                                                (data.first.holderId ==
+                                                (book.first.holderId ==
                                                         B.user.id)
                                                     ? S
                                                         .of(context)
                                                         .youHaveThisBook
                                                     : S.of(context).bookWith(
-                                                        data.first.holderName),
+                                                        book.first.holderName),
                                                 style: Theme.of(context)
                                                     .textTheme
                                                     .body1)

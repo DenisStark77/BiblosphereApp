@@ -54,7 +54,7 @@ dependencies:
 
   intro_views_flutter: ^2.3.0
 
-  barcode_scan: ^3.0.0
+  barcode_scan: ^2.0.2
 
   googleapis: ^0.53.0
 

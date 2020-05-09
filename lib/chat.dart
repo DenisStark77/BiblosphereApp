@@ -517,8 +517,8 @@ class ChatScreenState extends State<ChatScreen> {
         Map<String, dynamic> data = doc.document.data;
         String lang = deviceLang(context);
 
-        // Only check translation for newly added items, and only items to me
-        if (doc.type == DocumentChangeType.added && data['idTo'] == B.user.id) {
+        // Only check translation for newly added items, and only items TO me or auto-messages
+        if (doc.type == DocumentChangeType.added && (data['idTo'] == B.user.id || (data['bot'] != null && data['bot']))) {
           // Only run translation if my language is not available and his language is unknown or different
           if (data[lang] == null &&
               (data['language'] == null ||
@@ -689,6 +689,9 @@ class ChatScreenState extends State<ChatScreen> {
         : document[lang] != null ? S.of(context).autoTranslated : null;
 
     if (document['idFrom'] == myId) {
+      // Dont show translation of own messages unless it's auto-generated
+      if (! byBot) 
+        text = document['content'];
       // Right (my message)
       return Row(
         mainAxisSize: MainAxisSize.min,
@@ -702,7 +705,7 @@ class ChatScreenState extends State<ChatScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: <Widget>[
                         Text(
-                          document['content'],
+                          text,
                           style: TextStyle(color: C.chatMyText),
                         ),
                         byBot
@@ -757,7 +760,7 @@ class ChatScreenState extends State<ChatScreen> {
                                           CrossAxisAlignment.start,
                                       children: <Widget>[
                                         Text(
-                                          document['content'],
+                                          text,
                                           style: TextStyle(color: C.chatMyText),
                                         ),
                                         byBot

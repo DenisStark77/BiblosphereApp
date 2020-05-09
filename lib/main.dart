@@ -201,8 +201,9 @@ class _MyAppState extends State<MyApp> {
         });
       }
 
-      // Search a book to warm Google serverless
+      // Search a book to warm Google serverless (both entries)
       searchByTitleAuthor('Not a book which exist');
+      searchByIsbn('9785990174764');
     } catch (ex, stack) {
       print(ex);
       Crashlytics.instance.recordError(ex, stack);
