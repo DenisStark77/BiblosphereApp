@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:googleapis/firebasedynamiclinks/v1.dart';
 import 'package:intl/intl.dart';
 
 import 'package:biblosphere/l10n.dart';

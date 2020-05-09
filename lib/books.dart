@@ -1033,8 +1033,6 @@ class _FindBookWidgetState extends State<FindBookWidget> {
               if (!snapshot.hasData && book.book == null) {
                 return Container();
               } else {
-                BookSearchData data = snapshot.data;
-
                 // Choose icon based on conditions
                 Widget buttons;
                 if (!book.hasRecords) {
