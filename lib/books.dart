@@ -446,7 +446,8 @@ class _AddBookWidgetState extends State<AddBookWidget> {
 
       if (image == null) return;
 
-      String id = getTimestamp();
+      // TODO: Do not use timestamp as global id (will be overlaps from different users)
+      String id = getTimestamp() + ':' + B.user.id;
       String name = id + ".jpg";
 
       Shelf shelf = Shelf(
@@ -1102,7 +1103,7 @@ class _FindBookWidgetState extends State<FindBookWidget> {
                                       snackbar: true);
 
                                   logAnalyticsEvent(
-                                      name: 'book_received',
+                                      name: 'add_to_wish_list_attempt',
                                       parameters: <String, dynamic>{
                                         'user': B.user.id,
                                         'isbn': book.book.isbn,
@@ -1197,7 +1198,7 @@ class _FindBookWidgetState extends State<FindBookWidget> {
                                     context, book.first);
 
                                 logAnalyticsEvent(
-                                    name: 'book_received',
+                                    name: 'book_request_attempt',
                                     parameters: <String, dynamic>{
                                       'user': B.user.id,
                                       'isbn': book.book.isbn,

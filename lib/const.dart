@@ -410,13 +410,6 @@ class Shelf {
   DocumentReference get ref {
     return db.collection('shelves').document(id);
   }
-
-  static DocumentReference Ref([String id = null]) {
-    if (id != null)
-      return db.collection('shelves').document(id);
-    else
-      return db.collection('shelves').document();
-  }
 }
 
 class User {
