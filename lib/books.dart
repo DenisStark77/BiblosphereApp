@@ -44,7 +44,19 @@ Future<String> scanIsbn(BuildContext context, BookCallback onSuccess) async {
       if (book != null) {
         onSuccess(book);
       } else {
-        //print("!!!DEBUG No record found for isbn: $barcode");
+        print("!!!DEBUG No record found for isbn: $barcode. DO MANUAL");
+        pushSingle(
+            context,
+            new MaterialPageRoute(
+                builder: (context) => buildScaffold(
+                    context,
+                    null,
+                    new BookDetailsWidget(
+                        bookrecord: Bookrecord(
+                            isbn: barcode, ownerId: B.user.id, wish: false),
+                        mode: BookDetailsMode.Input),
+                    appbar: false)),
+            'book_details');
 
         showSnackBar(context, S.of(context).isbnNotFound);
         Firestore.instance.collection('noisbn').document(barcode).setData({
@@ -132,7 +144,10 @@ class _AddBookWidgetState extends State<AddBookWidget> {
       SliverAppBar(
         // Provide a standard title.
         title: Text(S.of(context).addbookTitle,
-            style: Theme.of(context).textTheme.headline6.apply(color: C.titleText)),
+            style: Theme.of(context)
+                .textTheme
+                .headline6
+                .apply(color: C.titleText)),
         // Allows the user to reveal the app bar if they begin scrolling
         // back up the list of items.
         centerTitle: true,
@@ -336,8 +351,9 @@ class _AddBookWidgetState extends State<AddBookWidget> {
                                           .subtitle2)),
                               Container(
                                   child: Text(progressText(shelf),
-                                      style:
-                                          Theme.of(context).textTheme.bodyText2)),
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodyText2)),
                               Container(
                                   padding: EdgeInsets.only(
                                       top: 10.0, left: 10.0, right: 10.0),
@@ -349,8 +365,9 @@ class _AddBookWidgetState extends State<AddBookWidget> {
                                               .recognitionProgressBooks(
                                                   shelf.total,
                                                   shelf.recognized),
-                                          style:
-                                              Theme.of(context).textTheme.bodyText1)
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .bodyText1)
                                       : shelf.status !=
                                                   RecognitionStatus.None &&
                                               shelf.status !=
@@ -469,7 +486,8 @@ class _AddBookWidgetState extends State<AddBookWidget> {
             duration: 6);
       });
 
-      final String storagePath = await uploadPicture(image, B.user.id, name);
+      final String storagePath =
+          await uploadPicture(image, 'images/${B.user.id}/$name');
       // !!!DEBUG
       //String storagePath = 'images/oyYUDByQGVdgP13T1nyArhyFkct1/1586749554453.jpg';
 
@@ -526,9 +544,8 @@ class _AddBookWidgetState extends State<AddBookWidget> {
   }
 }
 
-Future<String> uploadPicture(File image, String user, String name) async {
-  final StorageReference ref =
-      FirebaseStorage.instance.ref().child('images').child(user).child(name);
+Future<String> uploadPicture(File image, String name) async {
+  final StorageReference ref = FirebaseStorage.instance.ref().child(name);
   final StorageUploadTask uploadTask = ref.putFile(
     image,
     new StorageMetadata(
@@ -831,7 +848,10 @@ class _FindBookWidgetState extends State<FindBookWidget> {
       SliverAppBar(
         // Provide a standard title.
         title: Text(S.of(context).findbookTitle,
-            style: Theme.of(context).textTheme.headline6.apply(color: C.titleText)),
+            style: Theme.of(context)
+                .textTheme
+                .headline6
+                .apply(color: C.titleText)),
         centerTitle: true,
         // Allows the user to reveal the app bar if they begin scrolling
         // back up the list of items.
@@ -1000,7 +1020,9 @@ class _FindBookWidgetState extends State<FindBookWidget> {
                       ],
                     ),
                   ),
-                  ! progressBar && mode == FindWidgetMode.All && availableBooks > 0
+                  !progressBar &&
+                          mode == FindWidgetMode.All &&
+                          availableBooks > 0
                       ? Container(
                           padding: new EdgeInsets.only(
                               bottom: 10.0, left: 10.0, right: 10.0),
@@ -1023,7 +1045,10 @@ class _FindBookWidgetState extends State<FindBookWidget> {
                       : Container(),
                 ])),
         // Make the initial height of the SliverAppBar larger than normal.
-        expandedHeight: !progressBar && mode == FindWidgetMode.All && availableBooks > 0 ? 200 : 185,
+        expandedHeight:
+            !progressBar && mode == FindWidgetMode.All && availableBooks > 0
+                ? 200
+                : 185,
       ),
       SliverList(
         delegate: SliverChildBuilderDelegate((context, index) {
@@ -1317,7 +1342,10 @@ class _GetBookWidgetState extends State<GetBookWidget> {
       SliverAppBar(
         // Provide a standard title.
         title: Text(S.of(context).titleGetBook,
-            style: Theme.of(context).textTheme.headline6.apply(color: C.titleText)),
+            style: Theme.of(context)
+                .textTheme
+                .headline6
+                .apply(color: C.titleText)),
         // Allows the user to reveal the app bar if they begin scrolling
         // back up the list of items.
         floating: true,
@@ -1523,4 +1551,434 @@ class _GetBookWidgetState extends State<GetBookWidget> {
   }
 
   Future<void> searchBookstores() async {}
+}
+
+enum BookDetailsMode { Input, Edit, View }
+
+class BookDetailsWidget extends StatefulWidget {
+  BookDetailsWidget(
+      {Key key, @required this.bookrecord, this.mode = BookDetailsMode.Edit})
+      : super(key: key);
+
+  final Bookrecord bookrecord;
+  final BookDetailsMode mode;
+
+  @override
+  _BookDetailsWidgetState createState() =>
+      new _BookDetailsWidgetState(bookrecord: bookrecord, mode: mode);
+}
+
+class _BookDetailsWidgetState extends State<BookDetailsWidget> {
+  //List<Book> suggestions = [];
+  Bookrecord bookrecord;
+  BookDetailsMode mode;
+
+  TextEditingController authorsTextController;
+  TextEditingController titleTextController;
+  TextEditingController descriptionTextController;
+
+  Map<String, dynamic> languages;
+  List<String> preferredLanguages = [
+    'eng',
+    'rus',
+    'spa',
+    'fra',
+    'kor',
+    'jpn',
+    'ara',
+    'hin',
+    'zho',
+    'deu'
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+
+    authorsTextController = new TextEditingController();
+    titleTextController = new TextEditingController();
+    descriptionTextController = new TextEditingController();
+
+    // Read language codes from JSON
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      String data = await rootBundle.loadString('assets/languages.json');
+      setState(() {
+        languages = json.decode(data);
+      });
+      print(languages);
+    });
+  }
+
+  @override
+  void dispose() {
+    authorsTextController.dispose();
+    titleTextController.dispose();
+    descriptionTextController.dispose();
+
+    super.dispose();
+  }
+
+  _BookDetailsWidgetState(
+      {Key key, @required this.bookrecord, this.mode = BookDetailsMode.Edit});
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomScrollView(slivers: <Widget>[
+      SliverAppBar(
+        // Provide a standard title.
+        title: Text(S.of(context).titleBookDetails,
+            style: Theme.of(context)
+                .textTheme
+                .headline6
+                .apply(color: C.titleText)),
+        // Allows the user to reveal the app bar if they begin scrolling
+        // back up the list of items.
+        floating: false,
+        pinned: true,
+        snap: false,
+        // Display a placeholder widget to visualize the shrinking size.
+      ),
+      SliverToBoxAdapter(
+        child: BookrecordWidget(
+            bookrecord: bookrecord,
+            builder: (context, rec) {
+              // Screen with bookrecord details
+              return Column(
+                children: <Widget>[
+                  // Message with guidance (only in input mode)
+                  guidanceMessage(context),
+
+                  // Book cover, Author, Title and ISBN
+                  // First cover has to be added (author & title are inactive)
+                  Row(children: <Widget>[
+                    Stack(children: <Widget>[
+                      bookImage(bookrecord, 80, padding: EdgeInsets.all(5.0)),
+                      bookrecord.hasCover
+                          ? Container()
+                          : Center(
+                              child: Row(
+                              children: <Widget>[
+                                Tooltip(
+                                    message:
+                                        S.of(context).recognizeCoverFromGallery,
+                                    child: IconButton(
+                                      color: C.button,
+                                      icon: assetIcon(image_gallery_100,
+                                          size: 30),
+                                      onPressed: () async {
+                                        recognizeCover(context,
+                                            source: ImageSource.gallery);
+                                      },
+                                    )),
+                                Tooltip(
+                                    message:
+                                        S.of(context).recognizeCoverFromCamera,
+                                    child: IconButton(
+                                      color: C.button,
+                                      icon: assetIcon(compact_camera_100,
+                                          size: 30),
+                                      onPressed: () async {
+                                        recognizeCover(context,
+                                            source: ImageSource.camera);
+                                      },
+                                    )),
+                              ],
+                            ))
+                    ]),
+                    Expanded(
+                        child: Container(
+                            margin: EdgeInsets.only(left: 10.0),
+                            child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: <Widget>[
+                                  // TODO: Add editing by taping the field
+                                  bookrecord.hasAuthor
+                                      ?
+                                      // Show authors if present
+                                      Text('${bookrecord.authors[0]}',
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .bodyText2)
+                                      :
+                                      // Show input field if author is empty
+                                      TextField(
+                                          maxLines: 1,
+                                          controller: authorsTextController,
+                                          onEditingComplete: () {
+                                            // TODO: Save authors to Firestore
+                                            setState(() {
+                                              bookrecord.authors =
+                                                  List<String>.from(
+                                                      authorsTextController.text
+                                                          .split(','));
+                                            });
+                                          },
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .headline6,
+                                          decoration: InputDecoration(
+                                              //border: InputBorder.none,
+                                              hintStyle: C.hints
+                                                  .apply(color: C.inputHints),
+                                              hintText:
+                                                  S.of(context).hintAuthor),
+                                        ),
+                                  // TODO: Add editing by taping the field
+                                  bookrecord.hasTitle
+                                      ?
+                                      // Show title if present
+                                      Text('\"${bookrecord.title}\"',
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .bodyText2)
+                                      :
+                                      // Show input field if author is empty
+                                      TextField(
+                                          maxLines: 1,
+                                          controller: titleTextController,
+                                          onEditingComplete: () {
+                                            // TODO: Save title to Firestore
+                                            setState(() {
+                                              bookrecord.title =
+                                                  titleTextController.text;
+                                            });
+                                          },
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .headline6,
+                                          decoration: InputDecoration(
+                                              //border: InputBorder.none,
+                                              hintStyle: C.hints
+                                                  .apply(color: C.inputHints),
+                                              hintText:
+                                                  S.of(context).hintTitle),
+                                        ),
+                                ])))
+                  ]),
+
+                  // Cover text (only show in input mode if either of author/title is empty)
+                  mode == BookDetailsMode.Input &&
+                          bookrecord.hasCoverText &&
+                          (!bookrecord.hasAuthor || !bookrecord.hasTitle)
+                      ? Container(
+                          child: SelectableText(bookrecord.coverText,
+                              style: Theme.of(context).textTheme.bodyText2))
+                      : Container(),
+
+                  // TODO: Add bookspine text (only show in input mode if author/title are empty)
+
+                  // Language dropdown
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: <Widget>[
+                      Text(S.of(context).labelLanguage,
+                          style: Theme.of(context).textTheme.bodyText2),
+                      Expanded(
+                          child: Container(
+                              child: DropdownButton(
+                                  value: bookrecord.language,
+                                  items: languages == null
+                                      ? []
+                                      : languages.values
+                                          .where((element) => preferredLanguages
+                                              .contains(element['lng']))
+                                          .map((value) => DropdownMenuItem(
+                                              value: value['lng'],
+                                              child: Text(value['endonym'],
+                                                  style: Theme.of(context)
+                                                      .textTheme
+                                                      .bodyText2)))
+                                          .toList(),
+                                  onChanged: (value) {
+                                    setState(() {
+                                      bookrecord.language = value;
+                                    });
+                                    print('!!!DEBUG value selected: $value');
+                                  })))
+                    ],
+                  ),
+
+                  // Genre dropdown
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: <Widget>[
+                      Text(S.of(context).labelGenre,
+                          style: Theme.of(context).textTheme.bodyText2),
+                      Expanded(
+                          child: Container(
+                              child: DropdownButton(
+                        value: bookrecord.genre,
+                        items: S
+                            .of(context)
+                            .genres
+                            .keys
+                            .map((key) => DropdownMenuItem(
+                                value: key,
+                                child: ['fiction', 'nonfiction'].contains(key) ? Text(
+                                        S.of(context).genre(key),
+                                    style:
+                                        Theme.of(context).textTheme.bodyText2.apply(fontWeightDelta: 2)): Text(
+                                        '     ' + S.of(context).genre(key),
+                                    style:
+                                        Theme.of(context).textTheme.bodyText2)))
+                            .toList(),
+                        onChanged: (value) {
+                          setState(() {
+                            bookrecord.genre = value;
+                          });
+                          print(
+                              '!!!DEBUG value selected: $value, ${S.of(context).genres[value]}');
+                        },
+                        selectedItemBuilder: (BuildContext context) {
+                          return S
+                              .of(context)
+                              .genres
+                              .keys
+                              .map<Widget>((String item) {
+                            return Center(child: Text(S.of(context).genre(item),
+                                style: Theme.of(context).textTheme.bodyText2));
+                          }).toList();
+                        },
+                      )))
+                    ],
+                  )
+                ],
+              );
+
+              // Description
+
+              // User tags
+            }),
+      ),
+    ]);
+  }
+
+  Widget guidanceMessage(BuildContext context) {
+    String direction;
+    if (mode != BookDetailsMode.Input)
+      return Container();
+    else if (bookrecord.isEmpty)
+      direction = S.of(context).entryGuidanceEmptyBook;
+    else if (!bookrecord.hasCover)
+      direction = S.of(context).entryGuidanceNoCover;
+    else if (bookrecord.hasCover &&
+        (!bookrecord.hasAuthor || !bookrecord.hasTitle))
+      direction = S.of(context).entryGuidanceCoverButIncomplete;
+    else if (!bookrecord.isComplete)
+      direction = S.of(context).entryGuidanceNotComplete;
+    else
+      direction = S.of(context).entryGuidanceComplete;
+
+    return Column(children: <Widget>[
+      Text(direction, style: Theme.of(context).textTheme.bodyText2),
+      GestureDetector(
+          onTap: () async {
+            String url =
+                'https://www.google.com/search?q=isbn+${bookrecord.isbn}';
+
+            if (bookrecord.hasAuthor) url += '+' + bookrecord.authors.join('+');
+
+            if (bookrecord.hasTitle) url += '+' + bookrecord.title;
+
+            String encoded = Uri.encodeFull(url);
+
+            if (await canLaunch(encoded)) {
+              await launch(encoded);
+            } else {
+              throw 'Could not launch url $encoded';
+            }
+          },
+          child: Text(S.of(context).clickToGoogleBook,
+              style: Theme.of(context).textTheme.bodyText1.apply(
+                  color: Colors.blue, decoration: TextDecoration.underline)))
+    ]);
+  }
+
+  Future recognizeCover(BuildContext context,
+      {ImageSource source = ImageSource.camera}) async {
+    // Check that record is not empty
+    if (bookrecord.isbn == null || bookrecord.isbn.isEmpty) {
+      print('!!!DEBUG: Empty ISBN');
+      return;
+    }
+
+    try {
+      File image = await ImagePicker.pickImage(source: source);
+      //print('!!!DEBUG: Recognize image: ${image.path}');
+
+      // Check that image is selected
+      if (image == null) {
+        print('!!!DEBUG: No image selected');
+        return;
+      }
+
+      String name = 'covers_full/' + bookrecord.isbn + ".jpg";
+
+      //final String storagePath = await uploadPicture(image, name);
+      // !!!DEBUG
+      String storagePath = 'covers_full/9785389015234.jpg';
+
+      print('!!!DEBUG: Storage path: $storagePath');
+
+      FirebaseUser user = await FirebaseAuth.instance.currentUser();
+      IdTokenResult idtoken = await user.getIdToken();
+
+      String body = json.encode({
+        'uid': user.uid,
+        'uri': storagePath,
+        'isbn': bookrecord.isbn,
+        'ocr': bookrecord.isEmpty,
+      });
+
+      // Call Python service to recognize
+      Response res = await LibConnect.getCloudFunctionClient().post(
+          'https://biblosphere-api-ihj6i2l2aq-uc.a.run.app/add_cover',
+          body: body,
+          headers: {
+            HttpHeaders.authorizationHeader: "Bearer ${idtoken.token}",
+            HttpHeaders.contentTypeHeader: "application/json"
+          });
+
+      if (res.statusCode != 200) {
+        print('!!!DEBUG: Recognition request failed');
+        logAnalyticsEvent(
+            name: 'cover_recognition_failed',
+            parameters: <String, dynamic>{
+              'type': 'response',
+              'error': res.statusCode.toString(),
+            });
+      }
+      print('!!!DEBUG: Cover recognition result: ${res.body}');
+
+      final resJson = json.decode(res.body);
+
+      if (resJson is Map && resJson.containsKey('error')) {
+        print('!!!DEBUG: add_cover error ${resJson['error']['message']}');
+      } else {
+        print('!!!DEBUG: Response cover text ${resJson[0]['cover_text']}');
+
+        setState(() {
+          if (resJson[0]['cover_text'] != null &&
+              resJson[0]['cover_text'].isNotEmpty)
+            bookrecord.coverText = resJson[0]['cover_text'];
+
+          if (!bookrecord.hasCover &&
+              resJson[0]['image'] != null &&
+              resJson[0]['image'].isNotEmpty)
+            bookrecord.image = resJson[0]['image'];
+        });
+      }
+    } catch (e, stack) {
+      print("Failed to recognize cover: " + e.toString() + stack.toString());
+      logAnalyticsEvent(
+          name: 'cover_recognition_failed',
+          parameters: <String, dynamic>{
+            'type': 'exception',
+            'error': e.toString(),
+          });
+      Crashlytics.instance.recordError(e, stack);
+    }
+  }
 }

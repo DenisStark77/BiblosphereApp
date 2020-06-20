@@ -1650,12 +1650,12 @@ class _SettingsWidgetState extends State<SettingsWidget> {
                         child: Row(
                             mainAxisAlignment: MainAxisAlignment.start,
                             children: <Widget>[
-                              userPhoto(B.user, 90),
+                              userPhoto(B.loginUser, 90),
                               Expanded(
                                   child: Container(
                                       padding: EdgeInsets.only(left: 10.0),
                                       child: Column(children: <Widget>[
-                                        Text(B.user.name,
+                                        Text(B.loginUser.name,
                                             style: Theme.of(context)
                                                 .textTheme
                                                 .headline6),
@@ -1670,13 +1670,49 @@ class _SettingsWidgetState extends State<SettingsWidget> {
                     planInfoWidget(context),
                     isTrial() && offerings != null
                         ? upgradeWidget()
-                        : Container()
+                        : Container(),
+                    linkedUsersWidget(context),
                   ]),
             ),
           ),
         ],
       ),
     );
+  }
+
+  Widget linkedUsersWidget(BuildContext context) {
+    if (B.loginUser.linkedUsers != null && B.loginUser.linkedUsers.length > 0
+    && B.linkedUsers != null && B.linkedUsers.length > 0) {
+      return Container(child: 
+      Row(
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: <Widget>[
+          Text(S.of(context).currentUserSetting, style: Theme.of(context).textTheme.subtitle2),
+          Container(
+            margin: EdgeInsets.only(left: 10.0, right: 10.0),
+            child: DropdownButton(
+            value: B.loginUser.currentUser ?? B.user.id,
+            onChanged: (newValue) {
+              // Refresh the UI
+              setState(() {
+                B.loginUser.currentUser = newValue;
+              });
+              // Update value of current user
+              B.loginUser.ref.updateData({'currentUser': newValue});
+            },
+            items: B.linkedUsers.map((user) {
+              return DropdownMenuItem(
+                child: Center(child: Text(user.name, style: Theme.of(context).textTheme.bodyText2)),
+                value: user.id,
+              );
+            }).toList(),
+          )),
+        ],
+      ));
+    } else {
+      return Container();
+    }
+
   }
 
   Widget planInfoWidget(BuildContext context) {

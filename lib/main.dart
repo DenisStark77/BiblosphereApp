@@ -175,12 +175,57 @@ class _MyAppState extends State<MyApp> {
         await user.ref.setData(user.toJson());
       } else {
         // Update user fields from Firestore
-        B.user = User.fromJson(userSnap.data);
+        User user = User.fromJson(userSnap.data);
+
+        B.loginUser = user;
+
+        // Add list of linked users
+        if (user.linkedUsers != null && user.linkedUsers.length > 0) {
+          List<User> list = [];
+
+          user.linkedUsers.forEach((id) async { 
+            DocumentSnapshot doc = await User.Ref(id).get();
+            list.add(User.fromJson(doc.data));
+          });
+          
+          B.linkedUsers = list;
+        }
+
+        // To suport library accounts: read library user record if currentUser is there
+        if (user.currentUser != null && user.currentUser != user.id) {
+          DocumentSnapshot doc = await User.Ref(user.currentUser).get();
+          user = User.fromJson(doc.data);
+        }
+
+        B.user = user;
       }
 
       // Listen on changes to user record in Firestore and update to B.user
-      _userSubscription = user.ref.snapshots().listen((DocumentSnapshot doc) {
-        B.user = User.fromJson(doc.data);
+      _userSubscription = B.loginUser.ref.snapshots().listen((DocumentSnapshot doc) async {
+        // To suport library accounts: read library user record if currentUser is there
+        User user = User.fromJson(doc.data);
+        B.loginUser = user;
+
+        // Add list of linked users
+        if (user.linkedUsers != null && user.linkedUsers.length > 0) {
+          List<User> list = [];
+
+          user.linkedUsers.forEach((id) async { 
+            DocumentSnapshot doc = await User.Ref(id).get();
+            list.add(User.fromJson(doc.data));
+          });
+
+          B.linkedUsers = list;
+        }
+
+        if (user.currentUser != null && user.currentUser != user.id) {
+          DocumentSnapshot doc = await User.Ref(user.currentUser).get();
+          user = User.fromJson(doc.data);
+        }
+
+        setState(() {
+            B.user = user;
+        });
       });
 
       // TODO: Listen on tokenRefresh to update token in Firestore

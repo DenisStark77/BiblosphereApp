@@ -142,6 +142,9 @@ flutter:
     - images/icons/icons8-attach-90.png
     - images/icons/icons8-heart-100.png
 
+    # dictionaries and lists
+    - assets/languages.json
+
     # credentials for DialogFlow
     - assets/dialogflow.json
 

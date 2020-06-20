@@ -21,9 +21,21 @@ class B {
   B._internal();
 
   static User _currentUser;
+  static User _loginUser;
   static Position _position;
   static String _locality;
   static String _country;
+  static List<User> _linkedUsers;
+
+  static List<User> get linkedUsers => _linkedUsers;
+  static set linkedUsers(List<User> list) {
+    _linkedUsers = list;
+  }
+
+  static User get loginUser => _loginUser;
+  static set loginUser(User user) {
+    _loginUser = user;
+  }
 
   static User get user => _currentUser;
   static set user(User user) {
@@ -169,87 +181,6 @@ Widget drawerMenuItem(BuildContext context, String text, String icon,
         child: Text(text, style: Theme.of(context).textTheme.bodyText2)),
   ]);
 }
-
-/*
-class MyIcons {
-  static const fontFamily = 'MyIcons';
-
-  static const IconData add = const IconData(0xf208, fontFamily: fontFamily);
-  static const IconData arrow_left =
-      const IconData(0xf116, fontFamily: fontFamily);
-  static const IconData arrow_right =
-      const IconData(0xf117, fontFamily: fontFamily);
-  static const IconData envelop =
-      const IconData(0xf1cd, fontFamily: fontFamily);
-  static const IconData cancel_cross =
-      const IconData(0xf161, fontFamily: fontFamily);
-  static const IconData cancel_cross2 =
-      const IconData(0xf13a, fontFamily: fontFamily);
-  static const IconData cancel_cross3 =
-      const IconData(0xf13b, fontFamily: fontFamily);
-  static const IconData checkmark =
-      const IconData(0xf140, fontFamily: fontFamily);
-  static const IconData face = const IconData(0xf131, fontFamily: fontFamily);
-  static const IconData library =
-      const IconData(0xf107, fontFamily: fontFamily);
-  static const IconData mobile = const IconData(0xf1fd, fontFamily: fontFamily);
-  static const IconData money = const IconData(0xf14d, fontFamily: fontFamily);
-  static const IconData plus = const IconData(0xf208, fontFamily: fontFamily);
-  static const IconData plus1 = const IconData(0xf102, fontFamily: fontFamily);
-  static const IconData returning =
-      const IconData(0xf21d, fontFamily: fontFamily);
-  static const IconData settings =
-      const IconData(0xf14c, fontFamily: fontFamily);
-  static const IconData book = const IconData(0xf12c, fontFamily: fontFamily);
-  static const IconData navigation =
-      const IconData(0xf14e, fontFamily: fontFamily);
-  static const IconData navigation1 =
-      const IconData(0xf1c5, fontFamily: fontFamily);
-  static const IconData navigation2 =
-      const IconData(0xf1d0, fontFamily: fontFamily);
-  static const IconData hand_pointer_o =
-      const IconData(0xf25a, fontFamily: fontFamily);
-  static const IconData exit = const IconData(0xf17c, fontFamily: fontFamily);
-  static const IconData heart = const IconData(0xf19b, fontFamily: fontFamily);
-  static const IconData heart1 = const IconData(0xf1c8, fontFamily: fontFamily);
-  static const IconData home = const IconData(0xf19f, fontFamily: fontFamily);
-  static const IconData share = const IconData(0xf18b, fontFamily: fontFamily);
-  static const IconData share1 = const IconData(0xf1e7, fontFamily: fontFamily);
-  static const IconData barcode =
-      const IconData(0xf149, fontFamily: fontFamily);
-  static const IconData chat = const IconData(0xf13f, fontFamily: fontFamily);
-  static const IconData message =
-      const IconData(0xf13e, fontFamily: fontFamily);
-  static const IconData filter = const IconData(0xf18f, fontFamily: fontFamily);
-  static const IconData trash = const IconData(0xf259, fontFamily: fontFamily);
-  static const IconData search = const IconData(0xf1cc, fontFamily: fontFamily);
-  static const IconData thumbdown =
-      const IconData(0xf16c, fontFamily: fontFamily);
-  static const IconData thumbup =
-      const IconData(0xf1be, fontFamily: fontFamily);
-  static const IconData flag = const IconData(0xf188, fontFamily: fontFamily);
-  static const IconData camera = const IconData(0xf1ac, fontFamily: fontFamily);
-  static const IconData cart = const IconData(0xf232, fontFamily: fontFamily);
-  static const IconData girl = const IconData(0xf283, fontFamily: fontFamily);
-  static const IconData boy = const IconData(0xf131, fontFamily: fontFamily);
-  static const IconData globe = const IconData(0xf284, fontFamily: fontFamily);
-  static const IconData people = const IconData(0xf274, fontFamily: fontFamily);
-  static const IconData plane = const IconData(0xf1f6, fontFamily: fontFamily);
-  static const IconData idea = const IconData(0xf1bd, fontFamily: fontFamily);
-  static const IconData other = const IconData(0xf190, fontFamily: fontFamily);
-  static const IconData stop = const IconData(0xf13a, fontFamily: fontFamily);
-  static const IconData chain = const IconData(0xf1bf, fontFamily: fontFamily);
-  static const IconData open = const IconData(0xf173, fontFamily: fontFamily);
-  static const IconData synch = const IconData(0xf15b, fontFamily: fontFamily);
-  static const IconData galery = const IconData(0xf201, fontFamily: fontFamily);
-  static const IconData given = const IconData(0xf1e9, fontFamily: fontFamily);
-  static const IconData taken = const IconData(0xf273, fontFamily: fontFamily);
-  static const IconData outbox = const IconData(0xf1ee, fontFamily: fontFamily);
-  static const IconData wishlist =
-      const IconData(0xf193, fontFamily: fontFamily);
-}
-
-*/
 
 enum BookSource { none, google, goodreads }
 
@@ -418,6 +349,10 @@ class User {
   String photo;
   // Fields for referral program. Referral Link and two persons to split fee to
   String link;
+  // Support for linked account
+  String currentUser;
+  List<String> linkedUsers;
+  // Support for referal program
   String beneficiary1;
   String beneficiary2;
   GeoPoint position;
@@ -447,6 +382,8 @@ class User {
         name = json['name'],
         photo = json['photo'] ?? json['photoUrl'],
         link = json['link'],
+        currentUser = json['currentUser'],
+        linkedUsers = (json['linkedUsers'] as List)?.cast<String>(),
         beneficiary1 = json['beneficiary1'],
         beneficiary2 = json['beneficiary2'],
         position = json['position'] as GeoPoint,
@@ -463,6 +400,9 @@ class User {
       'name': name,
       'photo': photo,
       'link': link,
+      // Do not update linked users (only direct update from settings)
+      //'currentUser': currentUser,
+      //'linkedUsers': linkedUsers,
       'beneficiary1': beneficiary1,
       'beneficiary2': beneficiary2,
       'position': position,
@@ -499,6 +439,12 @@ class Bookrecord {
   List<String> authors;
   String image;
   Set<String> keys;
+  String language;
+  String genre;
+  String description;
+  String spineText;
+  String coverText;
+  List<String> tags;
 
   String ownerId;
   String ownerName;
@@ -531,6 +477,12 @@ class Bookrecord {
       this.title,
       this.authors,
       this.image,
+      this.spineText,
+      this.coverText,
+      this.language,
+      this.genre,
+      this.description,
+      this.tags,
       this.location,
       this.holderId,
       this.holderName,
@@ -563,6 +515,12 @@ class Bookrecord {
         title = json['title'],
         authors = (json['authors'] as List)?.cast<String>(),
         image = json['image'],
+        genre = json['genre'],
+        language = json['language'],
+        spineText = json['spineText'],
+        coverText = json['coverText'],
+        description = json['description'],
+        tags = (json['tags'] as List)?.cast<String>(),
         keys = (json['keys'] as List)?.cast<String>()?.toSet(),
         ownerId = json['ownerId'],
         ownerName = json['ownerName'],
@@ -622,8 +580,46 @@ class Bookrecord {
       'authors': authors,
       'isbn': isbn,
       'image': image,
+      'language': language,
+      'genre': genre,
+      'description': description,
+      'coverText': coverText,
+      'spineText': spineText,
+      'tags': tags,
       'keys': keys.toList(),
     };
+  }
+
+  bool get isEmpty {
+    return !hasAuthor && ! hasTitle;
+  }
+
+  bool get hasTitle {
+    return title != null && title.isNotEmpty;
+  }
+
+  bool get hasAuthor {
+    return authors != null && authors.length > 0;
+  }
+
+  bool get hasCover {
+    return image != null && image.isNotEmpty;
+  }
+
+  bool get hasCoverText {
+    return coverText != null && coverText.isNotEmpty;
+  }
+
+  bool get hasLanguage {
+    return language != null && language.isNotEmpty;
+  }
+
+  bool get hasDescription {
+    return description != null && description.isNotEmpty;
+  }
+
+  bool get isComplete {
+    return !isEmpty && hasCover && hasLanguage && hasDescription;
   }
 
   bool get isOwn {

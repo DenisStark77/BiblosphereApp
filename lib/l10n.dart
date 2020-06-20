@@ -24,6 +24,153 @@ class S {
     return Localizations.of<S>(context, S);
   }
 
+  // List of books genres
+    static Map<String, Map<String, String>> _genres = {
+    'en': {
+      'fiction': 'Fiction',
+      'fiction_alternate_history': ' > Alternate history',
+      'fiction_anthology': ' > Anthology',
+      'fiction_chick_lit': ' > Chick lit',
+      'fiction_childrens': ' > Children''s',
+      'fiction_classic': ' > Classic',
+      'fiction_comic_book': ' > Comic book',
+      'fiction_coming_of_age': ' > Coming-of-age',
+      'fiction_crime': ' > Crime',
+      'fiction_drama': ' > Drama',
+      'fiction_fairytale': ' > Fairytale',
+      'fiction_fantasy': ' > Fantasy',
+      'fiction_graphic_novel': ' > Graphic novel',
+      'fiction_historical_fiction': ' > Historical fiction',
+      'fiction_horror': ' > Horror',
+      'fiction_mystery': ' > Mystery',
+      'fiction_paranormal_romance': ' > Paranormal romance',
+      'fiction_picture_book': ' > Picture book',
+      'fiction_poetry': ' > Poetry',
+      'fiction_political_thriller': ' > Political thriller',
+      'fiction_romance': ' > Romance',
+      'fiction_satire': ' > Satire',
+      'fiction_science_fiction': ' > Science fiction',
+      'fiction_short_story': ' > Short story',
+      'fiction_suspense': ' > Suspense',
+      'fiction_thriller': ' > Thriller',
+      'fiction_western': ' > Western',
+      'fiction_young_adult': ' > Young adult',
+      'nonfiction': 'Nonfiction',
+      'nonfiction_art_architecture': ' > Art/architecture',
+      'nonfiction_autobiography': ' > Autobiography',
+      'nonfiction_biography': ' > Biography',
+      'nonfiction_business_economics': ' > Business/economics',
+      'nonfiction_cookbook': ' > Cookbook',
+      'nonfiction_crafts_hobbies': ' > Crafts/hobbies',
+      'nonfiction_diary': ' > Diary',
+      'nonfiction_dictionary': ' > Dictionary',
+      'nonfiction_encyclopedia': ' > Encyclopedia',
+      'nonfiction_guide': ' > Guide',
+      'nonfiction_health_fitness': ' > Health/fitness',
+      'nonfiction_history': ' > History',
+      'nonfiction_home_and_garden': ' > Home and garden',
+      'nonfiction_humor': ' > Humor',
+      'nonfiction_journal': ' > Journal',
+      'nonfiction_math': ' > Math',
+      'nonfiction_memoir': ' > Memoir',
+      'nonfiction_philosophy': ' > Philosophy',
+      'nonfiction_prayer': ' > Prayer',
+      'nonfiction_religion_spirituality_and_new_age': ' > Religion and spirituality',
+      'nonfiction_review': ' > Review',
+      'nonfiction_science': ' > Science',
+      'nonfiction_self_help': ' > Self help',
+      'nonfiction_sports_and_leisure': ' > Sports and leisure',
+      'nonfiction_textbook': ' > Textbook',
+      'nonfiction_travel': ' > Travel',
+      'nonfiction_true_crime': ' > True crime',    
+    },
+    'ru': {
+      'fiction': 'Художественная',
+      'fiction_action_and_adventure': ' > Боевики и приключения',
+      'fiction_alternate_history': ' > Альтернативная история',
+      'fiction_anthology': ' > Антология',
+      'fiction_chick_lit': ' > Для молодых женщин',
+      'fiction_childrens': ' > Детская',
+      'fiction_classic': ' > Классика',
+      'fiction_comic_book': ' > Комикс',
+      'fiction_coming_of_age': ' > Подростковая',
+      'fiction_crime': ' > Криминальная',
+      'fiction_drama': ' > Драма',
+      'fiction_fairytale': ' > Сказки',
+      'fiction_fantasy': ' > Фэнтези',
+      'fiction_graphic_novel': ' > Комиксы',
+      'fiction_historical_fiction': ' > Историческая фантастика',
+      'fiction_horror': ' > Ужасы',
+      'fiction_mystery': ' > Мистика',
+      'fiction_paranormal_romance': ' > Паранормальный роман',
+      'fiction_picture_book': ' > Иллюстрированная книга',
+      'fiction_poetry': ' > Поэзия',
+      'fiction_political_thriller': ' > Политический триллер',
+      'fiction_romance': ' > Романтика',
+      'fiction_satire': ' > Сатира',
+      'fiction_science_fiction': ' > Научная фантастика',
+      'fiction_short_story': ' > Рассказ',
+      'fiction_suspense': ' > Саспенс',
+      'fiction_thriller': ' > Триллер',
+      'fiction_western': ' > Вестерн',
+      'fiction_young_adult': ' > Молодежная',
+      'nonfiction': 'Нехудожестванная',
+      'nonfiction_art_architecture': ' > Искусство / архитектура',
+      'nonfiction_autobiography': ' > Автобиография',
+      'nonfiction_biography': ' > Биография',
+      'nonfiction_business_economics': ' > Бизнес / экономика',
+      'nonfiction_cookbook': ' > Поваренная книга',
+      'nonfiction_crafts_hobbies': ' > Рукоделие / хобби',
+      'nonfiction_diary': ' > Дневник',
+      'nonfiction_dictionary': ' > Словарь',
+      'nonfiction_encyclopedia': ' > Энциклопедия',
+      'nonfiction_guide': ' > Руководство',
+      'nonfiction_health_fitness': ' > Здоровье и фитнес',
+      'nonfiction_history': ' > История',
+      'nonfiction_home_and_garden': ' > Дом и сад',
+      'nonfiction_humor': ' > Юмор',
+      'nonfiction_journal': ' > Журнал',
+      'nonfiction_math': ' > Математика',
+      'nonfiction_memoir': ' > Мемуары',
+      'nonfiction_philosophy': ' > Философия',
+      'nonfiction_prayer': ' > Молитва',
+      'nonfiction_religion_spirituality_and_new_age': ' > Религия и духовность',
+      'nonfiction_review': ' > Обзор',
+      'nonfiction_science': ' > Наука',
+      'nonfiction_self_help': ' > Самопомощь',
+      'nonfiction_sports_and_leisure': ' > Спорт и отдых',
+      'nonfiction_textbook': ' > Учебник',
+      'nonfiction_travel': ' > Путешествия',
+      'nonfiction_true_crime': ' > Криминальная',    },
+  };
+
+  Map<String, String> get genres {
+    print('!!!DEDUG: System locale: ${Intl.defaultLocale}');
+
+    String lang = Intl.defaultLocale;
+
+    if( !_genres.keys.contains(lang) )
+      lang = 'en';
+
+    return _genres[lang];
+  }
+
+  String genre(String code) {
+    if (code == null)
+      return null;
+      
+    String lang = Intl.defaultLocale;
+    if( !_genres.keys.contains(lang) )
+      lang = 'en';
+
+    String genre = _genres[lang][code];
+
+    if (genre.startsWith(' > '))
+       genre = genre.substring(3);
+
+    return genre;
+  }
+
   // main.dart
   String get title {
     return Intl.message('Biblosphere',
@@ -1226,6 +1373,64 @@ We are looking for people and organizations to partner with. Our mission to spre
   String get onContinent {
     return Intl.message('on your continent', name: 'onContinent');
   }
+
+  String get currentUserSetting {
+    return Intl.message('Current user:', name: 'currentUserSetting');
+  }
+
+  String get titleBookDetails {
+    return Intl.message('BOOK DETAILS', name: 'titleBookDetails');
+  }
+  
+  String get entryGuidanceEmptyBook {
+    return Intl.message('Book is missing in catalogs. Please add a photo of a book cover.', name: 'entryGuidanceEmptyBook');
+  }
+  
+  String get entryGuidanceNoCover {
+    return Intl.message('Book cover is missing. Please add a photo of a book cover.', name: 'entryGuidanceNoCover');
+  }
+
+  String get entryGuidanceCoverButIncomplete {
+    return Intl.message('Complete author and title. Copy from book cover or google it using link below.', name: 'entryGuidanceCoverButIncomplete');
+  }
+
+  String get entryGuidanceNotComplete {
+    return Intl.message('Book information stored. You can also fill other optional fields.', name: 'entryGuidanceNotComplete');
+  }
+
+  String get entryGuidanceComplete {
+    return Intl.message('Book information completed and stored.', name: 'entryGuidanceComplete');
+  }
+
+  String get recognizeCoverFromGallery {
+    return Intl.message('Load from gallery.', name: 'recognizeCoverFromGallery');
+  }
+
+  String get recognizeCoverFromCamera {
+    return Intl.message('Take a picture.', name: 'recognizeCoverFromCamera');
+  }
+
+  String get hintAuthor {
+    return Intl.message('Enter or copy author(s)', name: 'hintAuthor');
+  }
+
+  String get hintTitle {
+    return Intl.message('Enter or copy title', name: 'hintTitle');
+  }
+
+  String get labelLanguage {
+    return Intl.message('Language:', name: 'labelLanguage');
+  }
+
+  String get labelGenre {
+    return Intl.message('Genre:', name: 'labelGenre');
+  }
+
+  String get clickToGoogleBook {
+    return Intl.message('Link to search details of this book on Google', name: 'clickToGoogleBook');
+  }
+
+
 }
 
 
