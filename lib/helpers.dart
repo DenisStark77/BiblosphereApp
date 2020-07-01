@@ -234,11 +234,11 @@ Widget bookImage(dynamic book, double size,
   String image;
   if (book is Book) {
     image = book.image;
-    if (book.authors != null)
+    if (book.authors != null && book.title != null)
       tooltip = book.authors.join(',') + '\n' + book.title;
   } else if (book is Bookrecord) {
     image = book.image;
-    if (book.authors != null)
+    if (book.authors != null && book.title != null)
       tooltip = book.authors.join(',') + '\n' + book.title;
   } else if (book is String) image = book;
 

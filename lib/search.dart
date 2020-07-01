@@ -5,11 +5,69 @@ import 'dart:io';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:biblosphere/const.dart';
 
-// TODO: Result of searchByTitleAuthor has to be updated from Firestore
-//  for the books which available in Biblosphere
+
+// Function to add books to the Biblosphere catalog
+Future<void> addBookToCatalog(List<Bookrecord> books) async {
+  FirebaseUser user = await FirebaseAuth.instance.currentUser();
+  IdTokenResult idtoken = await user.getIdToken();
+
+  String body = json.encode({
+    'books': books.map((b) => b.toJson(bookOnly: true)).toList()
+  });
+
+  print('!!!DEBUG body: $body');
+
+  // Call Python service to recognize
+  Response res = await LibConnect.getCloudFunctionClient().post(
+      'https://biblosphere-api-ihj6i2l2aq-uc.a.run.app/add',
+          body: body,
+          headers: {
+            HttpHeaders.authorizationHeader: "Bearer ${idtoken.token}",
+            HttpHeaders.contentTypeHeader: "application/json"
+          }
+      );
+
+  if (res.statusCode != 200) {
+    // TODO: Add report to crashalitic
+    print('!!!DEBUG: Add book error ${res.body}');
+    return;
+  } else {
+    print('!!!DEBUG: Books added to catalog ${res.body}');
+    return;
+  }
+}
+
+
+// Function to add books to the Biblosphere catalog
+Future<List<String>> getTagList(String query) async {
+  FirebaseUser user = await FirebaseAuth.instance.currentUser();
+  IdTokenResult idtoken = await user.getIdToken();
+
+  // Call Python service to return list of tags
+  // TODO: check that cirilic works well without encoding URL 
+  Response res = await LibConnect.getCloudFunctionClient().get(
+      'https://biblosphere-api-ihj6i2l2aq-uc.a.run.app/get_tags?query=${query}',
+          headers: {
+            HttpHeaders.authorizationHeader: "Bearer ${idtoken.token}",
+            HttpHeaders.contentTypeHeader: "application/json"
+          }
+      );
+
+  if (res.statusCode != 200) {
+    // TODO: Add report to crashalitic
+    print('!!!DEBUG: Get tag list error ${res.body}');
+    return [];
+  } else {
+    final resJson = json.decode(res.body);
+    print('!!!DEBUG: Tag list returned ${resJson.length} elements');
+
+    return List<String>.from(resJson);
+  }
+}
+
+
+// Function to search in catalogue in MySQL
 Future<List<Book>> searchByTitleAuthor(String text) async {
-  //TODO: Redesign search as now it only use ONE keyword
-  // and doing rest of filtering on client side
   // Search in catalogue in MySQL
   FirebaseUser user = await FirebaseAuth.instance.currentUser();
   IdTokenResult jwt = await user.getIdToken();

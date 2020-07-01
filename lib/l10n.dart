@@ -158,7 +158,7 @@ class S {
   String genre(String code) {
     if (code == null)
       return null;
-      
+
     String lang = Intl.defaultLocale;
     if( !_genres.keys.contains(lang) )
       lang = 'en';
@@ -1403,11 +1403,15 @@ We are looking for people and organizations to partner with. Our mission to spre
   }
 
   String get recognizeCoverFromGallery {
-    return Intl.message('Load from gallery.', name: 'recognizeCoverFromGallery');
+    return Intl.message('Load book cover from a gallery.', name: 'recognizeCoverFromGallery');
   }
 
   String get recognizeCoverFromCamera {
-    return Intl.message('Take a picture.', name: 'recognizeCoverFromCamera');
+    return Intl.message('Take a picture of book cover.', name: 'recognizeCoverFromCamera');
+  }
+
+  String get recognizeBackFromCamera {
+    return Intl.message('Take a picture of a book back.', name: 'recognizeBackFromCamera');
   }
 
   String get hintAuthor {
@@ -1426,8 +1430,24 @@ We are looking for people and organizations to partner with. Our mission to spre
     return Intl.message('Genre:', name: 'labelGenre');
   }
 
+  String get labelDescription {
+    return Intl.message('Description:', name: 'labelDescription');
+  }
+
+  String get labelUserTags {
+    return Intl.message('User tags:', name: 'labelUserTags');
+  }
+
+  String get labelCoverText {
+    return Intl.message('Cover text (copy-paste to author/title):', name: 'labelCoverText');
+  }
+
   String get clickToGoogleBook {
     return Intl.message('Link to search details of this book on Google', name: 'clickToGoogleBook');
+  }
+
+  String get hintDescription {
+    return Intl.message('Copy paste a description from Internet or make a photo of a book back', name: 'hintDescription');
   }
 
 

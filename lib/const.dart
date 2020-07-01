@@ -72,7 +72,7 @@ class BiblosphereColorScheme {
   Color chipText = Colors.white;
   Color inputHints = Colors.black;
   TextStyle hints = TextStyle(
-      fontSize: 20.0, fontWeight: FontWeight.w300, fontStyle: FontStyle.italic);
+      fontSize: 16.0, fontWeight: FontWeight.w300, fontStyle: FontStyle.italic);
 
   BiblosphereColorScheme(
       {this.titleBackground,
@@ -246,6 +246,8 @@ class Book {
         'isbn': isbn,
         'image': image,
         'keys': keys.toList(),
+        'genre': genre,
+        'language': language
       };
     else
       return {
@@ -444,7 +446,12 @@ class Bookrecord {
   String description;
   String spineText;
   String coverText;
+
+  // Tags assigned to the book by owner
   List<String> tags;
+
+  // All tags assigned to this book by other users
+  List<String> allTags;
 
   String ownerId;
   String ownerName;
@@ -483,6 +490,7 @@ class Bookrecord {
       this.genre,
       this.description,
       this.tags,
+      this.allTags,
       this.location,
       this.holderId,
       this.holderName,
@@ -521,6 +529,7 @@ class Bookrecord {
         coverText = json['coverText'],
         description = json['description'],
         tags = (json['tags'] as List)?.cast<String>(),
+        allTags = (json['allTags'] as List)?.cast<String>(),
         keys = (json['keys'] as List)?.cast<String>()?.toSet(),
         ownerId = json['ownerId'],
         ownerName = json['ownerName'],
@@ -558,7 +567,23 @@ class Bookrecord {
     }
   }
 
-  Map<String, dynamic> toJson() {
+  Map<String, dynamic> toJson({bookOnly=false}) {
+    if (bookOnly) {
+    return {
+      'title': title,
+      'authors': authors,
+      'isbn': isbn,
+      'image': image,
+      'language': language,
+      'genre': genre,
+      'description': description,
+      'coverText': coverText,
+      'spineText': spineText,
+      'tags': tags,
+      'allTags': allTags,
+      'keys': keys.toList(),
+    };
+    } else {
     return {
       'id': id,
       'ownerId': ownerId,
@@ -586,8 +611,10 @@ class Bookrecord {
       'coverText': coverText,
       'spineText': spineText,
       'tags': tags,
+      'allTags': allTags,
       'keys': keys.toList(),
     };
+    }
   }
 
   bool get isEmpty {

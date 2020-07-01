@@ -13,6 +13,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:http/http.dart';
 import 'dart:convert';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_chips_input/flutter_chips_input.dart';
 
 import 'package:biblosphere/const.dart';
 import 'package:biblosphere/helpers.dart';
@@ -1576,6 +1577,10 @@ class _BookDetailsWidgetState extends State<BookDetailsWidget> {
   TextEditingController authorsTextController;
   TextEditingController titleTextController;
   TextEditingController descriptionTextController;
+  bool editDescription = false;
+
+  // List of global list tags matching the query
+  List<String> matching_tags = [];
 
   Map<String, dynamic> languages;
   List<String> preferredLanguages = [
@@ -1611,6 +1616,14 @@ class _BookDetailsWidgetState extends State<BookDetailsWidget> {
 
   @override
   void dispose() {
+    print('!!!DEBUG: Store data in Firestore and MySQL');
+    if (bookrecord != null) {
+      bookrecord.ref.setData(bookrecord.toJson(), merge: true);
+      if (mode == BookDetailsMode.Input) 
+        print('!!!DEBUG adding book to catalog');
+        addBookToCatalog([bookrecord]);
+    }
+
     authorsTextController.dispose();
     titleTextController.dispose();
     descriptionTextController.dispose();
@@ -1644,6 +1657,7 @@ class _BookDetailsWidgetState extends State<BookDetailsWidget> {
             builder: (context, rec) {
               // Screen with bookrecord details
               return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
                   // Message with guidance (only in input mode)
                   guidanceMessage(context),
@@ -1652,38 +1666,40 @@ class _BookDetailsWidgetState extends State<BookDetailsWidget> {
                   // First cover has to be added (author & title are inactive)
                   Row(children: <Widget>[
                     Stack(children: <Widget>[
-                      bookImage(bookrecord, 80, padding: EdgeInsets.all(5.0)),
+                      Container(child: bookImage(bookrecord, 80, padding: EdgeInsets.all(5.0))),
                       bookrecord.hasCover
                           ? Container()
-                          : Center(
+                          : Positioned.fill(child: Container(
+                              alignment: Alignment.bottomCenter,
                               child: Row(
+                                mainAxisSize: MainAxisSize.min,
                               children: <Widget>[
-                                Tooltip(
+                                Expanded(child: Tooltip(
                                     message:
                                         S.of(context).recognizeCoverFromGallery,
                                     child: IconButton(
                                       color: C.button,
                                       icon: assetIcon(image_gallery_100,
-                                          size: 30),
+                                          size: 30, padding: 0.0),
                                       onPressed: () async {
                                         recognizeCover(context,
                                             source: ImageSource.gallery);
                                       },
-                                    )),
-                                Tooltip(
+                                    ))),
+                                Expanded(child: Tooltip(
                                     message:
                                         S.of(context).recognizeCoverFromCamera,
                                     child: IconButton(
                                       color: C.button,
                                       icon: assetIcon(compact_camera_100,
-                                          size: 30),
+                                          size: 30, padding: 0.0),
                                       onPressed: () async {
                                         recognizeCover(context,
                                             source: ImageSource.camera);
                                       },
-                                    )),
+                                    ))),
                               ],
-                            ))
+                            )))
                     ]),
                     Expanded(
                         child: Container(
@@ -1711,11 +1727,10 @@ class _BookDetailsWidgetState extends State<BookDetailsWidget> {
                                                   List<String>.from(
                                                       authorsTextController.text
                                                           .split(','));
+                                              bookrecord.ref.setData(bookrecord.toJson(), merge: true);
                                             });
                                           },
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .headline6,
+                                          style: Theme.of(context).textTheme.bodyText2,
                                           decoration: InputDecoration(
                                               //border: InputBorder.none,
                                               hintStyle: C.hints
@@ -1741,11 +1756,10 @@ class _BookDetailsWidgetState extends State<BookDetailsWidget> {
                                             setState(() {
                                               bookrecord.title =
                                                   titleTextController.text;
+                                              bookrecord.ref.setData(bookrecord.toJson(), merge: true);
                                             });
                                           },
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .headline6,
+                                          style: Theme.of(context).textTheme.bodyText2,
                                           decoration: InputDecoration(
                                               //border: InputBorder.none,
                                               hintStyle: C.hints
@@ -1757,25 +1771,29 @@ class _BookDetailsWidgetState extends State<BookDetailsWidget> {
                   ]),
 
                   // Cover text (only show in input mode if either of author/title is empty)
-                  mode == BookDetailsMode.Input &&
+                    mode == BookDetailsMode.Input &&
                           bookrecord.hasCoverText &&
                           (!bookrecord.hasAuthor || !bookrecord.hasTitle)
-                      ? Container(
-                          child: SelectableText(bookrecord.coverText,
-                              style: Theme.of(context).textTheme.bodyText2))
+                      ? Container(margin: EdgeInsets.only(left: 5.0, right: 5.0, bottom: 10.0),
+                          child: Column(children: <Widget>[
+                            Text(S.of(context).labelCoverText,
+                          style: Theme.of(context).textTheme.bodyText2.apply(fontWeightDelta: 2)),
+                            SelectableText(bookrecord.coverText,
+                              style: Theme.of(context).textTheme.bodyText2)]))
                       : Container(),
 
                   // TODO: Add bookspine text (only show in input mode if author/title are empty)
 
                   // Language dropdown
-                  Row(
+                  Container(margin: EdgeInsets.only(left: 5.0, right: 5.0),
+                    child: Row(
                     mainAxisSize: MainAxisSize.min,
                     mainAxisAlignment: MainAxisAlignment.start,
                     children: <Widget>[
                       Text(S.of(context).labelLanguage,
-                          style: Theme.of(context).textTheme.bodyText2),
-                      Expanded(
-                          child: Container(
+                          style: Theme.of(context).textTheme.bodyText2.apply(fontWeightDelta: 2)),
+                          Container(
+                              margin: EdgeInsets.only(left: 10.0),
                               child: DropdownButton(
                                   value: bookrecord.language,
                                   items: languages == null
@@ -1793,21 +1811,23 @@ class _BookDetailsWidgetState extends State<BookDetailsWidget> {
                                   onChanged: (value) {
                                     setState(() {
                                       bookrecord.language = value;
+                                      bookrecord.ref.setData(bookrecord.toJson(), merge: true);
                                     });
                                     print('!!!DEBUG value selected: $value');
-                                  })))
+                                  }))
                     ],
-                  ),
+                  )),
 
                   // Genre dropdown
-                  Row(
+                  Container(margin: EdgeInsets.only(left: 5.0, right: 5.0),
+                    child: Row(
                     mainAxisSize: MainAxisSize.min,
                     mainAxisAlignment: MainAxisAlignment.start,
                     children: <Widget>[
                       Text(S.of(context).labelGenre,
-                          style: Theme.of(context).textTheme.bodyText2),
-                      Expanded(
-                          child: Container(
+                          style: Theme.of(context).textTheme.bodyText2.apply(fontWeightDelta: 2)),
+                        Container(
+                              margin: EdgeInsets.only(left: 10.0),
                               child: DropdownButton(
                         value: bookrecord.genre,
                         items: S
@@ -1827,6 +1847,7 @@ class _BookDetailsWidgetState extends State<BookDetailsWidget> {
                         onChanged: (value) {
                           setState(() {
                             bookrecord.genre = value;
+                            bookrecord.ref.setData(bookrecord.toJson(), merge: true);
                           });
                           print(
                               '!!!DEBUG value selected: $value, ${S.of(context).genres[value]}');
@@ -1841,16 +1862,145 @@ class _BookDetailsWidgetState extends State<BookDetailsWidget> {
                                 style: Theme.of(context).textTheme.bodyText2));
                           }).toList();
                         },
-                      )))
+                      ))
                     ],
-                  )
+                  )),
+
+                  // Description
+                  Container(margin: EdgeInsets.only(left: 5.0, right: 5.0, top: 10.0),
+                    child: Text(S.of(context).labelDescription,
+                    style: Theme.of(context).textTheme.bodyText2.apply(fontWeightDelta: 2))),
+                  Container(margin: EdgeInsets.only(left: 5.0, right: 5.0),
+                    child: bookrecord.hasDescription && !editDescription
+                                      ?
+                                      // Show description if present
+                                      GestureDetector(onTap: () {
+
+                                        setState(() {
+                                          editDescription = true;
+                                        });
+                                      },  
+                                        child: Text('${bookrecord.description}',
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .bodyText2))
+                                      :
+                                      // Show input field if description is empty
+                                      Stack(children: <Widget> [
+                                        TextField(
+                                          minLines: 3,
+                                          maxLines: 10,
+                                          controller: descriptionTextController,
+                                          keyboardType: TextInputType.multiline,
+                                          textInputAction: TextInputAction.done,
+                                          onEditingComplete: () {
+                                            // TODO: Save description to Firestore
+                                            FocusScope.of(context).unfocus();
+                                            setState(() {
+                                              editDescription = false;
+                                              bookrecord.description = descriptionTextController.text;
+                                              bookrecord.ref.setData(bookrecord.toJson(), merge: true);
+                                            });
+                                          },
+                                          style: Theme.of(context).textTheme.bodyText2,
+                                          decoration: InputDecoration(
+                                              //border: InputBorder.none,
+                                              hintStyle: C.hints
+                                                  .apply(color: C.inputHints),
+                                              hintText:
+                                                  S.of(context).hintDescription),
+                                        ),
+                                        Positioned.fill(child: Container(alignment: Alignment.bottomRight,
+                                        child: Tooltip(
+                                    message:
+                                        S.of(context).recognizeBackFromCamera,
+                                    child: IconButton(
+                                      color: C.button,
+                                      icon: assetIcon(compact_camera_100,
+                                          size: 30),
+                                      onPressed: () async {
+                                        recognizeBack(context,
+                                            source: ImageSource.camera);
+                                      },
+                                    ))))
+                                        ])),
+
+                  // User tags
+                  Container(margin: EdgeInsets.only(left: 5.0, top: 10.0, right: 5.0),
+                    child: Text(S.of(context).labelUserTags,
+                    style: Theme.of(context).textTheme.bodyText2.apply(fontWeightDelta: 2))),
+                  Container(margin: EdgeInsets.only(left: 5.0, right: 5.0),
+                    child: ChipsInput(
+                      initialValue: bookrecord != null && bookrecord.tags != null ? bookrecord.tags : [],
+                      //decoration: InputDecoration(
+                      //    labelText: "Add #tags",
+                      //),
+                      maxChips: 5,
+                      findSuggestions: (String query) {
+                          if (query.length != 0) {
+                              String lowercaseQuery = query.toLowerCase();
+                              if (query.length >= 2)
+                                // Query API and assign result to global list of tags
+                                getTagList(lowercaseQuery).then((value) => matching_tags = value);
+
+                              List<String> options = [];
+
+                              // Check tags in local tags of the book
+                              if (bookrecord != null && bookrecord.allTags != null)
+                                options = bookrecord.allTags.where((tag) => tag.toLowerCase().contains(query.toLowerCase())).toList(growable: false)
+                                    ..sort((a, b) => a
+                                        .toLowerCase()
+                                        .indexOf(lowercaseQuery)
+                                        .compareTo(b.toLowerCase().indexOf(lowercaseQuery)));
+
+                              // None of the book tags matches the query
+                              if (options.length == 0)
+                                options = matching_tags.where((tag) => tag.toLowerCase().contains(query.toLowerCase())).toList(growable: false)
+                                    ..sort((a, b) => a
+                                        .toLowerCase()
+                                        .indexOf(lowercaseQuery)
+                                        .compareTo(b.toLowerCase().indexOf(lowercaseQuery)));
+
+                              // In case no suggestions offer what's typed
+                              if (options.length == 0)
+                                options = <String>[lowercaseQuery];
+
+                              return options;
+                          } else {
+                              return const <String>[];
+                          }
+                      },
+                      onChanged: (data) {
+                          print('!!!DEBUG: ON CHANGE $data');
+                          bookrecord.tags = List<String>.from(data);
+                          bookrecord.allTags = List<String>.from(data);
+                          bookrecord.ref.setData(bookrecord.toJson(), merge: true);
+                      },
+                      chipBuilder: (context, state, tag) {
+                          return InputChip(
+                              key: ObjectKey(tag),
+                              label: Text(tag),
+                              avatar: CircleAvatar(
+                                  child: Text('#'),
+                              ),
+                              onDeleted: () => state.deleteChip(tag),
+                              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          );
+                      },
+                      suggestionBuilder: (context, state, tag) {
+                          return ListTile(
+                              key: ObjectKey(tag),
+                              leading: CircleAvatar(
+                                  child: Text('#'),
+                              ),
+                              title: Text(tag),
+                              onTap: () => state.selectSuggestion(tag),
+                          );
+                      },
+                  ))
                 ],
               );
-
-              // Description
-
-              // User tags
-            }),
+           }),
       ),
     ]);
   }
@@ -1871,7 +2021,13 @@ class _BookDetailsWidgetState extends State<BookDetailsWidget> {
     else
       direction = S.of(context).entryGuidanceComplete;
 
-    return Column(children: <Widget>[
+    return Container(
+      margin: EdgeInsets.all(5.0),
+      padding: EdgeInsets.all(5.0),
+      decoration: BoxDecoration(borderRadius: BorderRadius.circular(5.0), border: Border.all(color: Colors.red)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[
       Text(direction, style: Theme.of(context).textTheme.bodyText2),
       GestureDetector(
           onTap: () async {
@@ -1893,7 +2049,7 @@ class _BookDetailsWidgetState extends State<BookDetailsWidget> {
           child: Text(S.of(context).clickToGoogleBook,
               style: Theme.of(context).textTheme.bodyText1.apply(
                   color: Colors.blue, decoration: TextDecoration.underline)))
-    ]);
+    ]));
   }
 
   Future recognizeCover(BuildContext context,
@@ -1905,7 +2061,8 @@ class _BookDetailsWidgetState extends State<BookDetailsWidget> {
     }
 
     try {
-      File image = await ImagePicker.pickImage(source: source);
+      // Limit size of the photo to improve speed 
+      File image = await ImagePicker.pickImage(source: source, maxWidth: 800.0);
       //print('!!!DEBUG: Recognize image: ${image.path}');
 
       // Check that image is selected
@@ -1914,7 +2071,7 @@ class _BookDetailsWidgetState extends State<BookDetailsWidget> {
         return;
       }
 
-      String name = 'covers_full/' + bookrecord.isbn + ".jpg";
+      String name = 'covers_full/' + bookrecord.isbn + "-" + DateTime.now().millisecondsSinceEpoch.toString() + ".jpg";
 
       //final String storagePath = await uploadPicture(image, name);
       // !!!DEBUG
@@ -1964,6 +2121,11 @@ class _BookDetailsWidgetState extends State<BookDetailsWidget> {
               resJson[0]['cover_text'].isNotEmpty)
             bookrecord.coverText = resJson[0]['cover_text'];
 
+          if (!bookrecord.hasLanguage && 
+              resJson[0]['language'] != null &&
+              resJson[0]['language'].isNotEmpty)
+            bookrecord.language = resJson[0]['language'];
+
           if (!bookrecord.hasCover &&
               resJson[0]['image'] != null &&
               resJson[0]['image'].isNotEmpty)
@@ -1974,6 +2136,94 @@ class _BookDetailsWidgetState extends State<BookDetailsWidget> {
       print("Failed to recognize cover: " + e.toString() + stack.toString());
       logAnalyticsEvent(
           name: 'cover_recognition_failed',
+          parameters: <String, dynamic>{
+            'type': 'exception',
+            'error': e.toString(),
+          });
+      Crashlytics.instance.recordError(e, stack);
+    }
+  }
+
+  Future recognizeBack(BuildContext context,
+      {ImageSource source = ImageSource.camera}) async {
+    // Check that record is not empty
+    if (bookrecord.isbn == null || bookrecord.isbn.isEmpty) {
+      print('!!!DEBUG: Empty ISBN');
+      return;
+    }
+
+    try {
+      File image = await ImagePicker.pickImage(source: source);
+      //print('!!!DEBUG: Recognize image: ${image.path}');
+
+      // Check that image is selected
+      if (image == null) {
+        print('!!!DEBUG: No image selected');
+        return;
+      }
+
+      String name = 'bookback/' + bookrecord.isbn + "-" + DateTime.now().millisecondsSinceEpoch.toString() + ".jpg";
+
+      //final String storagePath = await uploadPicture(image, name);
+      // !!!DEBUG
+      String storagePath = 'bookback/9785389015234-1592676485108.jpg';
+
+      print('!!!DEBUG: Storage path: $storagePath');
+
+      FirebaseUser user = await FirebaseAuth.instance.currentUser();
+      IdTokenResult idtoken = await user.getIdToken();
+
+      String body = json.encode({
+        'uid': user.uid,
+        'uri': storagePath,
+        'isbn': bookrecord.isbn,
+        'ocr': ! bookrecord.hasDescription,
+      });
+
+      // Call Python service to recognize
+      Response res = await LibConnect.getCloudFunctionClient().post(
+          'https://biblosphere-api-ihj6i2l2aq-uc.a.run.app/add_back',
+          body: body,
+          headers: {
+            HttpHeaders.authorizationHeader: "Bearer ${idtoken.token}",
+            HttpHeaders.contentTypeHeader: "application/json"
+          });
+
+      if (res.statusCode != 200) {
+        print('!!!DEBUG: Book back recognition request failed');
+        logAnalyticsEvent(
+            name: 'back_recognition_failed',
+            parameters: <String, dynamic>{
+              'type': 'response',
+              'error': res.statusCode.toString(),
+            });
+      }
+      print('!!!DEBUG: Back recognition result: ${res.body}');
+
+      final resJson = json.decode(res.body);
+
+      if (resJson is Map && resJson.containsKey('error')) {
+        print('!!!DEBUG: add_back error ${resJson['error']['message']}');
+      } else {
+        print('!!!DEBUG: Response back text ${resJson[0]['cover_text']}');
+
+        setState(() {
+          if (!bookrecord.hasLanguage && 
+              resJson[0]['language'] != null &&
+              resJson[0]['language'].isNotEmpty)
+            bookrecord.language = resJson[0]['language'];
+
+          if (resJson[0]['back_text'] != null &&
+              resJson[0]['back_text'].isNotEmpty) {
+                bookrecord.description = resJson[0]['back_text'];
+                descriptionTextController.text = bookrecord.description;
+              }
+        });
+      }
+    } catch (e, stack) {
+      print("Failed to recognize back: " + e.toString() + stack.toString());
+      logAnalyticsEvent(
+          name: 'back_recognition_failed',
           parameters: <String, dynamic>{
             'type': 'exception',
             'error': e.toString(),
