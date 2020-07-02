@@ -175,7 +175,7 @@ class _MyAppState extends State<MyApp> {
         await user.ref.setData(user.toJson());
       } else {
         // Update user fields from Firestore
-        User user = User.fromJson(userSnap.data);
+        user = User.fromJson(userSnap.data);
 
         B.loginUser = user;
 
@@ -237,7 +237,7 @@ class _MyAppState extends State<MyApp> {
       });
 
       // If refferal program link is empty generate one
-      if (B.user.link == null) {
+      if (user.link == null) {
         // TODO: Make this call async to minimize waiting time for login
         String link = await buildLink('chat?user=${user.id}');
         user.ref.updateData({
